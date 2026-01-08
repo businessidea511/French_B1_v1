@@ -7,10 +7,10 @@ import 'pages/home_page.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Load environment variables gracefully
+  // Load environment variables gracefully from assets
   try {
-    await dotenv.load(fileName: ".env");
-    debugPrint('.env file loaded successfully');
+    await dotenv.load(fileName: "assets/env/.env");
+    debugPrint('.env file loaded successfully from assets/env');
   } catch (e) {
     debugPrint(
         'Note: Initializing without .env file. AI features will require you to add your DeepSeek API key to a .env file based on .env.example.');
