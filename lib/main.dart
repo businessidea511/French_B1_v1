@@ -1,19 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:flutter/foundation.dart';
 import 'theme/app_theme.dart';
 import 'pages/home_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Load environment variables gracefully from assets
+  // Load local .env if it exists
   try {
-    await dotenv.load(fileName: "assets/env/.env");
-    debugPrint('.env file loaded successfully from assets/env');
-  } catch (e) {
-    debugPrint(
-        'Note: Initializing without .env file. AI features will require you to add your DeepSeek API key to a .env file based on .env.example.');
+    await dotenv.load(fileName: ".env");
+  } catch (_) {
+    // Silently continue; production uses --dart-define
   }
 
   runApp(const FrenchB1App());

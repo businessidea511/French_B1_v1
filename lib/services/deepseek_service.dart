@@ -6,10 +6,11 @@ import 'package:flutter/foundation.dart';
 class DeepSeekService {
   static const String baseUrl = 'https://api.deepseek.com/v1';
 
-  static String get apiKey =>
-      const String.fromEnvironment('DEEPSEEK_API_KEY', defaultValue: '') != ''
-          ? const String.fromEnvironment('DEEPSEEK_API_KEY')
-          : (dotenv.env['DEEPSEEK_API_KEY'] ?? '');
+  static String get apiKey {
+    const String dKey = String.fromEnvironment('DEEPSEEK_API_KEY');
+    if (dKey.isNotEmpty) return dKey;
+    return dotenv.env['DEEPSEEK_API_KEY'] ?? '';
+  }
 
   // Generate multiple AI-powered exercises
   static Future<List<Map<String, dynamic>>> generateExercises(
