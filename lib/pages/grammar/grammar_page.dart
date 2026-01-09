@@ -24,26 +24,23 @@ class GrammarPage extends StatelessWidget {
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 1200),
-          child: Focus(
-            autofocus: true,
-            child: GridView.builder(
-              padding: const EdgeInsets.all(24),
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: MediaQuery.of(context).size.width > 900
-                    ? 3
-                    : MediaQuery.of(context).size.width > 600
-                        ? 2
-                        : 1,
-                mainAxisSpacing: 20,
-                crossAxisSpacing: 20,
-                childAspectRatio: 1.6,
-              ),
-              itemCount: grammarTopics.length,
-              itemBuilder: (context, index) {
-                final topic = grammarTopics[index];
-                return _buildTopicCard(context, topic);
-              },
+          child: GridView.builder(
+            padding: const EdgeInsets.all(24),
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: MediaQuery.of(context).size.width > 900
+                  ? 3
+                  : MediaQuery.of(context).size.width > 600
+                      ? 2
+                      : 1,
+              mainAxisSpacing: 20,
+              crossAxisSpacing: 20,
+              childAspectRatio: 1.6,
             ),
+            itemCount: grammarTopics.length,
+            itemBuilder: (context, index) {
+              final topic = grammarTopics[index];
+              return _buildTopicCard(context, topic);
+            },
           ),
         ),
       ),

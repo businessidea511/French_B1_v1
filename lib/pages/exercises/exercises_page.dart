@@ -95,32 +95,29 @@ class _ExercisesPageState extends State<ExercisesPage> {
   }
 
   Widget _buildTopicSelection() {
-    return Focus(
-      autofocus: true,
-      child: ListView(
-        padding: const EdgeInsets.all(24),
-        children: grammarTopics.map((topic) {
-          return Card(
-            margin: const EdgeInsets.only(bottom: 16),
-            child: ListTile(
-              contentPadding: const EdgeInsets.all(16),
-              leading: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: AppTheme.primary.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(topic.icon, style: const TextStyle(fontSize: 24)),
+    return ListView(
+      padding: const EdgeInsets.all(24),
+      children: grammarTopics.map((topic) {
+        return Card(
+          margin: const EdgeInsets.only(bottom: 16),
+          child: ListTile(
+            contentPadding: const EdgeInsets.all(16),
+            leading: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppTheme.primary.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
               ),
-              title: Text(topic.title,
-                  style: const TextStyle(fontWeight: FontWeight.bold)),
-              subtitle: const Text('Generate 10 dynamic exercises'),
-              trailing: const Icon(Icons.auto_awesome, color: AppTheme.primary),
-              onTap: () => _startAIExercises(topic.id),
+              child: Text(topic.icon, style: const TextStyle(fontSize: 24)),
             ),
-          );
-        }).toList(),
-      ),
+            title: Text(topic.title,
+                style: const TextStyle(fontWeight: FontWeight.bold)),
+            subtitle: const Text('Generate 10 dynamic exercises'),
+            trailing: const Icon(Icons.auto_awesome, color: AppTheme.primary),
+            onTap: () => _startAIExercises(topic.id),
+          ),
+        );
+      }).toList(),
     );
   }
 
@@ -135,58 +132,54 @@ class _ExercisesPageState extends State<ExercisesPage> {
 
     final question = questions[currentQuestion];
 
-    return Focus(
-      autofocus: true,
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(10),
-              child: LinearProgressIndicator(
-                value: (currentQuestion + 1) / questions.length,
-                minHeight: 10,
-                backgroundColor: AppTheme.surface,
-                valueColor:
-                    const AlwaysStoppedAnimation<Color>(AppTheme.primary),
-              ),
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(10),
+            child: LinearProgressIndicator(
+              value: (currentQuestion + 1) / questions.length,
+              minHeight: 10,
+              backgroundColor: AppTheme.surface,
+              valueColor: const AlwaysStoppedAnimation<Color>(AppTheme.primary),
             ),
-            const SizedBox(height: 32),
-            Text(
-              'QUESTION ${currentQuestion + 1} OF ${questions.length}',
-              style: const TextStyle(
-                  letterSpacing: 1.5,
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                  color: AppTheme.textTertiary),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              question['question'],
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-            const SizedBox(height: 40),
-            ...List.generate(
-              (question['options'] as List).length,
-              (index) => Padding(
-                padding: const EdgeInsets.only(bottom: 16),
-                child: ElevatedButton(
-                  onPressed: () => _answerQuestion(index, question['correct']),
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 24, vertical: 20),
-                    alignment: Alignment.centerLeft,
-                  ),
-                  child: Text(
-                    question['options'][index],
-                    style: const TextStyle(fontSize: 16),
-                  ),
+          ),
+          const SizedBox(height: 32),
+          Text(
+            'QUESTION ${currentQuestion + 1} OF ${questions.length}',
+            style: const TextStyle(
+                letterSpacing: 1.5,
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: AppTheme.textTertiary),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            question['question'],
+            style: Theme.of(context).textTheme.headlineMedium,
+          ),
+          const SizedBox(height: 40),
+          ...List.generate(
+            (question['options'] as List).length,
+            (index) => Padding(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: ElevatedButton(
+                onPressed: () => _answerQuestion(index, question['correct']),
+                style: ElevatedButton.styleFrom(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                  alignment: Alignment.centerLeft,
+                ),
+                child: Text(
+                  question['options'][index],
+                  style: const TextStyle(fontSize: 16),
                 ),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

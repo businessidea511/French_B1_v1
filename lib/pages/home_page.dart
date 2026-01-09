@@ -26,137 +26,129 @@ class HomePage extends StatelessWidget {
           child: Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 1200),
-              child: Focus(
-                autofocus: true,
-                child: CustomScrollView(
-                  slivers: [
-                    SliverPadding(
-                      padding: const EdgeInsets.fromLTRB(24, 60, 24, 40),
-                      sliver: SliverToBoxAdapter(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 16, vertical: 8),
-                              decoration: BoxDecoration(
-                                color: AppTheme.primary.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(100),
-                                border: Border.all(
-                                    color: AppTheme.primary.withOpacity(0.2)),
-                              ),
-                              child: const Text(
-                                '🇫🇷 NIVEAU B1',
-                                style: TextStyle(
-                                  color: AppTheme.primary,
-                                  fontWeight: FontWeight.bold,
-                                  letterSpacing: 1.2,
-                                  fontSize: 12,
-                                ),
+              child: CustomScrollView(
+                slivers: [
+                  SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(24, 60, 24, 40),
+                    sliver: SliverToBoxAdapter(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: AppTheme.primary.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(100),
+                              border: Border.all(
+                                  color: AppTheme.primary.withOpacity(0.2)),
+                            ),
+                            child: const Text(
+                              '🇫🇷 NIVEAU B1',
+                              style: TextStyle(
+                                color: AppTheme.primary,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 1.2,
+                                fontSize: 12,
                               ),
                             ),
-                            const SizedBox(height: 24),
-                            Text(
-                              'Bonjour!',
-                              style: Theme.of(context).textTheme.displayLarge,
-                              textAlign: TextAlign.center,
-                            ),
-                            const SizedBox(height: 12),
-                            Text(
-                              'What would you like to master today?',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodyLarge
-                                  ?.copyWith(
-                                    color: AppTheme.textSecondary,
-                                  ),
-                              textAlign: TextAlign.center,
-                            ),
-                          ],
-                        ),
+                          ),
+                          const SizedBox(height: 24),
+                          Text(
+                            'Bonjour!',
+                            style: Theme.of(context).textTheme.displayLarge,
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            'What would you like to master today?',
+                            style:
+                                Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                      color: AppTheme.textSecondary,
+                                    ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
                       ),
                     ),
-                    SliverPadding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                      sliver: SliverGrid(
-                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount:
-                              MediaQuery.of(context).size.width > 900
-                                  ? 4
-                                  : MediaQuery.of(context).size.width > 600
-                                      ? 2
-                                      : 1,
-                          mainAxisSpacing: 24,
-                          crossAxisSpacing: 24,
-                          childAspectRatio: 1,
-                        ),
-                        delegate: SliverChildListDelegate([
-                          _buildFeatureCard(
-                            context,
-                            title: 'Grammar',
-                            subtitle: '9 Essential Lessons',
-                            icon: '📚',
-                            color: AppTheme.primary,
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) => const GrammarPage()),
-                              );
-                            },
-                          ),
-                          _buildFeatureCard(
-                            context,
-                            title: 'Exercises',
-                            subtitle: 'Practice & Feedback',
-                            icon: '✍️',
-                            color: AppTheme.secondary,
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) =>
-                                        const ExercisesPage()),
-                              );
-                            },
-                          ),
-                          _buildFeatureCard(
-                            context,
-                            title: 'Flashcards',
-                            subtitle: 'Smart Memorization',
-                            icon: '🎴',
-                            color: AppTheme.success,
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) =>
-                                        const FlashcardsPage()),
-                              );
-                            },
-                          ),
-                          _buildFeatureCard(
-                            context,
-                            title: 'Verbs',
-                            subtitle: 'Conjugation Tables',
-                            icon: '🔄',
-                            color: AppTheme.warning,
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) => const VerbsPage()),
-                              );
-                            },
-                          ),
-                        ]),
+                  ),
+                  SliverPadding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                    sliver: SliverGrid(
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: MediaQuery.of(context).size.width > 900
+                            ? 4
+                            : MediaQuery.of(context).size.width > 600
+                                ? 2
+                                : 1,
+                        mainAxisSpacing: 24,
+                        crossAxisSpacing: 24,
+                        childAspectRatio: 1,
                       ),
+                      delegate: SliverChildListDelegate([
+                        _buildFeatureCard(
+                          context,
+                          title: 'Grammar',
+                          subtitle: '9 Essential Lessons',
+                          icon: '📚',
+                          color: AppTheme.primary,
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => const GrammarPage()),
+                            );
+                          },
+                        ),
+                        _buildFeatureCard(
+                          context,
+                          title: 'Exercises',
+                          subtitle: 'Practice & Feedback',
+                          icon: '✍️',
+                          color: AppTheme.secondary,
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => const ExercisesPage()),
+                            );
+                          },
+                        ),
+                        _buildFeatureCard(
+                          context,
+                          title: 'Flashcards',
+                          subtitle: 'Smart Memorization',
+                          icon: '🎴',
+                          color: AppTheme.success,
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => const FlashcardsPage()),
+                            );
+                          },
+                        ),
+                        _buildFeatureCard(
+                          context,
+                          title: 'Verbs',
+                          subtitle: 'Conjugation Tables',
+                          icon: '🔄',
+                          color: AppTheme.warning,
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => const VerbsPage()),
+                            );
+                          },
+                        ),
+                      ]),
                     ),
-                    const SliverToBoxAdapter(
-                      child: SizedBox(height: 60),
-                    ),
-                  ],
-                ),
+                  ),
+                  const SliverToBoxAdapter(
+                    child: SizedBox(height: 60),
+                  ),
+                ],
               ),
             ),
           ),
