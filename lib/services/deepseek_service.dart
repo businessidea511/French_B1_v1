@@ -33,7 +33,10 @@ class DeepSeekService {
                   '1. LOGICAL CONSISTENCY: The "correct" index MUST point to the grammatically correct answer. \n'
                   '2. NO AMBIGUITY: Do not use distractors that could also be correct in the context. If testing "Futur Proche", do not include "Futur Simple" as a distractor if both would be valid. \n'
                   '3. PEDAGOGICAL EXPLANATION: The explanation MUST explain why the answer is correct and briefly why others are wrong. \n'
-                  '4. ACCURACY: Double-check conjugations and agreements. Return JSON with "exercises" array.'
+                  '4. ACCURACY: Double-check conjugations and agreements. \n'
+                  '5. PRONOUN CLARITY: For "COD/COI" or pronoun replacement, the question MUST put the objects to be replaced in parentheses. '
+                  'Example: "Elle [achète] (des fleurs) (à sa mère) -> Elle ______." '
+                  'Return JSON with "exercises" array.'
             },
             {
               'role': 'user',
