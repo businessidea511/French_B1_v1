@@ -25,6 +25,9 @@ class FrenchB1App extends StatelessWidget {
       title: 'French B1 Learning',
       theme: AppTheme.darkTheme,
       debugShowCheckedModeBanner: false,
+      scrollBehavior: const MaterialScrollBehavior().copyWith(
+        scrollbars: true,
+      ),
       home: const HomePage(),
     );
   }

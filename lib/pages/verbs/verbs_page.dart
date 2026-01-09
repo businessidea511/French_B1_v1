@@ -597,20 +597,23 @@ class _VerbsPageState extends State<VerbsPage> {
       appBar: AppBar(
         title: const Text('Verb Conjugator'),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 900),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                _buildVerbSearchAndSelect(),
-                const SizedBox(height: 24),
-                _buildTenseSelector(),
-                const SizedBox(height: 24),
-                _buildConjugationResults(),
-              ],
+      body: Focus(
+        autofocus: true,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 900),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _buildVerbSearchAndSelect(),
+                  const SizedBox(height: 24),
+                  _buildTenseSelector(),
+                  const SizedBox(height: 24),
+                  _buildConjugationResults(),
+                ],
+              ),
             ),
           ),
         ),

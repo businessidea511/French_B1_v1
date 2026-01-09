@@ -18,11 +18,14 @@ class LessonTemplate extends StatelessWidget {
       appBar: AppBar(
         title: Text('$icon $title'),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: children,
+      body: Focus(
+        autofocus: true,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: children,
+          ),
         ),
       ),
     );

@@ -93,29 +93,33 @@ class _FlashcardsPageState extends State<FlashcardsPage> {
   }
 
   Widget _buildTopicSelection() {
-    return ListView(
-      padding: const EdgeInsets.all(24),
-      children: grammarTopics.map((topic) {
-        return Card(
-          margin: const EdgeInsets.only(bottom: 16),
-          child: ListTile(
-            contentPadding: const EdgeInsets.all(16),
-            leading: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: AppTheme.secondary.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
+    return Focus(
+      autofocus: true,
+      child: ListView(
+        padding: const EdgeInsets.all(24),
+        children: grammarTopics.map((topic) {
+          return Card(
+            margin: const EdgeInsets.only(bottom: 16),
+            child: ListTile(
+              contentPadding: const EdgeInsets.all(16),
+              leading: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppTheme.secondary.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(topic.icon, style: const TextStyle(fontSize: 24)),
               ),
-              child: Text(topic.icon, style: const TextStyle(fontSize: 24)),
+              title: Text(topic.title,
+                  style: const TextStyle(fontWeight: FontWeight.bold)),
+              subtitle: const Text('Generate 10 dynamic cards'),
+              trailing:
+                  const Icon(Icons.auto_awesome, color: AppTheme.secondary),
+              onTap: () => _startAIFlashcards(topic.id),
             ),
-            title: Text(topic.title,
-                style: const TextStyle(fontWeight: FontWeight.bold)),
-            subtitle: const Text('Generate 10 dynamic cards'),
-            trailing: const Icon(Icons.auto_awesome, color: AppTheme.secondary),
-            onTap: () => _startAIFlashcards(topic.id),
-          ),
-        );
-      }).toList(),
+          );
+        }).toList(),
+      ),
     );
   }
 
