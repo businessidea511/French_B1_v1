@@ -34,6 +34,30 @@ A comprehensive Flutter web application for learning French at the B1 level, fea
 - Easy verb and tense selection
 - Clear formatting for learning
 
+### Robust Exercise Randomization & Uniqueness
+
+Ensure that exercises are pedagogical, unique, and randomized to prevent predictable patterns.
+
+## Proposed Changes
+
+### [DeepSeek Service](file:///c:/Users/Lenovo/OneDrive/Desktop/B1%20French%20Flutter/french_course_b1/lib/services/deepseek_service.dart)
+- Update the `generateExercises` prompt to explicitly demand 4 **unique** options.
+- Add a requirement for the AI to vary the correct answer index (redundant but helpful for variety).
+- Increase the temperature slightly to encourage diverse distractors.
+
+### [Exercises Page](file:///c:/Users/Lenovo/OneDrive/Desktop/B1%20French%20Flutter/french_course_b1/lib/pages/exercises/exercises_page.dart)
+- Implement a `_shuffleAndSanitize` method in `_ExercisesPageState`.
+- This method will:
+    - **Shuffle** the options array for each question.
+    - **Recalculate** the `correct` index to point to the new location.
+    - **Filter** out duplicate options by generating new ones or asking the student to "skip" (though unique prompt should fix this).
+- Call this method in `_startAIExercises` before setting the state.
+
+## Verification Plan
+- Run 5 exercise generations.
+- Confirm the correct answer is at a different index (0, 1, 2, or 3) for each question.
+- Visually inspect options to ensure no duplicates.
+
 ### 🤖 AI Integration
 - DeepSeek API for dynamic exercise generation
 - AI-powered grammar explanations

@@ -29,16 +29,16 @@ class DeepSeekService {
             {
               'role': 'system',
               'content':
-                  'You are a French B1 grammar teacher. Generate exercises in JSON format. Return a JSON object with a key "exercises" containing an array of objects.'
+                  'You are a French B1 grammar teacher. Generate exercises in JSON format. Return a JSON object with a key "exercises" containing an array of objects. IMPORTANT: All 4 options must be strictly unique distractors.'
             },
             {
               'role': 'user',
               'content':
-                  'Generate $count multiple choice exercises for French B1 topic: $topic. Difficulty: $difficulty. Each exercise must have: "question", "options" (array of 4), "correct" (index 0-3), "explanation".'
+                  'Generate $count multiple choice exercises for French B1 topic: $topic. Difficulty: $difficulty. Each exercise must have: "question", "options" (array of 4 unique strings), "correct" (index 0-3, vary this index across questions), "explanation".'
             }
           ],
           'response_format': {'type': 'json_object'},
-          'temperature': 0.7,
+          'temperature': 0.8,
         }),
       );
 

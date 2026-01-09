@@ -39,8 +39,30 @@ class _ExercisesPageState extends State<ExercisesPage> {
 
     try {
       final aiQuestions = await DeepSeekService.generateExercises(topic, 'B1');
+
+      // Shuffle and sanitize questions
+      final sanitizedQuestions = aiQuestions.map((q) {
+        final List<String> options = List<String>.from(q['options']);
+        final String correctText = options[q['correct']];
+
+        // 1. Deduplicate (rare but possible with AI)
+        final uniqueOptions = options.toSet().toList();
+
+        // 2. Shuffle
+        uniqueOptions.shuffle();
+
+        // 3. Find new correct index
+        final newCorrectIndex = uniqueOptions.indexOf(correctText);
+
+        return {
+          ...q,
+          'options': uniqueOptions,
+          'correct': newCorrectIndex,
+        };
+      }).toList();
+
       setState(() {
-        questions = aiQuestions;
+        questions = sanitizedQuestions;
         _isLoading = false;
         currentQuestion = 0;
         score = 0;
