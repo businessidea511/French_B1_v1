@@ -1,22 +1,28 @@
 #!/bin/bash
 
-echo "=== STARTING FLUTTER BUILD ==="
-# Standard build command
+# Exit on error
+set -e
+
+echo "=== DIAGNOSTICS ==="
+./flutter/bin/flutter --version
+./flutter/bin/flutter build web -h | grep "web-renderer" || echo "Note: --web-renderer flag not found in help"
+
+echo "=== BUILDING WEB ==="
+# Minimal command. No renderer flag, no verbose.
 ./flutter/bin/flutter build web --release --dart-define=DEEPSEEK_API_KEY="$DEEPSEEK_API_KEY"
 
-echo "=== PREPARING FOR VERCEL SERVICE ==="
-# Move to 'public' folder which Vercel handles very reliably
-rm -rf public
-mkdir -p public
-cp -r build/web/* public/
-
-echo "=== VERIFYING OUTPUT FILES ==="
-ls -la public/
-if [ -f "public/main.dart.js" ]; then
-  echo "Success: main.dart.js is present in public/"
+echo "=== POST-BUILD CHECK ==="
+if [ -d "build/web" ]; then
+  echo "Success: Contents of build/web:"
+  ls -F build/web/
+  
+  # Ensure public/ exists and is fresh
+  rm -rf public
+  mkdir -p public
+  cp -r build/web/* public/
+  
+  echo "Final public/ directory ready for Vercel."
 else
-  echo "Error: main.dart.js NOT FOUND"
+  echo "ERROR: build/web was not created."
   exit 1
 fi
-
-echo "Build and preparation complete."
