@@ -1,6 +1,6 @@
 @echo off
-set /p commit_msg="Enter commit message: "
-if "%commit_msg%"=="" set commit_msg="Update deployment"
+set /p commit_msg="Enter commit message (default: Update deployment): "
+if "%commit_msg%"=="" set commit_msg=Update deployment
 
 echo Staging changes...
 git add .

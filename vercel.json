@@ -1,5 +1,5 @@
 {
-    "buildCommand": "flutter/bin/flutter build web --release --dart-define=DEEPSEEK_API_KEY=\"$DEEPSEEK_API_KEY\"",
+    "buildCommand": "sh build.sh",
     "outputDirectory": "build/web",
     "framework": null,
     "installCommand": "if [ ! -d \"flutter\" ]; then git clone https://github.com/flutter/flutter.git -b stable --depth 1; fi && flutter/bin/flutter doctor && flutter/bin/flutter pub get"
