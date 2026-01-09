@@ -17,6 +17,13 @@ class GrammarTopic {
 // All grammar topics
 final List<GrammarTopic> grammarTopics = [
   const GrammarTopic(
+    id: 'present',
+    title: 'Le Présent',
+    subtitle: 'Present Tense',
+    icon: '⌚',
+    description: 'Master regular and irregular verbs in the present tense',
+  ),
+  const GrammarTopic(
     id: 'passe_compose',
     title: 'Passé Composé',
     subtitle: 'Past Tense with "have"',

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../theme/app_theme.dart';
 import '../../models/grammar_topic.dart';
 import 'lessons/passe_compose_page.dart';
+import 'lessons/present_page.dart';
 import 'lessons/imparfait_page.dart';
 import 'lessons/plus_que_parfait_page.dart';
 import 'lessons/conditionnel_page.dart';
@@ -108,6 +109,8 @@ class GrammarPage extends StatelessWidget {
 
   Widget _getLessonPage(String topicId) {
     switch (topicId) {
+      case 'present':
+        return const PresentPage();
       case 'passe_compose':
         return const PasseComposePage();
       case 'imparfait':
