@@ -1,18 +1,22 @@
 #!/bin/bash
 
-echo "=== FLUTTER VERSION INFO ==="
-./flutter/bin/flutter --version
-./flutter/bin/flutter config
-
 echo "=== STARTING FLUTTER BUILD ==="
-# Removing --web-renderer as it was causing "option not found" errors on Vercel
-# Removed -v to keep logs cleaner unless really needed
+# Standard build command
 ./flutter/bin/flutter build web --release --dart-define=DEEPSEEK_API_KEY="$DEEPSEEK_API_KEY"
 
-echo "=== BUILD FINISHED ==="
-if [ -d "build/web" ]; then
-  echo "Success: build/web directory found"
+echo "=== PREPARING FOR VERCEL SERVICE ==="
+# Move to 'public' folder which Vercel handles very reliably
+rm -rf public
+mkdir -p public
+cp -r build/web/* public/
+
+echo "=== VERIFYING OUTPUT FILES ==="
+ls -la public/
+if [ -f "public/main.dart.js" ]; then
+  echo "Success: main.dart.js is present in public/"
 else
-  echo "ERROR: build/web directory NOT found"
+  echo "Error: main.dart.js NOT FOUND"
   exit 1
 fi
+
+echo "Build and preparation complete."
