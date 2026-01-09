@@ -119,27 +119,88 @@ class _ExercisesPageState extends State<ExercisesPage> {
   Widget _buildTopicSelection() {
     return ListView(
       padding: const EdgeInsets.all(24),
-      children: grammarTopics.map((topic) {
-        return Card(
-          margin: const EdgeInsets.only(bottom: 16),
-          child: ListTile(
-            contentPadding: const EdgeInsets.all(16),
-            leading: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: AppTheme.primary.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Text(topic.icon, style: const TextStyle(fontSize: 24)),
-            ),
-            title: Text(topic.title,
-                style: const TextStyle(fontWeight: FontWeight.bold)),
-            subtitle: const Text('Generate 10 dynamic exercises'),
-            trailing: const Icon(Icons.auto_awesome, color: AppTheme.primary),
-            onTap: () => _startAIExercises(topic.id),
+      children: [
+        // Special Mixed Review Card
+        Card(
+          margin: const EdgeInsets.only(bottom: 24),
+          elevation: 4,
+          shadowColor: AppTheme.primary.withOpacity(0.5),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+            side: const BorderSide(color: AppTheme.primary, width: 2),
           ),
-        );
-      }).toList(),
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(24),
+              gradient: LinearGradient(
+                colors: [
+                  AppTheme.primary.withOpacity(0.1),
+                  AppTheme.accent.withOpacity(0.1),
+                ],
+              ),
+            ),
+            child: ListTile(
+              contentPadding: const EdgeInsets.all(24),
+              leading: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppTheme.primary,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: const Text('⭐', style: TextStyle(fontSize: 32)),
+              ),
+              title: const Text(
+                'B1 General Review',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 20,
+                  fontFamily: 'Outfit',
+                ),
+              ),
+              subtitle: const Padding(
+                padding: EdgeInsets.only(top: 8.0),
+                child: Text('Final Exam style: All tenses + COD/COI'),
+              ),
+              trailing: const Icon(Icons.auto_awesome,
+                  color: AppTheme.primary, size: 32),
+              onTap: () => _startAIExercises('mixed_review'),
+            ),
+          ),
+        ),
+        const Padding(
+          padding: EdgeInsets.only(bottom: 16, left: 8),
+          child: Text(
+            'TOPIC-SPECIFIC DRILLS',
+            style: TextStyle(
+              letterSpacing: 1.5,
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              color: AppTheme.textTertiary,
+            ),
+          ),
+        ),
+        ...grammarTopics.map((topic) {
+          return Card(
+            margin: const EdgeInsets.only(bottom: 16),
+            child: ListTile(
+              contentPadding: const EdgeInsets.all(16),
+              leading: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppTheme.primary.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(topic.icon, style: const TextStyle(fontSize: 24)),
+              ),
+              title: Text(topic.title,
+                  style: const TextStyle(fontWeight: FontWeight.bold)),
+              subtitle: const Text('Generate 10 dynamic exercises'),
+              trailing: const Icon(Icons.auto_awesome, color: AppTheme.primary),
+              onTap: () => _startAIExercises(topic.id),
+            ),
+          );
+        }).toList(),
+      ],
     );
   }
 
