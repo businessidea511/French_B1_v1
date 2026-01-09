@@ -120,7 +120,7 @@ class DeepSeekService {
             {
               'role': 'system',
               'content':
-                  'You are a French linguistics expert. Provide verb conjugations in JSON format. Return a JSON object where keys are tenses and values are lists of 6 conjugated forms (je, tu, il/elle, nous, vous, ils/elles).'
+                  'You are a French linguistics expert. Provide verb conjugations in JSON format. Return a JSON object where keys are tenses and values are lists of 6 conjugated forms. IMPORTANT: Each form MUST include the pronoun (je, tu, il/elle, nous, vous, ils/elles). Example: ["je parle", "tu parles", ...].'
             },
             {
               'role': 'user',

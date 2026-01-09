@@ -568,8 +568,39 @@ class _VerbsPageState extends State<VerbsPage> {
     setState(() => _isLoading = true);
     try {
       final result = await DeepSeekService.conjugateVerb(verb.toLowerCase());
+
+      // Safety Net: Ensure all forms have pronouns
+      final sanitizedResult = result.map((tense, forms) {
+        final pronouns = ['je', 'tu', 'il/elle', 'nous', 'vous', 'ils/elles'];
+        final sanitizedForms = forms.asMap().entries.map((entry) {
+          final index = entry.key;
+          String form = entry.value.trim();
+          final pronoun = pronouns[index];
+
+          // Check if the form already starts with the pronoun
+          // (Handle both standard "je" and elided "j'")
+          bool hasPronoun = false;
+          if (index == 0) {
+            hasPronoun = form.startsWith('je ') || form.startsWith("j'");
+          } else {
+            hasPronoun = form.startsWith(pronoun + ' ');
+          }
+
+          if (!hasPronoun) {
+            // Apply elision for 'je' if verb starts with vowel or silent h
+            if (index == 0 &&
+                RegExp(r'^[aeiouhéèàâîôû]').hasMatch(form.toLowerCase())) {
+              return "j'$form";
+            }
+            return "$pronoun $form";
+          }
+          return form;
+        }).toList();
+        return MapEntry(tense, sanitizedForms);
+      });
+
       setState(() {
-        conjugations[verb.toLowerCase()] = result;
+        conjugations[verb.toLowerCase()] = sanitizedResult;
         selectedVerb = verb.toLowerCase();
         if (!verbs.contains(verb.toLowerCase())) {
           verbs.add(verb.toLowerCase());

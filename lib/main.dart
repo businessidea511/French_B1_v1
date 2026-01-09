@@ -31,7 +31,7 @@ class FrenchB1App extends StatelessWidget {
         const SingleActivator(LogicalKeyboardKey.arrowUp): () {
           PrimaryScrollController.of(
                   FocusManager.instance.primaryFocus!.context!)
-              ?.animateTo(
+              .animateTo(
             (PrimaryScrollController.of(
                             FocusManager.instance.primaryFocus!.context!)
                         ?.offset ??
@@ -44,7 +44,7 @@ class FrenchB1App extends StatelessWidget {
         const SingleActivator(LogicalKeyboardKey.arrowDown): () {
           PrimaryScrollController.of(
                   FocusManager.instance.primaryFocus!.context!)
-              ?.animateTo(
+              .animateTo(
             (PrimaryScrollController.of(
                             FocusManager.instance.primaryFocus!.context!)
                         ?.offset ??
