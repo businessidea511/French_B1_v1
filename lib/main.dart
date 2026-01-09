@@ -21,64 +21,83 @@ void main() async {
 class FrenchB1App extends StatelessWidget {
   const FrenchB1App({super.key});
 
+  void _handleScroll(BuildContext context, double offset,
+      {bool isPage = false}) {
+    final controller = PrimaryScrollController.of(context);
+    if (controller.hasClients) {
+      final target = controller.offset + offset;
+
+      controller.animateTo(
+        target.clamp(0.0, controller.position.maxScrollExtent),
+        duration: Duration(milliseconds: isPage ? 300 : 100),
+        curve: Curves.easeOut,
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     // Root FocusNode to keep everything organized
     final FocusNode rootFocusNode = FocusNode(debugLabel: 'RootFocusNode');
 
-    return CallbackShortcuts(
-      bindings: <ShortcutActivator, VoidCallback>{
-        const SingleActivator(LogicalKeyboardKey.arrowUp): () {
-          PrimaryScrollController.of(
-                  FocusManager.instance.primaryFocus!.context!)
-              .animateTo(
-            (PrimaryScrollController.of(
-                            FocusManager.instance.primaryFocus!.context!)
-                        ?.offset ??
-                    0) -
-                100,
-            duration: const Duration(milliseconds: 100),
-            curve: Curves.easeOut,
-          );
-        },
-        const SingleActivator(LogicalKeyboardKey.arrowDown): () {
-          PrimaryScrollController.of(
-                  FocusManager.instance.primaryFocus!.context!)
-              .animateTo(
-            (PrimaryScrollController.of(
-                            FocusManager.instance.primaryFocus!.context!)
-                        ?.offset ??
-                    0) +
-                100,
-            duration: const Duration(milliseconds: 100),
-            curve: Curves.easeOut,
-          );
-        },
+    return Listener(
+      onPointerDown: (_) {
+        // Force focus back to our app on any click to prevent browser focus-thievery
+        if (!rootFocusNode.hasFocus) {
+          rootFocusNode.requestFocus();
+        }
       },
-      child: Listener(
-        onPointerDown: (_) {
-          // Force focus back to our app on any click to prevent browser focus-thievery
-          if (!rootFocusNode.hasFocus) {
-            rootFocusNode.requestFocus();
-          }
-        },
-        child: Focus(
-          focusNode: rootFocusNode,
-          autofocus: true,
-          child: MaterialApp(
-            title: 'French B1 Learning',
-            theme: AppTheme.darkTheme,
-            debugShowCheckedModeBanner: false,
-            scrollBehavior: const MaterialScrollBehavior().copyWith(
-              scrollbars: true,
-              dragDevices: {
-                PointerDeviceKind.touch,
-                PointerDeviceKind.mouse,
-                PointerDeviceKind.trackpad,
-              },
-            ),
-            home: const HomePage(),
+      child: Focus(
+        focusNode: rootFocusNode,
+        autofocus: true,
+        child: MaterialApp(
+          title: 'French B1 Learning',
+          theme: AppTheme.darkTheme,
+          debugShowCheckedModeBanner: false,
+          scrollBehavior: const MaterialScrollBehavior().copyWith(
+            scrollbars: true,
+            dragDevices: {
+              PointerDeviceKind.touch,
+              PointerDeviceKind.mouse,
+              PointerDeviceKind.trackpad,
+            },
           ),
+          builder: (context, child) {
+            return CallbackShortcuts(
+              bindings: <ShortcutActivator, VoidCallback>{
+                const SingleActivator(LogicalKeyboardKey.arrowUp): () =>
+                    _handleScroll(context, -100),
+                const SingleActivator(LogicalKeyboardKey.arrowDown): () =>
+                    _handleScroll(context, 100),
+                const SingleActivator(LogicalKeyboardKey.pageUp): () =>
+                    _handleScroll(
+                        context, -MediaQuery.of(context).size.height * 0.8,
+                        isPage: true),
+                const SingleActivator(LogicalKeyboardKey.pageDown): () =>
+                    _handleScroll(
+                        context, MediaQuery.of(context).size.height * 0.8,
+                        isPage: true),
+                const SingleActivator(LogicalKeyboardKey.home): () {
+                  final controller = PrimaryScrollController.of(context);
+                  if (controller.hasClients) {
+                    controller.animateTo(0,
+                        duration: const Duration(milliseconds: 500),
+                        curve: Curves.easeOut);
+                  }
+                },
+                const SingleActivator(LogicalKeyboardKey.end): () {
+                  final controller = PrimaryScrollController.of(context);
+                  if (controller.hasClients) {
+                    controller.animateTo(controller.position.maxScrollExtent,
+                        duration: const Duration(milliseconds: 500),
+                        curve: Curves.easeOut);
+                  }
+                },
+              },
+              child: child!,
+            );
+          },
+          home: const HomePage(),
         ),
       ),
     );

@@ -27,6 +27,7 @@ class HomePage extends StatelessWidget {
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 1200),
               child: CustomScrollView(
+                primary: true,
                 slivers: [
                   SliverPadding(
                     padding: const EdgeInsets.fromLTRB(24, 60, 24, 40),
