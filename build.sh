@@ -1,16 +1,18 @@
 #!/bin/bash
 
-# Create a dummy .env if it doesn't exist to satisfy the asset requirement (though we removed it from pubspec, it's good practice)
-mkdir -p assets/env
-touch .env
-touch assets/env/.env
+# Exit on error
+set -e
 
-echo "Building Flutter Web with DEEPSEEK_API_KEY injection..."
+echo "Starting Flutter Web Build..."
 
-# Run the build with dart-define
-# We use quotes around the variable to handle any special characters
-flutter/bin/flutter build web --release \
-  --dart-define=DEEPSEEK_API_KEY="$DEEPSEEK_API_KEY" \
-  --web-renderer html
+# Ensure we have the environment variable
+if [ -z "$DEEPSEEK_API_KEY" ]; then
+  echo "Warning: DEEPSEEK_API_KEY is not set. AI features may not work."
+fi
 
-echo "Build complete."
+# We build to build/web (standard Flutter output)
+# We use --dart-define=KEY=VALUE without extra quotes for maximum compatibility
+./flutter/bin/flutter build web --release --dart-define=DEEPSEEK_API_KEY=$DEEPSEEK_API_KEY
+
+echo "Build complete. Output is in build/web"
+ls -la build/web
