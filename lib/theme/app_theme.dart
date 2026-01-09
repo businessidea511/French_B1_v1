@@ -30,6 +30,19 @@ class AppTheme {
     end: Alignment.bottomRight,
   );
 
+  // Eye-comfort study gradients (Lower saturation, professional tones)
+  static const LinearGradient studyFrontGradient = LinearGradient(
+    colors: [Color(0xFF312E81), Color(0xFF1E1B4B)], // Deep Indigo to Navy
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
+  static const LinearGradient studyBackGradient = LinearGradient(
+    colors: [Color(0xFF0F766E), Color(0xFF115E59)], // Muted Teal to Deep Teal
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
   static ThemeData get darkTheme {
     return ThemeData(
       useMaterial3: true,

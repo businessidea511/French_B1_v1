@@ -156,8 +156,8 @@ class _FlashcardsPageState extends State<FlashcardsPage> {
                 width: double.infinity,
                 decoration: BoxDecoration(
                   gradient: showAnswer
-                      ? AppTheme.accentGradient
-                      : AppTheme.primaryGradient,
+                      ? AppTheme.studyBackGradient
+                      : AppTheme.studyFrontGradient,
                   borderRadius: BorderRadius.circular(32),
                   boxShadow: [
                     BoxShadow(
