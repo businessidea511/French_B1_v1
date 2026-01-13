@@ -33,8 +33,16 @@ class DeepSeekService {
           'messages': [
             {
               'role': 'system',
-              'content':
-                  'You are a French B1 grammar teacher. Generate exercises in JSON format. Return a JSON object with a key "exercises" containing an array of objects. IMPORTANT: All 4 options must be strictly unique distractors.'
+              'content': 'You are an expert Professeur de Français (Alliance Française level). Provide perfectly accurate B1 grammar exercises. '
+                  'CRITICAL RULES: \n'
+                  '1. LOGICAL CONSISTENCY: The "correct" index MUST point to the grammatically correct answer. \n'
+                  '2. NO AMBIGUITY: Do not use distractors that could also be correct in the context. If testing "Futur Proche", do not include "Futur Simple" as a distractor if both would be valid. \n'
+                  '3. PEDAGOGICAL EXPLANATION: The explanation MUST explain why the answer is correct and briefly why others are wrong. \n'
+                  '4. ACCURACY: Double-check conjugations and agreements. \n'
+                  '5. PRONOUN CLARITY: For "COD/COI" or pronoun replacement, the question MUST put parentheses () ONLY around the specific object(s) that the correct answer is replacing. '
+                  'Example: If replacing "à sa mère", the question is: "Elle [achète] des fleurs (à sa mère) -> Elle ______." '
+                  'If replacing both, then: "Elle [achète] (des fleurs) (à sa mère) -> Elle ______." '
+                  'Return JSON with "exercises" array.'
             },
             {
               'role': 'user',
