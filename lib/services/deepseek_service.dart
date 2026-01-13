@@ -48,7 +48,9 @@ class DeepSeekService {
               'role': 'user',
               'content': topic == 'mixed_review'
                   ? 'Generate $count multiple choice exercises for a comprehensive French B1 General Review. The 10 questions MUST be a balanced mix of: Passé Composé, Imparfait, Plus-que-parfait, Conditionnel, Futur Proche, Futur Simple, and COD/COI. Difficulty: $difficulty. Each exercise must have: "question", "options" (array of 4 unique strings), "correct" (index 0-3, vary this index across questions), "explanation".'
-                  : 'Generate $count multiple choice exercises for French B1 topic: $topic. Difficulty: $difficulty. Each exercise must have: "question", "options" (array of 4 unique strings), "correct" (index 0-3, vary this index across questions), "explanation".'
+                  : topic == 'si_seulement'
+                      ? 'Generate $count multiple choice exercises for French B1 topic: Si seulement. CRITICAL INSTRUCTION: You MUST generate a mix of questions using "Si seulement + Imparfait" (expressing wishes for present/future) AND "Si seulement + Plus-que-parfait" (expressing regrets about the past). Do NOT strictly limit to one tense. Ensure variety. Difficulty: $difficulty. Each exercise must have: "question", "options" (array of 4 unique strings), "correct" (index 0-3, vary this index across questions), "explanation".'
+                      : 'Generate $count multiple choice exercises for French B1 topic: $topic. Difficulty: $difficulty. Each exercise must have: "question", "options" (array of 4 unique strings), "correct" (index 0-3, vary this index across questions), "explanation".'
             }
           ],
           'response_format': {'type': 'json_object'},
