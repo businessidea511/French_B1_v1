@@ -15,5 +15,6 @@ echo Pushing to GitHub (HTTPS)...
 git push -u origin main
 
 echo Done! Vercel will now start the build.
+echo NOTE: Essays and Dialogue sections will be HIDDEN in the production build.
 echo (If you are in PowerShell, remember to use .\deploy.bat to run this next time)
 pause

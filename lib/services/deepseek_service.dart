@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/foundation.dart';
+import 'dart:math';
 
 class DeepSeekService {
   static const String baseUrl = 'https://api.deepseek.com/v1';
@@ -9,7 +10,11 @@ class DeepSeekService {
   static String get apiKey {
     const String dKey = String.fromEnvironment('DEEPSEEK_API_KEY');
     if (dKey.isNotEmpty) return dKey;
-    return dotenv.env['DEEPSEEK_API_KEY'] ?? '';
+    try {
+      return dotenv.env['DEEPSEEK_API_KEY'] ?? '';
+    } catch (_) {
+      return '';
+    }
   }
 
   // Generate multiple AI-powered exercises
@@ -231,6 +236,115 @@ class DeepSeekService {
     } catch (e) {
       debugPrint('Error checking answer: $e');
       return 'Unable to provide feedback at this time.';
+    }
+  }
+
+  // Generate listening exercise (Text + Questions)
+  // Generate listening exercise (Text + Questions)
+  static Future<Map<String, dynamic>> generateListeningExercise(String topic,
+      {String? city}) async {
+    try {
+      final bool isDialogue = topic.startsWith('Dialogue');
+      String userPrompt;
+
+      if (isDialogue) {
+        final targetCity = city ?? 'Paris';
+
+        // Explicit Randomization to force variety
+        final Map<String, List<String>> cityNeighborhoods = {
+          'Paris': [
+            'Montmartre',
+            'Le Marais',
+            'Quartier Latin',
+            'Bastille',
+            'Saint-Germain-des-Prés',
+            'Belleville',
+            'Opéra'
+          ],
+          'Bruxelles': [
+            'Ixelles',
+            'Uccle',
+            'Saint-Gilles',
+            'Centre-ville',
+            'Etterbeek',
+            'Schaerbeek',
+            'Anderlecht'
+          ],
+          'Liège': [
+            'Outremeuse',
+            'Le Carré',
+            'Guillemins',
+            'Saint-Léonard',
+            'Cointe',
+            'Pierreuse',
+            'Longdoz'
+          ],
+        };
+
+        final neighborhoods = cityNeighborhoods[targetCity] ?? ['Centre-ville'];
+        final randomNeighborhood =
+            neighborhoods[Random().nextInt(neighborhoods.length)];
+
+        final List<String> roomTypes = [
+          'Studio',
+          'T2 (1 bedroom)',
+          'T3 (2 bedrooms)',
+          'T4 (3 bedrooms)'
+        ];
+        final randomRoom = roomTypes[Random().nextInt(roomTypes.length)];
+
+        // Random budget between 600 and 2000
+        final randomBudget =
+            (Random().nextInt(15) + 6) * 100; // 600, 700... 2000
+
+        userPrompt =
+            'Generate a listening dialogue regarding renting an apartment in $targetCity. '
+            'STRICT CONSTRAINTS: '
+            '1. Location: The apartment MUST be in the "$randomNeighborhood" neighborhood. '
+            '2. Size: It must be a $randomRoom. '
+            '3. Budget: Around $randomBudget€/month. '
+            '4. Scenario: Vary the client constraints (e.g., pets, floor, elevator). '
+            'Make this specific scenario unique.';
+      } else {
+        userPrompt =
+            'Generate a listening exercise about: $topic. Variation: ${Random().nextInt(10000)}. Make this story unique and different from previous versions.';
+      }
+
+      final response = await http.post(
+        Uri.parse('$baseUrl/chat/completions'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $apiKey',
+        },
+        body: jsonEncode({
+          'model': 'deepseek-chat',
+          'messages': [
+            {
+              'role': 'system',
+              'content': isDialogue
+                  ? 'You are a French B1 teacher. Generate a listening dialogue in JSON format. Return a JSON object with keys "text" and "questions" (an array of 5 objects). The "text" MUST be a dialogue script between "Client" and "Agence", where every line starts with "Client:" or "Agence:". Example: "Client: Bonjour...". Each question object must have: "question", "options" (4 strings), "answer" (the correct string from options) which tests comprehension.'
+                  : 'You are a French B1 teacher. Generate a listening exercise in JSON format. Return a JSON object with keys "text" (a ~100 word French story/article) and "questions" (an array of 5 objects). Each question object must have: "question", "options" (4 strings), "answer" (the correct string from options). The text should be suitable for B1 level students.'
+            },
+            {'role': 'user', 'content': userPrompt}
+          ],
+          'response_format': {'type': 'json_object'},
+          'temperature': isDialogue
+              ? 0.7
+              : 0.9, // Higher temp for variety in both cases, relying on system prompt for structure
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final content = data['choices'][0]['message']['content'];
+        return jsonDecode(content);
+      } else {
+        throw Exception(
+            'Failed to generate listening exercise: ${response.statusCode}');
+      }
+    } catch (e) {
+      debugPrint('Error generating listening exercise: $e');
+      rethrow;
     }
   }
 }

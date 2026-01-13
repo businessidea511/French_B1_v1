@@ -4,9 +4,19 @@ import 'grammar/grammar_page.dart';
 import 'exercises/exercises_page.dart';
 import 'flashcards/flashcards_page.dart';
 import 'verbs/verbs_page.dart';
+import 'examen/examen_one_page.dart';
+import 'essay/essay_page.dart';
+import 'dialogue/dialogue_page.dart';
+import 'listening/listening_page.dart';
+
+import 'package:flutter/foundation.dart'; // Import for kDebugMode
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
+
+  // Helper to determine if we should show local-only features
+  static const bool _showLocalFeatures = kDebugMode ||
+      bool.fromEnvironment('SHOW_LOCAL_FEATURES', defaultValue: false);
 
   @override
   Widget build(BuildContext context) {
@@ -143,6 +153,64 @@ class HomePage extends StatelessWidget {
                             );
                           },
                         ),
+                        _buildFeatureCard(
+                          context,
+                          title: 'Examen',
+                          subtitle: 'Janvier 2025',
+                          icon: '📝',
+                          color: AppTheme.accent,
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => const ExamenOnePage()),
+                            );
+                          },
+                        ),
+                        if (_showLocalFeatures)
+                          _buildFeatureCard(
+                            context,
+                            title: 'Essays',
+                            subtitle: 'Rédactions & Histoires',
+                            icon: '📖',
+                            color: Colors.purple,
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => const EssayPage()),
+                              );
+                            },
+                          ),
+                        if (_showLocalFeatures)
+                          _buildFeatureCard(
+                            context,
+                            title: 'Dialogues',
+                            subtitle: 'Situations Réelles',
+                            icon: '💬',
+                            color: Colors.orange,
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => const DialoguePage()),
+                              );
+                            },
+                          ),
+                        _buildFeatureCard(
+                          context,
+                          title: 'Écouter',
+                          subtitle: 'Compréhension Orale',
+                          icon: '🎧',
+                          color: Colors.teal,
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => const ListeningPage()),
+                            );
+                          },
+                        ),
                       ]),
                     ),
                   ),
@@ -195,32 +263,36 @@ class HomePage extends StatelessWidget {
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.all(32),
+                padding: const EdgeInsets.all(20),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Container(
-                      padding: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
                         color: color.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
                         icon,
-                        style: const TextStyle(fontSize: 40),
+                        style: const TextStyle(fontSize: 32),
                       ),
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 12),
                     Text(
                       title,
-                      style: Theme.of(context).textTheme.headlineMedium,
+                      style: Theme.of(context)
+                          .textTheme
+                          .headlineMedium
+                          ?.copyWith(fontSize: 20),
                       textAlign: TextAlign.center,
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 4),
                     Text(
                       subtitle,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                             color: AppTheme.textTertiary,
+                            fontSize: 14,
                           ),
                       textAlign: TextAlign.center,
                     ),

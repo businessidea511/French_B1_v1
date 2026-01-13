@@ -199,7 +199,7 @@ class _ExercisesPageState extends State<ExercisesPage> {
               onTap: () => _startAIExercises(topic.id),
             ),
           );
-        }).toList(),
+        }),
       ],
     );
   }
