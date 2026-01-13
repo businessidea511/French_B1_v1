@@ -66,24 +66,37 @@ class _ListeningPageState extends State<ListeningPage> {
   }
 
   Future<void> _initVoices() async {
-    try {
-      final voices = await _ttsService.flutterTts.getVoices;
-      setState(() {
-        _frenchVoices = voices
-            .where((v) => v['locale'].toString().startsWith('fr'))
-            .toList()
-            .cast<Map<dynamic, dynamic>>();
+    // Retry logic for mobile web compatibility
+    for (int i = 0; i < 3; i++) {
+      try {
+        final voices = await _ttsService.flutterTts.getVoices;
+        if (mounted) {
+          setState(() {
+            _frenchVoices = voices
+                .where((v) => v['locale'].toString().startsWith('fr'))
+                .toList()
+                .cast<Map<dynamic, dynamic>>();
 
-        if (_frenchVoices.isNotEmpty) {
-          // Default: First voice for Client
-          _selectedClientVoice = _frenchVoices.first;
-          // Default: Second voice for Agence (or first if only 1)
-          _selectedAgenceVoice =
-              _frenchVoices.length > 1 ? _frenchVoices[1] : _frenchVoices.first;
+            if (_frenchVoices.isNotEmpty) {
+              // Only set defaults if not already set or invalid
+              if (_selectedClientVoice == null ||
+                  !_frenchVoices.contains(_selectedClientVoice)) {
+                _selectedClientVoice = _frenchVoices.first;
+              }
+              if (_selectedAgenceVoice == null ||
+                  !_frenchVoices.contains(_selectedAgenceVoice)) {
+                _selectedAgenceVoice = _frenchVoices.length > 1
+                    ? _frenchVoices[1]
+                    : _frenchVoices.first;
+              }
+            }
+          });
         }
-      });
-    } catch (e) {
-      debugPrint('Error loading voices: $e');
+        if (_frenchVoices.isNotEmpty) break;
+      } catch (e) {
+        debugPrint('Error loading voices: $e');
+      }
+      await Future.delayed(const Duration(milliseconds: 500));
     }
   }
 
@@ -319,63 +332,86 @@ class _ListeningPageState extends State<ListeningPage> {
                       ),
                       const SizedBox(height: 16),
 
-                      if (_frenchVoices.isNotEmpty) ...[
-                        Row(
-                          children: [
-                            Expanded(
-                              child: DropdownButtonFormField<
-                                  Map<dynamic, dynamic>>(
-                                value: _selectedClientVoice,
-                                isExpanded: true,
-                                decoration: const InputDecoration(
-                                  labelText: 'Client Voice',
-                                  border: OutlineInputBorder(),
-                                  contentPadding: EdgeInsets.symmetric(
-                                      horizontal: 12, vertical: 12),
-                                ),
-                                items: _frenchVoices.map((v) {
-                                  return DropdownMenuItem(
-                                    value: v,
-                                    child: Text(v['name'].toString(),
-                                        overflow: TextOverflow.ellipsis),
-                                  );
-                                }).toList(),
-                                onChanged: (val) {
-                                  setState(() {
-                                    _selectedClientVoice = val;
-                                  });
-                                },
+                      // Voice Selectors
+                      Row(
+                        children: [
+                          Expanded(
+                            child:
+                                DropdownButtonFormField<Map<dynamic, dynamic>>(
+                              value: _selectedClientVoice,
+                              isExpanded: true,
+                              decoration: const InputDecoration(
+                                labelText: 'Client Voice',
+                                border: OutlineInputBorder(),
+                                contentPadding: EdgeInsets.symmetric(
+                                    horizontal: 12, vertical: 12),
                               ),
+                              items: _frenchVoices.isEmpty
+                                  ? [
+                                      const DropdownMenuItem(
+                                          value: null,
+                                          child: Text('Default Voice'))
+                                    ]
+                                  : _frenchVoices.map((v) {
+                                      return DropdownMenuItem(
+                                        value: v,
+                                        child: Text(v['name'].toString(),
+                                            overflow: TextOverflow.ellipsis),
+                                      );
+                                    }).toList(),
+                              onChanged: _frenchVoices.isEmpty
+                                  ? null
+                                  : (val) {
+                                      setState(() {
+                                        _selectedClientVoice = val;
+                                      });
+                                    },
                             ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: DropdownButtonFormField<
-                                  Map<dynamic, dynamic>>(
-                                value: _selectedAgenceVoice,
-                                isExpanded: true,
-                                decoration: const InputDecoration(
-                                  labelText: 'Agence Voice',
-                                  border: OutlineInputBorder(),
-                                  contentPadding: EdgeInsets.symmetric(
-                                      horizontal: 12, vertical: 12),
-                                ),
-                                items: _frenchVoices.map((v) {
-                                  return DropdownMenuItem(
-                                    value: v,
-                                    child: Text(v['name'].toString(),
-                                        overflow: TextOverflow.ellipsis),
-                                  );
-                                }).toList(),
-                                onChanged: (val) {
-                                  setState(() {
-                                    _selectedAgenceVoice = val;
-                                  });
-                                },
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child:
+                                DropdownButtonFormField<Map<dynamic, dynamic>>(
+                              value: _selectedAgenceVoice,
+                              isExpanded: true,
+                              decoration: const InputDecoration(
+                                labelText: 'Agence Voice',
+                                border: OutlineInputBorder(),
+                                contentPadding: EdgeInsets.symmetric(
+                                    horizontal: 12, vertical: 12),
                               ),
+                              items: _frenchVoices.isEmpty
+                                  ? [
+                                      const DropdownMenuItem(
+                                          value: null,
+                                          child: Text('Default Voice'))
+                                    ]
+                                  : _frenchVoices.map((v) {
+                                      return DropdownMenuItem(
+                                        value: v,
+                                        child: Text(v['name'].toString(),
+                                            overflow: TextOverflow.ellipsis),
+                                      );
+                                    }).toList(),
+                              onChanged: _frenchVoices.isEmpty
+                                  ? null
+                                  : (val) {
+                                      setState(() {
+                                        _selectedAgenceVoice = val;
+                                      });
+                                    },
                             ),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      if (_frenchVoices.isEmpty)
+                        TextButton.icon(
+                          onPressed: _initVoices,
+                          icon: const Icon(Icons.refresh, size: 16),
+                          label: const Text('Try Reloading Voices'),
+                        )
+                      else
                         const Text(
                           'Note: Available voices depend on your device and browser settings.',
                           style: TextStyle(
@@ -384,7 +420,6 @@ class _ListeningPageState extends State<ListeningPage> {
                               fontStyle: FontStyle.italic),
                           textAlign: TextAlign.center,
                         ),
-                      ],
                       const SizedBox(height: 16),
                     ],
 
