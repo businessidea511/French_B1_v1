@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../theme/app_theme.dart';
-import '../../models/grammar_topic.dart';
-
+import '../../services/language_provider.dart';
 import '../../services/deepseek_service.dart';
+import '../../models/grammar_topic.dart';
 
 class ExercisesPage extends StatefulWidget {
   const ExercisesPage({super.key});
@@ -38,7 +39,10 @@ class _ExercisesPageState extends State<ExercisesPage> {
     });
 
     try {
-      final aiQuestions = await DeepSeekService.generateExercises(topic, 'B1');
+      final languageProvider =
+          Provider.of<LanguageProvider>(context, listen: false);
+      final aiQuestions = await DeepSeekService.generateExercises(
+          topic, 'B1', languageProvider.currentLanguage.name);
 
       // Shuffle and sanitize questions
       final sanitizedQuestions = aiQuestions.map((q) {

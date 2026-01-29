@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../theme/app_theme.dart';
+import '../services/language_provider.dart';
 import 'grammar/grammar_page.dart';
 import 'exercises/exercises_page.dart';
 import 'flashcards/flashcards_page.dart';
@@ -8,6 +10,7 @@ import 'examen/examen_one_page.dart';
 import 'essay/essay_page.dart';
 import 'dialogue/dialogue_page.dart';
 import 'listening/listening_page.dart';
+import 'daily_phrases/daily_phrases_page.dart';
 
 import 'package:flutter/foundation.dart'; // Import for kDebugMode
 
@@ -18,8 +21,50 @@ class HomePage extends StatelessWidget {
   static const bool _showLocalFeatures = kDebugMode ||
       bool.fromEnvironment('SHOW_LOCAL_FEATURES', defaultValue: false);
 
+  void _showLanguageSelector(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        final languageProvider =
+            Provider.of<LanguageProvider>(context, listen: false);
+        return AlertDialog(
+          backgroundColor: AppTheme.surface,
+          title: Text(
+            languageProvider.translate('select_language'),
+            style: const TextStyle(color: AppTheme.textPrimary),
+          ),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: ListView.builder(
+              shrinkWrap: true,
+              itemCount: AppLanguage.values.length,
+              itemBuilder: (context, index) {
+                final language = AppLanguage.values[index];
+                return ListTile(
+                  title: Text(
+                    language.name,
+                    style: const TextStyle(color: AppTheme.textPrimary),
+                  ),
+                  trailing: languageProvider.currentLanguage == language
+                      ? const Icon(Icons.check, color: AppTheme.primary)
+                      : null,
+                  onTap: () {
+                    languageProvider.setLanguage(language);
+                    Navigator.pop(context);
+                  },
+                );
+              },
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final languageProvider = Provider.of<LanguageProvider>(context);
+
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
@@ -40,11 +85,24 @@ class HomePage extends StatelessWidget {
                 primary: true,
                 slivers: [
                   SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(24, 60, 24, 40),
+                    padding: const EdgeInsets.fromLTRB(24, 20, 24, 40),
                     sliver: SliverToBoxAdapter(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              IconButton(
+                                icon: const Icon(Icons.language,
+                                    color: AppTheme.primary),
+                                onPressed: () => _showLanguageSelector(context),
+                                tooltip: languageProvider
+                                    .translate('select_language'),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 20),
                           Container(
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 16, vertical: 8),
@@ -66,13 +124,13 @@ class HomePage extends StatelessWidget {
                           ),
                           const SizedBox(height: 24),
                           Text(
-                            'Bonjour!',
+                            languageProvider.translate('greeting'),
                             style: Theme.of(context).textTheme.displayLarge,
                             textAlign: TextAlign.center,
                           ),
                           const SizedBox(height: 12),
                           Text(
-                            'What would you like to master today?',
+                            languageProvider.translate('subtitle'),
                             style:
                                 Theme.of(context).textTheme.bodyLarge?.copyWith(
                                       color: AppTheme.textSecondary,
@@ -99,7 +157,7 @@ class HomePage extends StatelessWidget {
                       delegate: SliverChildListDelegate([
                         _buildFeatureCard(
                           context,
-                          title: 'Grammar',
+                          title: languageProvider.translate('grammar'),
                           subtitle: '9 Essential Lessons',
                           icon: '📚',
                           color: AppTheme.primary,
@@ -113,7 +171,7 @@ class HomePage extends StatelessWidget {
                         ),
                         _buildFeatureCard(
                           context,
-                          title: 'Exercises',
+                          title: languageProvider.translate('exercises'),
                           subtitle: 'Practice & Feedback',
                           icon: '✍️',
                           color: AppTheme.secondary,
@@ -127,7 +185,7 @@ class HomePage extends StatelessWidget {
                         ),
                         _buildFeatureCard(
                           context,
-                          title: 'Flashcards',
+                          title: languageProvider.translate('flashcards'),
                           subtitle: 'Smart Memorization',
                           icon: '🎴',
                           color: AppTheme.success,
@@ -141,7 +199,7 @@ class HomePage extends StatelessWidget {
                         ),
                         _buildFeatureCard(
                           context,
-                          title: 'Verbs',
+                          title: languageProvider.translate('verbs'),
                           subtitle: 'Conjugation Tables',
                           icon: '🔄',
                           color: AppTheme.warning,
@@ -155,7 +213,7 @@ class HomePage extends StatelessWidget {
                         ),
                         _buildFeatureCard(
                           context,
-                          title: 'Examen',
+                          title: languageProvider.translate('examen'),
                           subtitle: 'Janvier 2025',
                           icon: '📝',
                           color: AppTheme.accent,
@@ -170,7 +228,7 @@ class HomePage extends StatelessWidget {
                         if (_showLocalFeatures)
                           _buildFeatureCard(
                             context,
-                            title: 'Essays',
+                            title: languageProvider.translate('essays'),
                             subtitle: 'Rédactions & Histoires',
                             icon: '📖',
                             color: Colors.purple,
@@ -185,7 +243,7 @@ class HomePage extends StatelessWidget {
                         if (_showLocalFeatures)
                           _buildFeatureCard(
                             context,
-                            title: 'Dialogues',
+                            title: languageProvider.translate('dialogues'),
                             subtitle: 'Situations Réelles',
                             icon: '💬',
                             color: Colors.orange,
@@ -199,7 +257,22 @@ class HomePage extends StatelessWidget {
                           ),
                         _buildFeatureCard(
                           context,
-                          title: 'Écouter',
+                          title: languageProvider.translate('daily_phrases'),
+                          subtitle: 'Common Sentences',
+                          icon: '🗣️',
+                          color: Colors.indigo,
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) =>
+                                      const DailyPhrasesPage()),
+                            );
+                          },
+                        ),
+                        _buildFeatureCard(
+                          context,
+                          title: languageProvider.translate('listening'),
                           subtitle: 'Compréhension Orale',
                           icon: '🎧',
                           color: Colors.teal,

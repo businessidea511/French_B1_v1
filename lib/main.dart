@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:provider/provider.dart';
 import 'theme/app_theme.dart';
 import 'pages/home_page.dart';
+import 'services/language_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -15,7 +17,12 @@ void main() async {
     // Silently continue; production uses --dart-define
   }
 
-  runApp(const FrenchB1App());
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => LanguageProvider(),
+      child: const FrenchB1App(),
+    ),
+  );
 }
 
 class FrenchB1App extends StatelessWidget {
@@ -40,66 +47,75 @@ class FrenchB1App extends StatelessWidget {
     // Root FocusNode to keep everything organized
     final FocusNode rootFocusNode = FocusNode(debugLabel: 'RootFocusNode');
 
-    return Listener(
-      onPointerDown: (_) {
-        // Force focus back to our app on any click to prevent browser focus-thievery
-        if (!rootFocusNode.hasFocus) {
-          rootFocusNode.requestFocus();
-        }
-      },
-      child: Focus(
-        focusNode: rootFocusNode,
-        autofocus: true,
-        child: MaterialApp(
-          title: 'French B1 Learning',
-          theme: AppTheme.darkTheme,
-          debugShowCheckedModeBanner: false,
-          scrollBehavior: const MaterialScrollBehavior().copyWith(
-            scrollbars: true,
-            dragDevices: {
-              PointerDeviceKind.touch,
-              PointerDeviceKind.mouse,
-              PointerDeviceKind.trackpad,
-            },
-          ),
-          builder: (context, child) {
-            return CallbackShortcuts(
-              bindings: <ShortcutActivator, VoidCallback>{
-                const SingleActivator(LogicalKeyboardKey.arrowUp): () =>
-                    _handleScroll(context, -100),
-                const SingleActivator(LogicalKeyboardKey.arrowDown): () =>
-                    _handleScroll(context, 100),
-                const SingleActivator(LogicalKeyboardKey.pageUp): () =>
-                    _handleScroll(
-                        context, -MediaQuery.of(context).size.height * 0.8,
-                        isPage: true),
-                const SingleActivator(LogicalKeyboardKey.pageDown): () =>
-                    _handleScroll(
-                        context, MediaQuery.of(context).size.height * 0.8,
-                        isPage: true),
-                const SingleActivator(LogicalKeyboardKey.home): () {
-                  final controller = PrimaryScrollController.of(context);
-                  if (controller.hasClients) {
-                    controller.animateTo(0,
-                        duration: const Duration(milliseconds: 500),
-                        curve: Curves.easeOut);
-                  }
-                },
-                const SingleActivator(LogicalKeyboardKey.end): () {
-                  final controller = PrimaryScrollController.of(context);
-                  if (controller.hasClients) {
-                    controller.animateTo(controller.position.maxScrollExtent,
-                        duration: const Duration(milliseconds: 500),
-                        curve: Curves.easeOut);
-                  }
-                },
-              },
-              child: child!,
-            );
+    return Consumer<LanguageProvider>(
+      builder: (context, languageProvider, child) {
+        return Listener(
+          onPointerDown: (_) {
+            if (!rootFocusNode.hasFocus) {
+              rootFocusNode.requestFocus();
+            }
           },
-          home: const HomePage(),
-        ),
-      ),
+          child: Focus(
+            focusNode: rootFocusNode,
+            autofocus: true,
+            child: MaterialApp(
+              title: 'French B1 Learning',
+              theme: AppTheme.darkTheme,
+              debugShowCheckedModeBanner: false,
+              scrollBehavior: const MaterialScrollBehavior().copyWith(
+                scrollbars: true,
+                dragDevices: {
+                  PointerDeviceKind.touch,
+                  PointerDeviceKind.mouse,
+                  PointerDeviceKind.trackpad,
+                },
+              ),
+              builder: (context, child) {
+                return Directionality(
+                  textDirection: languageProvider.isRTL
+                      ? TextDirection.rtl
+                      : TextDirection.ltr,
+                  child: CallbackShortcuts(
+                    bindings: <ShortcutActivator, VoidCallback>{
+                      const SingleActivator(LogicalKeyboardKey.arrowUp): () =>
+                          _handleScroll(context, -100),
+                      const SingleActivator(LogicalKeyboardKey.arrowDown): () =>
+                          _handleScroll(context, 100),
+                      const SingleActivator(LogicalKeyboardKey.pageUp): () =>
+                          _handleScroll(context,
+                              -MediaQuery.of(context).size.height * 0.8,
+                              isPage: true),
+                      const SingleActivator(LogicalKeyboardKey.pageDown): () =>
+                          _handleScroll(
+                              context, MediaQuery.of(context).size.height * 0.8,
+                              isPage: true),
+                      const SingleActivator(LogicalKeyboardKey.home): () {
+                        final controller = PrimaryScrollController.of(context);
+                        if (controller.hasClients) {
+                          controller.animateTo(0,
+                              duration: const Duration(milliseconds: 500),
+                              curve: Curves.easeOut);
+                        }
+                      },
+                      const SingleActivator(LogicalKeyboardKey.end): () {
+                        final controller = PrimaryScrollController.of(context);
+                        if (controller.hasClients) {
+                          controller.animateTo(
+                              controller.position.maxScrollExtent,
+                              duration: const Duration(milliseconds: 500),
+                              curve: Curves.easeOut);
+                        }
+                      },
+                    },
+                    child: child!,
+                  ),
+                );
+              },
+              home: const HomePage(),
+            ),
+          ),
+        );
+      },
     );
   }
 }

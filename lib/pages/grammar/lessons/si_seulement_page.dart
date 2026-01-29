@@ -1,21 +1,26 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../../widgets/lesson_template.dart';
+import '../../../widgets/translated_text.dart';
+import '../../../services/language_provider.dart';
 
 class SiSeulementPage extends StatelessWidget {
   const SiSeulementPage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final lp = Provider.of<LanguageProvider>(context);
     return LessonTemplate(
-      title: 'Si seulement',
+      title:
+          lp.currentLanguage == AppLanguage.french ? 'Si seulement' : 'If only',
       icon: '💭',
       children: [
-        const Text(
-          '"Si seulement" means "If only" - it\'s for  expressing REGRETS and WISHES about things that aren\'t true or didn\'t happen. Very dramatic! 🎭',
+        const TranslatedText(
+          '"Si seulement" means "If only" - it\'s for expressing REGRETS and WISHES about things that aren\'t true or didn\'t happen. Very dramaic! 🎭',
           style: TextStyle(fontSize: 16, height: 1.5),
         ),
         const SectionTitle('💔 Two Types of Regrets'),
-        const Text(
+        const TranslatedText(
           '1. **Present/Future regrets** (wish things were different NOW)\n'
           '2. **Past regrets** (wish things had been different THEN)',
           style: TextStyle(fontSize: 15, height: 1.8),
@@ -70,7 +75,7 @@ class SiSeulementPage extends StatelessWidget {
           color: Color(0xFF10B981),
         ),
         const SectionTitle('🎭 Common Expressions'),
-        const Text(
+        const TranslatedText(
           '• Si seulement je le savais! (If only I knew!)\n'
           '• Si seulement c\'était vrai! (If only it were true!)\n'
           '• Si seulement tu avais écouté! (If only you had listened!)\n'

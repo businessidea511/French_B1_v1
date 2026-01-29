@@ -1,16 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../../widgets/lesson_template.dart';
+import '../../../widgets/translated_text.dart';
+import '../../../services/language_provider.dart';
 
 class NegativeComplexPage extends StatelessWidget {
   const NegativeComplexPage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final lp = Provider.of<LanguageProvider>(context);
     return LessonTemplate(
-      title: 'Complex Negation',
+      title: lp.currentLanguage == AppLanguage.french
+          ? 'Négation Complexe'
+          : 'Complex Negation',
       icon: '⛔',
       children: [
-        const Text(
+        const TranslatedText(
           'You know "ne...pas" (not), but French has MORE ways to say NO! Let\'s master never, nothing, nobody, and no more!',
           style: TextStyle(fontSize: 16, height: 1.5),
         ),
@@ -77,7 +83,7 @@ class NegativeComplexPage extends StatelessWidget {
           color: Color(0xFFF59E0B),
         ),
         const SectionTitle('❌ Common Mistakes'),
-        const Text(
+        const TranslatedText(
           '❌ Je ne jamais mange → ✅ Je ne mange jamais\n'
           '❌ Je rien comprends → ✅ Je ne comprends rien\n\n'
           'Don\'t forget the NE!',

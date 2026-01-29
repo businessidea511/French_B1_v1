@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'translated_text.dart';
 
 class LessonTemplate extends StatelessWidget {
   final String title;
@@ -39,13 +40,26 @@ class SectionTitle extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(top: 32, bottom: 16),
-      child: Text(
-        emoji != null ? '$emoji $title' : title,
-        style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-              color: Colors.white,
-              fontWeight: FontWeight.w700,
-            ),
-      ),
+      child: emoji != null
+          ? Row(
+              children: [
+                Text('$emoji ', style: const TextStyle(fontSize: 24)),
+                Expanded(
+                    child: TranslatedText(title,
+                        style: Theme.of(context)
+                            .textTheme
+                            .headlineMedium
+                            ?.copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w700,
+                            ))),
+              ],
+            )
+          : TranslatedText(title,
+              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                  )),
     );
   }
 }
@@ -88,13 +102,21 @@ class ExampleBox extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 10),
-          Text(
-            '→ $english',
-            style: TextStyle(
-              fontSize: 15,
-              color: Colors.white.withOpacity(0.5),
-              fontStyle: FontStyle.italic,
-            ),
+          Row(
+            children: [
+              Text('→ ',
+                  style: TextStyle(color: Colors.white.withOpacity(0.5))),
+              Expanded(
+                child: TranslatedText(
+                  english,
+                  style: TextStyle(
+                    fontSize: 15,
+                    color: Colors.white.withOpacity(0.5),
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -142,7 +164,7 @@ class TipBox extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
+                TranslatedText(
                   title,
                   style: TextStyle(
                     fontSize: 18,
@@ -152,7 +174,7 @@ class TipBox extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 8),
-                Text(
+                TranslatedText(
                   content,
                   style: TextStyle(
                     fontSize: 15,

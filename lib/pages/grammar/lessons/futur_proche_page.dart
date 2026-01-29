@@ -1,21 +1,27 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../../widgets/lesson_template.dart';
+import '../../../widgets/translated_text.dart';
+import '../../../services/language_provider.dart';
 
 class FuturProchePage extends StatelessWidget {
   const FuturProchePage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final lp = Provider.of<LanguageProvider>(context);
     return LessonTemplate(
-      title: 'Futur Proche',
+      title: lp.currentLanguage == AppLanguage.french
+          ? 'Futur Proche'
+          : 'Near Future',
       icon: '🔜',
       children: [
-        const Text(
+        const TranslatedText(
           'Futur Proche = "going to" in English. It\'s the EASIEST future tense because it\'s for things happening SOON or that you\'ve already decided to do!',
           style: TextStyle(fontSize: 16, height: 1.5),
         ),
         const SectionTitle('🎯 When to Use It'),
-        const Text(
+        const TranslatedText(
           '• Immediate future (happening very soon)\n'
           '• Plans you\'ve already decided\n'
           '• Obvious consequences',
@@ -30,7 +36,7 @@ class FuturProchePage extends StatelessWidget {
           color: Color(0xFF10B981),
         ),
         const SectionTitle('📝 Conjugation of ALLER'),
-        const Text(
+        const TranslatedText(
           'je vais\n'
           'tu vas\n'
           'il/elle va\n'
@@ -64,7 +70,7 @@ class FuturProchePage extends StatelessWidget {
           color: Color(0xFFF59E0B),
         ),
         const SectionTitle('❌ Common Mistakes'),
-        const Text(
+        const TranslatedText(
           '❌ Je vais aller au cinéma → This is correct but weird!\n'
           '✅ Je vais au cinéma (just use present of aller)\n\n'
           'Don\'t use "aller + aller" - it sounds silly!',

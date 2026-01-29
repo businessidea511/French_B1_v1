@@ -1,21 +1,27 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../../widgets/lesson_template.dart';
+import '../../../widgets/translated_text.dart';
+import '../../../services/language_provider.dart';
 
 class ImparfaitPage extends StatelessWidget {
   const ImparfaitPage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final lp = Provider.of<LanguageProvider>(context);
     return LessonTemplate(
-      title: 'Imparfait',
+      title: lp.currentLanguage == AppLanguage.french
+          ? 'Imparfait'
+          : 'Imperfect Tense',
       icon: '🎬',
       children: [
-        const Text(
+        const TranslatedText(
           'Think of Imparfait as the "BACKGROUND MUSIC" of your past. While Passé Composé is specific actions, Imparfait sets the SCENE and describes what was ONGOING.',
           style: TextStyle(fontSize: 16, height: 1.5),
         ),
         const SectionTitle('🎥 The Movie Metaphor', emoji: null),
-        const Text(
+        const TranslatedText(
           'If Passé Composé is the main ACTION, Imparfait is the SCENERY:\n\n'
           '• The weather in the background\n'
           '• What characters were wearing\n'
@@ -28,7 +34,7 @@ class ImparfaitPage extends StatelessWidget {
           french: 'Il pleuvait quand je suis sorti',
           english: 'It WAS RAINING (background) when I left (specific action)',
         ),
-        const Text(
+        const TranslatedText(
           '→ "pleuvait" = setting the scene (Imparfait)\n'
           '→ "suis sorti" = what happened (Passé Composé)',
           style: TextStyle(fontSize: 14, fontStyle: FontStyle.italic),
@@ -42,7 +48,7 @@ class ImparfaitPage extends StatelessWidget {
           color: Color(0xFF6366F1),
         ),
         const SectionTitle('Step-by-Step Example: PARLER'),
-        const Text(
+        const TranslatedText(
           '1. Nous parlons (present)\n'
           '2. Remove -ons → parl-\n'
           '3. Add endings:\n\n'
@@ -68,7 +74,7 @@ class ImparfaitPage extends StatelessWidget {
           english: 'We were living / used to live in Paris in 2020',
         ),
         const SectionTitle('🎯 When to Use Imparfait'),
-        const Text(
+        const TranslatedText(
           '1. **Descriptions** (age, weather, feelings, appearance)\n'
           '   • Il faisait froid (It was cold)\n'
           '   • Elle était contente (She was happy)\n\n'

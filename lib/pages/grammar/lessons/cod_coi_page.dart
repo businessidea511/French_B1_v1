@@ -1,21 +1,27 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../../widgets/lesson_template.dart';
+import '../../../widgets/translated_text.dart';
+import '../../../services/language_provider.dart';
 
 class CodCoiPage extends StatelessWidget {
   const CodCoiPage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final lp = Provider.of<LanguageProvider>(context);
     return LessonTemplate(
-      title: 'COD / COI',
+      title: lp.currentLanguage == AppLanguage.french
+          ? 'COD / COI'
+          : 'Direct & Indirect Objects',
       icon: '🎯',
       children: [
-        const Text(
+        const TranslatedText(
           'COD and COI are OBJECT PRONOUNS that replace nouns to avoid repetition. Think of them as shortcuts!',
           style: TextStyle(fontSize: 16, height: 1.5),
         ),
         const SectionTitle('🎯 What Are They?'),
-        const Text(
+        const TranslatedText(
           '**COD (Complément d\'Objet Direct)** = Direct Object\n'
           '→ WHAT or WHO directly receives the action\n'
           '→ No preposition needed\n\n'
@@ -26,7 +32,7 @@ class CodCoiPage extends StatelessWidget {
         ),
         const SectionTitle('📋 The Pronouns'),
         const SectionTitle('COD (Direct Object)'),
-        const Text(
+        const TranslatedText(
           'me/m\' = me\n'
           'te/t\' = you\n'
           'le/l\' = him/it (masculine)\n'
@@ -37,7 +43,7 @@ class CodCoiPage extends StatelessWidget {
           style: TextStyle(fontSize: 15, height: 1.8, fontFamily: 'monospace'),
         ),
         const SectionTitle('COI (Indirect Object)'),
-        const Text(
+        const TranslatedText(
           'me/m\' = to me\n'
           'te/t\' = to you\n'
           'lui = to him/her\n'
@@ -91,8 +97,8 @@ class CodCoiPage extends StatelessWidget {
           color: Color(0xFFF59E0B),
         ),
         const SectionTitle('⚠️ Tricky Verbs with À'),
-        const Text(
-          'These verbs use COI (even though  they might not in English):\n\n'
+        const TranslatedText(
+          'These verbs use COI (even though they might not in English):\n\n'
           '• parler à (talk to) → Je lui parle\n'
           '• téléphoner à (call) → Je lui téléphone\n'
           '• répondre à (answer) → Je lui réponds\n'

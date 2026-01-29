@@ -1,21 +1,27 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../../widgets/lesson_template.dart';
+import '../../../widgets/translated_text.dart';
+import '../../../services/language_provider.dart';
 
 class FuturSimplePage extends StatelessWidget {
   const FuturSimplePage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final lp = Provider.of<LanguageProvider>(context);
     return LessonTemplate(
-      title: 'Futur Simple',
+      title: lp.currentLanguage == AppLanguage.french
+          ? 'Futur Simple'
+          : 'Simple Future Tense',
       icon: '🔮',
       children: [
-        const Text(
+        const TranslatedText(
           'Futur Simple = "will" in English. It\'s for predictions, promises, and things you\'ll do in the more distant future (not immediate like Futur Proche).',
           style: TextStyle(fontSize: 16, height: 1.5),
         ),
         const SectionTitle('⚖️ Futur Proche vs Futur Simple'),
-        const Text(
+        const TranslatedText(
           '🔜 Futur Proche: "I\'m going to eat" (soon, decided)\n'
           '🔮 Futur Simple: "I will eat" (general future, promise, prediction)',
           style: TextStyle(fontSize: 15, height: 1.8),
@@ -30,7 +36,7 @@ class FuturSimplePage extends StatelessWidget {
           color: Color(0xFF6366F1),
         ),
         const SectionTitle('📝 Regular Examples'),
-        const Text(
+        const TranslatedText(
           'PARLER → je parlerai (I will speak)\n'
           'FINIR → tu finiras (you will finish)\n'
           'VENDRE → il vendra (he will sell)',
@@ -71,7 +77,7 @@ class FuturSimplePage extends StatelessWidget {
           color: Color(0xFF10B981),
         ),
         const SectionTitle('🎯 Signal Words'),
-        const Text(
+        const TranslatedText(
           'Look for:\n'
           '• demain (tomorrow)\n'
           '• la semaine prochaine (next week)\n'

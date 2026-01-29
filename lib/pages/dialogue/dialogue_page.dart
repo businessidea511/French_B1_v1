@@ -25,7 +25,7 @@ class DialoguePage extends StatelessWidget {
               {
                 'role': 'Agent',
                 'text':
-                    "Bonjour Monsieur/Madame, bienvenue à l'agence Immobilière de Liège. Comment puis-je vous aider aujourd'hui ?"
+                    "Bonjour, bienvenue à l'agence immobilière de Liège. Comment puis-je vous aider ?"
               },
               {
                 'role': 'Client',
@@ -40,58 +40,57 @@ class DialoguePage extends StatelessWidget {
               {
                 'role': 'Client',
                 'text':
-                    "Oui, je voudrais habiter près de la gare des Guillemins, pour pouvoir prendre le train facilement."
+                    "Oui, je voudrais habiter près de la gare. C'est pratique pour moi."
+              },
+              {
+                'role': 'Agent',
+                'text': "D'accord. Quel type d'appartement recherchez-vous ?"
+              },
+              {
+                'role': 'Client',
+                'text': "Je cherche un deux pièces, de préférence."
               },
               {
                 'role': 'Agent',
                 'text':
-                    "C'est noté. Quel type d'appartement recherchez-vous ? Un studio, un deux pièces ?"
+                    "Parfait. Et quel est votre budget mensuel pour le loyer ?"
+              },
+              {
+                'role': 'Client',
+                'text': "Mon budget est entre 500 et 650 euros par mois."
+              },
+              {
+                'role': 'Agent',
+                'text': "Entendu. Avez-vous d'autres critères importants ?"
               },
               {
                 'role': 'Client',
                 'text':
-                    "Je cherche un petit appartement, mais pas trop petit. Un deux pièces serait parfait."
+                    "Oui, j'aimerais qu'il y ait un parc à proximité de l'appartement."
               },
               {
                 'role': 'Agent',
                 'text':
-                    "D'accord. Et quel est votre budget mensuel pour le loyer ?"
+                    "J'ai justement un appartement qui pourrait vous convenir. Il se trouve rue des Guillemins, à 5 minutes de la gare."
               },
               {
                 'role': 'Client',
                 'text':
-                    "Mon budget est entre 500 et 650 euros hors charges, ou alors 800 euros charges comprises maximum."
+                    "Très bien ! Est-ce qu'il y a un parc dans les environs ?"
               },
               {
                 'role': 'Agent',
                 'text':
-                    "C'est un budget raisonnable. Avez-vous d'autres critères importants ?"
+                    "Oui, le Parc d'Avroy est juste à côté. Il y a également un supermarché à proximité."
               },
               {
                 'role': 'Client',
-                'text':
-                    "Oui, j'aimerais qu'il y ait un parc ou un espace vert à proximité, et aussi des magasins pour faire mes courses."
+                'text': "Excellent ! Pourriez-vous me dire le prix ?"
               },
               {
                 'role': 'Agent',
                 'text':
-                    "Entendu. Laissez-moi regarder ce que nous avons... Ah, j'ai justement un appartement qui pourrait vous convenir. Il est situé rue des Guillemins, à 5 minutes de la gare."
-              },
-              {
-                'role': 'Client',
-                'text':
-                    "Ah, ça m'intéresse ! Est-ce qu'il y a des espaces verts autour ?"
-              },
-              {
-                'role': 'Agent',
-                'text':
-                    "Oui, le Parc d'Avroy est juste à côté. Et il y a un supermarché et une boulangerie en bas de l'immeuble."
-              },
-              {'role': 'Client', 'text': "C'est parfait ! Et le loyer ?"},
-              {
-                'role': 'Agent',
-                'text':
-                    "Le loyer est de 600 euros, plus 150 euros de charges qui incluent le chauffage et l'eau. Donc on arrive à 750 euros au total."
+                    "Le loyer est de 600 euros, plus 100 euros de charges. Cela fait 700 euros au total."
               },
               {
                 'role': 'Client',
@@ -105,7 +104,7 @@ class DialoguePage extends StatelessWidget {
               },
               {
                 'role': 'Client',
-                'text': "Oui, c'est parfait. Merci beaucoup !"
+                'text': "Oui, c'est parfait. Je vous remercie beaucoup !"
               },
             ],
           ),

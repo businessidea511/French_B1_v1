@@ -1,21 +1,27 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../../widgets/lesson_template.dart';
+import '../../../widgets/translated_text.dart';
+import '../../../services/language_provider.dart';
 
 class PresentPage extends StatelessWidget {
   const PresentPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return const LessonTemplate(
-      title: 'Le Présent',
+    final lp = Provider.of<LanguageProvider>(context);
+    return LessonTemplate(
+      title: lp.currentLanguage == AppLanguage.french
+          ? 'Le Présent'
+          : 'Present Tense',
       icon: '⌚',
       children: [
-        Text(
+        const TranslatedText(
           'Think of Le Présent as the "Live Stream" tense. It\'s for what\'s happening RIGHT NOW or things that are always true, like habits or scientific facts 📺',
           style: TextStyle(fontSize: 16, height: 1.5),
         ),
-        SectionTitle('🎬 The "Live Stream" Metaphor', emoji: null),
-        Text(
+        const SectionTitle('🎬 The "Live Stream" Metaphor', emoji: null),
+        const TranslatedText(
           'If you were filming a TikTok or a Live Stream, you would use Le Présent to describe the action as it happens:',
           style: TextStyle(fontSize: 15, height: 1.5),
         ),
@@ -27,13 +33,13 @@ class PresentPage extends StatelessWidget {
           french: 'Le soleil brille tous les jours',
           english: 'The sun shines every day (Always true)',
         ),
-        SectionTitle('🔧 How to Build It'),
-        Text(
+        const SectionTitle('🔧 How to Build It'),
+        const TranslatedText(
           'French verbs belong to 3 main groups. Each has its own "ending" formula:',
           style: TextStyle(fontSize: 15, height: 1.5),
         ),
-        SectionTitle('Group 1: -ER Verbs (Easy Mode 🟢)'),
-        Text(
+        const SectionTitle('Group 1: -ER Verbs (Easy Mode 🟢)'),
+        const TranslatedText(
           'Remove -ER and add: -e, -es, -e, -ons, -ez, -ent',
           style: TextStyle(fontSize: 15, height: 1.8),
         ),
@@ -42,8 +48,8 @@ class PresentPage extends StatelessWidget {
               'Je parle, Tu parles, Il parle\nNous parlons, Vous parlez, Ils parlent',
           english: 'Parler (To speak)',
         ),
-        SectionTitle('Group 2: -IR Verbs (Steady Mode 🟡)'),
-        Text(
+        const SectionTitle('Group 2: -IR Verbs (Steady Mode 🟡)'),
+        const TranslatedText(
           'Remove -IR and add: -is, -is, -it, -issons, -issez, -issent',
           style: TextStyle(fontSize: 15, height: 1.8),
         ),
@@ -52,8 +58,8 @@ class PresentPage extends StatelessWidget {
               'Je finis, Tu finis, Il finit\nNous finissons, Vous finissez, Ils finissent',
           english: 'Finir (To finish)',
         ),
-        SectionTitle('Group 3: -RE Verbs (Boss Mode 🔴)'),
-        Text(
+        const SectionTitle('Group 3: -RE Verbs (Boss Mode 🔴)'),
+        const TranslatedText(
           'Remove -RE and add: -s, -s, -(nothing), -ons, -ez, -ent',
           style: TextStyle(fontSize: 15, height: 1.8),
         ),
@@ -62,8 +68,8 @@ class PresentPage extends StatelessWidget {
               'Je vends, Tu vends, Il vend\nNous vendons, Vous vendez, Ils vendent',
           english: 'Vendre (To sell)',
         ),
-        SectionTitle('🎯 The "Fantastic Four" Irregulars'),
-        Text(
+        const SectionTitle('🎯 The "Fantastic Four" Irregulars'),
+        const TranslatedText(
           'These 4 are the most used verbs in French. You MUST memorize them!',
           style: TextStyle(fontSize: 15, height: 1.5),
         ),

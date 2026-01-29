@@ -118,6 +118,69 @@ Un jour, j'aurai ma société en Belgique.""",
 
 يوماً ما، سيكون لدي شركتي في بلجيكا.""",
           ),
+          const SizedBox(height: 16),
+          _buildEssayCard(
+            context,
+            title: "Mes vacances en Allemagne",
+            description: "A surprise trip to Germany by train.",
+            tenses: "Futur Simple, Conditionnel",
+            content:
+                """Pour mes prochaines vacances, j'irai en Allemagne pour voir ma sœur. Je prendrai le train. J'apporterai du parfum pour ma sœur et des cadeaux pour ses filles.
+
+Je ne dirai rien à ma sœur. Ce sera une surprise ! Elle sera très contente de me voir. J'aimerais aussi visiter le centre-ville avec elle.
+
+Je verrai aussi mon ami. Nous irons au restaurant arabe et au café. S'il faisait beau, nous irions au parc. Si j'avais plus de temps, j'irais aussi à Berlin.
+
+Je resterai dix jours, et après je rentrerai chez moi en Belgique. Je suis très content de faire ce voyage.""",
+            arabicContent:
+                """في عطلتي القادمة، سأذهب إلى ألمانيا لزيارة أختي. سأركب القطار. سأحضر عطراً لأختي وهدايا لبناتها.
+
+لن أقول شيئاً لأختي. ستكون مفاجأة! ستكون سعيدة جداً لرؤيتي. طبعاً، أود زيارة وسط المدينة معها.
+
+سأرى صديقي أيضاً. سنذهب إلى مطعم عربي ومقهى. لو كان الجو جميلاً، سنذهب إلى الحديقة. لو كان لدي وقت أكثر، لذهبت أيضاً إلى برلين.
+
+سأبقى 10 أيام، وبعد ذلك سأعود إلى منزلي في بلجيكا. أنا سعيد جداً للقيام بهذه الرحلة.""",
+          ),
+          const SizedBox(height: 16),
+          _buildEssayCard(
+            context,
+            title: "Un premier rendez-vous romantique",
+            description:
+                "Comment raconter une rencontre et des phrases pour séduire.",
+            tenses: "Présent, Passé Composé, Conditionnel, Futur Proche",
+            content:
+                """Hier soir, j'ai eu un premier rendez-vous très spécial. Nous sommes allés dans un petit restaurant italien. L'ambiance était très romantique avec des bougies. On a beaucoup discuté et on a ri ensemble.
+
+Si tout se passe bien, je la reverrai le week-end prochain. J'aimerais l'inviter au cinéma ou faire une promenade au parc.
+
+Voici quelques phrases utiles pour un rendez-vous :
+- Tu es magnifique ce soir. (Pour une femme)
+- Tu as un sourire charmant.
+- Je me sens vraiment bien avec toi.
+- J'aimerais beaucoup te revoir.
+
+Des questions pour faire bonne impression :
+- Qu'est-ce qui te passionne dans la vie ?
+- Quel est ton plus grand rêve ?
+- Quel est ton endroit préféré dans le monde ?
+- Qu'est-ce que tu cherches chez une personne ?""",
+            arabicContent:
+                """بالأمس، كان لدي أول موعد غرامي مميز جداً. ذهبنا إلى مطعم إيطالي صغير. كانت الأجواء رومانسية جداً مع الشموع. تحدثنا كثيراً وضحكنا معاً.
+
+إذا سارت الأمور على ما يرام، سأراها مرة أخرى في عطلة نهاية الأسبوع القادمة. أود دعوتها إلى السينما أو الذهاب في نزهة في الحديقة.
+
+إليك بعض الجمل المفيدة لموعد غرامي وللغزل:
+- أنتِ رائعة الجمال الليلة.
+- لديكِ ابتسامة ساحرة.
+- أشعر حقاً بالراحة معكِ.
+- أود حقاً أن أراكِ مرة أخرى.
+
+أسئلة لترك انطباع جيد:
+- ما الذي يثير شغفك في الحياة؟
+- ما هو حلمك الأكبر؟
+- ما هو مكانك المفضل في العالم؟
+- ما الذي تبحث عنه في الشخص الآخر؟""",
+          ),
         ],
       ),
     );

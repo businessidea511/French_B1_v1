@@ -19,7 +19,7 @@ class DeepSeekService {
 
   // Generate multiple AI-powered exercises
   static Future<List<Map<String, dynamic>>> generateExercises(
-      String topic, String difficulty,
+      String topic, String difficulty, String targetLanguage,
       {int count = 10}) async {
     try {
       final response = await http.post(
@@ -36,21 +36,16 @@ class DeepSeekService {
               'content': 'You are an expert Professeur de Français (Alliance Française level). Provide perfectly accurate B1 grammar exercises. '
                   'CRITICAL RULES: \n'
                   '1. LOGICAL CONSISTENCY: The "correct" index MUST point to the grammatically correct answer. \n'
-                  '2. NO AMBIGUITY: Do not use distractors that could also be correct in the context. If testing "Futur Proche", do not include "Futur Simple" as a distractor if both would be valid. \n'
-                  '3. PEDAGOGICAL EXPLANATION: The explanation MUST explain why the answer is correct and briefly why others are wrong. \n'
+                  '2. NO AMBIGUITY: Do not use distractors that could also be correct in the context. \n'
+                  '3. PEDAGOGICAL EXPLANATION: The explanation MUST be in $targetLanguage and explain why the answer is correct. \n'
                   '4. ACCURACY: Double-check conjugations and agreements. \n'
-                  '5. PRONOUN CLARITY: For "COD/COI" or pronoun replacement, the question MUST put parentheses () ONLY around the specific object(s) that the correct answer is replacing. '
-                  'Example: If replacing "à sa mère", the question is: "Elle [achète] des fleurs (à sa mère) -> Elle ______." '
-                  'If replacing both, then: "Elle [achète] (des fleurs) (à sa mère) -> Elle ______." '
                   'Return JSON with "exercises" array.'
             },
             {
               'role': 'user',
               'content': topic == 'mixed_review'
-                  ? 'Generate $count multiple choice exercises for a comprehensive French B1 General Review. Variation: ${Random().nextInt(10000)}. The 10 questions MUST be a balanced mix of: Passé Composé, Imparfait, Plus-que-parfait, Conditionnel, Futur Proche, Futur Simple, and COD/COI. Difficulty: $difficulty. Each exercise must have: "question", "options" (array of 4 unique strings), "correct" (index 0-3, vary this index across questions), "explanation".'
-                  : topic == 'si_seulement'
-                      ? 'Generate $count multiple choice exercises for French B1 topic: Si seulement. Variation: ${Random().nextInt(10000)}. CRITICAL INSTRUCTION: You MUST generate a mix of questions using "Si seulement + Imparfait" (expressing wishes for present/future) AND "Si seulement + Plus-que-parfait" (expressing regrets about the past). Do NOT strictly limit to one tense. Ensure variety. Difficulty: $difficulty. Each exercise must have: "question", "options" (array of 4 unique strings), "correct" (index 0-3, vary this index across questions), "explanation".'
-                      : 'Generate $count multiple choice exercises for French B1 topic: $topic. Variation: ${Random().nextInt(10000)}. Difficulty: $difficulty. Each exercise must have: "question", "options" (array of 4 unique strings), "correct" (index 0-3, vary this index across questions), "explanation".'
+                  ? 'Generate $count multiple choice exercises for a comprehensive French B1 General Review. The 10 questions MUST be a balanced mix of tenses. Difficulty: $difficulty. Each exercise must have: "question", "options" (array of 4 unique strings), "correct" (index 0-3), "explanation" (in $targetLanguage).'
+                  : 'Generate $count multiple choice exercises for French B1 topic: $topic. Difficulty: $difficulty. Each exercise must have: "question", "options" (array of 4 unique strings), "correct" (index 0-3), "explanation" (in $targetLanguage).'
             }
           ],
           'response_format': {'type': 'json_object'},
@@ -169,7 +164,8 @@ class DeepSeekService {
   }
 
   // Get AI explanation for a grammar topic
-  static Future<String> getGrammarExplanation(String topic) async {
+  static Future<String> getGrammarExplanation(
+      String topic, String targetLanguage) async {
     try {
       final response = await http.post(
         Uri.parse('$baseUrl/chat/completions'),
@@ -183,16 +179,16 @@ class DeepSeekService {
             {
               'role': 'system',
               'content':
-                  'You are a French teacher explaining grammar to beginners. Use simple language, clear examples, and helpful metaphors.'
+                  'You are a French teacher explaining grammar to beginners. Use simple language, clear examples, and helpful metaphors. Your entire explanation MUST be in $targetLanguage.'
             },
             {
               'role': 'user',
               'content':
-                  'Explain French B1 topic: $topic in a simple way for dummies. Include examples and common mistakes.'
+                  'Explain French B1 topic: $topic in a simple way for dummies. Include examples and common mistakes. Write the response in $targetLanguage.'
             }
           ],
           'temperature': 0.7,
-          'max_tokens': 800,
+          'max_tokens': 1200,
         }),
       );
 
@@ -209,8 +205,8 @@ class DeepSeekService {
   }
 
   // Check answer and provide feedback
-  static Future<String> checkAnswer(
-      String question, String userAnswer, String correctAnswer) async {
+  static Future<String> checkAnswer(String question, String userAnswer,
+      String correctAnswer, String targetLanguage) async {
     try {
       final response = await http.post(
         Uri.parse('$baseUrl/chat/completions'),
@@ -224,12 +220,12 @@ class DeepSeekService {
             {
               'role': 'system',
               'content':
-                  'You are a supportive French teacher providing feedback on student answers.'
+                  'You are a supportive French teacher providing feedback on student answers. Your feedback MUST be in $targetLanguage.'
             },
             {
               'role': 'user',
               'content':
-                  'Question: $question\nStudent answer: $userAnswer\nCorrect answer: $correctAnswer\n\nProvide encouraging feedback explaining why the correct answer is right.'
+                  'Question: $question\nStudent answer: $userAnswer\nCorrect answer: $correctAnswer\n\nProvide encouraging feedback in $targetLanguage explaining why the correct answer is right.'
             }
           ],
           'temperature': 0.7,
@@ -355,6 +351,54 @@ class DeepSeekService {
     } catch (e) {
       debugPrint('Error generating listening exercise: $e');
       rethrow;
+    }
+  }
+
+  // Translate text to a target language
+  static Future<String> translateText(
+      String text, String targetLanguage) async {
+    // We now allow translation for French to localize English-only descriptions,
+    // relying on our system prompt to preserve existing French examples.
+
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/chat/completions'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $apiKey',
+        },
+        body: jsonEncode({
+          'model': 'deepseek-chat',
+          'messages': [
+            {
+              'role': 'system',
+              'content': 'You are a professional translator and French language expert. '
+                  'Translate the given text into $targetLanguage. '
+                  'CRITICAL RULE: This text is from a French grammar lesson. '
+                  'DO NOT translate French words, phrases, conjugations, or examples used for teaching. '
+                  'Keep any text that looks like a French grammar example, a conjugation (e.g., -er, -ir, -re endings), or a specific French phrase EXACTLY as it is. '
+                  'Only translate the surrounding explanations, instructions, and descriptions. '
+                  'Even if the text contains symbols like ❌ or ✅ followed by French, KEEP the French part. '
+                  'Provide ONLY the localized translation, no extra comments.'
+            },
+            {
+              'role': 'user',
+              'content':
+                  'Translate this lesson content to $targetLanguage: $text'
+            }
+          ],
+          'temperature': 0.3,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return data['choices'][0]['message']['content'].toString().trim();
+      }
+      return text;
+    } catch (e) {
+      debugPrint('Translation error: $e');
+      return text;
     }
   }
 }

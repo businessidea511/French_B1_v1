@@ -1,37 +1,44 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../../widgets/lesson_template.dart';
+import '../../../widgets/translated_text.dart';
+import '../../../services/language_provider.dart';
 
 class ConditionnelPage extends StatelessWidget {
   const ConditionnelPage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final lp = Provider.of<LanguageProvider>(context);
     return LessonTemplate(
-      title: 'Conditionnel',
+      title: lp.currentLanguage == AppLanguage.french
+          ? 'Conditionnel'
+          : 'Conditional Tense',
       icon: '🤔',
       children: [
-        const Text(
+        const TranslatedText(
           'The Conditionnel is your "WISHING AND WONDERING" tense. Use it for would/could/should - basically anything that\'s HYPOTHETICAL or POLITE!',
           style: TextStyle(fontSize: 16, height: 1.5),
         ),
         const SectionTitle('🎯 Three Main Uses'),
-        const Text(
+        const TranslatedText(
           '1. **Polite Requests** - More polite than present tense\n'
           '2. **Wishes and Dreams** - Things you "would" do\n'
           '3. **Hypothetical Situations** - "If I won the lottery, I would..."',
           style: TextStyle(fontSize: 15, height: 1.8),
         ),
         const SectionTitle('🔧 How to Build It'),
-        const TipBox(
-          title: 'Super Formula!',
-          content: 'Future stem + Imparfait endings\n\n'
-              'Take the FUTURE SIMPLE stem and add:\n'
-              '-ais, -ais, -ait, -ions, -iez, -aient',
-          icon: Icons.calculate,
-          color: Color(0xFF6366F1),
+        const TranslatedText(
+          'Super Formula!',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        const TranslatedText(
+          'Take the FUTURE SIMPLE stem and add:\n'
+          '-ais, -ais, -ait, -ions, -iez, -aient',
+          style: TextStyle(fontSize: 15, height: 1.8),
         ),
         const SectionTitle('📝 Regular Verbs'),
-        const Text(
+        const TranslatedText(
           'PARLER → je parlerais (I would speak)\n'
           'FINIR → tu finirais (you would finish)\n'
           'VENDRE → il vendrait (he would sell)',

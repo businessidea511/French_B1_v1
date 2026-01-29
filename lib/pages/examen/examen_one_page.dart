@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../theme/app_theme.dart';
+import '../../services/language_provider.dart';
 import '../../services/deepseek_service.dart';
 
 class ExamenOnePage extends StatefulWidget {
@@ -194,19 +196,45 @@ class _ExamenOnePageState extends State<ExamenOnePage> {
     });
 
     try {
-      // Custom prompt for the specific exam topics
-      // Topics: Passé (imp, pqp, pc), Présent, Futur (simple, proche), Conditionnel, Si clauses.
-      // We will trick the DeepSeekService or just call it
-      // Actually, DeepSeekService.generateExercises takes a 'topic'.
-      // I'll send a custom formatted string and hope the service handles it or I'll modify the service call inline?
-      // The service uses: "Generate $count multiple choice exercises for French B1 topic: $topic."
-      // So I can pass a long string describing the topics.
-      final topicDescription =
-          "Review of: Passé Composé, Imparfait, Plus-que-parfait, Conditionnel, Futur Simple, Futur Proche, and 'Si' clauses (Si j'avais..., j'aurais...). Context: Housing, Childhood, Neighborhood.";
+      // Comprehensive prompt covering ALL grammar topics and essay comprehension
+      final topicDescription = """
+Generate a comprehensive French B1 exam with 30 multiple choice questions:
 
+SECTION 1 - GRAMMAR (20 questions, 2 per topic):
+1. Le Présent (Present tense - regular and irregular verbs)
+2. Passé Composé (Completed past actions with avoir/être)
+3. Imparfait (Ongoing past actions and descriptions)
+4. Plus-que-parfait (Past perfect - actions before other past actions)
+5. Conditionnel (Would/Could/Should - wishes and hypotheticals)
+6. Négation Complexe (Complex negation: ne...jamais, ne...rien, ne...personne)
+7. Futur Proche (Near future: aller + infinitive)
+8. Futur Simple (Simple future tense)
+9. COD/COI (Direct and indirect object pronouns: le, la, lui, leur)
+10. Si seulement (Expressing regrets and wishes)
+
+SECTION 2 - READING COMPREHENSION (10 questions, 2 per essay):
+Based on these essays, create comprehension questions:
+
+Essay 1 - "Souvenir d'enfance":
+"Quand j'étais petit, je jouais tout le temps au football avec mes amis. C'était ma passion. Un jour, alors que nous jouions dans le parc, je suis tombé violemment en essayant d'attraper le ballon. Je me suis fait très mal à la main. J'avais très peur. Mes parents sont arrivés rapidement et je suis allé à l'hôpital. Le médecin m'a examiné et il a soigné ma blessure. Heureusement, ce n'était pas cassé. C'était une mauvaise expérience pour moi. Si seulement j'avais fait plus attention, je ne me serais pas blessé ce jour-là."
+
+Essay 2 - "Mon logement à Liège":
+"J'habite actuellement dans un appartement au rez-de-chaussée, dans le quartier de la Citadelle à Liège. C'est un quartier très calme et verdoyant. Le propriétaire de la maison habite juste au-dessus de chez moi, au premier étage. Il vit avec sa femme. L'emplacement est idéal : il y a un petit magasin et un arrêt de bus juste en face de l'appartement. Mon appartement se compose de deux pièces. Le salon est spacieux, avec un grand canapé confortable et une télévision."
+
+Essay 3 - "Mes projets d'avenir":
+"Actuellement, j'apprends le français parce que je veux trouver un bon travail. J'ai déjà terminé mon application pour les CV. Bientôt, je vais commencer une nouvelle application pour le service client qui utilise l'IA. Enfin, je créerai mon entreprise en Belgique et je commencerai à promouvoir mes applications."
+
+Essay 4 - "Mes vacances en Allemagne":
+"Pour mes prochaines vacances, j'irai en Allemagne pour voir ma sœur. Je prendrai le train. J'apporterai du parfum pour ma sœur et des cadeaux pour ses filles. Je ne dirai rien à ma sœur. Ce sera une surprise ! Elle sera très contente de me voir. Je verrai aussi mon ami. Nous irons au restaurant arabe et au café. S'il faisait beau, nous irions au parc. Si j'avais plus de temps, j'irais aussi à Berlin. Je resterai dix jours, et après je rentrerai chez moi en Belgique."
+
+Mix grammar and comprehension questions throughout the exam. Ensure variety in question difficulty.
+""";
+
+      final languageProvider =
+          Provider.of<LanguageProvider>(context, listen: false);
       final aiQuestions = await DeepSeekService.generateExercises(
-          topicDescription, 'B1',
-          count: 15);
+          topicDescription, 'B1', languageProvider.currentLanguage.name,
+          count: 30);
 
       final sanitizedQuestions = aiQuestions.map((q) {
         final List<String> options = List<String>.from(q['options']);

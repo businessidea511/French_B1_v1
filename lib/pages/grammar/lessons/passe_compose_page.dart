@@ -1,21 +1,27 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../../widgets/lesson_template.dart';
+import '../../../widgets/translated_text.dart';
+import '../../../services/language_provider.dart';
 
 class PasseComposePage extends StatelessWidget {
   const PasseComposePage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final lp = Provider.of<LanguageProvider>(context);
     return LessonTemplate(
-      title: 'Passé Composé',
+      title: lp.currentLanguage == AppLanguage.french
+          ? 'Passé Composé'
+          : 'Past Tense',
       icon: '⏱️',
       children: [
-        const Text(
+        const TranslatedText(
           'Think of Passé Composé as the "I DID IT!" tense. It\'s for completed actions that happened in the past, like checking items off your to-do list ✅',
           style: TextStyle(fontSize: 16, height: 1.5),
         ),
         const SectionTitle('🎬 The Movie Metaphor', emoji: null),
-        const Text(
+        const TranslatedText(
           'If your life were a movie, Passé Composé would be the SPECIFIC SCENES that happened:',
           style: TextStyle(fontSize: 15, height: 1.5),
         ),
@@ -28,24 +34,24 @@ class PasseComposePage extends StatelessWidget {
           english: 'She finished her homework (it\'s DONE!)',
         ),
         const SectionTitle('🔧 How to Build It'),
-        const Text(
+        const TranslatedText(
           'Super simple! Just 2 parts:',
           style: TextStyle(fontSize: 15, height: 1.5),
         ),
         const TipBox(
           title: 'Formula',
-          content: 'AVOIR  or ÊTRE (present tense) + PAST PARTICIPLE',
+          content: 'AVOIR or ÊTRE (present tense) + PAST PARTICIPLE',
           icon: Icons.calculate,
           color: Color(0xFF6366F1),
         ),
         const SectionTitle('Step 1: Choose Your Helper Verb'),
-        const Text(
+        const TranslatedText(
           '• Most verbs use AVOIR (to have)\n'
           '• Movement verbs & reflexive verbs use ÊTRE (to be)',
           style: TextStyle(fontSize: 15, height: 1.8),
         ),
         const SectionTitle('Step 2: Make the Past Participle'),
-        const Text(
+        const TranslatedText(
           '• ER verbs → remove ER, add É (manger → mangé)\n'
           '• IR verbs → remove IR, add I (finir → fini)\n'
           '• RE verbs → remove RE, add U (vendre → vendu)',
@@ -89,7 +95,7 @@ class PasseComposePage extends StatelessWidget {
           color: Color(0xFFEF4444),
         ),
         const SectionTitle('🎯 Common Irregular Past Participles'),
-        const Text(
+        const TranslatedText(
           'These troublemakers don\'t follow the rules:\n\n'
           '• être → été (been)\n'
           '• avoir → eu (had)\n'

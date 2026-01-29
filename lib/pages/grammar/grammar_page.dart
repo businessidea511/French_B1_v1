@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../theme/app_theme.dart';
 import '../../models/grammar_topic.dart';
+import '../../services/language_provider.dart';
+import '../../services/deepseek_service.dart';
 import 'lessons/passe_compose_page.dart';
 import 'lessons/present_page.dart';
 import 'lessons/imparfait_page.dart';
@@ -17,9 +20,10 @@ class GrammarPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final languageProvider = Provider.of<LanguageProvider>(context);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Grammar Lessons'),
+        title: Text(languageProvider.translate('grammar_lessons')),
       ),
       body: Center(
         child: ConstrainedBox(
@@ -39,7 +43,7 @@ class GrammarPage extends StatelessWidget {
             itemCount: grammarTopics.length,
             itemBuilder: (context, index) {
               final topic = grammarTopics[index];
-              return _buildTopicCard(context, topic);
+              return _buildTopicCard(context, topic, languageProvider);
             },
           ),
         ),
@@ -47,7 +51,8 @@ class GrammarPage extends StatelessWidget {
     );
   }
 
-  Widget _buildTopicCard(BuildContext context, GrammarTopic topic) {
+  Widget _buildTopicCard(
+      BuildContext context, GrammarTopic topic, LanguageProvider lp) {
     return Card(
       clipBehavior: Clip.antiAlias,
       child: InkWell(
@@ -89,13 +94,21 @@ class GrammarPage extends StatelessWidget {
                 style: Theme.of(context).textTheme.headlineMedium,
               ),
               const SizedBox(height: 4),
-              Text(
-                topic.subtitle,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: AppTheme.textTertiary,
-                    ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+              FutureBuilder<String>(
+                future: lp.currentLanguage == AppLanguage.english
+                    ? Future.value(topic.subtitle)
+                    : DeepSeekService.translateText(
+                        topic.subtitle, lp.currentLanguage.name),
+                builder: (context, snapshot) {
+                  return Text(
+                    snapshot.data ?? topic.subtitle,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: AppTheme.textTertiary,
+                        ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  );
+                },
               ),
             ],
           ),
