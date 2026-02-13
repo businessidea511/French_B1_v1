@@ -18,8 +18,7 @@ class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
   // Helper to determine if we should show local-only features
-  static const bool _showLocalFeatures = kDebugMode ||
-      bool.fromEnvironment('SHOW_LOCAL_FEATURES', defaultValue: false);
+  static const bool _showLocalFeatures = false;
 
   void _showLanguageSelector(BuildContext context) {
     showDialog(

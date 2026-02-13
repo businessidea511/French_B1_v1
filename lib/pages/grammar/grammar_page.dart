@@ -14,6 +14,8 @@ import 'lessons/futur_proche_page.dart';
 import 'lessons/futur_simple_page.dart';
 import 'lessons/cod_coi_page.dart';
 import 'lessons/si_seulement_page.dart';
+import 'lessons/voix_passive_page.dart';
+import 'lessons/adverbes_ment_page.dart';
 
 class GrammarPage extends StatelessWidget {
   const GrammarPage({super.key});
@@ -139,6 +141,10 @@ class GrammarPage extends StatelessWidget {
         return const CodCoiPage();
       case 'si_seulement':
         return const SiSeulementPage();
+      case 'voix_passive':
+        return const VoixPassivePage();
+      case 'adverbes_ment':
+        return const AdverbesMentPage();
       default:
         return const Scaffold(body: Center(child: Text('Lesson not found')));
     }

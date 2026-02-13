@@ -86,4 +86,18 @@ final List<GrammarTopic> grammarTopics = [
     icon: '💭',
     description: 'Express regrets and wishes with "si seulement"',
   ),
+  const GrammarTopic(
+    id: 'voix_passive',
+    title: 'La Voix Passive',
+    subtitle: 'Passive Voice',
+    icon: '🔄',
+    description: 'Learn how to form and use the passive voice in French',
+  ),
+  const GrammarTopic(
+    id: 'adverbes_ment',
+    title: 'Les Adverbes en -ment',
+    subtitle: 'Adverbs ending in -ment',
+    icon: '🏃',
+    description: 'Master the formation of adverbs from adjectives',
+  ),
 ];

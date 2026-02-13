@@ -29,6 +29,21 @@ class _FlashcardsPageState extends State<FlashcardsPage> {
         'back': 'Completed actions in the past'
       },
     ],
+    'voix_passive': [
+      {
+        'front': 'Passive Voice Formula',
+        'back': 'ÊTRE (conjugated) + past participle (+ par...)'
+      },
+      {
+        'front': 'Passive: agreement rule?',
+        'back': 'Agreement with the SUBJECT'
+      },
+    ],
+    'adverbes_ment': [
+      {'front': 'Sérieux -> Adverb?', 'back': 'Sérieusement'},
+      {'front': 'Gentil -> Adverb?', 'back': 'Gentiment (irregular)'},
+      {'front': 'Patient -> Adverb?', 'back': 'Patiemment (-emment)'},
+    ],
   };
 
   Future<void> _startAIFlashcards(String topic) async {

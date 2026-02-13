@@ -27,7 +27,46 @@ class _ExercisesPageState extends State<ExercisesPage> {
         'correct': 0,
         'explanation': 'Use Passé Composé for a completed action.',
       },
-      // ... kept for fallback or mix
+    ],
+    'voix_passive': [
+      {
+        'question': 'Le chat mange la souris. (Passive: ___)',
+        'options': [
+          'La souris est mangée par le chat.',
+          'La souris a mangé par le chat.',
+          'Le chat est mangé par la souris.',
+          'La souris mange le chat.'
+        ],
+        'correct': 0,
+        'explanation':
+            'In passive voice, the object becomes the subject: "La souris est mangée".',
+      },
+      {
+        'question': 'La maison ___ par mon père l\'année prochaine.',
+        'options': [
+          'sera construite',
+          'est construit',
+          'a été construite',
+          'construira'
+        ],
+        'correct': 0,
+        'explanation': 'Future passive uses "sera" + past participle.',
+      },
+    ],
+    'adverbes_ment': [
+      {
+        'question': 'Il court très ___. (adjective: rapide)',
+        'options': ['rapidement', 'rapidementment', 'rapide', 'rapide'],
+        'correct': 0,
+        'explanation':
+            'Adverbs from adjectives ending in -e add -ment directly.',
+      },
+      {
+        'question': 'Elle parle ___ à son bébé. (adjective: doux)',
+        'options': ['doucement', 'douxment', 'dousement', 'doux'],
+        'correct': 0,
+        'explanation': 'Doux (masc) -> Douce (fem) -> Doucement.',
+      },
     ],
   };
 
