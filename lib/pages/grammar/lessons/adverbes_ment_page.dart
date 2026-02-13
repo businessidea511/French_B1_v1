@@ -17,52 +17,59 @@ class AdverbesMentPage extends StatelessWidget {
       icon: '🏃',
       children: [
         const TranslatedText(
-          'Most French adverbs are formed by adding "-ment" to the feminine form of an adjective. This is equivalent to "-ly" in English.',
-          style: TextStyle(fontSize: 16, height: 1.5),
+          'Adverbs are like "Action Spices" 🌶️. They tell us HOW someone does something (Slowly, happily, nicely). In French, most end in -MENT, just like English ends in -LY.',
+          style:
+              TextStyle(fontSize: 16, height: 1.5, fontWeight: FontWeight.bold),
         ),
-        const SectionTitle('🔧 Basic Rule'),
+        const SectionTitle('🧙‍♂️ The Magic "Ment" Formula'),
         const TipBox(
-          title: 'Formation',
+          title: 'Girl Power! 🚺',
           content:
-              'Feminine Adjective + -ment\n\nExample: lent (slow) → lente (fem) → lentement (slowly)',
-          icon: Icons.build,
+              'The secret is simple: Use the FEMININE form of the adjective + MENT.\n\n'
+              'Example: Lent (slow) → Lente (fem) → Lentement (slowly)',
+          icon: Icons.auto_awesome,
           color: Color(0xFF10B981),
         ),
-        const SectionTitle('📐 Special Rules'),
+        const SectionTitle('📐 The 3 Rules for Adverb Success'),
         const TranslatedText(
-          '1. If the masculine adjective ends in a vowel: Add "-ment" directly.\n'
-          '   • Vrai → Vraiment\n'
-          '   • Poli → Poliment\n\n'
-          '2. If the adjective ends in -ent or -ant: Replace with -emment or -amment.\n'
-          '   • Patient → Patiemment\n'
-          '   • Courant → Couramment',
+          '1️⃣ Standard Rule: Fem. Adjective + -ment\n'
+          '• Heureux → Heureuse → Heureusement\n'
+          '• Frais → Fraîche → Fraîchement\n\n'
+          '2️⃣ If Adjective ends in a Vowel: Just add -ment directly (skip the feminine step!)\n'
+          '• Poli → Poliment\n'
+          '• Vrai → Vraiment\n\n'
+          '3️⃣ The "-NT" Trap (Important!): \n'
+          '• Ends in -ENT? Change to -EMMENT (Prudent → Prudemment)\n'
+          '• Ends in -ANT? Change to -AMMENT (Courant → Couramment)',
           style: TextStyle(fontSize: 15, height: 1.8),
         ),
-        const SectionTitle('✨ Examples'),
+        const SectionTitle('✨ Real-Life Examples'),
         const ExampleBox(
-          french: 'Il parle doucement.',
-          english: 'He speaks softly.',
+          french: 'Il conduit prudemment.',
+          english: 'He drives prudently.',
         ),
         const ExampleBox(
-          french: 'Elle travaille sérieusement.',
-          english: 'She works seriously.',
+          french: 'Elle chante admirablement.',
+          english: 'She sings admirably.',
         ),
         const ExampleBox(
-          french: 'Nous mangeons rapidement.',
-          english: 'We eat quickly.',
+          french: 'Nous vivons tranquillement.',
+          english: 'We live quietly.',
         ),
-        const SectionTitle('⚠️ Some Exceptions'),
+        const SectionTitle('🚫 The "Rebel" Adverbs (Irregulars)'),
         const TranslatedText(
-          '• Bon → Bien (Well)\n'
-          '• Mauvais → Mal (Badly)\n'
-          '• Gentil → Gentiment (Kindly)',
+          'Some adverbs just hate rules:\n'
+          '• Bon (Good) → BIEN (Well)\n'
+          '• Mauvais (Bad) → MAL (Badly)\n'
+          '• Petit (Small) → PEU (Little)\n'
+          '• Gentil (Kind) → GENTIMENT (Kindly)',
           style: TextStyle(fontSize: 15, height: 1.8),
         ),
         const TipBox(
-          title: '💡 Pro Tip',
+          title: '👂 Dummy Ear Tip',
           content:
-              'The pronunciation of -emment and -amment is the same: [am-mã]. "Patiemment" sounds like it has an "a"!',
-          icon: Icons.lightbulb,
+              'Both -emment and -amment sound EQUALLY like "ah-mah" [am-mã]. Don\'t let the spelling scare your ears!',
+          icon: Icons.hearing,
           color: Color(0xFFF59E0B),
         ),
       ],

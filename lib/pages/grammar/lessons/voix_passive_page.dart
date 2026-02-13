@@ -17,49 +17,51 @@ class VoixPassivePage extends StatelessWidget {
       icon: '🔄',
       children: [
         const TranslatedText(
-          'The passive voice (la voix passive) is used to shift the focus from the person performing the action to the action itself or the person/thing receiving it.',
-          style: TextStyle(fontSize: 16, height: 1.5),
+          'Imagine a MIRROR. 🪞 In the "Passive Voice," we just flip the sentence! The one who WAS the target now becomes the "Boss" (the subject).',
+          style:
+              TextStyle(fontSize: 16, height: 1.5, fontWeight: FontWeight.bold),
         ),
-        const SectionTitle('🎯 When to Use It'),
+        const SectionTitle('💡 Why use it? (The "Lazy" Secret)'),
         const TranslatedText(
-          '• When the person doing the action is unknown or unimportant\n'
-          '• To emphasize the result or the object of the action\n'
-          '• In formal or journalistic writing',
+          'We use it when we don\'t know who did the action, or we don\'t care. \n'
+          'Example: "The bank was robbed." (We don\'t know who did it!)',
           style: TextStyle(fontSize: 15, height: 1.8),
         ),
-        const SectionTitle('🔧 How to Form It'),
+        const SectionTitle('🛠️ The 3-Step Magic Formula'),
         const TipBox(
-          title: 'The Formula',
-          content:
-              'ÊTRE (conjugated) + PAST PARTICIPLE (+ PAR + agent)\n\nNote: The past participle MUST agree in gender and number with the SUBJECT of the sentence!',
-          icon: Icons.unfold_more,
+          title: 'Step-by-Step Flip',
+          content: '1. Take the Object and make it the Subject.\n'
+              '2. Add the verb ÊTRE in the SAME tense as the original verb.\n'
+              '3. Add the Past Participle of the original verb.\n\n'
+              '⚠️ PRO RULE: The participle must MATCH the new subject (add -e for feminine, -s for plural)!',
+          icon: Icons.auto_fix_high,
           color: Color(0xFF10B981),
         ),
-        const SectionTitle('📝 Examples in Different Tenses'),
+        const SectionTitle('📝 See the Flip!'),
+        const ExampleBox(
+          french: 'Le chat mange la souris. (Active)',
+          english: 'The cat eats the mouse.',
+        ),
+        const ExampleBox(
+          french: 'La souris est mangée par le chat. (Passive)',
+          english: 'The mouse is eaten by the cat.',
+        ),
         const TranslatedText(
-          'Present: Le chat mange la souris → La souris est mangée par le chat.\n'
-          'Passé Composé: J\'ai fini le travail → Le travail a été fini par moi.\n'
-          'Futur Simple: Ils construiront la maison → La maison sera construite.',
+          'See? "Mange" (Present) became "EST" (Present) + "mangée" (Matched to mouse).',
+          style: TextStyle(fontSize: 14, fontStyle: FontStyle.italic),
+        ),
+        const SectionTitle('🕰️ Different Tenses (No Panic!)'),
+        const TranslatedText(
+          '• Past: J\'ai fini le livre → Le livre A ÉTÉ fini.\n'
+          '• Future: Tu feras le gâteau → Le gâteau SERA fait.\n'
+          '• Imparfait: Il lisait l\'histoire → L\'histoire ÉTAIT lue.',
           style: TextStyle(fontSize: 15, height: 1.8),
         ),
-        const SectionTitle('✨ More Examples'),
-        const ExampleBox(
-          french: 'Les fleurs sont arrosées chaque matin.',
-          english: 'The flowers are watered every morning.',
-        ),
-        const ExampleBox(
-          french: 'Le coupable a été arrêté par la police.',
-          english: 'The culprit was arrested by the police.',
-        ),
-        const ExampleBox(
-          french: 'Ce livre est écrit en français.',
-          english: 'This book is written in French.',
-        ),
         const TipBox(
-          title: '💡 Pro Tip',
+          title: '🤫 The "ON" Shortcut',
           content:
-              'French speakers often use "ON" instead of the passive voice in casual conversation. Instead of "La porte a été fermée", they might say "On a fermé la porte".',
-          icon: Icons.lightbulb,
+              'DUMMY TIP: French people are lazy! Instead of saying "La porte a été fermée" (passive), they usually say "On a fermé la porte" (Someone closed it). It sounds much more natural!',
+          icon: Icons.psychology,
           color: Color(0xFFF59E0B),
         ),
       ],
