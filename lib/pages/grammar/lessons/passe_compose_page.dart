@@ -34,10 +34,6 @@ class PasseComposePage extends StatelessWidget {
           english: 'She finished her homework (it\'s DONE!)',
         ),
         const SectionTitle('🔧 How to Build It'),
-        const TranslatedText(
-          'Super simple! Just 2 parts:',
-          style: TextStyle(fontSize: 15, height: 1.5),
-        ),
         const TipBox(
           title: 'Formula',
           content: 'AVOIR or ÊTRE (present tense) + PAST PARTICIPLE',
@@ -52,9 +48,9 @@ class PasseComposePage extends StatelessWidget {
         ),
         const SectionTitle('Step 2: Make the Past Participle'),
         const TranslatedText(
-          '• ER verbs → remove ER, add É (manger → mangé)\n'
-          '• IR verbs → remove IR, add I (finir → fini)\n'
-          '• RE verbs → remove RE, add U (vendre → vendu)',
+          '• ER verbs → remove ER, add É  (manger → mangé)\n'
+          '• IR verbs → remove IR, add I  (finir → fini)\n'
+          '• RE verbs → remove RE, add U  (vendre → vendu)',
           style: TextStyle(fontSize: 15, height: 1.8),
         ),
         const SectionTitle('📝 Examples with AVOIR'),
@@ -70,8 +66,8 @@ class PasseComposePage extends StatelessWidget {
           french: 'Nous avons attendu le bus',
           english: 'We waited for the bus',
         ),
-        const SectionTitle(' 🚶 Examples with ÊTRE (Movement Verbs)'),
-        const Text(
+        const SectionTitle('🚶 Examples with ÊTRE (Movement Verbs)'),
+        const TranslatedText(
           'Remember DR & MRS VANDERTRAMP for ÊTRE verbs!',
           style: TextStyle(fontSize: 15, fontStyle: FontStyle.italic),
         ),
@@ -90,34 +86,39 @@ class PasseComposePage extends StatelessWidget {
         const TipBox(
           title: '⚠️ IMPORTANT!',
           content:
-              'With ÊTRE, the past participle must AGREE with the subject (add e for feminine, s for plural, es for feminine plural)',
+              'With ÊTRE, the past participle must AGREE with the subject:\n'
+              'add -e for feminine, -s for plural, -es for feminine plural',
           icon: Icons.warning,
           color: Color(0xFFEF4444),
         ),
-        const SectionTitle('🎯 Common Irregular Past Participles'),
-        const TranslatedText(
-          'These troublemakers don\'t follow the rules:\n\n'
-          '• être → été (been)\n'
-          '• avoir → eu (had)\n'
-          '• faire → fait (done/made)\n'
-          '• voir → vu (seen)\n'
-          '• prendre → pris (taken)\n'
-          '• mettre → mis (put)\n'
-          '• écrire → écrit (written)\n'
-          '• lire → lu (read)',
-          style: TextStyle(fontSize: 15, height: 1.8),
+        // Irregular participles — must stay in French
+        const FrenchTipBox(
+          title: '🎯 Common Irregular Past Participles',
+          frenchText: 'être   →  été    (been)\n'
+              'avoir  →  eu     (had)\n'
+              'faire  →  fait   (done / made)\n'
+              'voir   →  vu     (seen)\n'
+              'prendre → pris  (taken)\n'
+              'mettre →  mis    (put)\n'
+              'écrire →  écrit  (written)\n'
+              'lire   →  lu     (read)',
+          icon: Icons.list_alt,
+          color: Color(0xFF8B5CF6),
         ),
         const SectionTitle('❌ Common Mistakes'),
-        const TipBox(
-          title: 'Don\'t  Forget the Helper Verb!',
-          content: '❌ Je mangé ➜ ✅ J\'ai mangé\nYou ALWAYS need avoir or être!',
+        const FrenchTipBox(
+          title: 'Don\'t Forget the Helper Verb!',
+          frenchText: '❌  Je mangé\n'
+              '✅  J\'ai mangé\n\n'
+              'You ALWAYS need avoir or être!',
           icon: Icons.error_outline,
           color: Color(0xFFF59E0B),
         ),
-        const TipBox(
+        const FrenchTipBox(
           title: 'Watch Out for Agreement!',
-          content:
-              '❌ Marie est allé ➜ ✅ Marie est allée\nWith être, add -e for feminine subjects!',
+          frenchText: '❌  Marie est allé\n'
+              '✅  Marie est allée\n\n'
+              'With être, add -e for feminine subjects!',
           icon: Icons.error_outline,
           color: Color(0xFFF59E0B),
         ),

@@ -11,6 +11,7 @@ import 'essay/essay_page.dart';
 import 'dialogue/dialogue_page.dart';
 import 'listening/listening_page.dart';
 import 'daily_phrases/daily_phrases_page.dart';
+import '../models/grammar_topic.dart';
 
 import 'package:flutter/foundation.dart'; // Import for kDebugMode
 
@@ -157,7 +158,7 @@ class HomePage extends StatelessWidget {
                         _buildFeatureCard(
                           context,
                           title: languageProvider.translate('grammar'),
-                          subtitle: '9 Essential Lessons',
+                          subtitle: '${grammarTopics.length} Essential Lessons',
                           icon: '📚',
                           color: AppTheme.primary,
                           onTap: () {

@@ -34,10 +34,33 @@ class PlusQueParfaitPage extends StatelessWidget {
         const SectionTitle('🔧 How to Build It'),
         const TipBox(
           title: 'Easy Formula!',
-          content:
-              'AVOIR or ÊTRE (in Imparfait) + PAST PARTICIPLE\n\nIt\'s just like Passé Composé, but with the helper verb in Imparfait!',
+          content: 'AVOIR or ÊTRE (in Imparfait) + PAST PARTICIPLE\n\n'
+              'It\'s just like Passé Composé, but with the helper verb in Imparfait!',
           icon: Icons.calculate,
           color: Color(0xFF6366F1),
+        ),
+        // Helper verb conjugation — must stay in French
+        const FrenchTipBox(
+          title: 'AVOIR in Imparfait (used with most verbs)',
+          frenchText: 'j\'avais\n'
+              'tu avais\n'
+              'il / elle avait\n'
+              'nous avions\n'
+              'vous aviez\n'
+              'ils / elles avaient',
+          icon: Icons.history,
+          color: Color(0xFF10B981),
+        ),
+        const FrenchTipBox(
+          title: 'ÊTRE in Imparfait (movement & reflexive verbs)',
+          frenchText: 'j\'étais\n'
+              'tu étais\n'
+              'il / elle était\n'
+              'nous étions\n'
+              'vous étiez\n'
+              'ils / elles étaient',
+          icon: Icons.directions_walk,
+          color: Color(0xFF0EA5E9),
         ),
         const SectionTitle('📝 Examples'),
         const ExampleBox(
@@ -55,7 +78,7 @@ class PlusQueParfaitPage extends StatelessWidget {
         const TipBox(
           title: '💡 Key Signal Words',
           content:
-              'Look for: déjà (already), avant (before), quand (when) - these often signal Plus-que-parfait!',
+              'Look for: déjà (already), avant (before), quand (when) — these often signal Plus-que-parfait!',
           icon: Icons.lightbulb,
           color: Color(0xFFF59E0B),
         ),

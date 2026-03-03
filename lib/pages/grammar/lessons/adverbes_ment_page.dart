@@ -31,17 +31,21 @@ class AdverbesMentPage extends StatelessWidget {
           color: Color(0xFF10B981),
         ),
         const SectionTitle('📐 The 3 Rules for Adverb Success'),
-        const TranslatedText(
-          '1️⃣ Standard Rule: Fem. Adjective + -ment\n'
-          '• Heureux → Heureuse → Heureusement\n'
-          '• Frais → Fraîche → Fraîchement\n\n'
-          '2️⃣ If Adjective ends in a Vowel: Just add -ment directly (skip the feminine step!)\n'
-          '• Poli → Poliment\n'
-          '• Vrai → Vraiment\n\n'
-          '3️⃣ The "-NT" Trap (Important!): \n'
-          '• Ends in -ENT? Change to -EMMENT (Prudent → Prudemment)\n'
-          '• Ends in -ANT? Change to -AMMENT (Courant → Couramment)',
-          style: TextStyle(fontSize: 15, height: 1.8),
+        // Rules include French words — use FrenchTipBox for the examples
+        const FrenchTipBox(
+          title: '3 Rules — French Examples',
+          frenchText: '1️⃣  Standard: Féminin + -ment\n'
+              '   Heureux  →  Heureuse  →  Heureusement\n'
+              '   Frais    →  Fraîche   →  Fraîchement\n\n'
+              '2️⃣  Adjective ends in a vowel → just add -ment\n'
+              '   Poli  →  Poliment\n'
+              '   Vrai  →  Vraiment\n\n'
+              '3️⃣  Ends in -ENT  →  -EMMENT\n'
+              '   Prudent  →  Prudemment\n\n'
+              '   Ends in -ANT  →  -AMMENT\n'
+              '   Courant  →  Couramment',
+          icon: Icons.rule,
+          color: Color(0xFF6366F1),
         ),
         const SectionTitle('✨ Real-Life Examples'),
         const ExampleBox(
@@ -57,13 +61,15 @@ class AdverbesMentPage extends StatelessWidget {
           english: 'We live quietly.',
         ),
         const SectionTitle('🚫 The "Rebel" Adverbs (Irregulars)'),
-        const TranslatedText(
-          'Some adverbs just hate rules:\n'
-          '• Bon (Good) → BIEN (Well)\n'
-          '• Mauvais (Bad) → MAL (Badly)\n'
-          '• Petit (Small) → PEU (Little)\n'
-          '• Gentil (Kind) → GENTIMENT (Kindly)',
-          style: TextStyle(fontSize: 15, height: 1.8),
+        // Irregular adverbs — French words must stay in French
+        const FrenchTipBox(
+          title: 'Some adverbs just hate rules!',
+          frenchText: 'Bon      (Good)   →  bien       (well)\n'
+              'Mauvais  (Bad)    →  mal        (badly)\n'
+              'Petit    (Small)  →  peu        (little)\n'
+              'Gentil   (Kind)   →  gentiment  (kindly)',
+          icon: Icons.warning,
+          color: Color(0xFFEF4444),
         ),
         const TipBox(
           title: '👂 Dummy Ear Tip',

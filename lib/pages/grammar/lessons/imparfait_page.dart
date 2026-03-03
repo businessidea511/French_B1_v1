@@ -42,23 +42,25 @@ class ImparfaitPage extends StatelessWidget {
         const SectionTitle('🔧 How to Build It'),
         const TipBox(
           title: 'Super Easy Formula!',
-          content:
-              'Take the NOUS form, remove -ONS, add Imparfait endings:\n-ais, -ais, -ait, -ions, -iez, -aient',
+          content: 'Take the NOUS form, remove -ONS, add Imparfait endings:\n'
+              '-ais, -ais, -ait, -ions, -iez, -aient',
           icon: Icons.calculate,
           color: Color(0xFF6366F1),
         ),
-        const SectionTitle('Step-by-Step Example: PARLER'),
-        const TranslatedText(
-          '1. Nous parlons (present)\n'
-          '2. Remove -ons → parl-\n'
-          '3. Add endings:\n\n'
-          '   je parlais\n'
-          '   tu parlais\n'
-          '   il/elle parlait\n'
-          '   nous parlions\n'
-          '   vous parliez\n'
-          '   ils/elles parlaient',
-          style: TextStyle(fontSize: 15, height: 1.8, fontFamily: 'monospace'),
+        // Full conjugation example — must stay in French
+        const FrenchTipBox(
+          title: 'Step-by-Step Example: PARLER',
+          frenchText: '1. Nous parlons (present)\n'
+              '2. Remove -ons  →  parl-\n'
+              '3. Add endings:\n\n'
+              '   je         parlais\n'
+              '   tu         parlais\n'
+              '   il / elle  parlait\n'
+              '   nous       parlions\n'
+              '   vous       parliez\n'
+              '   ils/elles  parlaient',
+          icon: Icons.auto_fix_high,
+          color: Color(0xFF10B981),
         ),
         const SectionTitle('📝 More Examples'),
         const ExampleBox(
@@ -75,17 +77,23 @@ class ImparfaitPage extends StatelessWidget {
         ),
         const SectionTitle('🎯 When to Use Imparfait'),
         const TranslatedText(
-          '1. **Descriptions** (age, weather, feelings, appearance)\n'
-          '   • Il faisait froid (It was cold)\n'
-          '   • Elle était contente (She was happy)\n\n'
-          '2. **Habits / Repeated Actions** ("used to" or "would")\n'
-          '   • Je mangeais toujours  des céréales (I used to always eat cereal)\n\n'
-          '3. **Ongoing Actions** (what "was happening")\n'
-          '   • Je dormais quand tu as appelé (I was sleeping when you called)\n\n'
-          '4. **Time / Age**\n'
-          '   • Il était 10h (It was 10 o\'clock)\n'
-          '   • J\'avais 15 ans (I was 15 years old)',
+          '1. Descriptions (age, weather, feelings, appearance)\n'
+          '2. Habits / Repeated Actions ("used to" or "would")\n'
+          '3. Ongoing Actions (what "was happening")\n'
+          '4. Time / Age',
           style: TextStyle(fontSize: 15, height: 1.8),
+        ),
+        const ExampleBox(
+          french: 'Il faisait froid.',
+          english: 'It was cold.  (description)',
+        ),
+        const ExampleBox(
+          french: 'Je mangeais toujours des céréales.',
+          english: 'I used to always eat cereal.  (habit)',
+        ),
+        const ExampleBox(
+          french: 'Je dormais quand tu as appelé.',
+          english: 'I was sleeping when you called.  (ongoing)',
         ),
         const TipBox(
           title: '💡 Magic Word: "USED TO"',
@@ -94,19 +102,26 @@ class ImparfaitPage extends StatelessWidget {
           icon: Icons.lightbulb,
           color: Color(0xFFF59E0B),
         ),
-        const SectionTitle('⚠️ Only ONE Irregular Stem'),
-        const TipBox(
-          title: 'ÊTRE is the ONLY exception!',
-          content:
-              'être → ét-\n\nj\'étais, tu étais, il était, nous étions, vous étiez, ils étaient',
+        // ÊTRE irregular — must stay in French
+        const FrenchTipBox(
+          title: '⚠️ ÊTRE is the ONLY Irregular Stem!',
+          frenchText: 'être  →  ét-\n\n'
+              'j\'étais\n'
+              'tu étais\n'
+              'il / elle était\n'
+              'nous étions\n'
+              'vous étiez\n'
+              'ils / elles étaient',
           icon: Icons.warning,
           color: Color(0xFFEF4444),
         ),
         const SectionTitle('❌ Common Mistakes'),
-        const TipBox(
+        const FrenchTipBox(
           title: 'Don\'t Mix Them Up!',
-          content:
-              '❌ Hier, il pleuvait et je sortais\n✅ Hier, il pleuvait et je suis sorti\n\nThe rain = background (Imparfait)\nLeaving = specific action ( Passé Composé)',
+          frenchText: '❌ Hier, il pleuvait et je sortais.\n'
+              '✅ Hier, il pleuvait et je suis sorti.\n\n'
+              'La pluie = background (Imparfait)\n'
+              'Sortir = specific action (Passé Composé)',
           icon: Icons.error_outline,
           color: Color(0xFFF59E0B),
         ),

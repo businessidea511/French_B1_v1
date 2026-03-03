@@ -29,18 +29,24 @@ class FuturSimplePage extends StatelessWidget {
         const SectionTitle('🔧 How to Build It'),
         const TipBox(
           title: 'Two Ways to Build',
-          content: '**Regular verbs (-ER/-IR):** INFINITIVE + endings\n'
-              '**Regular -RE verbs:** Remove E, then add endings\n\n'
+          content: 'Regular verbs (-ER/-IR): INFINITIVE + endings\n'
+              'Regular -RE verbs: Remove E, then add endings\n\n'
               'Endings: -ai, -as, -a, -ons, -ez, -ont',
           icon: Icons.calculate,
           color: Color(0xFF6366F1),
         ),
         const SectionTitle('📝 Regular Examples'),
-        const TranslatedText(
-          'PARLER → je parlerai (I will speak)\n'
-          'FINIR → tu finiras (you will finish)\n'
-          'VENDRE → il vendra (he will sell)',
-          style: TextStyle(fontSize: 15, height: 1.8, fontFamily: 'monospace'),
+        const ExampleBox(
+          french: 'PARLER → je parlerai',
+          english: 'I will speak',
+        ),
+        const ExampleBox(
+          french: 'FINIR → tu finiras',
+          english: 'You will finish',
+        ),
+        const ExampleBox(
+          french: 'VENDRE → il vendra',
+          english: 'He will sell',
         ),
         const SectionTitle('✨ Usage Examples'),
         const ExampleBox(
@@ -55,17 +61,17 @@ class FuturSimplePage extends StatelessWidget {
           french: 'Vous finirez à quelle heure?',
           english: 'What time will you finish?',
         ),
-        const SectionTitle('⚠️ Common Irregular Stems'),
-        const TipBox(
-          title: 'Memorize These!',
-          content: 'être → ser- (je serai)\n'
-              'avoir → aur- (j\'aurai)\n'
-              'aller → ir- (j\'irai)\n'
-              'faire → fer- (je ferai)\n'
-              'voir → verr- (je verrai)\n'
-              'vouloir → voudr- (je voudrai)\n'
-              'pouvoir → pourr- (je pourrai)\n'
-              'venir → viendr- (je viendrai)',
+        // Irregular stems — must stay in French
+        const FrenchTipBox(
+          title: '⚠️ Common Irregular Stems — Memorize These!',
+          frenchText: 'être    →  ser-    →  je serai\n'
+              'avoir   →  aur-    →  j\'aurai\n'
+              'aller   →  ir-     →  j\'irai\n'
+              'faire   →  fer-    →  je ferai\n'
+              'voir    →  verr-   →  je verrai\n'
+              'vouloir →  voudr-  →  je voudrai\n'
+              'pouvoir →  pourr-  →  je pourrai\n'
+              'venir   →  viendr- →  je viendrai',
           icon: Icons.warning,
           color: Color(0xFFEF4444),
         ),

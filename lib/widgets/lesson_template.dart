@@ -190,3 +190,74 @@ class TipBox extends StatelessWidget {
     );
   }
 }
+
+/// A styled tip box where the [title] is translated into the user's language,
+/// but [frenchText] is always rendered in plain [Text] — French never translated.
+class FrenchTipBox extends StatelessWidget {
+  final String title;
+  final String frenchText;
+  final IconData icon;
+  final Color color;
+
+  const FrenchTipBox({
+    super.key,
+    required this.title,
+    required this.frenchText,
+    this.icon = Icons.lightbulb_outline,
+    this.color = const Color(0xFFF59E0B),
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 20),
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.07),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: color.withOpacity(0.3), width: 1.5),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: color, size: 24),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                TranslatedText(
+                  title,
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: color,
+                    fontFamily: 'Outfit',
+                  ),
+                ),
+                const SizedBox(height: 8),
+                // Plain Text: French content is NEVER auto-translated
+                Text(
+                  frenchText,
+                  style: TextStyle(
+                    fontSize: 15,
+                    color: Colors.white.withOpacity(0.85),
+                    height: 1.7,
+                    fontFamily: 'monospace',
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

@@ -22,35 +22,40 @@ class CodCoiPage extends StatelessWidget {
         ),
         const SectionTitle('🎯 What Are They?'),
         const TranslatedText(
-          '**COD (Complément d\'Objet Direct)** = Direct Object\n'
+          'COD (Complément d\'Objet Direct) = Direct Object\n'
           '→ WHAT or WHO directly receives the action\n'
           '→ No preposition needed\n\n'
-          '**COI (Complément d\'Objet Indirect)** = Indirect Object\n'
+          'COI (Complément d\'Objet Indirect) = Indirect Object\n'
           '→ TO WHOM the action is done\n'
           '→ Uses preposition "à"',
           style: TextStyle(fontSize: 15, height: 1.8),
         ),
-        const SectionTitle('📋 The Pronouns'),
-        const SectionTitle('COD (Direct Object)'),
-        const TranslatedText(
-          'me/m\' = me\n'
-          'te/t\' = you\n'
-          'le/l\' = him/it (masculine)\n'
-          'la/l\' = her/it (feminine)\n'
-          'nous = us\n'
-          'vous = you (plural/formal)\n'
-          'les = them',
-          style: TextStyle(fontSize: 15, height: 1.8, fontFamily: 'monospace'),
+        // COD pronouns — French grammar terms must stay in French
+        const SectionTitle('📋 COD Pronouns (Direct Object)'),
+        const FrenchTipBox(
+          title: 'COD — Direct Object Pronouns',
+          frenchText: 'me / m\'  =  me\n'
+              'te / t\'  =  you\n'
+              'le / l\'  =  him / it (masculine)\n'
+              'la / l\'  =  her / it (feminine)\n'
+              'nous     =  us\n'
+              'vous     =  you (plural / formal)\n'
+              'les      =  them',
+          icon: Icons.account_circle,
+          color: Color(0xFF6366F1),
         ),
-        const SectionTitle('COI (Indirect Object)'),
-        const TranslatedText(
-          'me/m\' = to me\n'
-          'te/t\' = to you\n'
-          'lui = to him/her\n'
-          'nous = to us\n'
-          'vous = to you (plural/formal)\n'
-          'leur = to them',
-          style: TextStyle(fontSize: 15, height: 1.8, fontFamily: 'monospace'),
+        // COI pronouns
+        const SectionTitle('📋 COI Pronouns (Indirect Object)'),
+        const FrenchTipBox(
+          title: 'COI — Indirect Object Pronouns',
+          frenchText: 'me / m\'  =  to me\n'
+              'te / t\'  =  to you\n'
+              'lui      =  to him / her\n'
+              'nous     =  to us\n'
+              'vous     =  to you (plural / formal)\n'
+              'leur     =  to them',
+          icon: Icons.account_circle_outlined,
+          color: Color(0xFF10B981),
         ),
         const SectionTitle('✨ COD Examples'),
         const ExampleBox(
@@ -78,39 +83,44 @@ class CodCoiPage extends StatelessWidget {
           title: '🔍 How to Identify COD vs COI',
           content: 'Ask questions:\n'
               '• COD: WHAT? or WHO? (no preposition)\n'
-              '  "Je vois QUOI? → la voiture"\n\n'
-              '• COI: TO WHOM? (à + person)\n'
-              '  "Je parle à QUI? → à Marie"',
+              '• COI: TO WHOM? (à + person)',
           icon: Icons.help_outline,
           color: Color(0xFF6366F1),
         ),
-        const SectionTitle('📍Position'),
-        const TipBox(
-          title: 'Where to Put Them',
-          content: '**Present/Future:** BEFORE the verb\n'
-              '  Je le vois (I see him)\n\n'
-              '**Passé Composé:** BEFORE the auxiliary\n'
-              '  Je l\'ai vu (I saw him)\n\n'
-              '**With infinitive:** BEFORE the infinitive\n'
-              '  Je vais le voir (I\'m going to see him)',
+        const SectionTitle('📍 Position — Where to Put Them'),
+        const FrenchTipBox(
+          title: 'Pronoun placement rules',
+          frenchText: 'Present / Future  →  BEFORE the verb\n'
+              '  Je le vois.  (I see him)\n\n'
+              'Passé Composé  →  BEFORE the auxiliary\n'
+              '  Je l\'ai vu.  (I saw him)\n\n'
+              'With infinitive  →  BEFORE the infinitive\n'
+              '  Je vais le voir.  (I\'m going to see him)',
           icon: Icons.place,
           color: Color(0xFFF59E0B),
         ),
         const SectionTitle('⚠️ Tricky Verbs with À'),
         const TranslatedText(
-          'These verbs use COI (even though they might not in English):\n\n'
-          '• parler à (talk to) → Je lui parle\n'
-          '• téléphoner à (call) → Je lui téléphone\n'
-          '• répondre à (answer) → Je lui réponds\n'
-          '• demander à (ask) → Je lui demande',
-          style: TextStyle(fontSize: 15, height: 1.8),
+          'These verbs use COI (even though they might not in English):',
+          style: TextStyle(fontSize: 15, height: 1.6),
         ),
-        const TipBox(
-          title: '⚠️ Agreement Alert!',
-          content:
-              'In Passé Composé, the past participle agrees with COD (not COI) when it comes BEFORE:\n\n'
-              'La pomme? Je l\'ai mangée. (agrees)\n'
-              'Marie? Je lui ai parlé. (no agreement - COI)',
+        const ExampleBox(
+          french: 'parler à → Je lui parle',
+          english: 'talk to → I talk to him/her',
+        ),
+        const ExampleBox(
+          french: 'téléphoner à → Je lui téléphone',
+          english: 'call → I call him/her',
+        ),
+        const ExampleBox(
+          french: 'répondre à → Je lui réponds',
+          english: 'answer → I answer him/her',
+        ),
+        const FrenchTipBox(
+          title: '⚠️ Agreement Alert! (Passé Composé)',
+          frenchText: 'Participle agrees with COD when it comes BEFORE:\n\n'
+              '✅ La pomme ? Je l\'ai mangée.   (agrees — COD)\n'
+              '✅ Marie ?   Je lui ai parlé.    (no agreement — COI)',
           icon: Icons.warning,
           color: Color(0xFFEF4444),
         ),

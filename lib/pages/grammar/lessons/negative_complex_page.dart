@@ -66,28 +66,34 @@ class NegativeComplexPage extends StatelessWidget {
           french: 'Il n\'y a aucun problème',
           english: 'There is no problem',
         ),
-        const TipBox(
+        // Position rule — includes French examples that must stay French
+        const FrenchTipBox(
           title: '🎯 Position in Passé Composé',
-          content: 'ne + helping verb + jamais/rien/plus + past participle\n\n'
-              'Example: Je n\'ai jamais vu ce film\n\n'
-              'BUT with PERSONNE: Je n\'ai vu personne (after participle)',
+          frenchText:
+              'ne + helper verb + jamais/rien/plus + past participle\n\n'
+              '✅ Je n\'ai jamais vu ce film.\n\n'
+              '⚠️ PERSONNE comes AFTER the participle:\n'
+              '✅ Je n\'ai vu personne.',
           icon: Icons.info,
           color: Color(0xFF6366F1),
         ),
-        const TipBox(
-          title: '⚠️ Double Negatives are OK!',
-          content: 'In French, you CAN combine negatives:\n'
-              '• Je ne dis jamais rien (I never say anything)\n'
-              '• Il n\'y a plus personne (There\'s nobody left)',
+        // Double negatives — French examples must stay French
+        const FrenchTipBox(
+          title: '⚠️ Double Negatives are OK in French!',
+          frenchText: '✅ Je ne dis jamais rien.\n'
+              '   (I never say anything)\n\n'
+              '✅ Il n\'y a plus personne.\n'
+              '   (There\'s nobody left)',
           icon: Icons.warning,
           color: Color(0xFFF59E0B),
         ),
         const SectionTitle('❌ Common Mistakes'),
-        const TranslatedText(
-          '❌ Je ne jamais mange → ✅ Je ne mange jamais\n'
-          '❌ Je rien comprends → ✅ Je ne comprends rien\n\n'
-          'Don\'t forget the NE!',
-          style: TextStyle(fontSize: 15, height: 1.8),
+        const FrenchTipBox(
+          title: 'Don\'t forget the NE!',
+          frenchText: '❌ Je ne jamais mange    →  ✅ Je ne mange jamais\n'
+              '❌ Je rien comprends     →  ✅ Je ne comprends rien',
+          icon: Icons.error_outline,
+          color: Color(0xFFEF4444),
         ),
       ],
     );

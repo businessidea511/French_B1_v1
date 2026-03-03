@@ -16,25 +16,25 @@ class SiSeulementPage extends StatelessWidget {
       icon: '💭',
       children: [
         const TranslatedText(
-          '"Si seulement" means "If only" - it\'s for expressing REGRETS and WISHES about things that aren\'t true or didn\'t happen. Very dramaic! 🎭',
+          '"Si seulement" means "If only" - it\'s for expressing REGRETS and WISHES about things that aren\'t true or didn\'t happen. Very dramatic! 🎭',
           style: TextStyle(fontSize: 16, height: 1.5),
         ),
         const SectionTitle('💔 Two Types of Regrets'),
         const TranslatedText(
-          '1. **Present/Future regrets** (wish things were different NOW)\n'
-          '2. **Past regrets** (wish things had been different THEN)',
+          '1. Present / Future regrets — wish things were different NOW\n'
+          '2. Past regrets — wish things had been different THEN',
           style: TextStyle(fontSize: 15, height: 1.8),
         ),
-        const SectionTitle('🔧 Structure 1: Present/Future Wishes'),
-        const TipBox(
-          title: 'Formula',
-          content:
-              'Si seulement + IMPARFAIT\n\nUse Imparfait to wish about the present or future!',
+        const SectionTitle('🔧 Structure 1: Present / Future Wishes'),
+        const FrenchTipBox(
+          title: 'Formula: Si seulement + Imparfait',
+          frenchText: 'Si seulement + IMPARFAIT\n\n'
+              'Use Imparfait to wish about the present or future!',
           icon: Icons.calculate,
           color: Color(0xFF6366F1),
         ),
         const ExampleBox(
-          french: 'Si seulement j\'étais riche!',
+          french: 'Si seulement j\'étais riche !',
           english: 'If only I were rich! (but I\'m not)',
         ),
         const ExampleBox(
@@ -42,19 +42,19 @@ class SiSeulementPage extends StatelessWidget {
           english: 'If only the weather were nice (but it\'s not)',
         ),
         const ExampleBox(
-          french: 'Si seulement je pouvais voler!',
+          french: 'Si seulement je pouvais voler !',
           english: 'If only I could fly! (but I can\'t)',
         ),
         const SectionTitle('🔧 Structure 2: Past Regrets'),
-        const TipBox(
-          title: 'Formula',
-          content:
-              'Si seulement + PLUS-QUE-PARFAIT\n\nUse Plus-que-parfait to regret things that happened (or didn\'t happen) in the past!',
+        const FrenchTipBox(
+          title: 'Formula: Si seulement + Plus-que-parfait',
+          frenchText: 'Si seulement + PLUS-QUE-PARFAIT\n\n'
+              'Use Plus-que-parfait to regret things that happened (or didn\'t happen) in the past!',
           icon: Icons.calculate,
           color: Color(0xFF6366F1),
         ),
         const ExampleBox(
-          french: 'Si seulement j\'avais étudié!',
+          french: 'Si seulement j\'avais étudié !',
           english: 'If only I had studied! (but I didn\'t)',
         ),
         const ExampleBox(
@@ -65,22 +65,28 @@ class SiSeulementPage extends StatelessWidget {
           french: 'Si seulement elle avait dit la vérité',
           english: 'If only she had told the truth (but she didn\'t)',
         ),
-        const TipBox(
+        // Quick reference — French key sentences must stay French
+        const FrenchTipBox(
           title: '💡 Quick Reference',
-          content: '• Wishing about NOW/FUTURE → Imparfait\n'
-              '  "Si seulement j\'ÉTAIS riche"\n\n'
-              '• Regretting the PAST → Plus-que-parfait\n'
-              '  "Si seulement j\'AVAIS ÉTÉ riche"',
+          frenchText: 'Wishing about NOW / FUTURE  →  Imparfait\n'
+              '  Si seulement j\'ÉTAIS riche.\n\n'
+              'Regretting the PAST  →  Plus-que-parfait\n'
+              '  Si seulement j\'AVAIS ÉTÉ riche.',
           icon: Icons.lightbulb,
           color: Color(0xFF10B981),
         ),
         const SectionTitle('🎭 Common Expressions'),
-        const TranslatedText(
-          '• Si seulement je le savais! (If only I knew!)\n'
-          '• Si seulement c\'était vrai! (If only it were true!)\n'
-          '• Si seulement tu avais écouté! (If only you had listened!)\n'
-          '• Si seulement je pouvais recommencer! (If only I could start over!)',
-          style: TextStyle(fontSize: 15, height: 1.8),
+        const ExampleBox(
+          french: 'Si seulement je le savais !',
+          english: 'If only I knew!',
+        ),
+        const ExampleBox(
+          french: 'Si seulement c\'était vrai !',
+          english: 'If only it were true!',
+        ),
+        const ExampleBox(
+          french: 'Si seulement tu avais écouté !',
+          english: 'If only you had listened!',
         ),
         const ExampleBox(
           french: 'Si seulement j\'avais su, je ne serais pas venu',
@@ -89,8 +95,8 @@ class SiSeulementPage extends StatelessWidget {
         const TipBox(
           title: '⚠️ Don\'t Confuse Si!',
           content: '• "Si" in conditions = if (normal conditionals)\n'
-              '• "Si seulement" = if only (regrets/wishes)\n\n'
-              'Si seulement is MORE EMOTIONAL!',
+              '• "Si seulement" = if only (regrets / wishes)\n\n'
+              '"Si seulement" is MORE EMOTIONAL!',
           icon: Icons.warning,
           color: Color(0xFFF59E0B),
         ),

@@ -25,11 +25,11 @@ class PresentPage extends StatelessWidget {
           'If you were filming a TikTok or a Live Stream, you would use Le Présent to describe the action as it happens:',
           style: TextStyle(fontSize: 15, height: 1.5),
         ),
-        ExampleBox(
+        const ExampleBox(
           french: 'Je regarde un film maintenant',
           english: 'I am watching a movie now (Right now!)',
         ),
-        ExampleBox(
+        const ExampleBox(
           french: 'Le soleil brille tous les jours',
           english: 'The sun shines every day (Always true)',
         ),
@@ -43,7 +43,7 @@ class PresentPage extends StatelessWidget {
           'Remove -ER and add: -e, -es, -e, -ons, -ez, -ent',
           style: TextStyle(fontSize: 15, height: 1.8),
         ),
-        ExampleBox(
+        const ExampleBox(
           french:
               'Je parle, Tu parles, Il parle\nNous parlons, Vous parlez, Ils parlent',
           english: 'Parler (To speak)',
@@ -53,7 +53,7 @@ class PresentPage extends StatelessWidget {
           'Remove -IR and add: -is, -is, -it, -issons, -issez, -issent',
           style: TextStyle(fontSize: 15, height: 1.8),
         ),
-        ExampleBox(
+        const ExampleBox(
           french:
               'Je finis, Tu finis, Il finit\nNous finissons, Vous finissez, Ils finissent',
           english: 'Finir (To finish)',
@@ -63,7 +63,7 @@ class PresentPage extends StatelessWidget {
           'Remove -RE and add: -s, -s, -(nothing), -ons, -ez, -ent',
           style: TextStyle(fontSize: 15, height: 1.8),
         ),
-        ExampleBox(
+        const ExampleBox(
           french:
               'Je vends, Tu vends, Il vend\nNous vendons, Vous vendez, Ils vendent',
           english: 'Vendre (To sell)',
@@ -73,36 +73,55 @@ class PresentPage extends StatelessWidget {
           'These 4 are the most used verbs in French. You MUST memorize them!',
           style: TextStyle(fontSize: 15, height: 1.5),
         ),
-        TipBox(
+        const FrenchTipBox(
           title: 'Être (To be)',
-          content: 'Je suis, tu es, il est, nous sommes, vous êtes, ils sont',
+          frenchText: 'je suis\n'
+              'tu es\n'
+              'il / elle est\n'
+              'nous sommes\n'
+              'vous êtes\n'
+              'ils / elles sont',
           icon: Icons.person,
           color: Color(0xFF6366F1),
         ),
-        TipBox(
+        const FrenchTipBox(
           title: 'Avoir (To have)',
-          content: 'J\'ai, tu as, il a, nous avons, vous avez, ils ont',
+          frenchText: 'j\'ai\n'
+              'tu as\n'
+              'il / elle a\n'
+              'nous avons\n'
+              'vous avez\n'
+              'ils / elles ont',
           icon: Icons.inventory_2,
           color: Color(0xFFEC4899),
         ),
-        TipBox(
+        const FrenchTipBox(
           title: 'Aller (To go)',
-          content: 'Je vais, tu vas, il va, nous allons, vous allez, ils vont',
+          frenchText: 'je vais\n'
+              'tu vas\n'
+              'il / elle va\n'
+              'nous allons\n'
+              'vous allez\n'
+              'ils / elles vont',
           icon: Icons.directions_run,
           color: Color(0xFF10B981),
         ),
-        TipBox(
-          title: 'Faire (To do/make)',
-          content:
-              'Je fais, tu fais, il fait, nous faisons, vous faites, ils font',
+        const FrenchTipBox(
+          title: 'Faire (To do / make)',
+          frenchText: 'je fais\n'
+              'tu fais\n'
+              'il / elle fait\n'
+              'nous faisons\n'
+              'vous faites\n'
+              'ils / elles font',
           icon: Icons.build,
           color: Color(0xFFF59E0B),
         ),
-        SectionTitle('❌ Common Mistakes'),
-        TipBox(
+        const SectionTitle('❌ Common Mistakes'),
+        const TipBox(
           title: 'Pronunciation Trap!',
-          content:
-              'The "-ent" ending for "Ils/Elles" is SILENT! 🤫\n❌ Ils parl-ENT ➜ ✅ Ils parl (sounds like "parle")',
+          content: 'The "-ent" ending for "Ils/Elles" is SILENT! 🤫\n'
+              '❌ Ils parl-ENT ➜ ✅ Ils parl (sounds like "parle")',
           icon: Icons.volume_off,
           color: Color(0xFFEF4444),
         ),
