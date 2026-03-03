@@ -4,6 +4,76 @@ import '../../../widgets/lesson_template.dart';
 import '../../../widgets/translated_text.dart';
 import '../../../services/language_provider.dart';
 
+// ── Helper: a styled box where the TITLE is translated but
+//    the FRENCH content stays in plain Text (never translated).
+class _FrenchTipBox extends StatelessWidget {
+  final String title; // translated label / heading
+  final String frenchText; // always stays in French
+  final IconData icon;
+  final Color color;
+
+  const _FrenchTipBox({
+    required this.title,
+    required this.frenchText,
+    required this.icon,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 20),
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.07),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: color.withOpacity(0.3), width: 1.5),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: color, size: 24),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                TranslatedText(
+                  title,
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: color,
+                    fontFamily: 'Outfit',
+                  ),
+                ),
+                const SizedBox(height: 8),
+                // ← plain Text: French never gets translated
+                Text(
+                  frenchText,
+                  style: TextStyle(
+                    fontSize: 15,
+                    color: Colors.white.withOpacity(0.85),
+                    height: 1.7,
+                    fontFamily: 'monospace',
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class VoixPassivePage extends StatelessWidget {
   const VoixPassivePage({super.key});
 
@@ -46,9 +116,7 @@ class VoixPassivePage extends StatelessWidget {
         const TipBox(
           title: '💡 When do French people use the passive?',
           content: '1. When we DON\'T KNOW who did the action.\n'
-              '   → La banque a été volée.  (The bank was robbed — by whom? No idea!)\n\n'
               '2. When we DON\'T CARE who did it.\n'
-              '   → Le pont a été construit en 1900.  (Built in 1900 — who built it doesn\'t matter)\n\n'
               '3. To put MORE FOCUS on the result than on the doer.',
           icon: Icons.lightbulb,
           color: Color(0xFF6366F1),
@@ -56,15 +124,15 @@ class VoixPassivePage extends StatelessWidget {
 
         // ── THE FORMULA ────────────────────────────────────────────────────
         const SectionTitle('🛠️ The Magic Formula — 3 Easy Steps'),
-        const TipBox(
+        // Formula box — French formula stays in French
+        _FrenchTipBox(
           title: 'Passive Formula',
-          content:
+          frenchText:
               'SUBJECT  +  ÊTRE (correct tense)  +  PAST PARTICIPLE  +  (par + agent)\n\n'
-              'Example:\n'
-              '  Le gâteau  +  est  +  mangé  +  par les enfants.\n'
-              '  The cake is eaten by the children.',
+              'Exemple :\n'
+              '  Le gâteau  +  est  +  mangé  +  par les enfants.',
           icon: Icons.auto_fix_high,
-          color: Color(0xFF10B981),
+          color: const Color(0xFF10B981),
         ),
         const TranslatedText(
           'Step 1 ▶ Take the OBJECT of the active sentence → make it the new SUBJECT.\n'
@@ -76,38 +144,39 @@ class VoixPassivePage extends StatelessWidget {
 
         // ── AGREEMENT RULE ─────────────────────────────────────────────────
         const SectionTitle('🎯 The Agreement Rule — Super Important!'),
-        const TipBox(
-          title: '⚠️ The Past Participle MUST match the NEW Subject',
-          content: 'Add  -e  for feminine\n'
-              'Add  -s  for masculine plural\n'
-              'Add  -es  for feminine plural\n\n'
-              'Examples:\n'
-              '  Le livre est lu.          (masculine singular — no change)\n'
-              '  La lettre est lue.        (feminine → add -e)\n'
-              '  Les livres sont lus.      (masculine plural → add -s)\n'
-              '  Les lettres sont lues.    (feminine plural → add -es)',
+        const TranslatedText(
+          'The past participle must MATCH the new subject in gender and number:',
+          style: TextStyle(fontSize: 15, height: 1.6),
+        ),
+        _FrenchTipBox(
+          title: '⚠️ Add -e / -s / -es to the participle',
+          frenchText:
+              '  Le livre est lu.           (masculine singular — no change)\n'
+              '  La lettre est lue.         (feminine → add -e)\n'
+              '  Les livres sont lus.       (masculine plural → add -s)\n'
+              '  Les lettres sont lues.     (feminine plural → add -es)',
           icon: Icons.warning,
-          color: Color(0xFFEF4444),
+          color: const Color(0xFFEF4444),
         ),
 
         // ── ÊTRE CONJUGATION TABLE ─────────────────────────────────────────
         const SectionTitle('📊 ÊTRE in Every Tense — Your Cheat Sheet'),
         const TranslatedText(
-          'Because ÊTRE is the key verb in ALL passive sentences, you need to know it in every tense. Here it is!',
+          'Because ÊTRE is the key verb in ALL passive sentences, you need to know it in every tense. Here it is — always in French!',
           style: TextStyle(fontSize: 15, height: 1.6),
         ),
 
-        // Present
-        const TipBox(
-          title: '1️⃣ Présent (Present) — "is / are"',
-          content: 'je   suis\n'
-              'tu   es\n'
-              'il/elle   est\n'
-              'nous   sommes\n'
-              'vous   êtes\n'
-              'ils/elles   sont',
+        // 1. Présent
+        _FrenchTipBox(
+          title: '1️⃣ Présent — "is / are"',
+          frenchText: 'je          suis\n'
+              'tu          es\n'
+              'il / elle   est\n'
+              'nous        sommes\n'
+              'vous        êtes\n'
+              'ils / elles sont',
           icon: Icons.access_time,
-          color: Color(0xFF6366F1),
+          color: const Color(0xFF6366F1),
         ),
         const ExampleBox(
           french: 'Le repas est préparé par ma mère.',
@@ -115,60 +184,59 @@ class VoixPassivePage extends StatelessWidget {
               'The meal IS prepared by my mother.  (right now / in general)',
         ),
 
-        // Passé Composé
-        const TipBox(
-          title: '2️⃣ Passé Composé (Past — completed action) — "was / were"',
-          content: 'j\'ai été\n'
+        // 2. Passé Composé
+        _FrenchTipBox(
+          title: '2️⃣ Passé Composé — "was / were" (completed)',
+          frenchText: 'j\'ai été\n'
               'tu as été\n'
-              'il/elle a été\n'
+              'il / elle a été\n'
               'nous avons été\n'
               'vous avez été\n'
-              'ils/elles ont été',
+              'ils / elles ont été',
           icon: Icons.history,
-          color: Color(0xFF10B981),
+          color: const Color(0xFF10B981),
         ),
         const ExampleBox(
           french: 'La lettre a été écrite par Paul.',
-          english: 'The letter WAS WRITTEN by Paul.  (it\'s done, finished!)',
+          english: 'The letter WAS WRITTEN by Paul.  (done, finished!)',
         ),
         const ExampleBox(
           french: 'Les maisons ont été construites en 1990.',
           english: 'The houses WERE BUILT in 1990.',
         ),
 
-        // Imparfait
-        const TipBox(
-          title: '3️⃣ Imparfait (Imperfect) — "was being / used to be"',
-          content: 'j\'étais\n'
+        // 3. Imparfait
+        _FrenchTipBox(
+          title: '3️⃣ Imparfait — "was being / used to be"',
+          frenchText: 'j\'étais\n'
               'tu étais\n'
-              'il/elle était\n'
+              'il / elle était\n'
               'nous étions\n'
               'vous étiez\n'
-              'ils/elles étaient',
+              'ils / elles étaient',
           icon: Icons.replay,
-          color: Color(0xFFF59E0B),
+          color: const Color(0xFFF59E0B),
         ),
         const ExampleBox(
           french: 'Le livre était lu chaque soir.',
-          english:
-              'The book WAS BEING READ every evening.  (ongoing / repeated habit)',
+          english: 'The book WAS BEING READ every evening.  (ongoing / habit)',
         ),
         const ExampleBox(
           french: 'Les enfants étaient surveillés par leurs parents.',
           english: 'The children WERE BEING WATCHED by their parents.',
         ),
 
-        // Futur Simple
-        const TipBox(
-          title: '4️⃣ Futur Simple (Future) — "will be"',
-          content: 'je serai\n'
+        // 4. Futur Simple
+        _FrenchTipBox(
+          title: '4️⃣ Futur Simple — "will be"',
+          frenchText: 'je serai\n'
               'tu seras\n'
-              'il/elle sera\n'
+              'il / elle sera\n'
               'nous serons\n'
               'vous serez\n'
-              'ils/elles seront',
+              'ils / elles seront',
           icon: Icons.arrow_forward,
-          color: Color(0xFF0EA5E9),
+          color: const Color(0xFF0EA5E9),
         ),
         const ExampleBox(
           french: 'Le gâteau sera mangé demain.',
@@ -179,34 +247,34 @@ class VoixPassivePage extends StatelessWidget {
           english: 'The results WILL BE announced on Monday.',
         ),
 
-        // Conditionnel
-        const TipBox(
-          title: '5️⃣ Conditionnel Présent (Conditional) — "would be"',
-          content: 'je serais\n'
+        // 5. Conditionnel Présent
+        _FrenchTipBox(
+          title: '5️⃣ Conditionnel Présent — "would be"',
+          frenchText: 'je serais\n'
               'tu serais\n'
-              'il/elle serait\n'
+              'il / elle serait\n'
               'nous serions\n'
               'vous seriez\n'
-              'ils/elles seraient',
+              'ils / elles seraient',
           icon: Icons.help_outline,
-          color: Color(0xFFEC4899),
+          color: const Color(0xFFEC4899),
         ),
         const ExampleBox(
           french: 'Le travail serait fini si tu aidais.',
           english: 'The work WOULD BE finished if you helped.',
         ),
 
-        // Plus-que-parfait
-        const TipBox(
-          title: '6️⃣ Plus-que-parfait (Pluperfect) — "had been"',
-          content: 'j\'avais été\n'
+        // 6. Plus-que-parfait
+        _FrenchTipBox(
+          title: '6️⃣ Plus-que-parfait — "had been"',
+          frenchText: 'j\'avais été\n'
               'tu avais été\n'
-              'il/elle avait été\n'
+              'il / elle avait été\n'
               'nous avions été\n'
               'vous aviez été\n'
-              'ils/elles avaient été',
+              'ils / elles avaient été',
           icon: Icons.fast_rewind,
-          color: Color(0xFF8B5CF6),
+          color: const Color(0xFF8B5CF6),
         ),
         const ExampleBox(
           french: 'La porte avait été fermée avant notre arrivée.',
@@ -215,14 +283,17 @@ class VoixPassivePage extends StatelessWidget {
 
         // ── TENSE SUMMARY ──────────────────────────────────────────────────
         const SectionTitle('📋 Quick Tense Summary'),
-        const TranslatedText(
-          '• Présent          →  est / sont  +  participle\n'
-          '• Passé Composé    →  a été / ont été  +  participle\n'
-          '• Imparfait        →  était / étaient  +  participle\n'
-          '• Futur Simple     →  sera / seront  +  participle\n'
-          '• Conditionnel     →  serait / seraient  +  participle\n'
-          '• Plus-que-parfait →  avait été / avaient été  +  participle',
-          style: TextStyle(fontSize: 15, height: 2.0, fontFamily: 'monospace'),
+        // Summary — French verbs must NOT be translated
+        _FrenchTipBox(
+          title: 'All 6 passive patterns at a glance',
+          frenchText: '• Présent          →  est / sont  +  participe\n'
+              '• Passé Composé    →  a été / ont été  +  participe\n'
+              '• Imparfait        →  était / étaient  +  participe\n'
+              '• Futur Simple     →  sera / seront  +  participe\n'
+              '• Conditionnel     →  serait / seraient  +  participe\n'
+              '• Plus-que-parfait →  avait été / avaient été  +  participe',
+          icon: Icons.table_chart,
+          color: const Color(0xFF6366F1),
         ),
 
         // ── THE "ON" SHORTCUT ──────────────────────────────────────────────
@@ -230,63 +301,75 @@ class VoixPassivePage extends StatelessWidget {
         const TipBox(
           title: 'Native speakers rarely use the passive!',
           content:
-              'In everyday spoken French, people prefer "on" (someone / they / one) over the passive voice. It sounds much more natural!\n\n'
-              '❌ Passive:  La porte a été fermée.  (The door was closed.)\n'
-              '✅ Natural:  On a fermé la porte.    (Someone closed the door.)\n\n'
-              '❌ Passive:  Les magasins seront ouverts.  (The shops will be opened.)\n'
-              '✅ Natural:  On va ouvrir les magasins.    (They\'re going to open the shops.)\n\n'
-              'Use the passive in WRITING, reports, and formal contexts — but "on" in everyday conversation!',
+              'In everyday spoken French, people prefer "on" (someone / they) over the passive voice. It sounds much more natural!\n\n'
+              'Use the passive in WRITING, reports, and formal contexts — "on" in daily conversation!',
           icon: Icons.psychology,
           color: Color(0xFF10B981),
+        ),
+        const ExampleBox(
+          french: '❌ Passive:  La porte a été fermée.',
+          english:
+              '✅ Natural:  On a fermé la porte.  (Someone closed the door.)',
+        ),
+        const ExampleBox(
+          french: '❌ Passive:  Les magasins seront ouverts.',
+          english:
+              '✅ Natural:  On va ouvrir les magasins.  (They\'re going to open the shops.)',
         ),
 
         // ── COMMON MISTAKES ────────────────────────────────────────────────
         const SectionTitle('❌ Common Mistakes'),
-        const TipBox(
+        _FrenchTipBox(
           title: 'Mistake 1 — Forgetting the Agreement',
-          content: '❌ La lettre est écrit par Paul.\n'
-              '✅ La lettre est écrite par Paul.\n\n'
-              '"La lettre" is feminine → the participle needs -e!',
+          frenchText: '❌  La lettre est écrit par Paul.\n'
+              '✅  La lettre est écrite par Paul.\n\n'
+              '"La lettre" est féminin → participe + e !',
           icon: Icons.error_outline,
-          color: Color(0xFFF59E0B),
+          color: const Color(0xFFF59E0B),
         ),
-        const TipBox(
+        _FrenchTipBox(
           title: 'Mistake 2 — Wrong Tense of ÊTRE',
-          content:
-              '❌ Le repas est préparé hier.  (using present for a past action)\n'
-              '✅ Le repas a été préparé hier.\n\n'
-              'Always match ÊTRE\'s tense to WHEN the action happened!',
+          frenchText: '❌  Le repas est préparé hier.\n'
+              '✅  Le repas a été préparé hier.\n\n'
+              'Action hier = Passé Composé → "a été" !',
           icon: Icons.error_outline,
-          color: Color(0xFFF59E0B),
+          color: const Color(0xFFF59E0B),
         ),
-        const TipBox(
+        _FrenchTipBox(
           title: 'Mistake 3 — Using AVOIR instead of ÊTRE',
-          content: '❌ Le gâteau a mangé par les enfants.\n'
-              '✅ Le gâteau est mangé par les enfants.\n\n'
-              'Passive voice ALWAYS uses ÊTRE — never "avoir" directly as the linking verb!',
+          frenchText: '❌  Le gâteau a mangé par les enfants.\n'
+              '✅  Le gâteau est mangé par les enfants.\n\n'
+              'La voix passive utilise toujours ÊTRE !',
           icon: Icons.error_outline,
-          color: Color(0xFFEF4444),
+          color: const Color(0xFFEF4444),
         ),
 
         // ── FINAL PRACTICE ─────────────────────────────────────────────────
         const SectionTitle('🏋️ Practice — Flip These Sentences!'),
         const TranslatedText(
-          'Try turning these ACTIVE sentences into PASSIVE:\n\n'
-          '1. Le professeur explique la leçon.\n'
-          '   → La leçon ___ expliquée par le professeur.\n\n'
-          '2. Les enfants ont mangé les bonbons.\n'
-          '   → Les bonbons ___ ___ mangés par les enfants.\n\n'
-          '3. On construira un nouveau pont.\n'
-          '   → Un nouveau pont ___ construit.',
-          style: TextStyle(fontSize: 15, height: 1.9),
+          'Try turning these ACTIVE sentences into PASSIVE (fill in the blanks):',
+          style: TextStyle(fontSize: 15, height: 1.6),
         ),
-        const TipBox(
+        const ExampleBox(
+          french: '1. Le professeur explique la leçon.\n'
+              '   → La leçon ___ expliquée par le professeur.\n\n'
+              '2. Les enfants ont mangé les bonbons.\n'
+              '   → Les bonbons ___ ___ mangés par les enfants.\n\n'
+              '3. On construira un nouveau pont.\n'
+              '   → Un nouveau pont ___ construit.',
+          english: 'Fill in the missing form(s) of ÊTRE!',
+        ),
+        // Answers — always in French, never translated
+        _FrenchTipBox(
           title: '✅ Answers',
-          content: '1. La leçon EST expliquée par le professeur.  (présent)\n'
-              '2. Les bonbons ONT ÉTÉ mangés par les enfants.  (passé composé)\n'
-              '3. Un nouveau pont SERA construit.  (futur simple)',
+          frenchText: '1. La leçon  EST  expliquée par le professeur.\n'
+              '   (Présent)\n\n'
+              '2. Les bonbons  ONT ÉTÉ  mangés par les enfants.\n'
+              '   (Passé Composé)\n\n'
+              '3. Un nouveau pont  SERA  construit.\n'
+              '   (Futur Simple)',
           icon: Icons.check_circle_outline,
-          color: Color(0xFF10B981),
+          color: const Color(0xFF10B981),
         ),
       ],
     );
