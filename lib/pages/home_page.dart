@@ -6,7 +6,7 @@ import 'grammar/grammar_page.dart';
 import 'exercises/exercises_page.dart';
 import 'flashcards/flashcards_page.dart';
 import 'verbs/verbs_page.dart';
-import 'examen/examen_one_page.dart';
+
 import 'essay/essay_page.dart';
 import 'dialogue/dialogue_page.dart';
 import 'listening/listening_page.dart';
@@ -208,20 +208,6 @@ class HomePage extends StatelessWidget {
                               context,
                               MaterialPageRoute(
                                   builder: (context) => const VerbsPage()),
-                            );
-                          },
-                        ),
-                        _buildFeatureCard(
-                          context,
-                          title: languageProvider.translate('examen'),
-                          subtitle: 'Janvier 2025',
-                          icon: '📝',
-                          color: AppTheme.accent,
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) => const ExamenOnePage()),
                             );
                           },
                         ),
