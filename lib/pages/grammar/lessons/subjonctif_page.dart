@@ -26,35 +26,70 @@ class SubjonctifPage extends StatelessWidget {
         ),
 
         // ── WHEN TO USE IT ─────────────────────────────────────────────────
+        // Each category uses SectionTitle (TranslatedText = translates) + FrenchTipBox (French stays French)
         const SectionTitle('🎯 When Do You Use It?'),
         const TranslatedText(
-          'Use Subjonctif after these types of expressions:',
+          'Use Subjonctif after these 5 types of expressions:',
           style: TextStyle(fontSize: 15, height: 1.6),
         ),
+
+        const SectionTitle('1️⃣ Wishes & Desires'),
         const FrenchTipBox(
-          title: '5 Trigger Categories',
-          frenchText: '1️⃣  WISHES / DESIRES\n'
-              '   Je veux que... / Je voudrais que...\n'
-              '   J\'aimerais que...\n\n'
-              '2️⃣  EMOTIONS / FEELINGS\n'
-              '   Je suis content(e) que...\n'
-              '   J\'ai peur que...\n'
-              '   Il est dommage que...\n\n'
-              '3️⃣  DOUBT / UNCERTAINTY\n'
-              '   Je doute que...\n'
-              '   Il est possible que...\n'
-              '   Il est peu probable que...\n\n'
-              '4️⃣  OBLIGATION / NECESSITY\n'
-              '   Il faut que...\n'
-              '   Il est nécessaire que...\n'
-              '   Il est important que...\n\n'
-              '5️⃣  CONJUNCTIONS (time / purpose)\n'
-              '   pour que... / afin que... (so that)\n'
-              '   bien que... / quoique... (although)\n'
-              '   avant que... (before)\n'
-              '   à moins que... (unless)',
-          icon: Icons.category,
+          title: 'Key expressions',
+          frenchText: 'Je veux que...\n'
+              'Je voudrais que...\n'
+              'J\'aimerais que...\n'
+              'Je désire que...',
+          icon: Icons.favorite,
           color: Color(0xFF6366F1),
+        ),
+
+        const SectionTitle('2️⃣ Emotions & Feelings'),
+        const FrenchTipBox(
+          title: 'Key expressions',
+          frenchText: 'Je suis content(e) que...\n'
+              'Je suis triste que...\n'
+              'J\'ai peur que...\n'
+              'Il est dommage que...\n'
+              'C\'est incroyable que...',
+          icon: Icons.favorite_border,
+          color: Color(0xFFEC4899),
+        ),
+
+        const SectionTitle('3️⃣ Doubt & Uncertainty'),
+        const FrenchTipBox(
+          title: 'Key expressions',
+          frenchText: 'Je doute que...\n'
+              'Il est possible que...\n'
+              'Il est peu probable que...\n'
+              'Il est improbable que...',
+          icon: Icons.help_outline,
+          color: Color(0xFFF59E0B),
+        ),
+
+        const SectionTitle('4️⃣ Obligation & Necessity'),
+        const FrenchTipBox(
+          title: 'Key expressions',
+          frenchText: 'Il faut que...\n'
+              'Il est nécessaire que...\n'
+              'Il est important que...\n'
+              'Il est essentiel que...',
+          icon: Icons.assignment_turned_in,
+          color: Color(0xFF10B981),
+        ),
+
+        const SectionTitle('5️⃣ Conjunctions (time / purpose / concession)'),
+        const FrenchTipBox(
+          title: 'Key conjunctions that trigger Subjonctif',
+          frenchText: 'pour que...        (so that)\n'
+              'afin que...        (in order that)\n'
+              'bien que...        (although)\n'
+              'quoique...         (although)\n'
+              'avant que...       (before)\n'
+              'à moins que...     (unless)\n'
+              'jusqu\'à ce que... (until)',
+          icon: Icons.link,
+          color: Color(0xFF8B5CF6),
         ),
 
         // ── THE KEY RULE ───────────────────────────────────────────────────
@@ -134,41 +169,143 @@ class SubjonctifPage extends StatelessWidget {
         ),
 
         // ── IRREGULAR VERBS ────────────────────────────────────────────────
-        const SectionTitle('🚨 The Irregular "Big 6" — Memorize These!'),
+        const SectionTitle(
+            '🚨 15 Most Important Irregular Verbs — Memorize These!'),
         const TranslatedText(
-          'These 6 verbs do NOT follow the regular pattern. You MUST learn them by heart:',
+          'These verbs do NOT follow the regular pattern. They are the most frequently used in French — learn them well!',
           style: TextStyle(fontSize: 15, height: 1.6),
         ),
+
+        // ★ Group 1 — Completely irregular (must memorize fully)
         const FrenchTipBox(
-          title: 'ÊTRE — completely irregular',
-          frenchText: 'que je    sois\n'
-              'que tu    sois\n'
-              'qu\'il/elle soit\n'
-              'que nous  soyons\n'
-              'que vous  soyez\n'
+          title: 'ÊTRE — completely irregular ★ most important',
+          frenchText: 'que je       sois\n'
+              'que tu       sois\n'
+              'qu\'il/elle   soit\n'
+              'que nous     soyons\n'
+              'que vous     soyez\n'
               'qu\'ils/elles soient',
           icon: Icons.star,
           color: Color(0xFF8B5CF6),
         ),
         const FrenchTipBox(
-          title: 'AVOIR — completely irregular',
+          title: 'AVOIR — completely irregular ★ most important',
           frenchText: 'que j\'aie\n'
               'que tu aies\n'
-              'qu\'il/elle ait\n'
-              'que nous ayons\n'
-              'que vous ayez\n'
+              'qu\'il/elle   ait\n'
+              'que nous     ayons\n'
+              'que vous     ayez\n'
               'qu\'ils/elles aient',
           icon: Icons.star,
           color: Color(0xFFEC4899),
         ),
+
+        // ★ Group 2 — Very common irregulars
         const FrenchTipBox(
-          title: 'ALLER / FAIRE / POUVOIR / SAVOIR',
-          frenchText: 'aller   →  que j\'aille,  que nous allions\n'
-              'faire   →  que je fasse,  que nous fassions\n'
-              'pouvoir →  que je puisse, que nous puissions\n'
-              'savoir  →  que je sache,  que nous sachions',
-          icon: Icons.warning,
+          title: 'ALLER — to go',
+          frenchText: 'que j\'aille      que nous allions\n'
+              'que tu ailles    que vous alliez\n'
+              'qu\'il aille      qu\'ils aillent',
+          icon: Icons.directions_run,
+          color: Color(0xFF10B981),
+        ),
+        const FrenchTipBox(
+          title: 'FAIRE — to do / make',
+          frenchText: 'que je fasse     que nous fassions\n'
+              'que tu fasses    que vous fassiez\n'
+              'qu\'il fasse      qu\'ils fassent',
+          icon: Icons.build,
+          color: Color(0xFF10B981),
+        ),
+        const FrenchTipBox(
+          title: 'POUVOIR — to be able to / can',
+          frenchText: 'que je puisse    que nous puissions\n'
+              'que tu puisses   que vous puissiez\n'
+              'qu\'il puisse     qu\'ils puissent',
+          icon: Icons.bolt,
+          color: Color(0xFF0EA5E9),
+        ),
+        const FrenchTipBox(
+          title: 'SAVOIR — to know',
+          frenchText: 'que je sache     que nous sachions\n'
+              'que tu saches    que vous sachiez\n'
+              'qu\'il sache      qu\'ils sachent',
+          icon: Icons.school,
+          color: Color(0xFF0EA5E9),
+        ),
+        const FrenchTipBox(
+          title: 'VOULOIR — to want',
+          frenchText: 'que je veuille   que nous voulions\n'
+              'que tu veuilles  que vous vouliez\n'
+              'qu\'il veuille    qu\'ils veuillent',
+          icon: Icons.favorite,
           color: Color(0xFFF59E0B),
+        ),
+        const FrenchTipBox(
+          title: 'VENIR — to come',
+          frenchText: 'que je vienne    que nous venions\n'
+              'que tu viennes   que vous veniez\n'
+              'qu\'il vienne     qu\'ils viennent',
+          icon: Icons.login,
+          color: Color(0xFFF59E0B),
+        ),
+
+        // ★ Group 3 — Common semi-irregulars
+        const FrenchTipBox(
+          title: 'PRENDRE — to take',
+          frenchText: 'que je prenne    que nous prenions\n'
+              'que tu prennes   que vous preniez\n'
+              'qu\'il prenne     qu\'ils prennent',
+          icon: Icons.pan_tool,
+          color: Color(0xFFEF4444),
+        ),
+        const FrenchTipBox(
+          title: 'DEVOIR — must / to have to',
+          frenchText: 'que je doive     que nous devions\n'
+              'que tu doives    que vous deviez\n'
+              'qu\'il doive      qu\'ils doivent',
+          icon: Icons.assignment,
+          color: Color(0xFFEF4444),
+        ),
+        const FrenchTipBox(
+          title: 'BOIRE — to drink',
+          frenchText: 'que je boive     que nous buvions\n'
+              'que tu boives    que vous buviez\n'
+              'qu\'il boive      qu\'ils boivent',
+          icon: Icons.local_drink,
+          color: Color(0xFF6366F1),
+        ),
+        const FrenchTipBox(
+          title: 'VENIR — TENIR — to hold',
+          frenchText: 'que je tienne    que nous tenions\n'
+              'que tu tiennes   que vous teniez\n'
+              'qu\'il tienne     qu\'ils tiennent',
+          icon: Icons.back_hand,
+          color: Color(0xFF6366F1),
+        ),
+        const FrenchTipBox(
+          title: 'CROIRE — to believe',
+          frenchText: 'que je croie     que nous croyions\n'
+              'que tu croies    que vous croyiez\n'
+              'qu\'il croie      qu\'ils croient',
+          icon: Icons.psychology,
+          color: Color(0xFF8B5CF6),
+        ),
+        const FrenchTipBox(
+          title: 'RECEVOIR — to receive',
+          frenchText: 'que je reçoive   que nous recevions\n'
+              'que tu reçoives  que vous receviez\n'
+              'qu\'il reçoive    qu\'ils reçoivent',
+          icon: Icons.inbox,
+          color: Color(0xFF8B5CF6),
+        ),
+        const FrenchTipBox(
+          title: 'VALOIR — to be worth',
+          frenchText: 'que je vaille    que nous valions\n'
+              'que tu vailles   que vous valiez\n'
+              'qu\'il vaille     qu\'ils vaillent',
+          icon: Icons.star_rate,
+          color: Color(0xFFEC4899),
         ),
 
         // ── COMMON MISTAKES ────────────────────────────────────────────────
@@ -186,9 +323,9 @@ class SubjonctifPage extends StatelessWidget {
           title: 'Mistake 2 — Using Subjonctif with penser/croire (positive)',
           frenchText: '❌  Je pense qu\'il SOIT là.      (Subjonctif — wrong!)\n'
               '✅  Je pense qu\'il EST là.       (Indicatif — correct!)\n\n'
-              'Penser/croire + que in POSITIVE = Indicatif\n'
-              'Penser/croire + que in NEGATIVE/QUESTION = Subjonctif\n'
-              '✅  Je ne pense pas qu\'il SOIT là.  (Subjonctif — correct!)',
+              'Positive penser/croire + que  →  Indicatif\n'
+              'Negative/question penser/croire + que  →  Subjonctif\n'
+              '✅  Je ne pense pas qu\'il SOIT là.',
           icon: Icons.error_outline,
           color: Color(0xFFEF4444),
         ),
@@ -196,7 +333,7 @@ class SubjonctifPage extends StatelessWidget {
           title: 'Mistake 3 — Forgetting "que" before Subjonctif',
           frenchText: '❌  Il faut tu fasses cela.\n'
               '✅  Il faut QUE tu fasses cela.\n\n'
-              'The word "que" is mandatory between the trigger and the Subjonctif!',
+              '"que" is mandatory between the trigger and the Subjonctif!',
           icon: Icons.error_outline,
           color: Color(0xFFF59E0B),
         ),
