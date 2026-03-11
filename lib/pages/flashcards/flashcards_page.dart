@@ -44,6 +44,46 @@ class _FlashcardsPageState extends State<FlashcardsPage> {
       {'front': 'Gentil -> Adverb?', 'back': 'Gentiment (irregular)'},
       {'front': 'Patient -> Adverb?', 'back': 'Patiemment (-emment)'},
     ],
+    'subjonctif': [
+      {
+        'front': 'When do you use Le Subjonctif?',
+        'back':
+            'After expressions of WISH, EMOTION, DOUBT, OBLIGATION, or special CONJUNCTIONS (pour que, bien que, avant que…)',
+      },
+      {
+        'front': 'Subjonctif formula?',
+        'back':
+            'ils/elles form → remove -ENT → add: -e, -es, -e, -ions, -iez, -ent',
+      },
+      {
+        'front': 'ÊTRE in Subjonctif (que je...)?',
+        'back':
+            'que je sois, tu sois, il soit, nous soyons, vous soyez, ils soient',
+      },
+      {
+        'front': 'AVOIR in Subjonctif (que je...)?',
+        'back': 'que j\'aie, tu aies, il ait, nous ayons, vous ayez, ils aient',
+      },
+      {
+        'front': 'FAIRE in Subjonctif (que je...)?',
+        'back':
+            'que je fasse, tu fasses, il fasse, nous fassions, vous fassiez, ils fassent',
+      },
+      {
+        'front': 'Same subject? Subjonctif or Infinitive?',
+        'back':
+            'INFINITIVE! ✅ "Je veux venir" (same = I)\nSubjonctif only when subjects DIFFER: "Je veux que tu viennes"',
+      },
+      {
+        'front': 'Translate: "I want you to come."',
+        'back': 'Je veux que tu viennes. (Subjonctif of venir)',
+      },
+      {
+        'front': 'Il faut que... + ?',
+        'back':
+            'Subjonctif! Il faut que tu finisses. (it is necessary that you finish)',
+      },
+    ],
   };
 
   Future<void> _startAIFlashcards(String topic) async {

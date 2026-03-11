@@ -100,4 +100,12 @@ final List<GrammarTopic> grammarTopics = [
     icon: '🏃',
     description: 'Master the formation of adverbs from adjectives',
   ),
+  const GrammarTopic(
+    id: 'subjonctif',
+    title: 'Le Subjonctif',
+    subtitle: 'Wishes, Doubts & Emotions',
+    icon: '🌀',
+    description:
+        'Master the subjunctive mood for emotions, wishes, and uncertainty',
+  ),
 ];

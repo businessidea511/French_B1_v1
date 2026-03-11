@@ -68,6 +68,54 @@ class _ExercisesPageState extends State<ExercisesPage> {
         'explanation': 'Doux (masc) -> Douce (fem) -> Doucement.',
       },
     ],
+    'subjonctif': [
+      {
+        'question': 'Il faut que tu ___ tes devoirs. (faire)',
+        'options': ['fasses', 'fais', 'ferai', 'faisais'],
+        'correct': 0,
+        'explanation':
+            '"Il faut que" always triggers Subjonctif. Faire is irregular: que je fasse, que tu fasses.',
+      },
+      {
+        'question': 'Je suis content qu\'il ___ là. (être)',
+        'options': ['soit', 'est', 'sera', 'étais'],
+        'correct': 0,
+        'explanation':
+            'Emotion ("Je suis content que") triggers Subjonctif. Être is irregular: qu\'il soit.',
+      },
+      {
+        'question': 'Il est possible qu\'elle ___ en retard. (être)',
+        'options': ['soit', 'est', 'sera', 'était'],
+        'correct': 0,
+        'explanation':
+            '"Il est possible que" expresses doubt — always use Subjonctif.',
+      },
+      {
+        'question': 'Choose the CORRECT sentence:',
+        'options': [
+          'Je veux que tu viennes.',
+          'Je veux que tu viens.',
+          'Je veux tu viens.',
+          'Je veux venir tu.',
+        ],
+        'correct': 0,
+        'explanation':
+            'After "vouloir que" with two different subjects, use Subjonctif: "viennes" (venir → que tu viennes).',
+      },
+      {
+        'question':
+            'Which sentence uses Subjonctif CORRECTLY after "bien que"?',
+        'options': [
+          'Bien qu\'il soit fatigué, il travaille.',
+          'Bien qu\'il est fatigué, il travaille.',
+          'Bien qu\'il sera fatigué, il travaille.',
+          'Bien qu\'il était fatigué, il travaille.',
+        ],
+        'correct': 0,
+        'explanation':
+            '"Bien que" (although) always requires Subjonctif. Être → que je sois → qu\'il soit.',
+      },
+    ],
   };
 
   Future<void> _startAIExercises(String topic) async {
