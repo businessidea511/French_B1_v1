@@ -8,7 +8,8 @@ enum AppLanguage {
   ukrainian('Українська', 'uk', 'uk_UA', false),
   italian('Italiano', 'it', 'it_IT', false),
   eritrean('ትግርኛ', 'ti', 'ti_ER', false),
-  turkish('Türkçe', 'tr', 'tr_TR', false);
+  turkish('Türkçe', 'tr', 'tr_TR', false),
+  indonesian('Bahasa Indonesia', 'id', 'id_ID', false);
 
   final String name;
   final String code;
@@ -150,6 +151,20 @@ class LanguageProvider extends ChangeNotifier {
         'daily_phrases': 'Günlük Kalıplar',
         'listening': 'Dinleme',
         'select_language': 'Dil Seçin',
+      },
+      'id': {
+        'greeting': 'Halo!',
+        'subtitle': 'Apa yang ingin kamu pelajari hari ini?',
+        'grammar': 'Tata Bahasa',
+        'exercises': 'Latihan',
+        'flashcards': 'Kartu Belajar',
+        'verbs': 'Kata Kerja',
+        'examen': 'Ujian',
+        'essays': 'Esai',
+        'dialogues': 'Dialog',
+        'daily_phrases': 'Frasa Harian',
+        'listening': 'Mendengarkan',
+        'select_language': 'Pilih Bahasa',
       },
     };
 
