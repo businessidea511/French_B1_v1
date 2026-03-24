@@ -115,6 +115,37 @@ class MetiersPage extends StatelessWidget {
           icon: Icons.palette_outlined,
           color: Color(0xFF10B981),
         ),
+        
+        // ── Rare & Dangerous ──────────────────────────────────────────────────
+        const SectionTitle('⚡ Rare & Dangerous Professions'),
+        const TranslatedText(
+          'Some jobs in France are known for being particularly risky or unusual. Here are a few "métiers de l\'extrême":',
+          style: TextStyle(fontSize: 15, height: 1.6),
+        ),
+        const FrenchTipBox(
+          title: 'Extreme Careers',
+          frenchText: 'marin-pêcheur     →  deep-sea fisher\n'
+              'démineur          →  bomb disposal expert\n'
+              'élagueur          →  tree surgeon / trimmer\n'
+              'scaphandrier      →  deep-sea diver\n'
+              'cascadeur         →  stunt performer\n'
+              'laveur de vitres  →  skyscraper window cleaner\n'
+              'convoyeur de fonds → armored car guard',
+          icon: Icons.warning_amber_rounded,
+          color: Color(0xFFEF4444),
+        ),
+        const ExampleBox(
+          french: 'Le métier de marin-pêcheur est l\'un des plus dangereux au monde.',
+          english: 'The job of deep-sea fisher is one of the most dangerous in the world.',
+        ),
+        const ExampleBox(
+          french: 'Il travaille comme démineur pour l\'armée.',
+          english: 'He works as a bomb disposal expert for the army.',
+        ),
+        const ExampleBox(
+          french: 'Elle est cascadeuse dans des films d\'action.',
+          english: 'She is a stunt performer in action movies.',
+        ),
 
         // ── Key phrases ───────────────────────────────────────────────────────
         const SectionTitle('💬 Key Phrases — Talking About Work'),
