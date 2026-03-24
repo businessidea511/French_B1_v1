@@ -6,14 +6,12 @@ import 'grammar/grammar_page.dart';
 import 'exercises/exercises_page.dart';
 import 'flashcards/flashcards_page.dart';
 import 'verbs/verbs_page.dart';
-
 import 'essay/essay_page.dart';
 import 'dialogue/dialogue_page.dart';
 import 'listening/listening_page.dart';
 import 'daily_phrases/daily_phrases_page.dart';
+import 'lessons/lessons_page.dart';
 import '../models/grammar_topic.dart';
-
-import 'package:flutter/foundation.dart'; // Import for kDebugMode
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -107,10 +105,10 @@ class HomePage extends StatelessWidget {
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 16, vertical: 8),
                             decoration: BoxDecoration(
-                              color: AppTheme.primary.withOpacity(0.1),
+                              color: AppTheme.primary.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(100),
                               border: Border.all(
-                                  color: AppTheme.primary.withOpacity(0.2)),
+                                  color: AppTheme.primary.withValues(alpha: 0.2)),
                             ),
                             child: const Text(
                               '🇫🇷 NIVEAU B1',
@@ -180,6 +178,20 @@ class HomePage extends StatelessWidget {
                               context,
                               MaterialPageRoute(
                                   builder: (context) => const ExercisesPage()),
+                            );
+                          },
+                        ),
+                        _buildFeatureCard(
+                          context,
+                          title: languageProvider.translate('lessons'),
+                          subtitle: 'Vocabulary & Culture',
+                          icon: '📖',
+                          color: Colors.purple,
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => const LessonsPage()),
                             );
                           },
                         ),
@@ -298,10 +310,10 @@ class HomePage extends StatelessWidget {
       borderRadius: BorderRadius.circular(32),
       child: Container(
         decoration: BoxDecoration(
-          color: AppTheme.surface.withOpacity(0.4),
+          color: AppTheme.surface.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(32),
           border: Border.all(
-            color: Colors.white.withOpacity(0.08),
+            color: Colors.white.withValues(alpha: 0.08),
             width: 1,
           ),
         ),
@@ -316,7 +328,7 @@ class HomePage extends StatelessWidget {
                   width: 100,
                   height: 100,
                   decoration: BoxDecoration(
-                    color: color.withOpacity(0.1),
+                    color: color.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                 ),
@@ -329,7 +341,7 @@ class HomePage extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: color.withOpacity(0.1),
+                        color: color.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
