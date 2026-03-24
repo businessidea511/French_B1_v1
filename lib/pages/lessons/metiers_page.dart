@@ -130,6 +130,9 @@ class MetiersPage extends StatelessWidget {
               'scaphandrier      →  deep-sea diver\n'
               'cascadeur         →  stunt performer\n'
               'laveur de vitres  →  skyscraper window cleaner\n'
+              'égoutier          →  sewer worker\n'
+              'nettoyeur de crime → crime scene cleaner\n'
+              'récupérateur de venin → venom milker\n'
               'convoyeur de fonds → armored car guard',
           icon: Icons.warning_amber_rounded,
           color: Color(0xFFEF4444),
@@ -145,6 +148,32 @@ class MetiersPage extends StatelessWidget {
         const ExampleBox(
           french: 'Elle est cascadeuse dans des films d\'action.',
           english: 'She is a stunt performer in action movies.',
+        ),
+
+        // ── Bizarre & Unusual ────────────────────────────────────────────────
+        const SectionTitle('🦄 Bizarre & Unusual Professions'),
+        const TranslatedText(
+          'France also has some very "curieux" (curious) jobs that you don\'t see every day:',
+          style: TextStyle(fontSize: 15, height: 1.6),
+        ),
+        const FrenchTipBox(
+          title: 'Weird & Wonderful',
+          frenchText: 'fossoyeur        →  gravedigger\n'
+              'taxidermiste     →  taxidermist\n'
+              'pleureuse        →  professional mourner\n'
+              'réveilleur       →  knocker-upper (historical)\n'
+              'dégustateur de croquettes → pet food taster\n'
+              'testeur de toboggans → water slide tester',
+          icon: Icons.auto_awesome_outlined,
+          color: Color(0xFFAB47BC),
+        ),
+        const ExampleBox(
+          french: 'Le fossoyeur travaille dans le cimetière du village.',
+          english: 'The gravedigger works in the village cemetery.',
+        ),
+        const ExampleBox(
+          french: 'Il est taxidermiste : il prépare des animaux pour les musées.',
+          english: 'He is a taxidermist: he prepares animals for museums.',
         ),
 
         // ── Key phrases ───────────────────────────────────────────────────────
