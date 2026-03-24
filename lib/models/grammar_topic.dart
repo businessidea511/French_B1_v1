@@ -108,4 +108,11 @@ final List<GrammarTopic> grammarTopics = [
     description:
         'Master the subjunctive mood for emotions, wishes, and uncertainty',
   ),
+  const GrammarTopic(
+    id: 'comparatif',
+    title: 'Le Comparatif',
+    subtitle: 'More, Less & As ... As',
+    icon: '⚖️',
+    description: 'Compare people and things using plus, moins, and aussi',
+  ),
 ];

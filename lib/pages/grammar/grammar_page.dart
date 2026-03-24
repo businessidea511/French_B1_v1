@@ -17,6 +17,7 @@ import 'lessons/si_seulement_page.dart';
 import 'lessons/voix_passive_page.dart';
 import 'lessons/adverbes_ment_page.dart';
 import 'lessons/subjonctif_page.dart';
+import 'lessons/comparatif_page.dart';
 
 class GrammarPage extends StatelessWidget {
   const GrammarPage({super.key});
@@ -148,6 +149,8 @@ class GrammarPage extends StatelessWidget {
         return const AdverbesMentPage();
       case 'subjonctif':
         return const SubjonctifPage();
+      case 'comparatif':
+        return const ComparatifPage();
       default:
         return const Scaffold(body: Center(child: Text('Lesson not found')));
     }
