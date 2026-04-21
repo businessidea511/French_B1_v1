@@ -18,6 +18,7 @@ import 'lessons/voix_passive_page.dart';
 import 'lessons/adverbes_ment_page.dart';
 import 'lessons/subjonctif_page.dart';
 import 'lessons/comparatif_page.dart';
+import 'lessons/duration_prepositions_page.dart';
 
 class GrammarPage extends StatelessWidget {
   const GrammarPage({super.key});
@@ -151,6 +152,8 @@ class GrammarPage extends StatelessWidget {
         return const SubjonctifPage();
       case 'comparatif':
         return const ComparatifPage();
+      case 'time_prepositions':
+        return const DurationPrepositionsPage();
       default:
         return const Scaffold(body: Center(child: Text('Lesson not found')));
     }

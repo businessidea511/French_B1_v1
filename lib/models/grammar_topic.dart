@@ -115,4 +115,11 @@ final List<GrammarTopic> grammarTopics = [
     icon: '⚖️',
     description: 'Compare people and things using plus, moins, and aussi',
   ),
+  const GrammarTopic(
+    id: 'time_prepositions',
+    title: 'Mots de Temps',
+    subtitle: 'Depuis, pendant, il y a...',
+    icon: '🕰️',
+    description: 'Master time prepositions: depuis, pendant, il y a, en, dans',
+  ),
 ];
