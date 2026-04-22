@@ -1,22 +1,27 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../../widgets/lesson_template.dart';
+import '../../../widgets/translated_text.dart';
+import '../../../services/language_provider.dart';
 
 class DurationPrepositionsPage extends StatelessWidget {
   const DurationPrepositionsPage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final lp = Provider.of<LanguageProvider>(context);
+    
     return LessonTemplate(
-      title: 'Mots de Temps',
+      title: lp.currentLanguage == AppLanguage.french ? 'Mots de Temps' : 'Time Prepositions',
       icon: '🕰️',
       children: [
-        const Text(
+        const TranslatedText(
           'Talking about time in French is like being a time traveler 🕰️. You need different tools depending on whether you\'re looking back, looking forward, or measuring how long things take.',
           style: TextStyle(fontSize: 16, height: 1.5),
         ),
         
-        const SectionTitle('🔄 Depuis (Since / For)', emoji: null),
-        const Text(
+        const SectionTitle('Depuis (Since / For)', emoji: '🔄'),
+        const TranslatedText(
           'Use "Depuis" when an action started in the past and is STILL HAPPENING right now. In English, we usually use "have been doing".',
           style: TextStyle(fontSize: 15, height: 1.5),
         ),
@@ -35,8 +40,8 @@ class DurationPrepositionsPage extends StatelessWidget {
           color: Color(0xFF6366F1),
         ),
 
-        const SectionTitle('⏳ Pendant (During / For)', emoji: null),
-        const Text(
+        const SectionTitle('Pendant (During / For)', emoji: '⏳'),
+        const TranslatedText(
           'Use "Pendant" for a specific duration that has a clear START and END. It\'s for completed actions.',
           style: TextStyle(fontSize: 15, height: 1.5),
         ),
@@ -49,8 +54,8 @@ class DurationPrepositionsPage extends StatelessWidget {
           english: 'It rained during the whole weekend',
         ),
 
-        const SectionTitle('⏪ Il y a (Ago)', emoji: null),
-        const Text(
+        const SectionTitle('Il y a (Ago)', emoji: '⏪'),
+        const TranslatedText(
           'Use "Il y a" to point to a specific moment in the past. It works exactly like "Ago" in English.',
           style: TextStyle(fontSize: 15, height: 1.5),
         ),
@@ -63,8 +68,8 @@ class DurationPrepositionsPage extends StatelessWidget {
           english: 'We met a long time ago',
         ),
 
-        const SectionTitle('🚀 Dans (In - Future)', emoji: null),
-        const Text(
+        const SectionTitle('Dans (In - Future)', emoji: '🚀'),
+        const TranslatedText(
           'Use "Dans" to talk about when something WILL happen in the future.',
           style: TextStyle(fontSize: 15, height: 1.5),
         ),
@@ -73,8 +78,8 @@ class DurationPrepositionsPage extends StatelessWidget {
           english: 'The train leaves in 5 minutes',
         ),
 
-        const SectionTitle('⚡ En (In - Time Required)', emoji: null),
-        const Text(
+        const SectionTitle('En (In - Time Required)', emoji: '⚡'),
+        const TranslatedText(
           'Use "En" to express how much time was NEEDED to complete a task. Think of it as "within".',
           style: TextStyle(fontSize: 15, height: 1.5),
         ),
