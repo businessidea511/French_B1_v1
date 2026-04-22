@@ -122,4 +122,11 @@ final List<GrammarTopic> grammarTopics = [
     icon: '🕰️',
     description: 'Master time prepositions: depuis, pendant, il y a, en, dans',
   ),
+  const GrammarTopic(
+    id: 'connectors',
+    title: 'Les Connecteurs',
+    subtitle: 'Mais, donc, parce que...',
+    icon: '🔗',
+    description: 'Learn logical connectors: mais, donc, parce que, cependant, malgré',
+  ),
 ];
