@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
+import '../../widgets/translated_markdown.dart';
 import '../../widgets/lesson_template.dart';
 import '../../models/lesson_topic.dart';
 
@@ -21,7 +22,7 @@ class DynamicLessonPage extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             SectionTitle(section['title'] ?? 'Section'),
-            MarkdownBody(
+            TranslatedMarkdown(
               data: section['content'] ?? '',
               styleSheet: MarkdownStyleSheet(
                 p: const TextStyle(fontSize: 16, height: 1.6, color: Colors.white),

@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../theme/app_theme.dart';
-import '../../models/grammar_topic.dart';
-
 import '../../services/deepseek_service.dart';
+import '../../services/lessons_provider.dart';
 
 class FlashcardsPage extends StatefulWidget {
-  const FlashcardsPage({super.key});
+  final String? initialTopic;
+  const FlashcardsPage({super.key, this.initialTopic});
 
   @override
   State<FlashcardsPage> createState() => _FlashcardsPageState();
@@ -18,73 +19,15 @@ class _FlashcardsPageState extends State<FlashcardsPage> {
   bool _isLoading = false;
   List<Map<String, String>> cards = [];
 
-  final Map<String, List<Map<String, String>>> staticCards = {
-    'passe_compose': [
-      {
-        'front': 'How to form Passé Composé?',
-        'back': 'AVOIR/ÊTRE + past participle'
-      },
-      {
-        'front': 'Passé Composé is for...',
-        'back': 'Completed actions in the past'
-      },
-    ],
-    'voix_passive': [
-      {
-        'front': 'Passive Voice Formula',
-        'back': 'ÊTRE (conjugated) + past participle (+ par...)'
-      },
-      {
-        'front': 'Passive: agreement rule?',
-        'back': 'Agreement with the SUBJECT'
-      },
-    ],
-    'adverbes_ment': [
-      {'front': 'Sérieux -> Adverb?', 'back': 'Sérieusement'},
-      {'front': 'Gentil -> Adverb?', 'back': 'Gentiment (irregular)'},
-      {'front': 'Patient -> Adverb?', 'back': 'Patiemment (-emment)'},
-    ],
-    'subjonctif': [
-      {
-        'front': 'When do you use Le Subjonctif?',
-        'back':
-            'After expressions of WISH, EMOTION, DOUBT, OBLIGATION, or special CONJUNCTIONS (pour que, bien que, avant que…)',
-      },
-      {
-        'front': 'Subjonctif formula?',
-        'back':
-            'ils/elles form → remove -ENT → add: -e, -es, -e, -ions, -iez, -ent',
-      },
-      {
-        'front': 'ÊTRE in Subjonctif (que je...)?',
-        'back':
-            'que je sois, tu sois, il soit, nous soyons, vous soyez, ils soient',
-      },
-      {
-        'front': 'AVOIR in Subjonctif (que je...)?',
-        'back': 'que j\'aie, tu aies, il ait, nous ayons, vous ayez, ils aient',
-      },
-      {
-        'front': 'FAIRE in Subjonctif (que je...)?',
-        'back':
-            'que je fasse, tu fasses, il fasse, nous fassions, vous fassiez, ils fassent',
-      },
-      {
-        'front': 'Same subject? Subjonctif or Infinitive?',
-        'back':
-            'INFINITIVE! ✅ "Je veux venir" (same = I)\nSubjonctif only when subjects DIFFER: "Je veux que tu viennes"',
-      },
-      {
-        'front': 'Translate: "I want you to come."',
-        'back': 'Je veux que tu viennes. (Subjonctif of venir)',
-      },
-      {
-        'front': 'Il faut que... + ?',
-        'back':
-            'Subjonctif! Il faut que tu finisses. (it is necessary that you finish)',
-      },
-    ],
-  };
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initialTopic != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _startAIFlashcards(widget.initialTopic!);
+      });
+    }
+  }
 
   Future<void> _startAIFlashcards(String topic) async {
     setState(() {
@@ -95,22 +38,22 @@ class _FlashcardsPageState extends State<FlashcardsPage> {
 
     try {
       final aiCards = await DeepSeekService.generateFlashcards(topic);
-      setState(() {
-        cards = aiCards;
-        _isLoading = false;
-        currentCard = 0;
-        showAnswer = false;
-      });
+      if (mounted) {
+        setState(() {
+          cards = aiCards;
+          _isLoading = false;
+          currentCard = 0;
+          showAnswer = false;
+        });
+      }
     } catch (e) {
-      setState(() {
-        _isLoading = false;
-        cards = staticCards[topic] ?? [];
-      });
-      if (cards.isEmpty && mounted) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          cards = [];
+        });
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text(
-                  'Failed to generate AI flashcards. Check your API key.')),
+          const SnackBar(content: Text('Failed to generate AI flashcards. Check your API key.')),
         );
         setState(() => selectedTopic = null);
       }
@@ -148,29 +91,41 @@ class _FlashcardsPageState extends State<FlashcardsPage> {
   }
 
   Widget _buildTopicSelection() {
+    final lessonsProvider = Provider.of<LessonsProvider>(context);
+    final grammarItems = lessonsProvider.allGrammar;
+    final lessonItems = lessonsProvider.allLessons;
+
     return ListView(
       padding: const EdgeInsets.all(24),
-      children: grammarTopics.map((topic) {
-        return Card(
-          margin: const EdgeInsets.only(bottom: 16),
-          child: ListTile(
-            contentPadding: const EdgeInsets.all(16),
-            leading: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: AppTheme.secondary.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Text(topic.icon, style: const TextStyle(fontSize: 24)),
-            ),
-            title: Text(topic.title,
-                style: const TextStyle(fontWeight: FontWeight.bold)),
-            subtitle: const Text('Generate 10 dynamic cards'),
-            trailing: const Icon(Icons.auto_awesome, color: AppTheme.secondary),
-            onTap: () => _startAIFlashcards(topic.id),
+      children: [
+        const SectionHeader('GRAMMAR FLASHCARDS'),
+        ...grammarItems.map((topic) => _buildTopicTile(topic.title, topic.icon)),
+        
+        const SizedBox(height: 24),
+        const SectionHeader('LESSON FLASHCARDS'),
+        ...lessonItems.map((topic) => _buildTopicTile(topic.title, topic.icon)),
+      ],
+    );
+  }
+
+  Widget _buildTopicTile(String title, String icon) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 16),
+      child: ListTile(
+        contentPadding: const EdgeInsets.all(16),
+        leading: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: AppTheme.secondary.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(12),
           ),
-        );
-      }).toList(),
+          child: Text(icon, style: const TextStyle(fontSize: 24)),
+        ),
+        title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
+        subtitle: const Text('Generate 10 dynamic cards'),
+        trailing: const Icon(Icons.auto_awesome, color: AppTheme.secondary),
+        onTap: () => _startAIFlashcards(title),
+      ),
     );
   }
 
@@ -191,8 +146,7 @@ class _FlashcardsPageState extends State<FlashcardsPage> {
               ),
               Text(
                 'CARD ${currentCard + 1} OF ${cards.length}',
-                style: const TextStyle(
-                    fontWeight: FontWeight.bold, color: AppTheme.textTertiary),
+                style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.textTertiary),
               ),
               IconButton(
                 icon: const Icon(Icons.shuffle),
@@ -210,9 +164,7 @@ class _FlashcardsPageState extends State<FlashcardsPage> {
                 duration: const Duration(milliseconds: 300),
                 width: double.infinity,
                 decoration: BoxDecoration(
-                  gradient: showAnswer
-                      ? AppTheme.studyBackGradient
-                      : AppTheme.studyFrontGradient,
+                  gradient: showAnswer ? AppTheme.studyBackGradient : AppTheme.studyFrontGradient,
                   borderRadius: BorderRadius.circular(32),
                   boxShadow: [
                     BoxShadow(
@@ -239,18 +191,11 @@ class _FlashcardsPageState extends State<FlashcardsPage> {
                         Text(
                           showAnswer ? card['back']! : card['front']!,
                           textAlign: TextAlign.center,
-                          style: const TextStyle(
-                              fontSize: 28,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white),
+                          style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white),
                         ),
                         const SizedBox(height: 32),
-                        Icon(
-                            showAnswer
-                                ? Icons.check_circle_outline
-                                : Icons.help_outline,
-                            color: Colors.white.withValues(alpha: 0.4),
-                            size: 48),
+                        Icon(showAnswer ? Icons.check_circle_outline : Icons.help_outline,
+                            color: Colors.white.withValues(alpha: 0.4), size: 48),
                       ],
                     ),
                   ),
@@ -290,6 +235,27 @@ class _FlashcardsPageState extends State<FlashcardsPage> {
           ),
         ),
       ],
+    );
+  }
+}
+
+class SectionHeader extends StatelessWidget {
+  final String title;
+  const SectionHeader(this.title, {super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16, left: 8),
+      child: Text(
+        title,
+        style: const TextStyle(
+          letterSpacing: 1.5,
+          fontSize: 12,
+          fontWeight: FontWeight.bold,
+          color: AppTheme.textTertiary,
+        ),
+      ),
     );
   }
 }

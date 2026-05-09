@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../theme/app_theme.dart';
-import '../../models/grammar_topic.dart';
-
 import '../../services/deepseek_service.dart';
 import '../../services/language_provider.dart';
-import 'package:provider/provider.dart';
+import '../../services/lessons_provider.dart';
 
 class ExercisesPage extends StatefulWidget {
-  const ExercisesPage({super.key});
+  final String? initialTopic;
+  const ExercisesPage({super.key, this.initialTopic});
 
   @override
   State<ExercisesPage> createState() => _ExercisesPageState();
@@ -20,17 +20,15 @@ class _ExercisesPageState extends State<ExercisesPage> {
   bool _isLoading = false;
   List<Map<String, dynamic>> questions = [];
 
-  final Map<String, List<Map<String, dynamic>>> staticExercises = {
-    'passe_compose': [
-      {
-        'question': 'Hier, je ___ un film.',
-        'options': ['ai regardé', 'suis regardé', 'regardais', 'regarderai'],
-        'correct': 0,
-        'explanation': 'Use Passé Composé for a completed action.',
-      },
-      // ... kept for fallback or mix
-    ],
-  };
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initialTopic != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _startAIExercises(widget.initialTopic!);
+      });
+    }
+  }
 
   Future<void> _startAIExercises(String topic) async {
     setState(() {
@@ -65,23 +63,22 @@ class _ExercisesPageState extends State<ExercisesPage> {
         };
       }).toList();
 
-      setState(() {
-        questions = sanitizedQuestions;
-        _isLoading = false;
-        currentQuestion = 0;
-        score = 0;
-      });
+      if (mounted) {
+        setState(() {
+          questions = sanitizedQuestions;
+          _isLoading = false;
+          currentQuestion = 0;
+          score = 0;
+        });
+      }
     } catch (e) {
-      setState(() {
-        _isLoading = false;
-        // Fallback to static or error
-        questions = staticExercises[topic] ?? [];
-      });
-      if (questions.isEmpty && mounted) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          questions = []; // No static fallback for now to keep it fresh
+        });
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content:
-                  Text('Failed to generate AI exercises. Check your API key.')),
+          const SnackBar(content: Text('Failed to generate AI exercises. Check your API key.')),
         );
         setState(() => selectedTopic = null);
       }
@@ -121,6 +118,10 @@ class _ExercisesPageState extends State<ExercisesPage> {
   }
 
   Widget _buildTopicSelection() {
+    final lessonsProvider = Provider.of<LessonsProvider>(context);
+    final grammarItems = lessonsProvider.allGrammar;
+    final lessonItems = lessonsProvider.allLessons;
+
     return ListView(
       padding: const EdgeInsets.all(24),
       children: [
@@ -165,46 +166,40 @@ class _ExercisesPageState extends State<ExercisesPage> {
                 padding: EdgeInsets.only(top: 8.0),
                 child: Text('Final Exam style: All tenses + COD/COI'),
               ),
-              trailing: const Icon(Icons.auto_awesome,
-                  color: AppTheme.primary, size: 32),
+              trailing: const Icon(Icons.auto_awesome, color: AppTheme.primary, size: 32),
               onTap: () => _startAIExercises('mixed_review'),
             ),
           ),
         ),
-        const Padding(
-          padding: EdgeInsets.only(bottom: 16, left: 8),
-          child: Text(
-            'TOPIC-SPECIFIC DRILLS',
-            style: TextStyle(
-              letterSpacing: 1.5,
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-              color: AppTheme.textTertiary,
-            ),
-          ),
-        ),
-        ...grammarTopics.map((topic) {
-          return Card(
-            margin: const EdgeInsets.only(bottom: 16),
-            child: ListTile(
-              contentPadding: const EdgeInsets.all(16),
-              leading: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: AppTheme.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(topic.icon, style: const TextStyle(fontSize: 24)),
-              ),
-              title: Text(topic.title,
-                  style: const TextStyle(fontWeight: FontWeight.bold)),
-              subtitle: const Text('Generate 10 dynamic exercises'),
-              trailing: const Icon(Icons.auto_awesome, color: AppTheme.primary),
-              onTap: () => _startAIExercises(topic.id),
-            ),
-          );
-        }),
+        
+        const SectionHeader('GRAMMAR TOPICS'),
+        ...grammarItems.map((topic) => _buildTopicTile(topic.title, topic.icon, topic.id)),
+        
+        const SizedBox(height: 24),
+        const SectionHeader('LESSON TOPICS'),
+        ...lessonItems.map((topic) => _buildTopicTile(topic.title, topic.icon, topic.id)),
       ],
+    );
+  }
+
+  Widget _buildTopicTile(String title, String icon, String id) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 16),
+      child: ListTile(
+        contentPadding: const EdgeInsets.all(16),
+        leading: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: AppTheme.primary.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Text(icon, style: const TextStyle(fontSize: 24)),
+        ),
+        title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
+        subtitle: const Text('Generate 10 dynamic exercises'),
+        trailing: const Icon(Icons.auto_awesome, color: AppTheme.primary),
+        onTap: () => _startAIExercises(title), // Use title for AI context
+      ),
     );
   }
 
@@ -255,8 +250,7 @@ class _ExercisesPageState extends State<ExercisesPage> {
               child: ElevatedButton(
                 onPressed: () => _answerQuestion(index, question['correct']),
                 style: ElevatedButton.styleFrom(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
                   alignment: Alignment.centerLeft,
                 ),
                 child: Text(
@@ -352,8 +346,7 @@ class _ExercisesPageState extends State<ExercisesPage> {
             const SizedBox(height: 12),
             Text(
               'You scored $score out of ${questions.length}',
-              style:
-                  const TextStyle(fontSize: 18, color: AppTheme.textSecondary),
+              style: const TextStyle(fontSize: 18, color: AppTheme.textSecondary),
             ),
             const SizedBox(height: 40),
             Container(
@@ -367,9 +360,7 @@ class _ExercisesPageState extends State<ExercisesPage> {
               child: Text(
                 '$percentage%',
                 style: Theme.of(context).textTheme.displayMedium?.copyWith(
-                      color: percentage >= 70
-                          ? AppTheme.success
-                          : AppTheme.warning,
+                      color: percentage >= 70 ? AppTheme.success : AppTheme.warning,
                     ),
               ),
             ),
@@ -392,6 +383,27 @@ class _ExercisesPageState extends State<ExercisesPage> {
               ],
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class SectionHeader extends StatelessWidget {
+  final String title;
+  const SectionHeader(this.title, {super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16, left: 8),
+      child: Text(
+        title,
+        style: const TextStyle(
+          letterSpacing: 1.5,
+          fontSize: 12,
+          fontWeight: FontWeight.bold,
+          color: AppTheme.textTertiary,
         ),
       ),
     );

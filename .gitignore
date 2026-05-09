@@ -18,10 +18,8 @@ migrate_working_dir/
 *.iws
 .idea/
 
-# The .vscode folder contains launch configuration and tasks you configure in
-# VS Code which you may wish to be included in version control, so this line
-# is commented out by default.
-#.vscode/
+# VS Code (keep this uncommented to avoid pushing workspace settings)
+.vscode/
 
 # Flutter/Dart/Pub related
 **/doc/api/
@@ -39,14 +37,29 @@ app.*.symbols
 # Obfuscation related
 app.*.map.json
 
-# Android Studio will place build artifacts here
+# Android Studio build artifacts
 /android/app/debug
 /android/app/profile
 /android/app/release
 
-# Environment files
+# ============================================
+# SECURITY: Environment / Secret files
+# ============================================
 .env
 .env.local
-.env*.local
-assets/env/.env
+.env.*.local
+*.env
 assets/.env
+assets/env/.env
+assets/**/.env
+
+# ============================================
+# Large binary files (not needed in repo)
+# ============================================
+nuget.exe
+*.log
+hs_err_pid*.log
+replay_pid*.log
+
+# Public folder (Vercel build output — generated automatically)
+/public/

@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'translated_text.dart';
 import 'ask_ai_box.dart';
+import '../pages/exercises/exercises_page.dart';
+import '../pages/flashcards/flashcards_page.dart';
+import '../theme/app_theme.dart';
 
 class LessonTemplate extends StatelessWidget {
   final String title;
@@ -19,16 +22,114 @@ class LessonTemplate extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('$icon $title'),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              AppTheme.background,
+              AppTheme.surface.withValues(alpha: 0.8),
+            ],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
+        child: CustomScrollView(
+          slivers: [
+            SliverAppBar(
+              expandedHeight: 120,
+              floating: true,
+              pinned: true,
+              backgroundColor: Colors.transparent,
+              flexibleSpace: FlexibleSpaceBar(
+                title: Text('$icon $title', 
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.white)),
+                centerTitle: true,
+                background: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [AppTheme.primary.withValues(alpha: 0.2), Colors.transparent],
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            SliverPadding(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20),
+              sliver: SliverList(
+                delegate: SliverChildListDelegate([
+                  ...children,
+                  if (topic != null) ...[
+                    const SizedBox(height: 60),
+                    AskAIBox(topic: topic!),
+                    const SizedBox(height: 40),
+                    const SectionTitle('Practice & Memorize', emoji: '🎯'),
+                    const SizedBox(height: 20),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildActionButton(
+                            context,
+                            title: 'Exercises',
+                            icon: Icons.edit_note_rounded,
+                            color: AppTheme.secondary,
+                            onTap: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (_) => ExercisesPage(initialTopic: topic)),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: _buildActionButton(
+                            context,
+                            title: 'Flashcards',
+                            icon: Icons.style_rounded,
+                            color: AppTheme.success,
+                            onTap: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (_) => FlashcardsPage(initialTopic: topic)),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 100),
+                  ],
+                ]),
+              ),
+            ),
+          ],
+        ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
+    );
+  }
+
+  Widget _buildActionButton(BuildContext context,
+      {required String title,
+      required IconData icon,
+      required Color color,
+      required VoidCallback onTap}) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(24),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: color.withValues(alpha: 0.2), width: 1.5),
+        ),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            ...children,
-            if (topic != null) AskAIBox(topic: topic!),
+            Icon(icon, color: color, size: 36),
+            const SizedBox(height: 12),
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 14),
+            ),
           ],
         ),
       ),

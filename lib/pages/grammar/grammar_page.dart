@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:file_picker/file_picker.dart';
 import '../../theme/app_theme.dart';
 import '../../models/grammar_topic.dart';
 import '../../services/language_provider.dart';
+import '../../services/lessons_provider.dart';
 import '../../services/deepseek_service.dart';
+import '../../services/pdf_helper.dart';
+import '../lessons/dynamic_lesson_page.dart';
 import 'lessons/passe_compose_page.dart';
 import 'lessons/present_page.dart';
 import 'lessons/imparfait_page.dart';
@@ -21,53 +26,242 @@ import 'lessons/comparatif_page.dart';
 import 'lessons/duration_prepositions_page.dart';
 import 'lessons/connectors_page.dart';
 
-class GrammarPage extends StatelessWidget {
+// Import the common dynamic page (or we can use it for both)
+import '../../models/lesson_topic.dart';
+
+class GrammarPage extends StatefulWidget {
   const GrammarPage({super.key});
 
   @override
+  State<GrammarPage> createState() => _GrammarPageState();
+}
+
+class _GrammarPageState extends State<GrammarPage> {
+  bool _isGenerating = false;
+
+  void _showTopicNameDialog() {
+    final TextEditingController controller = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: AppTheme.surface,
+          title: const Text('Enter Grammar Topic', style: TextStyle(color: Colors.white)),
+          content: TextField(
+            controller: controller,
+            autofocus: true,
+            decoration: const InputDecoration(hintText: 'e.g. Subjonctif, Relative Pronouns...'),
+            style: const TextStyle(color: Colors.white),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                final topic = controller.text.trim();
+                if (topic.isNotEmpty) {
+                  Navigator.pop(context);
+                  _generateGrammar(topic: topic);
+                }
+              },
+              child: const Text('Generate'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _pickAndGenerateFromPdf() async {
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['pdf'],
+    );
+
+    if (result != null && result.files.single.path != null) {
+      final path = result.files.single.path!;
+      final name = result.files.single.name;
+      
+      setState(() => _isGenerating = true);
+      
+      try {
+        final text = await PdfHelper.extractText(path);
+        await _generateGrammar(topic: name, pdfText: text);
+      } catch (e) {
+        _showError('Failed to process PDF: $e');
+      } finally {
+        setState(() => _isGenerating = false);
+      }
+    }
+  }
+
+  Future<void> _generateGrammar({required String topic, String? pdfText}) async {
+    setState(() => _isGenerating = true);
+    
+    try {
+      final lp = Provider.of<LanguageProvider>(context, listen: false);
+      final lessonsProvider = Provider.of<LessonsProvider>(context, listen: false);
+      
+      final grammarData = await DeepSeekService.generateFullGrammar(
+        topic,
+        lp.currentLanguage.englishName,
+        pdfText: pdfText,
+      );
+      
+      await lessonsProvider.addGrammar(grammarData);
+      _showSuccess('Grammar guide "$topic" added successfully!');
+    } catch (e) {
+      _showError('Failed to generate grammar: $e');
+    } finally {
+      setState(() => _isGenerating = false);
+    }
+  }
+
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), backgroundColor: Colors.red),
+    );
+  }
+
+  void _showSuccess(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), backgroundColor: Colors.green),
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final languageProvider = Provider.of<LanguageProvider>(context);
+    final lp = Provider.of<LanguageProvider>(context);
+    final lessonsProvider = Provider.of<LessonsProvider>(context);
+    final grammarItems = lessonsProvider.allGrammar;
+
     return Scaffold(
       appBar: AppBar(
-        title: Text(languageProvider.translate('grammar_lessons')),
+        title: Text(lp.translate('grammar_lessons')),
       ),
-      body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 1200),
-          child: GridView.builder(
-            padding: const EdgeInsets.all(24),
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: MediaQuery.of(context).size.width > 900
-                  ? 3
-                  : MediaQuery.of(context).size.width > 600
-                      ? 2
-                      : 1,
-              mainAxisSpacing: 20,
-              crossAxisSpacing: 20,
-              childAspectRatio: 1.6,
+      body: Stack(
+        children: [
+          Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 1200),
+              child: GridView.builder(
+                padding: const EdgeInsets.all(24),
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: MediaQuery.of(context).size.width > 900
+                      ? 3
+                      : MediaQuery.of(context).size.width > 600
+                          ? 2
+                          : 1,
+                  mainAxisSpacing: 20,
+                  crossAxisSpacing: 20,
+                  childAspectRatio: 1.6,
+                ),
+                itemCount: grammarItems.length,
+                itemBuilder: (context, index) {
+                  final topic = grammarItems[index];
+                  return _buildTopicCard(context, topic, lp);
+                },
+              ),
             ),
-            itemCount: grammarTopics.length,
-            itemBuilder: (context, index) {
-              final topic = grammarTopics[index];
-              return _buildTopicCard(context, topic, languageProvider);
-            },
           ),
-        ),
+          if (_isGenerating)
+            Container(
+              color: Colors.black.withValues(alpha: 0.7),
+              child: Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const SpinKitDoubleBounce(color: AppTheme.primary, size: 80),
+                    const SizedBox(height: 20),
+                    const Text(
+                      'AI is generating your grammar guide...',
+                      style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      'This might take a few seconds',
+                      style: TextStyle(color: Colors.white.withValues(alpha: 0.7)),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () {
+          showModalBottomSheet(
+            context: context,
+            backgroundColor: AppTheme.surface,
+            shape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+            ),
+            builder: (context) => Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.edit, color: AppTheme.primary),
+                  title: const Text('Enter Topic Name', style: TextStyle(color: Colors.white)),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _showTopicNameDialog();
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.picture_as_pdf, color: AppTheme.secondary),
+                  title: const Text('Upload PDF', style: TextStyle(color: Colors.white)),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _pickAndGenerateFromPdf();
+                  },
+                ),
+                const SizedBox(height: 20),
+              ],
+            ),
+          );
+        },
+        icon: const Icon(Icons.add),
+        label: const Text('Add Grammar Topic'),
+        backgroundColor: AppTheme.primary,
       ),
     );
   }
 
   Widget _buildTopicCard(
       BuildContext context, GrammarTopic topic, LanguageProvider lp) {
+    final bool isCustom = topic.id.startsWith('custom_');
+    
     return Card(
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => _getLessonPage(topic.id)),
-          );
+          if (isCustom) {
+            // Use DynamicLessonPage but we need to convert GrammarTopic to LessonTopic or handle both
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => DynamicLessonPage(
+                  topic: LessonTopic(
+                    id: topic.id,
+                    title: topic.title,
+                    subtitle: topic.subtitle,
+                    icon: topic.icon,
+                    description: topic.description,
+                    content: topic.content,
+                  ),
+                ),
+              ),
+            );
+          } else {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => _getLessonPage(topic.id)),
+            );
+          }
         },
+        onLongPress: isCustom ? () => _showDeleteConfirm(topic.id) : null,
         child: Padding(
           padding: const EdgeInsets.all(24),
           child: Column(
@@ -90,8 +284,10 @@ class GrammarPage extends StatelessWidget {
                     ),
                   ),
                   const Spacer(),
-                  const Icon(Icons.arrow_forward,
-                      color: AppTheme.textTertiary, size: 20),
+                  if (isCustom)
+                    const Icon(Icons.auto_awesome, color: AppTheme.secondary, size: 20)
+                  else
+                    const Icon(Icons.arrow_forward, color: AppTheme.textTertiary, size: 20),
                 ],
               ),
               const Spacer(),
@@ -119,6 +315,28 @@ class GrammarPage extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  void _showDeleteConfirm(String id) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppTheme.surface,
+        title: const Text('Delete Topic?', style: TextStyle(color: Colors.white)),
+        content: const Text('Are you sure you want to remove this custom grammar guide?', style: TextStyle(color: Colors.white70)),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () {
+              Provider.of<LessonsProvider>(context, listen: false).removeGrammar(id);
+              Navigator.pop(context);
+              _showSuccess('Topic removed');
+            },
+            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+          ),
+        ],
       ),
     );
   }

@@ -4,6 +4,7 @@ class GrammarTopic {
   final String subtitle;
   final String icon;
   final String description;
+  final List<dynamic>? content;
 
   const GrammarTopic({
     required this.id,
@@ -11,7 +12,30 @@ class GrammarTopic {
     required this.subtitle,
     required this.icon,
     required this.description,
+    this.content,
   });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'title': title,
+      'subtitle': subtitle,
+      'icon': icon,
+      'description': description,
+      'content': content,
+    };
+  }
+
+  factory GrammarTopic.fromJson(Map<String, dynamic> json) {
+    return GrammarTopic(
+      id: json['id'],
+      title: json['title'],
+      subtitle: json['subtitle'],
+      icon: json['icon'],
+      description: json['description'],
+      content: json['content'],
+    );
+  }
 }
 
 // All grammar topics

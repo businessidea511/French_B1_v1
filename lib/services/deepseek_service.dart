@@ -501,6 +501,177 @@ class DeepSeekService {
       rethrow;
     }
   }
+
+  // Generate a full grammar guide from a topic or PDF text
+  static Future<Map<String, dynamic>> generateFullGrammar(
+      String topic, String targetLanguage,
+      {String? pdfText}) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/chat/completions'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $apiKey',
+        },
+        body: jsonEncode({
+          'model': 'deepseek-chat',
+          'messages': [
+            {
+              'role': 'system',
+              'content':
+                  'You are a French Grammar expert. Generate a comprehensive B1 grammar guide in JSON format. '
+                      'The guide must be "for dummies" (simple, clear, logical). '
+                      'CRITICAL RULE: ALL explanations, descriptions, and section content MUST be written in $targetLanguage. '
+                      'French examples, conjugations, and grammar rules MUST stay in French but ALWAYS include translations in $targetLanguage. '
+                      'Return a JSON object with: '
+                      '"title" (String - e.g. "Le Subjonctif"), "subtitle" (String - e.g. "Wishes and Doubts"), "icon" (String emoji), '
+                      '"sections" (Array of objects with "title" (in $targetLanguage) and "content" (Markdown string in $targetLanguage)).'
+            },
+            {
+              'role': 'user',
+              'content': pdfText != null
+                  ? 'Generate a French B1 grammar guide based on this PDF text: \n\n $pdfText \n\n Focus on the topic: $topic. Explanation language: $targetLanguage.'
+                  : 'Generate a French B1 grammar guide about: $topic. Explanation language: $targetLanguage.'
+            }
+          ],
+          'response_format': {'type': 'json_object'},
+          'temperature': 0.7,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return jsonDecode(data['choices'][0]['message']['content']);
+      } else {
+        throw Exception('Failed to generate grammar: ${response.statusCode}');
+      }
+    } catch (e) {
+      debugPrint('Error generating grammar: $e');
+      rethrow;
+    }
+  }
+
+  // Generate a full AI Book (story) combining grammar and lessons
+  static Future<Map<String, dynamic>> generateAIBook(
+      List<String> grammarTopics, List<String> lessonTopics, String targetLanguage) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/chat/completions'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $apiKey',
+        },
+        body: jsonEncode({
+          'model': 'deepseek-chat',
+          'messages': [
+            {
+              'role': 'system',
+              'content':
+                  'You are a professional French novelist and pedagogical expert. Generate a RICH, engaging, and detailed B1-level story in JSON format. '
+                      'The story MUST be long and immersive (at least 300-400 words total), divided into 4-6 pages. '
+                      'CRITICAL RULES: \n'
+                      '1. STORYTELLING: Write a real story with a beginning, middle, and end. Use descriptive language. \n'
+                      '2. INTEGRATION: Naturally weave the provided grammar points and vocabulary into the narrative. Do not just list them. \n'
+                      '3. FORMATTING: Each page must have substantial text (70-100 words). Return as a list of "pages". \n'
+                      '4. ANNOTATIONS: Highlight at least 3-5 interesting grammar/vocab uses per page. \n'
+                      '5. LANGUAGE: Story text is French. Hints/Explanations are in $targetLanguage. \n'
+                      'Return a JSON object with: "title", "pages" (Array of {text, annotations}).'
+            },
+            {
+              'role': 'user',
+              'content': 'Write a B1 story using: \n'
+                  'Grammar: ${grammarTopics.join(', ')} \n'
+                  'Vocabulary/Lessons: ${lessonTopics.join(', ')} \n'
+                  'Explanation Language: $targetLanguage.'
+            }
+          ],
+          'response_format': {'type': 'json_object'},
+          'temperature': 0.8,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return jsonDecode(data['choices'][0]['message']['content']);
+      } else {
+        throw Exception('Failed to generate AI Book: ${response.statusCode}');
+      }
+    } catch (e) {
+      debugPrint('Error generating AI Book: $e');
+      rethrow;
+    }
+  }
+
+  // ── Generate lesson from a photo (Vision) ─────────────────────────────────
+  static Future<Map<String, dynamic>> generateLessonFromImage(
+    String base64Image,
+    String mimeType,
+    String targetLanguage,
+  ) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/chat/completions'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $apiKey',
+        },
+        body: jsonEncode({
+          'model': 'deepseek-chat',
+          'messages': [
+            {
+              'role': 'system',
+              'content':
+                  'You are an expert French B1 teacher (Alliance Française level). '
+                  'The user will describe an image. Analyze its content and create a comprehensive French B1 lesson. '
+                  'The lesson explanation must be in $targetLanguage. '
+                  'Return ONLY valid JSON in this exact format: '
+                  '{"id":"img_lesson_<timestamp>","title":"<French topic title>","subtitle":"<subtitle in $targetLanguage>","icon":"📷","content":{'
+                  '"introduction":"<introduction in $targetLanguage>","vocabulary":[{"french":"","translation":"","example":""}],'
+                  '"grammar":{"title":"","explanation":"","examples":[""]},'
+                  '"exercises":[{"question":"","answer":""}],'
+                  '"cultural_note":""}}'
+            },
+            {
+              'role': 'user',
+              'content': [
+                {
+                  'type': 'image_url',
+                  'image_url': {
+                    'url': 'data:$mimeType;base64,$base64Image',
+                  }
+                },
+                {
+                  'type': 'text',
+                  'text':
+                      'Please analyze this image and create a B1 French lesson based on what you see. '
+                      'Focus on the vocabulary, objects, actions, or scene visible in the image. '
+                      'Return only the JSON lesson object.'
+                }
+              ]
+            }
+          ],
+          'max_tokens': 4000,
+          'response_format': {'type': 'json_object'},
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        String content = data['choices'][0]['message']['content'];
+        // Clean markdown if present
+        content = content.replaceAll('```json', '').replaceAll('```', '').trim();
+        final lesson = jsonDecode(content);
+        // Ensure unique ID
+        lesson['id'] = 'img_${DateTime.now().millisecondsSinceEpoch}';
+        return lesson;
+      } else {
+        throw Exception('DeepSeek Vision error: ${response.statusCode} - ${response.body}');
+      }
+    } catch (e) {
+      debugPrint('Error generating lesson from image: $e');
+      rethrow;
+    }
+  }
 }
 
 

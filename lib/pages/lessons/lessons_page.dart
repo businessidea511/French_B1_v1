@@ -1,7 +1,11 @@
+import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../theme/app_theme.dart';
 import '../../models/lesson_topic.dart';
 import '../../services/language_provider.dart';
@@ -111,6 +115,17 @@ class _LessonsPageState extends State<LessonsPage> {
                   _pickAndGenerateFromPdf();
                 },
               ),
+              const SizedBox(height: 12),
+              _buildAddOption(
+                icon: Icons.camera_alt_rounded,
+                title: 'By Photo',
+                subtitle: 'Take a photo or pick from gallery',
+                color: AppTheme.secondary,
+                onTap: () {
+                  Navigator.pop(context);
+                  _showImageSourceDialog();
+                },
+              ),
             ],
           ),
         );
@@ -123,19 +138,22 @@ class _LessonsPageState extends State<LessonsPage> {
     required String title,
     required String subtitle,
     required VoidCallback onTap,
+    Color? color,
   }) {
+    final iconColor = color ?? AppTheme.primary;
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+          border: Border.all(color: iconColor.withValues(alpha: 0.3)),
           borderRadius: BorderRadius.circular(12),
+          color: iconColor.withValues(alpha: 0.05),
         ),
         child: Row(
           children: [
-            Icon(icon, color: AppTheme.primary, size: 32),
+            Icon(icon, color: iconColor, size: 32),
             const SizedBox(width: 16),
             Expanded(
               child: Column(
@@ -146,6 +164,7 @@ class _LessonsPageState extends State<LessonsPage> {
                 ],
               ),
             ),
+            Icon(Icons.arrow_forward_ios, color: iconColor.withValues(alpha: 0.5), size: 14),
           ],
         ),
       ),
@@ -186,6 +205,85 @@ class _LessonsPageState extends State<LessonsPage> {
       },
     );
   }
+
+  // ── IMAGE CAPTURE ──────────────────────────────────────
+
+  void _showImageSourceDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppTheme.surface,
+        title: const Text('Choose Image Source', style: TextStyle(color: Colors.white)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (!kIsWeb)
+              _buildAddOption(
+                icon: Icons.camera_alt_rounded,
+                title: 'Take a Photo',
+                subtitle: 'Use your camera',
+                color: AppTheme.secondary,
+                onTap: () {
+                  Navigator.pop(context);
+                  _pickAndGenerateFromImage(ImageSource.camera);
+                },
+              ),
+            if (!kIsWeb) const SizedBox(height: 12),
+            _buildAddOption(
+              icon: Icons.photo_library_rounded,
+              title: 'Choose from Gallery',
+              subtitle: 'Pick an existing photo',
+              color: AppTheme.accent,
+              onTap: () {
+                Navigator.pop(context);
+                _pickAndGenerateFromImage(ImageSource.gallery);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _pickAndGenerateFromImage(ImageSource source) async {
+    final picker = ImagePicker();
+    final XFile? image = await picker.pickImage(
+      source: source,
+      imageQuality: 85,
+      maxWidth: 1920,
+    );
+
+    if (image == null) return;
+
+    setState(() => _isGenerating = true);
+
+    try {
+      // Convert image to base64
+      final bytes = await image.readAsBytes();
+      final base64Image = base64Encode(bytes);
+      final mimeType = image.name.toLowerCase().endsWith('.png')
+          ? 'image/png'
+          : 'image/jpeg';
+
+      final lp = Provider.of<LanguageProvider>(context, listen: false);
+      final lessonsProvider = Provider.of<LessonsProvider>(context, listen: false);
+
+      final lessonData = await DeepSeekService.generateLessonFromImage(
+        base64Image,
+        mimeType,
+        lp.currentLanguage.englishName,
+      );
+
+      await lessonsProvider.addLesson(lessonData);
+      _showSuccess('Lesson generated from photo successfully! 📸');
+    } catch (e) {
+      _showError('Failed to analyze image: $e');
+    } finally {
+      setState(() => _isGenerating = false);
+    }
+  }
+
+  // ── PDF ─────────────────────────────────────────────────
 
   Future<void> _pickAndGenerateFromPdf() async {
     final result = await FilePicker.platform.pickFiles(

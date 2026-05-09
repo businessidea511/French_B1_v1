@@ -11,11 +11,21 @@ import 'services/lessons_provider.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Load local .env if it exists
-  try {
-    await dotenv.load(fileName: "assets/.env");
-  } catch (_) {
-    // Silently continue; production uses --dart-define
+  // Try loading from multiple locations to be safe
+  final possiblePaths = [".env", "assets/.env", "assets/env/.env"];
+  bool loaded = false;
+  
+  for (String path in possiblePaths) {
+    try {
+      await dotenv.load(fileName: path);
+      debugPrint("Success: Loaded environment from $path");
+      loaded = true;
+      break;
+    } catch (_) {}
+  }
+
+  if (!loaded) {
+    debugPrint("Warning: Could not load .env file from any of the standard locations.");
   }
 
   runApp(
