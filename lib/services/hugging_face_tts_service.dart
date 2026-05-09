@@ -6,7 +6,16 @@ import 'package:path_provider/path_provider.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class HuggingFaceTtsService {
-  static final String _token = dotenv.env['HF_TOKEN'] ?? '';
+  static String get _token {
+    const String dKey = String.fromEnvironment('HF_TOKEN');
+    if (dKey.isNotEmpty) return dKey;
+    try {
+      return dotenv.env['HF_TOKEN'] ?? '';
+    } catch (_) {
+      return '';
+    }
+  }
+
   static const String _baseUrl =
       'https://innoai-edge-tts-text-to-speech.hf.space/gradio_api/call/tts_interface';
 
