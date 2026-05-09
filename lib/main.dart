@@ -34,8 +34,8 @@ class FrenchB1App extends StatelessWidget {
 
   void _handleScroll(BuildContext context, double offset,
       {bool isPage = false}) {
-    final controller = PrimaryScrollController.of(context);
-    if (controller.hasClients) {
+    final controller = PrimaryScrollController.maybeOf(context);
+    if (controller != null && controller.hasClients) {
       final target = controller.offset + offset;
 
       controller.animateTo(
@@ -94,16 +94,16 @@ class FrenchB1App extends StatelessWidget {
                               context, MediaQuery.of(context).size.height * 0.8,
                               isPage: true),
                       const SingleActivator(LogicalKeyboardKey.home): () {
-                        final controller = PrimaryScrollController.of(context);
-                        if (controller.hasClients) {
+                        final controller = PrimaryScrollController.maybeOf(context);
+                        if (controller != null && controller.hasClients) {
                           controller.animateTo(0,
                               duration: const Duration(milliseconds: 500),
                               curve: Curves.easeOut);
                         }
                       },
                       const SingleActivator(LogicalKeyboardKey.end): () {
-                        final controller = PrimaryScrollController.of(context);
-                        if (controller.hasClients) {
+                        final controller = PrimaryScrollController.maybeOf(context);
+                        if (controller != null && controller.hasClients) {
                           controller.animateTo(
                               controller.position.maxScrollExtent,
                               duration: const Duration(milliseconds: 500),

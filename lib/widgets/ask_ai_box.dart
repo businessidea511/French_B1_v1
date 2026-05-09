@@ -20,7 +20,6 @@ class _AskAIBoxState extends State<AskAIBox> {
   final TextEditingController _controller = TextEditingController();
   bool _isLoading = false;
   String? _response;
-  final ScrollController _scrollController = ScrollController();
 
   Future<void> _askQuestion() async {
     if (_controller.text.trim().isEmpty) return;
@@ -46,12 +45,17 @@ class _AskAIBoxState extends State<AskAIBox> {
       });
       
       // Auto-scroll to show the response
-      Future.delayed(const Duration(milliseconds: 100), () {
-        _scrollController.animateTo(
-          _scrollController.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 500),
-          curve: Curves.easeOut,
-        );
+      Future.delayed(const Duration(milliseconds: 300), () {
+        if (mounted) {
+          final primaryController = PrimaryScrollController.maybeOf(context);
+          if (primaryController != null && primaryController.hasClients) {
+            primaryController.animateTo(
+              primaryController.position.maxScrollExtent,
+              duration: const Duration(milliseconds: 800),
+              curve: Curves.easeOutQuart,
+            );
+          }
+        }
       });
     } catch (e) {
       setState(() {

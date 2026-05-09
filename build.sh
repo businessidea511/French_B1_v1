@@ -8,9 +8,10 @@ echo "=== PREPARING CONFIGURATION ==="
 echo "{\"DEEPSEEK_API_KEY\": \"$DEEPSEEK_API_KEY\", \"ADMIN_PASSWORD\": \"$ADMIN_PASSWORD\"}" > dart_config.json
 
 # Create a dummy .env file if it doesn't exist (Flutter build requires it since it's in pubspec.yaml)
-if [ ! -f ".env" ]; then
+if [ ! -f "assets/.env" ]; then
   echo "Creating dummy .env for build compatibility..."
-  touch .env
+  mkdir -p assets
+  touch assets/.env
 fi
 
 echo "=== STARTING FLUTTER BUILD ==="
