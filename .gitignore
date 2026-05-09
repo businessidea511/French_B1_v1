@@ -52,6 +52,7 @@ app.*.map.json
 assets/.env
 assets/env/.env
 assets/**/.env
+dart_config.json
 
 # ============================================
 # Large binary files (not needed in repo)
