@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/foundation.dart';
 import 'dart:math';
-import 'hugging_face_vision_service.dart';
+import 'gemini_service.dart';
 
 class DeepSeekService {
   static const String baseUrl = 'https://api.deepseek.com/v1';
@@ -661,8 +661,8 @@ class DeepSeekService {
     String targetLanguage,
   ) async {
     try {
-      // 1. Get description of the image using Hugging Face
-      final description = await HuggingFaceVisionService.describeImage(base64Image);
+      // 1. Get description of the image using Gemini
+      final description = await GeminiService.describeImage(base64Image, mimeType);
       
       if (description == null) {
         throw Exception('Could not describe image');
@@ -726,8 +726,8 @@ class DeepSeekService {
     String targetLanguage,
   ) async {
     try {
-      // 1. Get description of the image using Hugging Face
-      final description = await HuggingFaceVisionService.describeImage(base64Image);
+      // 1. Get description of the image using Gemini
+      final description = await GeminiService.describeImage(base64Image, mimeType);
       
       if (description == null) {
         throw Exception('Could not describe image');
