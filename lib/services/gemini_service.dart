@@ -28,11 +28,17 @@ class GeminiService {
     return keys;
   }
 
-  static int _currentKeyIndex = 0;
+  // Use a random starting index to distribute load across sessions
+  static int _currentKeyIndex = -1;
 
   static String _getNextKey() {
     final keys = _keys;
     if (keys.isEmpty) return '';
+    
+    if (_currentKeyIndex == -1) {
+      _currentKeyIndex = DateTime.now().millisecondsSinceEpoch % keys.length;
+    }
+
     final key = keys[_currentKeyIndex];
     _currentKeyIndex = (_currentKeyIndex + 1) % keys.length;
     return key;
