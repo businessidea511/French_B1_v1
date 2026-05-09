@@ -59,7 +59,7 @@ class GeminiService {
       debugPrint('💎 Analyzing image with Gemini 1.5 Flash...');
       
       final response = await http.post(
-        Uri.parse('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=$key'),
+        Uri.parse('https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=$key'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           "contents": [{
