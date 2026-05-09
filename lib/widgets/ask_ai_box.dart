@@ -227,6 +227,7 @@ class _AskAIBoxState extends State<AskAIBox> {
           ),
         ),
       ),
-    );
+    ),
+   );
   }
 }

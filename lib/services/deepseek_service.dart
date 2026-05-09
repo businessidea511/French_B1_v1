@@ -355,11 +355,8 @@ class DeepSeekService {
   }
 
   // Translate text to a target language
-  static Future<String> translateText(
-      String text, String targetLanguage) async {
-    // We now allow translation for French to localize English-only descriptions,
-    // relying on our system prompt to preserve existing French examples.
-
+  // Translate text to a target language
+  static Future<String> translateText(String text, String targetLanguage) async {
     try {
       final response = await http.post(
         Uri.parse('$baseUrl/chat/completions'),
@@ -372,19 +369,19 @@ class DeepSeekService {
           'messages': [
             {
               'role': 'system',
-              'content': 'You are a professional translator and French language expert. '
-                  'Translate the given text into $targetLanguage. '
-                  'CRITICAL RULE: This text is from a French grammar lesson. '
-                  'DO NOT translate French words, phrases, conjugations, or examples used for teaching. '
-                  'Keep any text that looks like a French grammar example, a conjugation (e.g., -er, -ir, -re endings), or a specific French phrase EXACTLY as it is. '
-                  'Only translate the surrounding explanations, instructions, and descriptions. '
-                  'Even if the text contains symbols like ❌ or ✅ followed by French, KEEP the French part. '
-                  'Provide ONLY the localized translation, no extra comments.'
+              'content':
+                  'You are a professional translator and French language expert. '
+                      'Translate the given text into $targetLanguage. '
+                      'CRITICAL RULE: This text is from a French grammar lesson. '
+                      'DO NOT translate French words, phrases, conjugations, or examples used for teaching. '
+                      'Keep any text that looks like a French grammar example, a conjugation (e.g., -er, -ir, -re endings), or a specific French phrase EXACTLY as it is. '
+                      'Only translate the surrounding explanations, instructions, and descriptions. '
+                      'Even if the text contains symbols like ❌ or ✅ followed by French, KEEP the French part. '
+                      'Provide ONLY the localized translation, no extra comments.'
             },
             {
               'role': 'user',
-              'content':
-                  'Translate this lesson content to $targetLanguage: $text'
+              'content': 'Translate this lesson content to $targetLanguage: $text'
             }
           ],
           'temperature': 0.3,
@@ -400,6 +397,8 @@ class DeepSeekService {
       debugPrint('Translation error: $e');
       return text;
     }
+  }
+
   // Ask a specific grammar question
   static Future<String> askGrammarQuestion(
       String question, String topic, String targetLanguage) async {
@@ -415,12 +414,13 @@ class DeepSeekService {
           'messages': [
             {
               'role': 'system',
-              'content': 'You are a French grammar expert. You explain things simply and clearly for "dummies" (beginner to intermediate levels). '
-                  'Your answer should be professional but very easy to understand. '
-                  'Use examples in French followed by their translation in $targetLanguage. '
-                  'Keep the response concise and pedagogical. '
-                  'The user is currently studying the topic: $topic. '
-                  'The user\'s preferred language for explanations is $targetLanguage.'
+              'content':
+                  'You are a French grammar expert. You explain things simply and clearly for "dummies" (beginner to intermediate levels). '
+                      'Your answer should be professional but very easy to understand. '
+                      'Use examples in French followed by their translation in $targetLanguage. '
+                      'Keep the response concise and pedagogical. '
+                      'The user is currently studying the topic: $topic. '
+                      'The user\'s preferred language for explanations is $targetLanguage.'
             },
             {
               'role': 'user',
@@ -442,9 +442,12 @@ class DeepSeekService {
       debugPrint('Error in askGrammarQuestion: $e');
       rethrow;
     }
+  }
+
   // Generate a full lesson from a topic or PDF text
   static Future<Map<String, dynamic>> generateFullLesson(
-      String topic, String targetLanguage, {String? pdfText}) async {
+      String topic, String targetLanguage,
+      {String? pdfText}) async {
     try {
       final response = await http.post(
         Uri.parse('$baseUrl/chat/completions'),
@@ -457,13 +460,14 @@ class DeepSeekService {
           'messages': [
             {
               'role': 'system',
-              'content': 'You are a French B1 teacher. Generate a comprehensive lesson in JSON format. '
-                  'The lesson must be "for dummies" (simple, clear, engaging). '
-                  'Your explanations MUST be in $targetLanguage. '
-                  'French examples and vocabulary MUST stay in French but include translations in $targetLanguage. '
-                  'Return a JSON object with: '
-                  '"title" (String), "subtitle" (String), "icon" (String emoji), '
-                  '"sections" (Array of objects with "title" and "content" (Markdown string)).'
+              'content':
+                  'You are a French B1 teacher. Generate a comprehensive lesson in JSON format. '
+                      'The lesson must be "for dummies" (simple, clear, engaging). '
+                      'Your explanations MUST be in $targetLanguage. '
+                      'French examples and vocabulary MUST stay in French but include translations in $targetLanguage. '
+                      'Return a JSON object with: '
+                      '"title" (String), "subtitle" (String), "icon" (String emoji), '
+                      '"sections" (Array of objects with "title" and "content" (Markdown string)).'
             },
             {
               'role': 'user',
