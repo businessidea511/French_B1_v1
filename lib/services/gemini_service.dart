@@ -31,19 +31,20 @@ class GeminiService {
     final key = _getNextKey();
     if (key.isEmpty) return "ERROR: No Gemini API keys found.";
 
-    // Try multiple model IDs and API versions
+    // 2026 Future Models from user's Google AI Studio screenshot
     final attempts = [
-      {'ver': 'v1beta', 'model': 'gemini-1.5-flash-8b-latest'},
-      {'ver': 'v1beta', 'model': 'gemini-1.5-flash'},
-      {'ver': 'v1', 'model': 'gemini-1.5-flash'},
-      {'ver': 'v1beta', 'model': 'gemini-1.5-pro'},
+      {'ver': 'v1beta', 'model': 'gemini-2.5-flash'},
+      {'ver': 'v1beta', 'model': 'gemini-3-flash'},
+      {'ver': 'v1beta', 'model': 'nano-banana'},
+      {'ver': 'v1beta', 'model': 'gemini-2-flash'},
+      {'ver': 'v1beta', 'model': 'gemini-1.5-flash'}, // Legacy fallback
     ];
 
     for (var attempt in attempts) {
       try {
         final version = attempt['ver'];
         final modelId = attempt['model'];
-        debugPrint('💎 Trying Gemini $modelId ($version) with Header Auth...');
+        debugPrint('💎 Trying Future Gemini $modelId ($version)...');
 
         final url = 'https://generativelanguage.googleapis.com/$version/models/$modelId:generateContent';
         
@@ -51,7 +52,7 @@ class GeminiService {
           Uri.parse(url),
           headers: {
             'Content-Type': 'application/json',
-            'x-goog-api-key': key, // Passing key in header is more robust against some CORS/Proxy issues
+            'x-goog-api-key': key,
           },
           body: jsonEncode({
             "contents": [{
@@ -65,15 +66,15 @@ class GeminiService {
 
         if (response.statusCode == 200) {
           final data = jsonDecode(response.body);
-          debugPrint('✅ Success with $modelId!');
+          debugPrint('✅ Success with Future model: $modelId!');
           return data['candidates'][0]['content']['parts'][0]['text'] as String;
         }
-        debugPrint('❌ $modelId failed (${response.statusCode}): ${response.body}');
+        debugPrint('❌ $modelId failed (${response.statusCode})');
       } catch (e) {
-        debugPrint('❌ Attempt failed: $e');
+        debugPrint('❌ Attempt failed for $attempt: $e');
       }
     }
 
-    return "EXCEPTION: All vision attempts failed. This might be a regional API restriction or an issue with the API keys.";
+    return "EXCEPTION: Your 2026 Google AI Studio models returned 404/Error. Please ensure the model IDs in Vercel are correct.";
   }
 }
