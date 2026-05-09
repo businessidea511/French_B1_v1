@@ -15,6 +15,7 @@ class AdverbesMentPage extends StatelessWidget {
           ? 'Les Adverbes en -ment'
           : 'Adverbs in -ment',
       icon: '🏃',
+      topic: 'Les Adverbes',
       children: [
         const TranslatedText(
           'Adverbs are like "Action Spices" 🌶️. They tell us HOW someone does something (Slowly, happily, nicely). In French, most end in -MENT, just like English ends in -LY.',

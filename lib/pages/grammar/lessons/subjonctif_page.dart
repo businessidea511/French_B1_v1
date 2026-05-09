@@ -15,6 +15,7 @@ class SubjonctifPage extends StatelessWidget {
           ? 'Le Subjonctif'
           : 'The Subjunctive',
       icon: '🌀',
+      topic: 'Le Subjonctif',
       children: [
         // ── INTRO ──────────────────────────────────────────────────────────
         const TranslatedText(

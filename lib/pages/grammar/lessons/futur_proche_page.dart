@@ -15,6 +15,7 @@ class FuturProchePage extends StatelessWidget {
           ? 'Futur Proche'
           : 'Near Future',
       icon: '🔜',
+      topic: 'Futur Proche',
       children: [
         const TranslatedText(
           'Futur Proche = "going to" in English. It\'s the EASIEST future tense because it\'s for things happening SOON or that you\'ve already decided to do!',

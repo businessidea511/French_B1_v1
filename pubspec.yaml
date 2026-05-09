@@ -35,6 +35,15 @@ dependencies:
   # Loading indicators
   flutter_spinkit: ^5.2.0
 
+  # File picker for PDF upload
+  file_picker: ^8.0.0
+  
+  # PDF processing
+  syncfusion_flutter_pdf: ^24.1.41
+
+  # Markdown support for AI lessons
+  flutter_markdown: ^0.7.3
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

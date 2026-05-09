@@ -15,6 +15,7 @@ class PresentPage extends StatelessWidget {
           ? 'Le Présent'
           : 'Present Tense',
       icon: '⌚',
+      topic: 'Le Présent',
       children: [
         const TranslatedText(
           'Think of Le Présent as the "Live Stream" tense. It\'s for what\'s happening RIGHT NOW or things that are always true, like habits or scientific facts 📺',

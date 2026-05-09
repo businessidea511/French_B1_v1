@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_theme.dart';
 import '../../services/deepseek_service.dart';
-import '../../services/tts_service.dart';
 
 class VerbsPage extends StatefulWidget {
   const VerbsPage({super.key});
@@ -11,44 +10,10 @@ class VerbsPage extends StatefulWidget {
 }
 
 class _VerbsPageState extends State<VerbsPage> {
-  final TtsService _ttsService = TtsService();
-  bool _isSpeaking = false;
   final TextEditingController _searchController = TextEditingController();
   bool _isLoading = false;
   String selectedVerb = 'parler';
   String selectedTense = 'Présent';
-
-  @override
-  void dispose() {
-    _ttsService.stop();
-    _searchController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _playConjugation(List<String> tenseData) async {
-    if (_isSpeaking) {
-      await _ttsService.stop();
-      setState(() => _isSpeaking = false);
-      return;
-    }
-
-    setState(() => _isSpeaking = true);
-
-    // Create a natural reading flow: "Je parle. Tu parles. ..."
-    String textToSpeak = tenseData.join(". ");
-
-    // Set French locale (assuming generic French is fine for verbs)
-    await _ttsService.flutterTts.setLanguage('fr-FR');
-    await _ttsService.setRate(0.8); // Slightly slower for clarity
-
-    _ttsService.flutterTts.setCompletionHandler(() {
-      if (mounted) {
-        setState(() => _isSpeaking = false);
-      }
-    });
-
-    await _ttsService.speak(textToSpeak);
-  }
 
   final List<String> verbs = {
     'parler',
@@ -868,28 +833,12 @@ class _VerbsPageState extends State<VerbsPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Expanded(
-              child: Text(
-                '${selectedVerb.toUpperCase()} - $selectedTense',
-                style: Theme.of(context).textTheme.headlineMedium,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-            IconButton(
-              onPressed: () => _playConjugation(tenseData),
-              icon: Icon(
-                _isSpeaking
-                    ? Icons.stop_circle_outlined
-                    : Icons.volume_up_rounded,
-                size: 32,
-                color: AppTheme.primary,
-              ),
-              tooltip: _isSpeaking ? 'Stop Audio' : 'Listen to Conjugation',
-            ),
-          ],
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          child: Text(
+            '${selectedVerb.toUpperCase()} - $selectedTense',
+            style: Theme.of(context).textTheme.headlineMedium,
+          ),
         ),
         const SizedBox(height: 16),
         GridView.builder(

@@ -15,6 +15,7 @@ class NegativeComplexPage extends StatelessWidget {
           ? 'Négation Complexe'
           : 'Complex Negation',
       icon: '⛔',
+      topic: 'Négation Complexe',
       children: [
         const TranslatedText(
           'You know "ne...pas" (not), but French has MORE ways to say NO! Let\'s master never, nothing, nobody, and no more!',

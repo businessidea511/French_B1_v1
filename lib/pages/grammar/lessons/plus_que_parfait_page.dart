@@ -15,6 +15,7 @@ class PlusQueParfaitPage extends StatelessWidget {
           ? 'Plus-que-parfait'
           : 'Past Perfect Tense',
       icon: '⏪',
+      topic: 'Plus-que-parfait',
       children: [
         const TranslatedText(
           'Think of Plus-que-parfait as the "FLASHBACK" tense. It\'s for actions that happened BEFORE other past actions. It\'s like going even FURTHER back in time!',

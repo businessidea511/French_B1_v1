@@ -85,6 +85,7 @@ class VoixPassivePage extends StatelessWidget {
           ? 'La Voix Passive & Active'
           : 'Passive & Active Voice',
       icon: '🔄',
+      topic: 'La Voix Passive',
       children: [
         // ── INTRO ──────────────────────────────────────────────────────────
         const TranslatedText(

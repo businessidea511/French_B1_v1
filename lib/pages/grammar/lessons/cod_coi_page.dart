@@ -15,6 +15,7 @@ class CodCoiPage extends StatelessWidget {
           ? 'COD / COI'
           : 'Direct & Indirect Objects',
       icon: '🎯',
+      topic: 'COD / COI',
       children: [
         const TranslatedText(
           'COD and COI are OBJECT PRONOUNS that replace nouns to avoid repetition. Think of them as shortcuts!',

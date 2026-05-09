@@ -14,6 +14,7 @@ class SiSeulementPage extends StatelessWidget {
       title:
           lp.currentLanguage == AppLanguage.french ? 'Si seulement' : 'If only',
       icon: '💭',
+      topic: 'Si seulement',
       children: [
         const TranslatedText(
           '"Si seulement" means "If only" - it\'s for expressing REGRETS and WISHES about things that aren\'t true or didn\'t happen. Very dramatic! 🎭',

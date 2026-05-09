@@ -15,6 +15,7 @@ class ImparfaitPage extends StatelessWidget {
           ? 'Imparfait'
           : 'Imperfect Tense',
       icon: '🎬',
+      topic: 'Imparfait',
       children: [
         const TranslatedText(
           'Think of Imparfait as the "BACKGROUND MUSIC" of your past. While Passé Composé is specific actions, Imparfait sets the SCENE and describes what was ONGOING.',

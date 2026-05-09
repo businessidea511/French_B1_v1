@@ -15,6 +15,7 @@ class ComparatifPage extends StatelessWidget {
           ? 'Le Comparatif'
           : 'Comparatives',
       icon: '⚖️',
+      topic: 'Le Comparatif',
       children: [
         const TranslatedText(
           'The Comparatif lets you COMPARE things — bigger, smaller, faster, cheaper! '

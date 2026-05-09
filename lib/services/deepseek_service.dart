@@ -400,5 +400,94 @@ class DeepSeekService {
       debugPrint('Translation error: $e');
       return text;
     }
+  // Ask a specific grammar question
+  static Future<String> askGrammarQuestion(
+      String question, String topic, String targetLanguage) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/chat/completions'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $apiKey',
+        },
+        body: jsonEncode({
+          'model': 'deepseek-chat',
+          'messages': [
+            {
+              'role': 'system',
+              'content': 'You are a French grammar expert. You explain things simply and clearly for "dummies" (beginner to intermediate levels). '
+                  'Your answer should be professional but very easy to understand. '
+                  'Use examples in French followed by their translation in $targetLanguage. '
+                  'Keep the response concise and pedagogical. '
+                  'The user is currently studying the topic: $topic. '
+                  'The user\'s preferred language for explanations is $targetLanguage.'
+            },
+            {
+              'role': 'user',
+              'content': 'Question about $topic: $question'
+            }
+          ],
+          'temperature': 0.7,
+          'max_tokens': 1000,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return data['choices'][0]['message']['content'];
+      } else {
+        throw Exception('Failed to get AI response: ${response.statusCode}');
+      }
+    } catch (e) {
+      debugPrint('Error in askGrammarQuestion: $e');
+      rethrow;
+    }
+  // Generate a full lesson from a topic or PDF text
+  static Future<Map<String, dynamic>> generateFullLesson(
+      String topic, String targetLanguage, {String? pdfText}) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/chat/completions'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $apiKey',
+        },
+        body: jsonEncode({
+          'model': 'deepseek-chat',
+          'messages': [
+            {
+              'role': 'system',
+              'content': 'You are a French B1 teacher. Generate a comprehensive lesson in JSON format. '
+                  'The lesson must be "for dummies" (simple, clear, engaging). '
+                  'Your explanations MUST be in $targetLanguage. '
+                  'French examples and vocabulary MUST stay in French but include translations in $targetLanguage. '
+                  'Return a JSON object with: '
+                  '"title" (String), "subtitle" (String), "icon" (String emoji), '
+                  '"sections" (Array of objects with "title" and "content" (Markdown string)).'
+            },
+            {
+              'role': 'user',
+              'content': pdfText != null
+                  ? 'Generate a French B1 lesson based on this PDF text: \n\n $pdfText \n\n Focus on the main topic: $topic. Explanation language: $targetLanguage.'
+                  : 'Generate a French B1 lesson about: $topic. Explanation language: $targetLanguage.'
+            }
+          ],
+          'response_format': {'type': 'json_object'},
+          'temperature': 0.7,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return jsonDecode(data['choices'][0]['message']['content']);
+      } else {
+        throw Exception('Failed to generate lesson: ${response.statusCode}');
+      }
+    } catch (e) {
+      debugPrint('Error generating lesson: $e');
+      rethrow;
+    }
   }
 }
+
+

@@ -15,6 +15,7 @@ class FuturSimplePage extends StatelessWidget {
           ? 'Futur Simple'
           : 'Simple Future Tense',
       icon: '🔮',
+      topic: 'Futur Simple',
       children: [
         const TranslatedText(
           'Futur Simple = "will" in English. It\'s for predictions, promises, and things you\'ll do in the more distant future (not immediate like Futur Proche).',

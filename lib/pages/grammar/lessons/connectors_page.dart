@@ -15,6 +15,7 @@ class ConnectorsPage extends StatelessWidget {
     return LessonTemplate(
       title: lp.currentLanguage == AppLanguage.french ? 'Les Connecteurs' : 'Logical Connectors',
       icon: '🔗',
+      topic: 'Les Connecteurs Logiques',
       children: [
         const TranslatedText(
           'Logical connectors are the "glue" of language. They help you join two ideas together and show the relationship between them—like cause, result, or opposition.',

@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
 import 'translated_text.dart';
+import 'ask_ai_box.dart';
 
 class LessonTemplate extends StatelessWidget {
   final String title;
   final String icon;
+  final String? topic; // Optional: used for AI questions
   final List<Widget> children;
 
   const LessonTemplate({
     super.key,
     required this.title,
     required this.icon,
+    this.topic,
     required this.children,
   });
 
@@ -23,7 +26,10 @@ class LessonTemplate extends StatelessWidget {
         padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: children,
+          children: [
+            ...children,
+            if (topic != null) AskAIBox(topic: topic!),
+          ],
         ),
       ),
     );

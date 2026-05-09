@@ -15,6 +15,7 @@ class ConditionnelPage extends StatelessWidget {
           ? 'Conditionnel'
           : 'Conditional Tense',
       icon: '🤔',
+      topic: 'Conditionnel',
       children: [
         const TranslatedText(
           'The Conditionnel is your "WISHING AND WONDERING" tense. Use it for would/could/should - basically anything that\'s HYPOTHETICAL or POLITE!',

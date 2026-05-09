@@ -15,6 +15,7 @@ class PasseComposePage extends StatelessWidget {
           ? 'Passé Composé'
           : 'Past Tense',
       icon: '⏱️',
+      topic: 'Passé Composé',
       children: [
         const TranslatedText(
           'Think of Passé Composé as the "I DID IT!" tense. It\'s for completed actions that happened in the past, like checking items off your to-do list ✅',

@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import 'theme/app_theme.dart';
 import 'pages/home_page.dart';
 import 'services/language_provider.dart';
+import 'services/lessons_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -18,8 +19,11 @@ void main() async {
   }
 
   runApp(
-    ChangeNotifierProvider(
-      create: (_) => LanguageProvider(),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => LanguageProvider()),
+        ChangeNotifierProvider(create: (_) => LessonsProvider()),
+      ],
       child: const FrenchB1App(),
     ),
   );

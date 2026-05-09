@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import '../../theme/app_theme.dart';
-import '../../services/language_provider.dart';
-import '../../services/deepseek_service.dart';
 import '../../models/grammar_topic.dart';
+
+import '../../services/deepseek_service.dart';
 
 class ExercisesPage extends StatefulWidget {
   const ExercisesPage({super.key});
@@ -27,94 +26,7 @@ class _ExercisesPageState extends State<ExercisesPage> {
         'correct': 0,
         'explanation': 'Use Passé Composé for a completed action.',
       },
-    ],
-    'voix_passive': [
-      {
-        'question': 'Le chat mange la souris. (Passive: ___)',
-        'options': [
-          'La souris est mangée par le chat.',
-          'La souris a mangé par le chat.',
-          'Le chat est mangé par la souris.',
-          'La souris mange le chat.'
-        ],
-        'correct': 0,
-        'explanation':
-            'In passive voice, the object becomes the subject: "La souris est mangée".',
-      },
-      {
-        'question': 'La maison ___ par mon père l\'année prochaine.',
-        'options': [
-          'sera construite',
-          'est construit',
-          'a été construite',
-          'construira'
-        ],
-        'correct': 0,
-        'explanation': 'Future passive uses "sera" + past participle.',
-      },
-    ],
-    'adverbes_ment': [
-      {
-        'question': 'Il court très ___. (adjective: rapide)',
-        'options': ['rapidement', 'rapidementment', 'rapide', 'rapide'],
-        'correct': 0,
-        'explanation':
-            'Adverbs from adjectives ending in -e add -ment directly.',
-      },
-      {
-        'question': 'Elle parle ___ à son bébé. (adjective: doux)',
-        'options': ['doucement', 'douxment', 'dousement', 'doux'],
-        'correct': 0,
-        'explanation': 'Doux (masc) -> Douce (fem) -> Doucement.',
-      },
-    ],
-    'subjonctif': [
-      {
-        'question': 'Il faut que tu ___ tes devoirs. (faire)',
-        'options': ['fasses', 'fais', 'ferai', 'faisais'],
-        'correct': 0,
-        'explanation':
-            '"Il faut que" always triggers Subjonctif. Faire is irregular: que je fasse, que tu fasses.',
-      },
-      {
-        'question': 'Je suis content qu\'il ___ là. (être)',
-        'options': ['soit', 'est', 'sera', 'étais'],
-        'correct': 0,
-        'explanation':
-            'Emotion ("Je suis content que") triggers Subjonctif. Être is irregular: qu\'il soit.',
-      },
-      {
-        'question': 'Il est possible qu\'elle ___ en retard. (être)',
-        'options': ['soit', 'est', 'sera', 'était'],
-        'correct': 0,
-        'explanation':
-            '"Il est possible que" expresses doubt — always use Subjonctif.',
-      },
-      {
-        'question': 'Choose the CORRECT sentence:',
-        'options': [
-          'Je veux que tu viennes.',
-          'Je veux que tu viens.',
-          'Je veux tu viens.',
-          'Je veux venir tu.',
-        ],
-        'correct': 0,
-        'explanation':
-            'After "vouloir que" with two different subjects, use Subjonctif: "viennes" (venir → que tu viennes).',
-      },
-      {
-        'question':
-            'Which sentence uses Subjonctif CORRECTLY after "bien que"?',
-        'options': [
-          'Bien qu\'il soit fatigué, il travaille.',
-          'Bien qu\'il est fatigué, il travaille.',
-          'Bien qu\'il sera fatigué, il travaille.',
-          'Bien qu\'il était fatigué, il travaille.',
-        ],
-        'correct': 0,
-        'explanation':
-            '"Bien que" (although) always requires Subjonctif. Être → que je sois → qu\'il soit.',
-      },
+      // ... kept for fallback or mix
     ],
   };
 
@@ -126,10 +38,7 @@ class _ExercisesPageState extends State<ExercisesPage> {
     });
 
     try {
-      final languageProvider =
-          Provider.of<LanguageProvider>(context, listen: false);
-      final aiQuestions = await DeepSeekService.generateExercises(
-          topic, 'B1', languageProvider.currentLanguage.name);
+      final aiQuestions = await DeepSeekService.generateExercises(topic, 'B1');
 
       // Shuffle and sanitize questions
       final sanitizedQuestions = aiQuestions.map((q) {

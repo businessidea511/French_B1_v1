@@ -14,6 +14,7 @@ class DurationPrepositionsPage extends StatelessWidget {
     return LessonTemplate(
       title: lp.currentLanguage == AppLanguage.french ? 'Mots de Temps' : 'Time Prepositions',
       icon: '🕰️',
+      topic: 'Prépositions de temps',
       children: [
         const TranslatedText(
           'Talking about time in French is like being a time traveler 🕰️. You need different tools depending on whether you\'re looking back, looking forward, or measuring how long things take.',
