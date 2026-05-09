@@ -49,3 +49,4 @@ app.*.map.json
 .env.local
 .env*.local
 assets/env/.env
+assets/.env

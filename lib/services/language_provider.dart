@@ -2,21 +2,22 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 enum AppLanguage {
-  french('Français', 'fr', 'fr_FR', false),
-  arabic('العربية', 'ar', 'ar_SA', true),
-  english('English', 'en', 'en_US', false),
-  ukrainian('Українська', 'uk', 'uk_UA', false),
-  italian('Italiano', 'it', 'it_IT', false),
-  eritrean('ትግርኛ', 'ti', 'ti_ER', false),
-  turkish('Türkçe', 'tr', 'tr_TR', false),
-  indonesian('Bahasa Indonesia', 'id', 'id_ID', false);
+  french('Français', 'French', 'fr', 'fr_FR', false),
+  arabic('العربية', 'Arabic', 'ar', 'ar_SA', true),
+  english('English', 'English', 'en', 'en_US', false),
+  ukrainian('Українська', 'Ukrainian', 'uk', 'uk_UA', false),
+  italian('Italiano', 'Italian', 'it', 'it_IT', false),
+  eritrean('ትግርኛ', 'Tigrinya', 'ti', 'ti_ER', false),
+  turkish('Türkçe', 'Turkish', 'tr', 'tr_TR', false),
+  indonesian('Bahasa Indonesia', 'Indonesian', 'id', 'id_ID', false);
 
   final String name;
+  final String englishName;
   final String code;
   final String ttsCode;
   final bool isRTL;
 
-  const AppLanguage(this.name, this.code, this.ttsCode, this.isRTL);
+  const AppLanguage(this.name, this.englishName, this.code, this.ttsCode, this.isRTL);
 }
 
 class LanguageProvider extends ChangeNotifier {

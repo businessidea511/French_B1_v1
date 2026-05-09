@@ -13,7 +13,7 @@ void main() async {
 
   // Load local .env if it exists
   try {
-    await dotenv.load(fileName: ".env");
+    await dotenv.load(fileName: "assets/.env");
   } catch (_) {
     // Silently continue; production uses --dart-define
   }

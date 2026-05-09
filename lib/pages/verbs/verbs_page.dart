@@ -91,7 +91,6 @@ class _VerbsPageState extends State<VerbsPage> {
     'taire',
     'rire',
     'cuire',
-    'naître',
     'suffire',
     'valoir',
     'fuir',
@@ -762,7 +761,7 @@ class _VerbsPageState extends State<VerbsPage> {
                 if (_isLoading)
                   Positioned.fill(
                     child: Container(
-                      color: AppTheme.surface.withOpacity(0.5),
+                      color: AppTheme.surface.withValues(alpha: 0.5),
                       child: const Center(
                         child: CircularProgressIndicator(),
                       ),
@@ -857,7 +856,7 @@ class _VerbsPageState extends State<VerbsPage> {
               decoration: BoxDecoration(
                 color: AppTheme.surface,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppTheme.primary.withOpacity(0.1)),
+                border: Border.all(color: AppTheme.primary.withValues(alpha: 0.1)),
               ),
               child: Row(
                 children: [

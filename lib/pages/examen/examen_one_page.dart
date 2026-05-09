@@ -233,7 +233,7 @@ Mix grammar and comprehension questions throughout the exam. Ensure variety in q
       final languageProvider =
           Provider.of<LanguageProvider>(context, listen: false);
       final aiQuestions = await DeepSeekService.generateExercises(
-          topicDescription, 'B1', languageProvider.currentLanguage.name,
+          topicDescription, 'B1', languageProvider.currentLanguage.englishName,
           count: 30);
 
       final sanitizedQuestions = aiQuestions.map((q) {
@@ -336,7 +336,7 @@ Mix grammar and comprehension questions throughout the exam. Ensure variety in q
                 padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                    color: AppTheme.primary.withOpacity(0.1),
+                    color: AppTheme.primary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(20)),
                 child: const Text('Examen Blanc',
                     style: TextStyle(
@@ -468,8 +468,8 @@ Mix grammar and comprehension questions throughout the exam. Ensure variety in q
               padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
               decoration: BoxDecoration(
                 color: percentage >= 50
-                    ? AppTheme.success.withOpacity(0.1)
-                    : AppTheme.error.withOpacity(0.1),
+                    ? AppTheme.success.withValues(alpha: 0.1)
+                    : AppTheme.error.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(100),
               ),
               child: Text(

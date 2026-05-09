@@ -37,8 +37,9 @@ class DeepSeekService {
                   'CRITICAL RULES: \n'
                   '1. LOGICAL CONSISTENCY: The "correct" index MUST point to the grammatically correct answer. \n'
                   '2. NO AMBIGUITY: Do not use distractors that could also be correct in the context. \n'
-                  '3. PEDAGOGICAL EXPLANATION: The explanation MUST be in $targetLanguage and explain why the answer is correct. \n'
-                  '4. ACCURACY: Double-check conjugations and agreements. \n'
+                  '3. FULL TRANSLATION: The question, the options, and the explanation MUST be in $targetLanguage. Only the French grammar subject being tested stays in French. \n'
+                  '4. PEDAGOGICAL EXPLANATION: The explanation MUST be in $targetLanguage and explain why the answer is correct. \n'
+                  '5. ACCURACY: Double-check conjugations and agreements. \n'
                   'Return JSON with "exercises" array.'
             },
             {
@@ -470,11 +471,12 @@ class DeepSeekService {
               'content':
                   'You are a French B1 teacher. Generate a comprehensive lesson in JSON format. '
                       'The lesson must be "for dummies" (simple, clear, engaging). '
-                      'Your explanations MUST be in $targetLanguage. '
-                      'French examples and vocabulary MUST stay in French but include translations in $targetLanguage. '
+                      'CRITICAL RULE: ALL explanations, descriptions, and section content MUST be written in $targetLanguage. '
+                      'French examples and vocabulary MUST stay in French but ALWAYS include translations in $targetLanguage. '
+                      'Do NOT use English if $targetLanguage is different from English. '
                       'Return a JSON object with: '
                       '"title" (String), "subtitle" (String), "icon" (String emoji), '
-                      '"sections" (Array of objects with "title" and "content" (Markdown string)).'
+                      '"sections" (Array of objects with "title" (in $targetLanguage) and "content" (Markdown string in $targetLanguage)).'
             },
             {
               'role': 'user',

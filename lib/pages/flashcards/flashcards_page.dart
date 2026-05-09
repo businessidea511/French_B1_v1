@@ -158,7 +158,7 @@ class _FlashcardsPageState extends State<FlashcardsPage> {
             leading: Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: AppTheme.secondary.withOpacity(0.1),
+                color: AppTheme.secondary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text(topic.icon, style: const TextStyle(fontSize: 24)),
@@ -216,7 +216,7 @@ class _FlashcardsPageState extends State<FlashcardsPage> {
                   borderRadius: BorderRadius.circular(32),
                   boxShadow: [
                     BoxShadow(
-                        color: Colors.black.withOpacity(0.2),
+                        color: Colors.black.withValues(alpha: 0.2),
                         blurRadius: 20,
                         offset: const Offset(0, 10)),
                   ],
@@ -233,7 +233,7 @@ class _FlashcardsPageState extends State<FlashcardsPage> {
                               letterSpacing: 2,
                               fontSize: 12,
                               fontWeight: FontWeight.bold,
-                              color: Colors.white.withOpacity(0.6)),
+                              color: Colors.white.withValues(alpha: 0.6)),
                         ),
                         const SizedBox(height: 32),
                         Text(
@@ -249,7 +249,7 @@ class _FlashcardsPageState extends State<FlashcardsPage> {
                             showAnswer
                                 ? Icons.check_circle_outline
                                 : Icons.help_outline,
-                            color: Colors.white.withOpacity(0.4),
+                            color: Colors.white.withValues(alpha: 0.4),
                             size: 48),
                       ],
                     ),

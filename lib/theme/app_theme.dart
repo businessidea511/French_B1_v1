@@ -60,7 +60,7 @@ class AppTheme {
         elevation: 0, // We'll use custom shadows/borders
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(24),
-          side: BorderSide(color: Colors.white.withOpacity(0.05), width: 1),
+          side: BorderSide(color: Colors.white.withValues(alpha: 0.05), width: 1),
         ),
       ),
       appBarTheme: const AppBarTheme(
@@ -127,7 +127,7 @@ class AppTheme {
             borderRadius: BorderRadius.circular(16),
           ),
           elevation: 8,
-          shadowColor: primary.withOpacity(0.5),
+          shadowColor: primary.withValues(alpha: 0.5),
           textStyle: const TextStyle(
             fontFamily: 'Outfit',
             fontSize: 16,
@@ -146,7 +146,7 @@ class AppTheme {
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
           borderSide:
-              BorderSide(color: Colors.white.withOpacity(0.1), width: 1),
+              BorderSide(color: Colors.white.withValues(alpha: 0.1), width: 1),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),

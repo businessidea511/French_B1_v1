@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import '../../widgets/lesson_template.dart';
-import '../../widgets/translated_text.dart';
-import '../../services/language_provider.dart';
 import '../../models/lesson_topic.dart';
 
 class DynamicLessonPage extends StatelessWidget {
@@ -13,7 +10,6 @@ class DynamicLessonPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final lp = Provider.of<LanguageProvider>(context);
     final List<dynamic> sections = topic.content ?? [];
 
     return LessonTemplate(

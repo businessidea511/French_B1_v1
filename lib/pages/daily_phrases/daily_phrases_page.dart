@@ -791,9 +791,9 @@ class _DailyPhrasesPageState extends State<DailyPhrasesPage> {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: AppTheme.surface.withOpacity(0.4),
+        color: AppTheme.surface.withValues(alpha: 0.4),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withOpacity(0.05)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
       ),
       child: Theme(
         data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
@@ -807,7 +807,7 @@ class _DailyPhrasesPageState extends State<DailyPhrasesPage> {
           leading: Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: AppTheme.primary.withOpacity(0.1),
+              color: AppTheme.primary.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Text(section['icon'], style: const TextStyle(fontSize: 24)),
@@ -844,7 +844,7 @@ class _DailyPhrasesPageState extends State<DailyPhrasesPage> {
             return Container(
               decoration: BoxDecoration(
                 border: Border(
-                    top: BorderSide(color: Colors.white.withOpacity(0.05))),
+                    top: BorderSide(color: Colors.white.withValues(alpha: 0.05))),
               ),
               child: ListTile(
                 contentPadding:

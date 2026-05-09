@@ -10,6 +10,7 @@ import '../../services/deepseek_service.dart';
 import '../../services/pdf_helper.dart';
 import 'metiers_page.dart';
 import 'dynamic_lesson_page.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class LessonsPage extends StatefulWidget {
   const LessonsPage({super.key});
@@ -22,6 +23,66 @@ class _LessonsPageState extends State<LessonsPage> {
   bool _isGenerating = false;
 
   void _showAddLessonDialog() {
+    final TextEditingController passwordController = TextEditingController();
+    
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: AppTheme.surface,
+          title: const Text('Admin Access', style: TextStyle(color: Colors.white)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Please enter the admin password to create new lessons.',
+                style: TextStyle(color: AppTheme.textSecondary, fontSize: 14),
+              ),
+              const SizedBox(height: 20),
+              TextField(
+                controller: passwordController,
+                obscureText: true,
+                style: const TextStyle(color: Colors.white),
+                decoration: InputDecoration(
+                  hintText: 'Enter Password',
+                  hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.3)),
+                  prefixIcon: const Icon(Icons.lock, color: AppTheme.primary),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                // First check String.fromEnvironment (for Vercel/Production)
+                // Then check dotenv (for local dev)
+                const String envPass = String.fromEnvironment('ADMIN_PASSWORD');
+                final String adminPass = envPass.isNotEmpty 
+                    ? envPass 
+                    : (dotenv.env['ADMIN_PASSWORD'] ?? 'admin123');
+
+                if (passwordController.text == adminPass) {
+                  Navigator.pop(context);
+                  _showLessonOptionsDialog();
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Incorrect Password'), backgroundColor: Colors.red),
+                  );
+                }
+              },
+              child: const Text('Verify'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showLessonOptionsDialog() {
     showDialog(
       context: context,
       builder: (context) {
@@ -69,7 +130,7 @@ class _LessonsPageState extends State<LessonsPage> {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          border: Border.all(color: Colors.white.withOpacity(0.1)),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Row(
@@ -81,7 +142,7 @@ class _LessonsPageState extends State<LessonsPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                  Text(subtitle, style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 12)),
+                  Text(subtitle, style: TextStyle(color: Colors.white.withValues(alpha: 0.6), fontSize: 12)),
                 ],
               ),
             ),
@@ -158,7 +219,7 @@ class _LessonsPageState extends State<LessonsPage> {
       
       final lessonData = await DeepSeekService.generateFullLesson(
         topic,
-        lp.currentLanguage.name,
+        lp.currentLanguage.englishName,
         pdfText: pdfText,
       );
       
@@ -220,7 +281,7 @@ class _LessonsPageState extends State<LessonsPage> {
           ),
           if (_isGenerating)
             Container(
-              color: Colors.black.withOpacity(0.7),
+              color: Colors.black.withValues(alpha: 0.7),
               child: Center(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -234,7 +295,7 @@ class _LessonsPageState extends State<LessonsPage> {
                     const SizedBox(height: 10),
                     Text(
                       'This might take a few seconds',
-                      style: TextStyle(color: Colors.white.withOpacity(0.7)),
+                      style: TextStyle(color: Colors.white.withValues(alpha: 0.7)),
                     ),
                   ],
                 ),

@@ -697,8 +697,6 @@ class _ListeningPageState extends State<ListeningPage> {
                         const SizedBox(height: 8),
                         ...options.map((opt) {
                           final String optStr = opt.toString();
-                          final String selectedStr =
-                              (_selectedAnswers[index] ?? '');
                           final String correctStr =
                               question['answer'].toString();
 
