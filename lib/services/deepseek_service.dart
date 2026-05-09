@@ -664,8 +664,8 @@ class DeepSeekService {
       // 1. Get description of the image using Gemini
       final description = await GeminiService.describeImage(base64Image, mimeType);
       
-      if (description == null) {
-        throw Exception('Could not describe image');
+      if (description.startsWith('ERROR') || description.startsWith('EXCEPTION')) {
+        throw Exception(description);
       }
 
       debugPrint('📸 Image Description for Lesson: $description');
@@ -729,8 +729,8 @@ class DeepSeekService {
       // 1. Get description of the image using Gemini
       final description = await GeminiService.describeImage(base64Image, mimeType);
       
-      if (description == null) {
-        throw Exception('Could not describe image');
+      if (description.startsWith('ERROR') || description.startsWith('EXCEPTION')) {
+        throw Exception(description);
       }
 
       debugPrint('📸 Image Description: $description');
@@ -771,7 +771,7 @@ class DeepSeekService {
       }
     } catch (e) {
       debugPrint('Error in vision-proxy: $e');
-      return "Désolé, I couldn't process the image analysis. Please try again with a clearer photo.";
+      return "Désolé, an error occurred: $e\n\nPlease try again with a clearer photo or check your API keys.";
     }
   }
 }

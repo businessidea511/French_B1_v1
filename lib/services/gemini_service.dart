@@ -44,12 +44,13 @@ class GeminiService {
     return key;
   }
 
-  static Future<String?> describeImage(String base64Image, String mimeType) async {
-    final key = _getNextKey();
-    if (key.isEmpty) {
-      debugPrint('❌ Gemini Error: No API keys found');
-      return null;
+  static Future<String> describeImage(String base64Image, String mimeType) async {
+    final keys = _keys;
+    if (keys.isEmpty) {
+      return "ERROR: No Gemini API keys found. Please check your Vercel Environment Variables.";
     }
+    
+    final key = _getNextKey();
 
     try {
       debugPrint('💎 Analyzing image with Gemini 1.5 Flash...');
@@ -60,7 +61,7 @@ class GeminiService {
         body: jsonEncode({
           "contents": [{
             "parts": [
-              {"text": "Describe this image in detail, focus on any French text, vocabulary, or objects visible. If there is French text, transcribe it exactly."},
+              {"text": "Describe this image in detail for a French B1 student. Transcribe any text exactly."},
               {
                 "inline_data": {
                   "mime_type": mimeType,
@@ -68,28 +69,18 @@ class GeminiService {
                 }
               }
             ]
-          }],
-          "generationConfig": {
-            "temperature": 0.4,
-            "topK": 32,
-            "topP": 1,
-            "maxOutputTokens": 1024,
-          }
+          }]
         }),
       ).timeout(const Duration(seconds: 30));
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final text = data['candidates'][0]['content']['parts'][0]['text'] as String;
-        debugPrint('✅ Gemini Success: ${text.substring(0, text.length.clamp(0, 100))}...');
-        return text;
+        return data['candidates'][0]['content']['parts'][0]['text'] as String;
       }
       
-      debugPrint('❌ Gemini API Error ${response.statusCode}: ${response.body}');
-      return null;
+      return "ERROR: Gemini API returned ${response.statusCode}. Body: ${response.body}";
     } catch (e) {
-      debugPrint('❌ Gemini Exception: $e');
-      return null;
+      return "EXCEPTION: $e";
     }
   }
 }
