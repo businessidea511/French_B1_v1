@@ -20,13 +20,16 @@ class AskAIBox extends StatefulWidget {
   State<AskAIBox> createState() => _AskAIBoxState();
 }
 
-class _AskAIBoxState extends State<AskAIBox> {
+class _AskAIBoxState extends State<AskAIBox> with AutomaticKeepAliveClientMixin {
   final TextEditingController _controller = TextEditingController();
   bool _isLoading = false;
   String? _response;
   XFile? _selectedImage;
   String? _base64Image;
   String? _mimeType;
+
+  @override
+  bool get wantKeepAlive => true;
 
   Future<void> _pickImage() async {
     final picker = ImagePicker();
@@ -130,6 +133,7 @@ class _AskAIBoxState extends State<AskAIBox> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     final lp = Provider.of<LanguageProvider>(context);
     final isRTL = lp.isRTL;
 

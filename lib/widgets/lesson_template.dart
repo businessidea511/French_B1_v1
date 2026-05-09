@@ -34,6 +34,7 @@ class LessonTemplate extends StatelessWidget {
           ),
         ),
         child: CustomScrollView(
+          physics: const ClampingScrollPhysics(),
           slivers: [
             SliverAppBar(
               expandedHeight: 120,
