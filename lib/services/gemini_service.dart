@@ -1,10 +1,9 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
-import 'package:http/http.dart' as http;
+import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class GeminiService {
-  // Rotate through multiple keys to bypass free tier limits
   static List<String> get _keys {
     List<String> keys = [];
     
@@ -24,14 +23,12 @@ class GeminiService {
     const k5 = String.fromEnvironment('GEMINI_KEY_5');
     if (k5.isNotEmpty) keys.add(k5);
     
-    // Fallback to legacy single key
     const k0 = String.fromEnvironment('GEMINI_KEY');
     if (k0.isNotEmpty && !keys.contains(k0)) keys.add(k0);
     
     return keys;
   }
 
-  // Use a random starting index to distribute load across sessions
   static int _currentKeyIndex = -1;
 
   static String _getNextKey() {
@@ -48,40 +45,33 @@ class GeminiService {
   }
 
   static Future<String> describeImage(String base64Image, String mimeType) async {
-    final keys = _keys;
-    if (keys.isEmpty) {
+    final key = _getNextKey();
+    if (key.isEmpty) {
       return "ERROR: No Gemini API keys found. Please check your Vercel Environment Variables.";
     }
-    
-    final key = _getNextKey();
 
     try {
-      debugPrint('💎 Analyzing image with Gemini 1.5 Flash...');
+      debugPrint('💎 Analyzing image with Official Gemini SDK...');
       
-      final response = await http.post(
-        Uri.parse('https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=$key'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          "contents": [{
-            "parts": [
-              {"text": "Describe this image in detail for a French B1 student. Transcribe any text exactly."},
-              {
-                "inline_data": {
-                  "mime_type": mimeType,
-                  "data": base64Image
-                }
-              }
-            ]
-          }]
-        }),
-      ).timeout(const Duration(seconds: 30));
+      final model = GenerativeModel(
+        model: 'gemini-1.5-flash',
+        apiKey: key,
+      );
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        return data['candidates'][0]['content']['parts'][0]['text'] as String;
-      }
+      final content = [
+        Content.multi([
+          TextPart("Describe this image in detail for a French B1 student. Transcribe any French text exactly."),
+          DataPart(mimeType, base64Decode(base64Image)),
+        ])
+      ];
+
+      final response = await model.generateContent(content);
       
-      return "ERROR: Gemini API returned ${response.statusCode}. Body: ${response.body}";
+      if (response.text != null) {
+        return response.text!;
+      } else {
+        return "ERROR: Gemini returned an empty response.";
+      }
     } catch (e) {
       return "EXCEPTION: $e";
     }
