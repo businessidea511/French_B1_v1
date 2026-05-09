@@ -19,32 +19,38 @@ class HuggingFaceVisionService {
   static Future<String?> describeImage(String base64Image) async {
     try {
       final token = _token;
-      if (token.isEmpty) return null;
+      if (token.isEmpty) {
+        debugPrint('❌ Vision Error: HF_TOKEN is missing');
+        return null;
+      }
 
-      debugPrint('📸 Describing image using Hugging Face...');
+      debugPrint('📸 Sending image bytes to Hugging Face...');
       
+      // Convert base64 back to raw bytes for the Inference API
+      final bytes = base64Decode(base64Image);
+
       final response = await http.post(
         Uri.parse(modelUrl),
         headers: {
           'Authorization': 'Bearer $token',
-          'Content-Type': 'application/json',
+          // Note: Content-Type is NOT json here, it's the raw image data
         },
-        body: jsonEncode({
-          'inputs': base64Image,
-          'parameters': {'wait_for_model': true}
-        }),
-      ).timeout(const Duration(seconds: 20));
+        body: bytes,
+      ).timeout(const Duration(seconds: 25));
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         if (data is List && data.isNotEmpty) {
-          return data[0]['generated_text'];
+          final text = data[0]['generated_text'] as String;
+          debugPrint('✅ Vision Success: $text');
+          return text;
         }
       }
-      debugPrint('HF Vision Error: ${response.statusCode} - ${response.body}');
+      
+      debugPrint('❌ Vision API Error ${response.statusCode}: ${response.body}');
       return null;
     } catch (e) {
-      debugPrint('HF Vision Exception: $e');
+      debugPrint('❌ Vision Exception: $e');
       return null;
     }
   }
