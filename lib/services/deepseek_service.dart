@@ -177,9 +177,10 @@ class DeepSeekService {
           'model': 'deepseek-chat',
           'messages': [
             {
-              'role': 'system',
               'content':
-                  'You are a French teacher explaining grammar to beginners. Use simple language, clear examples, and helpful metaphors. Your entire explanation MUST be in $targetLanguage.'
+                  'You are a French teacher explaining grammar to beginners. Use simple language, clear examples, and helpful metaphors. '
+                      'Use Markdown to format your response (Headings, bold keywords, code blocks for conjugations, blockquotes for tips). '
+                      'Your entire explanation MUST be in $targetLanguage.'
             },
             {
               'role': 'user',
@@ -417,6 +418,12 @@ class DeepSeekService {
               'content':
                   'You are a French grammar expert. You explain things simply and clearly for "dummies" (beginner to intermediate levels). '
                       'Your answer should be professional but very easy to understand. '
+                      'Use Markdown to format your response: \n'
+                      '- Use **bold** for French keywords. \n'
+                      '- Use `code blocks` for conjugations or specific rules. \n'
+                      '- Use ## Headings for different sections. \n'
+                      '- Use > Blockquotes for important tips. \n'
+                      '- Use bullet points for lists. \n'
                       'Use examples in French followed by their translation in $targetLanguage. '
                       'Keep the response concise and pedagogical. '
                       'The user is currently studying the topic: $topic. '

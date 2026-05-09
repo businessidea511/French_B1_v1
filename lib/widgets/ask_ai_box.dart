@@ -4,6 +4,7 @@ import '../services/deepseek_service.dart';
 import '../services/language_provider.dart';
 import '../theme/app_theme.dart';
 import 'translated_text.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
 import 'dart:ui';
 
 class AskAIBox extends StatefulWidget {
@@ -165,12 +166,26 @@ class _AskAIBoxState extends State<AskAIBox> {
                           ],
                         ),
                         const SizedBox(height: 12),
-                        Text(
-                          _response!,
-                          style: const TextStyle(
-                            fontSize: 15,
-                            height: 1.6,
-                            color: AppTheme.textPrimary,
+                        MarkdownBody(
+                          data: _response!,
+                          styleSheet: MarkdownStyleSheet(
+                            p: const TextStyle(
+                              fontSize: 15,
+                              height: 1.6,
+                              color: AppTheme.textPrimary,
+                            ),
+                            strong: const TextStyle(
+                              color: AppTheme.primary,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            h1: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+                            h2: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                            code: TextStyle(
+                              backgroundColor: Colors.black.withOpacity(0.3),
+                              color: AppTheme.accent,
+                              fontFamily: 'monospace',
+                            ),
+                            blockquote: const TextStyle(color: AppTheme.textSecondary, fontStyle: FontStyle.italic),
                           ),
                         ),
                       ],
