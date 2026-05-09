@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
+class HuggingFaceVisionService {
   static const List<String> modelUrls = [
     'https://api-inference.huggingface.co/models/Salesforce/blip-image-captioning-large',
     'https://api-inference.huggingface.co/models/nlpconnect/vit-gpt2-image-captioning',
@@ -30,7 +31,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 
     // Try multiple models in a cascade
     for (String url in modelUrls) {
-      int retries = 3;
+      int retries = 2; // Reduced to 2 for faster fallback
       while (retries > 0) {
         try {
           debugPrint('📸 Trying Vision Model: ${url.split('/').last} (Retries left: $retries)');
@@ -43,7 +44,9 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
           if (response.statusCode == 200) {
             final data = jsonDecode(response.body);
             if (data is List && data.isNotEmpty) {
-              return data[0]['generated_text'] as String;
+              final result = data[0]['generated_text'] as String;
+              debugPrint('✅ Vision Success from ${url.split('/').last}: $result');
+              return result;
             }
           }
           
