@@ -50,30 +50,40 @@ class GeminiService {
       return "ERROR: No Gemini API keys found. Please check your Vercel Environment Variables.";
     }
 
-    try {
-      debugPrint('💎 Analyzing image with Official Gemini SDK...');
-      
-      final model = GenerativeModel(
-        model: 'gemini-1.5-flash',
-        apiKey: key,
-      );
+    // Try multiple model names in case of regional 404 errors
+    final modelsToTry = ['gemini-1.5-flash', 'gemini-1.5-flash-latest', 'gemini-1.5-pro'];
+    
+    String lastError = "";
 
-      final content = [
-        Content.multi([
-          TextPart("Describe this image in detail for a French B1 student. Transcribe any French text exactly."),
-          DataPart(mimeType, base64Decode(base64Image)),
-        ])
-      ];
+    for (var modelName in modelsToTry) {
+      try {
+        debugPrint('💎 Trying Gemini model: $modelName...');
+        
+        final model = GenerativeModel(
+          model: modelName,
+          apiKey: key,
+        );
 
-      final response = await model.generateContent(content);
-      
-      if (response.text != null) {
-        return response.text!;
-      } else {
-        return "ERROR: Gemini returned an empty response.";
+        final content = [
+          Content.multi([
+            TextPart("Describe this image in detail for a French B1 student. Transcribe any French text exactly."),
+            DataPart(mimeType, base64Decode(base64Image)),
+          ])
+        ];
+
+        final response = await model.generateContent(content);
+        
+        if (response.text != null) {
+          debugPrint('✅ Success with model: $modelName');
+          return response.text!;
+        }
+      } catch (e) {
+        lastError = e.toString();
+        debugPrint('❌ Model $modelName failed: $e');
+        // Continue to next model
       }
-    } catch (e) {
-      return "EXCEPTION: $e";
     }
+
+    return "EXCEPTION: All models failed. Last error: $lastError";
   }
 }
