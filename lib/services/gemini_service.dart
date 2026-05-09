@@ -7,23 +7,26 @@ class GeminiService {
   // Rotate through multiple keys to bypass free tier limits
   static List<String> get _keys {
     List<String> keys = [];
-    // Try to get from environment (Vercel)
-    for (int i = 1; i <= 5; i++) {
-      final key = String.fromEnvironment('GEMINI_KEY_$i');
-      if (key.isNotEmpty) keys.add(key);
-    }
     
-    // Fallback to .env (Local)
-    if (keys.isEmpty) {
-      try {
-        if (dotenv.env['GEMINI_KEY_1'] != null) keys.add(dotenv.env['GEMINI_KEY_1']!);
-        if (dotenv.env['GEMINI_KEY_2'] != null) keys.add(dotenv.env['GEMINI_KEY_2']!);
-      } catch (_) {}
-    }
+    // In Flutter, String.fromEnvironment MUST use a string literal and be const
+    const k1 = String.fromEnvironment('GEMINI_KEY_1');
+    if (k1.isNotEmpty) keys.add(k1);
     
-    // Last fallback: single GEMINI_KEY
-    final singleKey = String.fromEnvironment('GEMINI_KEY');
-    if (singleKey.isNotEmpty && !keys.contains(singleKey)) keys.add(singleKey);
+    const k2 = String.fromEnvironment('GEMINI_KEY_2');
+    if (k2.isNotEmpty) keys.add(k2);
+    
+    const k3 = String.fromEnvironment('GEMINI_KEY_3');
+    if (k3.isNotEmpty) keys.add(k3);
+    
+    const k4 = String.fromEnvironment('GEMINI_KEY_4');
+    if (k4.isNotEmpty) keys.add(k4);
+    
+    const k5 = String.fromEnvironment('GEMINI_KEY_5');
+    if (k5.isNotEmpty) keys.add(k5);
+    
+    // Fallback to legacy single key
+    const k0 = String.fromEnvironment('GEMINI_KEY');
+    if (k0.isNotEmpty && !keys.contains(k0)) keys.add(k0);
     
     return keys;
   }
