@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/foundation.dart';
 import 'dart:math';
+import 'hugging_face_vision_service.dart';
 
 class DeepSeekService {
   static const String baseUrl = 'https://api.deepseek.com/v1';
@@ -602,13 +603,23 @@ class DeepSeekService {
     }
   }
 
-  // ── Generate lesson from a photo (Vision) ─────────────────────────────────
+  // ── Generate lesson from a photo (Vision via Proxy) ──────────────────────
   static Future<Map<String, dynamic>> generateLessonFromImage(
     String base64Image,
     String mimeType,
     String targetLanguage,
   ) async {
     try {
+      // 1. Get description of the image using Hugging Face
+      final description = await HuggingFaceVisionService.describeImage(base64Image);
+      
+      if (description == null) {
+        throw Exception('Could not describe image');
+      }
+
+      debugPrint('📸 Image Description for Lesson: $description');
+
+      // 2. Ask DeepSeek to generate lesson based on description
       final response = await http.post(
         Uri.parse('$baseUrl/chat/completions'),
         headers: {
@@ -621,8 +632,7 @@ class DeepSeekService {
             {
               'role': 'system',
               'content':
-                  'You are an expert French B1 teacher (Alliance Française level). '
-                  'The user will describe an image. Analyze its content and create a comprehensive French B1 lesson. '
+                  'You are an expert French B1 teacher. Based on this image description: "$description", create a comprehensive French B1 lesson. '
                   'The lesson explanation must be in $targetLanguage. '
                   'Return ONLY valid JSON in this exact format: '
                   '{"id":"img_lesson_<timestamp>","title":"<French topic title>","subtitle":"<subtitle in $targetLanguage>","icon":"📷","content":{'
@@ -633,21 +643,7 @@ class DeepSeekService {
             },
             {
               'role': 'user',
-              'content': [
-                {
-                  'type': 'image_url',
-                  'image_url': {
-                    'url': 'data:$mimeType;base64,$base64Image',
-                  }
-                },
-                {
-                  'type': 'text',
-                  'text':
-                      'Please analyze this image and create a B1 French lesson based on what you see. '
-                      'Focus on the vocabulary, objects, actions, or scene visible in the image. '
-                      'Return only the JSON lesson object.'
-                }
-              ]
+              'content': 'Create a B1 French lesson for the scene described as: "$description".'
             }
           ],
           'max_tokens': 4000,
@@ -658,22 +654,20 @@ class DeepSeekService {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         String content = data['choices'][0]['message']['content'];
-        // Clean markdown if present
         content = content.replaceAll('```json', '').replaceAll('```', '').trim();
         final lesson = jsonDecode(content);
-        // Ensure unique ID
         lesson['id'] = 'img_${DateTime.now().millisecondsSinceEpoch}';
         return lesson;
       } else {
-        throw Exception('DeepSeek Vision error: ${response.statusCode} - ${response.body}');
+        throw Exception('DeepSeek API error: ${response.statusCode}');
       }
     } catch (e) {
-      debugPrint('Error generating lesson from image: $e');
+      debugPrint('Error generating lesson from image proxy: $e');
       rethrow;
     }
   }
 
-  // ── Ask a question about an image (Vision) ────────────────────────────────
+  // ── Ask a question about an image (Vision via Proxy) ──────────────────────
   static Future<String> askQuestionWithImage(
     String question,
     String base64Image,
@@ -681,6 +675,16 @@ class DeepSeekService {
     String targetLanguage,
   ) async {
     try {
+      // 1. Get description of the image using Hugging Face
+      final description = await HuggingFaceVisionService.describeImage(base64Image);
+      
+      if (description == null) {
+        throw Exception('Could not describe image');
+      }
+
+      debugPrint('📸 Image Description: $description');
+
+      // 2. Ask DeepSeek to explain based on description
       final response = await http.post(
         Uri.parse('$baseUrl/chat/completions'),
         headers: {
@@ -693,25 +697,15 @@ class DeepSeekService {
             {
               'role': 'system',
               'content':
-                  'You are an expert French B1 teacher. Analyze the provided image and answer the user\'s question about it. '
+                  'You are an expert French B1 teacher. The user has provided an image which is described as: "$description". '
+                  'Answer the user\'s question about this scene/content. '
                   'The explanation MUST be in $targetLanguage. Use markdown for formatting.'
             },
             {
               'role': 'user',
-              'content': [
-                {
-                  'type': 'image_url',
-                  'image_url': {
-                    'url': 'data:$mimeType;base64,$base64Image',
-                  }
-                },
-                {
-                  'type': 'text',
-                  'text': question.isEmpty
-                      ? 'Please explain what is in this image in French and translate it to $targetLanguage.'
-                      : question
-                }
-              ]
+              'content': question.isEmpty
+                  ? 'Please explain the French vocabulary and grammar related to this description: "$description".'
+                  : question
             }
           ],
           'max_tokens': 2000,
@@ -722,11 +716,11 @@ class DeepSeekService {
         final data = jsonDecode(response.body);
         return data['choices'][0]['message']['content'];
       } else {
-        throw Exception('DeepSeek Vision error: ${response.statusCode}');
+        throw Exception('DeepSeek API error: ${response.statusCode}');
       }
     } catch (e) {
-      debugPrint('Error asking question with image: $e');
-      return "Désolé, I couldn't analyze that image. Please try again.";
+      debugPrint('Error in vision-proxy: $e');
+      return "Désolé, I couldn't process the image analysis. Please try again with a clearer photo.";
     }
   }
 }
