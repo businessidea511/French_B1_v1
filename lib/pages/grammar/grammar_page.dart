@@ -168,7 +168,7 @@ class _GrammarPageState extends State<GrammarPage> {
           ),
           if (_isGenerating)
             Container(
-              color: Colors.black.withValues(alpha: 0.7),
+              color: Colors.black.withOpacity(0.7),
               child: Center(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -182,7 +182,7 @@ class _GrammarPageState extends State<GrammarPage> {
                     const SizedBox(height: 10),
                     Text(
                       'This might take a few seconds',
-                      style: TextStyle(color: Colors.white.withValues(alpha: 0.7)),
+                      style: TextStyle(color: Colors.white.withOpacity(0.7)),
                     ),
                   ],
                 ),
@@ -273,7 +273,7 @@ class _GrammarPageState extends State<GrammarPage> {
                     width: 48,
                     height: 48,
                     decoration: BoxDecoration(
-                      color: AppTheme.primary.withValues(alpha: 0.1),
+                      color: AppTheme.primary.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Center(

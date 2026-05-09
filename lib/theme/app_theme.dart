@@ -48,9 +48,9 @@ class AppTheme {
   // Glassmorphism Decoration
   static BoxDecoration glassDecoration({double blur = 10, double opacity = 0.05}) {
     return BoxDecoration(
-      color: Colors.white.withValues(alpha: opacity),
+      color: Colors.white.withOpacity(opacity),
       borderRadius: BorderRadius.circular(24),
-      border: Border.all(color: Colors.white.withValues(alpha: 0.1), width: 1),
+      border: Border.all(color: Colors.white.withOpacity(0.1), width: 1),
     );
   }
 
@@ -72,12 +72,12 @@ class AppTheme {
       ),
     ),
     
-    cardTheme: CardTheme(
+    cardTheme: CardThemeData(
       color: surface,
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(24),
-        side: BorderSide(color: Colors.white.withValues(alpha: 0.05), width: 1),
+        side: BorderSide(color: Colors.white.withOpacity(0.05), width: 1),
       ),
     ),
 
@@ -124,7 +124,7 @@ class AppTheme {
 
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
-      fillColor: Colors.white.withValues(alpha: 0.05),
+      fillColor: Colors.white.withOpacity(0.05),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
         borderSide: BorderSide.none,

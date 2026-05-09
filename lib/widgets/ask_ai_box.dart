@@ -78,14 +78,14 @@ class _AskAIBoxState extends State<AskAIBox> {
           borderRadius: BorderRadius.circular(30),
         gradient: LinearGradient(
           colors: [
-            AppTheme.primary.withValues(alpha: 0.1),
-            AppTheme.accent.withValues(alpha: 0.05),
+            AppTheme.primary.withOpacity(0.1),
+            AppTheme.accent.withOpacity(0.05),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         border: Border.all(
-          color: AppTheme.primary.withValues(alpha: 0.2),
+          color: AppTheme.primary.withOpacity(0.2),
           width: 1.5,
         ),
       ),
@@ -107,7 +107,7 @@ class _AskAIBoxState extends State<AskAIBox> {
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
-                            color: AppTheme.primary.withValues(alpha: 0.3),
+                            color: AppTheme.primary.withOpacity(0.3),
                             blurRadius: 10,
                             spreadRadius: 2,
                           )
@@ -146,10 +146,10 @@ class _AskAIBoxState extends State<AskAIBox> {
                   Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.05),
+                      color: Colors.white.withOpacity(0.05),
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.1),
+                        color: Colors.white.withOpacity(0.1),
                       ),
                     ),
                     child: Column(
@@ -211,16 +211,16 @@ class _AskAIBoxState extends State<AskAIBox> {
                               fontWeight: FontWeight.bold,
                             ),
                             code: TextStyle(
-                              backgroundColor: Colors.black.withValues(alpha: 0.3),
+                              backgroundColor: Colors.black.withOpacity(0.3),
                               color: AppTheme.success, // Green for code/correct forms
                               fontFamily: 'monospace',
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
                             ),
                             codeblockDecoration: BoxDecoration(
-                              color: Colors.black.withValues(alpha: 0.4),
+                              color: Colors.black.withOpacity(0.4),
                               borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+                              border: Border.all(color: Colors.white.withOpacity(0.1)),
                             ),
                             blockquote: const TextStyle(
                               color: AppTheme.textTertiary,
@@ -228,7 +228,7 @@ class _AskAIBoxState extends State<AskAIBox> {
                               fontStyle: FontStyle.italic,
                             ),
                             blockquoteDecoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.03),
+                              color: Colors.white.withOpacity(0.03),
                               borderRadius: BorderRadius.circular(12),
                               border: const Border(
                                 left: BorderSide(color: AppTheme.primary, width: 4),
@@ -241,7 +241,7 @@ class _AskAIBoxState extends State<AskAIBox> {
                               fontSize: 14,
                             ),
                             tableBody: const TextStyle(color: Colors.white, fontSize: 14),
-                            tableBorder: TableBorder.all(color: Colors.white.withValues(alpha: 0.1)),
+                            tableBorder: TableBorder.all(color: Colors.white.withOpacity(0.1)),
                             tableCellsPadding: const EdgeInsets.all(12),
                           ),
                         ),
@@ -257,9 +257,9 @@ class _AskAIBoxState extends State<AskAIBox> {
                         controller: _controller,
                         decoration: InputDecoration(
                           hintText: 'Ask me anything...',
-                          hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.3)),
+                          hintStyle: TextStyle(color: Colors.white.withOpacity(0.3)),
                           filled: true,
-                          fillColor: Colors.black.withValues(alpha: 0.2),
+                          fillColor: Colors.black.withOpacity(0.2),
                           contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(15),
@@ -277,7 +277,7 @@ class _AskAIBoxState extends State<AskAIBox> {
                         padding: const EdgeInsets.all(15),
                         decoration: BoxDecoration(
                           gradient: _isLoading ? null : AppTheme.primaryGradient,
-                          color: _isLoading ? Colors.grey.withValues(alpha: 0.3) : null,
+                          color: _isLoading ? Colors.grey.withOpacity(0.3) : null,
                           borderRadius: BorderRadius.circular(15),
                         ),
                         child: _isLoading
