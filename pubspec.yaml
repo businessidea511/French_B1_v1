@@ -66,5 +66,3 @@ flutter:
   # Assets
   assets:
     - assets/
-    - assets/.env
-    - assets/env/.env

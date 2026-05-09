@@ -1,5 +1,9 @@
+import 'dart:convert';
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:image_picker/image_picker.dart';
 import '../services/deepseek_service.dart';
 import '../services/language_provider.dart';
 import '../theme/app_theme.dart';
@@ -20,9 +24,55 @@ class _AskAIBoxState extends State<AskAIBox> {
   final TextEditingController _controller = TextEditingController();
   bool _isLoading = false;
   String? _response;
+  XFile? _selectedImage;
+  String? _base64Image;
+  String? _mimeType;
+
+  Future<void> _pickImage() async {
+    final picker = ImagePicker();
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppTheme.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ListTile(
+            leading: const Icon(Icons.camera_alt, color: AppTheme.primary),
+            title: const Text('Take a Photo', style: TextStyle(color: Colors.white)),
+            onTap: () async {
+              Navigator.pop(context);
+              final image = await picker.pickImage(source: ImageSource.camera, imageQuality: 70);
+              if (image != null) _processImage(image);
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.photo_library, color: AppTheme.secondary),
+            title: const Text('Choose from Gallery', style: TextStyle(color: Colors.white)),
+            onTap: () async {
+              Navigator.pop(context);
+              final image = await picker.pickImage(source: ImageSource.gallery, imageQuality: 70);
+              if (image != null) _processImage(image);
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _processImage(XFile image) async {
+    final bytes = await image.readAsBytes();
+    setState(() {
+      _selectedImage = image;
+      _base64Image = base64Encode(bytes);
+      _mimeType = image.name.toLowerCase().endsWith('.png') ? 'image/png' : 'image/jpeg';
+    });
+  }
 
   Future<void> _askQuestion() async {
-    if (_controller.text.trim().isEmpty) return;
+    if (_controller.text.trim().isEmpty && _selectedImage == null) return;
 
     setState(() {
       _isLoading = true;
@@ -33,15 +83,28 @@ class _AskAIBoxState extends State<AskAIBox> {
     final targetLang = lp.currentLanguage.englishName; // Use the English name like 'Arabic' or 'Ukrainian'
 
     try {
-      final answer = await DeepSeekService.askGrammarQuestion(
-        _controller.text.trim(),
-        widget.topic,
-        targetLang,
-      );
+      String answer;
+      if (_base64Image != null) {
+        answer = await DeepSeekService.askQuestionWithImage(
+          _controller.text.trim(),
+          _base64Image!,
+          _mimeType!,
+          targetLang,
+        );
+      } else {
+        answer = await DeepSeekService.askGrammarQuestion(
+          _controller.text.trim(),
+          widget.topic,
+          targetLang,
+        );
+      }
 
       setState(() {
         _response = answer;
         _isLoading = false;
+        _selectedImage = null; // Clear image after success
+        _base64Image = null;
+        _controller.clear();
       });
       
       // Auto-scroll to show the response
@@ -250,8 +313,59 @@ class _AskAIBoxState extends State<AskAIBox> {
                   ),
                   const SizedBox(height: 20),
                 ],
+                
+                // Image Preview
+                if (_selectedImage != null)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 15),
+                    child: Stack(
+                      children: [
+                        Container(
+                          height: 120,
+                          width: 120,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(15),
+                            border: Border.all(color: AppTheme.primary, width: 2),
+                            image: DecorationImage(
+                              image: kIsWeb 
+                                ? NetworkImage(_selectedImage!.path) as ImageProvider
+                                : FileImage(File(_selectedImage!.path)),
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                        ),
+                        Positioned(
+                          top: 5,
+                          right: 5,
+                          child: GestureDetector(
+                            onTap: () => setState(() {
+                              _selectedImage = null;
+                              _base64Image = null;
+                            }),
+                            child: Container(
+                              padding: const EdgeInsets.all(4),
+                              decoration: const BoxDecoration(
+                                color: Colors.black54,
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(Icons.close, color: Colors.white, size: 16),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
                 Row(
                   children: [
+                    IconButton(
+                      icon: Icon(
+                        _selectedImage != null ? Icons.add_a_photo : Icons.camera_alt_outlined,
+                        color: _selectedImage != null ? AppTheme.success : AppTheme.textSecondary,
+                      ),
+                      onPressed: _isLoading ? null : _pickImage,
+                    ),
+                    const SizedBox(width: 8),
                     Expanded(
                       child: TextField(
                         controller: _controller,

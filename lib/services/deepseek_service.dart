@@ -672,6 +672,63 @@ class DeepSeekService {
       rethrow;
     }
   }
+
+  // ── Ask a question about an image (Vision) ────────────────────────────────
+  static Future<String> askQuestionWithImage(
+    String question,
+    String base64Image,
+    String mimeType,
+    String targetLanguage,
+  ) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/chat/completions'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $apiKey',
+        },
+        body: jsonEncode({
+          'model': 'deepseek-chat',
+          'messages': [
+            {
+              'role': 'system',
+              'content':
+                  'You are an expert French B1 teacher. Analyze the provided image and answer the user\'s question about it. '
+                  'The explanation MUST be in $targetLanguage. Use markdown for formatting.'
+            },
+            {
+              'role': 'user',
+              'content': [
+                {
+                  'type': 'image_url',
+                  'image_url': {
+                    'url': 'data:$mimeType;base64,$base64Image',
+                  }
+                },
+                {
+                  'type': 'text',
+                  'text': question.isEmpty
+                      ? 'Please explain what is in this image in French and translate it to $targetLanguage.'
+                      : question
+                }
+              ]
+            }
+          ],
+          'max_tokens': 2000,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return data['choices'][0]['message']['content'];
+      } else {
+        throw Exception('DeepSeek Vision error: ${response.statusCode}');
+      }
+    } catch (e) {
+      debugPrint('Error asking question with image: $e');
+      return "Désolé, I couldn't analyze that image. Please try again.";
+    }
+  }
 }
 
 
