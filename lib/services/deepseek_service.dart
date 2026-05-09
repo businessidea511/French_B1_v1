@@ -69,6 +69,56 @@ class DeepSeekService {
     }
   }
 
+  // Generate AI Story / Novel
+  static Future<Map<String, dynamic>> generateStory(
+    List<String> grammar,
+    List<String> lessons,
+    String targetLanguage,
+  ) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/chat/completions'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $apiKey',
+        },
+        body: jsonEncode({
+          'model': 'deepseek-chat',
+          'messages': [
+            {
+              'role': 'system',
+              'content':
+                  'You are an expert French B1 novelist and teacher. Create an engaging 5-page French story. '
+                  'The story MUST be in French. '
+                  'CRITICAL: Each page MUST have "learning_points" which are pedagogical explanations of the grammar or vocabulary used on that page. '
+                  'The "learning_points" MUST be written in $targetLanguage (the user\'s native language). '
+                  'Return ONLY valid JSON in this exact format: '
+                  '{"title":"<French Title>","pages":[{"text":"<French text for this page>","learning_points":["<Explanation in $targetLanguage>"]}]}'
+            },
+            {
+              'role': 'user',
+              'content':
+                  'Create a B1 level French story incorporating these grammar topics: ${grammar.join(", ")} and these lesson themes: ${lessons.join(", ")}. '
+                  'The story should have 5 pages. Each page needs 2-3 learning points explained in $targetLanguage.'
+            }
+          ],
+          'response_format': {'type': 'json_object'},
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final content = data['choices'][0]['message']['content'];
+        return jsonDecode(content);
+      } else {
+        throw Exception('Failed to generate story: ${response.statusCode}');
+      }
+    } catch (e) {
+      debugPrint('Error generating story: $e');
+      rethrow;
+    }
+  }
+
   // Generate AI flashcards
   static Future<List<Map<String, String>>> generateFlashcards(String topic,
       {int count = 10}) async {
@@ -572,10 +622,11 @@ class DeepSeekService {
                       'The story MUST be long and immersive (at least 300-400 words total), divided into 4-6 pages. '
                       'CRITICAL RULES: \n'
                       '1. STORYTELLING: Write a real story with a beginning, middle, and end. Use descriptive language. \n'
-                      '2. INTEGRATION: Naturally weave the provided grammar points and vocabulary into the narrative. Do not just list them. \n'
+                      '2. INTEGRATION: Naturally weave the provided grammar points and vocabulary into the narrative. \n'
                       '3. FORMATTING: Each page must have substantial text (70-100 words). Return as a list of "pages". \n'
                       '4. ANNOTATIONS: Highlight at least 3-5 interesting grammar/vocab uses per page. \n'
-                      '5. LANGUAGE: Story text is French. Hints/Explanations are in $targetLanguage. \n'
+                      '5. LANGUAGE ENFORCEMENT: The story text MUST be in French. ALL annotations and explanations MUST be written in $targetLanguage. '
+                      'It is FORBIDDEN to use English if $targetLanguage is not English. \n'
                       'Return a JSON object with: "title", "pages" (Array of {text, annotations}).'
             },
             {
@@ -583,11 +634,11 @@ class DeepSeekService {
               'content': 'Write a B1 story using: \n'
                   'Grammar: ${grammarTopics.join(', ')} \n'
                   'Vocabulary/Lessons: ${lessonTopics.join(', ')} \n'
-                  'Explanation Language: $targetLanguage.'
+                  'CRITICAL: ALL annotations and explanations MUST be in $targetLanguage.'
             }
           ],
           'response_format': {'type': 'json_object'},
-          'temperature': 0.8,
+          'temperature': 0.7,
         }),
       );
 
