@@ -498,6 +498,23 @@ class _LessonsPageState extends State<LessonsPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Lessons'),
+        actions: [
+          Consumer<LessonsProvider>(
+            builder: (context, lp, child) {
+              return IconButton(
+                icon: Icon(
+                  lp.isSyncing ? Icons.sync : Icons.cloud_done_rounded,
+                  color: lp.lastError != null ? Colors.red : (lp.isSyncing ? Colors.orange : Colors.green),
+                ),
+                onPressed: lp.lastError != null 
+                  ? () => _showError('Cloud Error: ${lp.lastError}')
+                  : () => lp.syncFromCloud(),
+                tooltip: lp.lastError ?? 'Cloud Connected',
+              );
+            },
+          ),
+          const SizedBox(width: 8),
+        ],
       ),
       body: Stack(
         children: [

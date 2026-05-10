@@ -84,12 +84,15 @@ class LessonsProvider extends ChangeNotifier {
 
   bool _isSyncing = false;
   bool get isSyncing => _isSyncing;
+  String? _lastError;
+  String? get lastError => _lastError;
 
   Future<void> syncFromCloud() async {
     if (_isSyncing) return;
     
     try {
       _isSyncing = true;
+      _lastError = null;
       notifyListeners();
       
       debugPrint('☁️ Syncing from Supabase Cloud...');
@@ -119,6 +122,7 @@ class LessonsProvider extends ChangeNotifier {
       await _saveLocalData();
       debugPrint('✅ Cloud Sync Complete: ${_customLessons.length} custom lessons found');
     } catch (e) {
+      _lastError = e.toString();
       debugPrint('⚠️ Cloud sync failed: $e');
     } finally {
       _isSyncing = false;
@@ -159,6 +163,8 @@ class LessonsProvider extends ChangeNotifier {
       }).select();
       debugPrint('✅ Lesson saved to cloud: ${response.length} rows affected');
     } catch (e, stack) {
+      _lastError = e.toString();
+      notifyListeners();
       debugPrint('❌ Cloud insert error: $e');
       debugPrint('Stack: $stack');
       // Rethrow so UI can show the real error
