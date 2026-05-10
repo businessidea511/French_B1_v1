@@ -165,15 +165,25 @@ class LessonsProvider extends ChangeNotifier {
   Future<void> addLesson(Map<String, dynamic> lessonData) async {
     final String id = 'custom_lesson_${DateTime.now().millisecondsSinceEpoch}';
     
-    // Intelligent content extraction
-    final dynamic rawContent = lessonData['widgets'] ?? lessonData['sections'] ?? lessonData['content'] ?? [];
-    
+    // Intelligent content extraction & normalization
+    final List<dynamic> rawWidgets = (lessonData['widgets'] ?? lessonData['sections'] ?? lessonData['content'] ?? []) as List;
+    final List<Map<String, dynamic>> normalizedWidgets = rawWidgets.map((w) {
+      if (w is! Map) return <String, dynamic>{};
+      final Map<String, dynamic> map = Map<String, dynamic>.from(w);
+      // Map common alternative keys to standard ones
+      if (map.containsKey('meaning')) map['translation'] = map['meaning'];
+      if (map.containsKey('english') && !map.containsKey('translation')) map['translation'] = map['english'];
+      if (map.containsKey('arabic') && !map.containsKey('translation')) map['translation'] = map['arabic'];
+      if (map.containsKey('explanation') && !map.containsKey('content')) map['content'] = map['explanation'];
+      if (map.containsKey('text') && !map.containsKey('content')) map['content'] = map['text'];
+      return map;
+    }).where((w) => w.isNotEmpty).toList();
+
     // Robust Title extraction
     String title = lessonData['title'] ?? lessonData['topic'] ?? 'Untitled Lesson';
-    if (title == 'Untitled Lesson' && rawContent is List && rawContent.isNotEmpty) {
-      // Fallback: try to get title from first section or text
-      final first = rawContent.first;
-      if (first is Map) title = first['title'] ?? first['content']?.toString().split('\n').first ?? title;
+    if (title == 'Untitled Lesson' && normalizedWidgets.isNotEmpty) {
+      final first = normalizedWidgets.first;
+      title = first['title'] ?? first['content']?.toString().split('\n').first ?? title;
     }
 
     final newLesson = LessonTopic(
@@ -182,8 +192,12 @@ class LessonsProvider extends ChangeNotifier {
       subtitle: lessonData['subtitle'] ?? lessonData['description'] ?? '',
       icon: lessonData['icon'] ?? '📖',
       description: lessonData['subtitle'] ?? title,
-      content: rawContent is List ? rawContent : [],
+      content: normalizedWidgets,
     );
+
+    if (normalizedWidgets.isEmpty) {
+      debugPrint('⚠️ Warning: Generated lesson has no widgets!');
+    }
 
     _customLessons.add(newLesson);
     notifyListeners();
