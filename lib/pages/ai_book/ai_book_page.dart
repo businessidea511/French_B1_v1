@@ -199,6 +199,7 @@ class _AIBookPageState extends State<AIBookPage> {
   }
 
   Widget _buildTopicSelection() {
+    final lp = Provider.of<LanguageProvider>(context);
     final lessonsProvider = Provider.of<LessonsProvider>(context);
     final grammarItems = lessonsProvider.allGrammar;
     final lessonItems = lessonsProvider.allLessons;
@@ -304,6 +305,7 @@ class _AIBookPageState extends State<AIBookPage> {
   }
 
   Widget _buildStoryViewer() {
+    final lp = Provider.of<LanguageProvider>(context);
     final List<dynamic> pages = _story!['pages'];
     final PageController controller = PageController(initialPage: _currentPageIndex);
 
