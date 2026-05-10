@@ -560,10 +560,10 @@ STYLE: Academic, thorough, and simplified for beginners.
 STRICT JSON SCHEMA:
 {
   "title": "Topic in French",
-  "subtitle": "Translation ($targetLanguage)",
+  "subtitle": "Direct Translation in $targetLanguage",
   "icon": "emoji",
   "widgets": [
-    {"type": "text", "content": "Academic introduction in $targetLanguage (min 5 sentences)"},
+    {"type": "text", "content": "Detailed introduction in $targetLanguage (No English Preamble!)"},
     {"type": "section_title", "emoji": "⚖️", "title": "Grammar & Structure ($targetLanguage)"},
     {"type": "tipbox", "title": "Key Rule", "content": "Detailed explanation in $targetLanguage", "color": "blue"},
     {"type": "section_title", "emoji": "📚", "title": "Vocabulary & Usage ($targetLanguage)"},
@@ -575,9 +575,11 @@ STRICT JSON SCHEMA:
 }
 
 REQUIREMENTS:
-1. LANGUAGE: Every field except "french" MUST be in $targetLanguage. 
-2. DEPTH: Match the quality of a professional textbook. 
-3. NO PREAMBLE: Start with '{'. Never apologize or talk to the user.
+1. SUBTITLE: Must be in $targetLanguage. This is what shows on the lesson card.
+2. NO ENGLISH PREAMBLE: Do NOT start with "In this lesson..." or "Today we will..." in English. Start directly in $targetLanguage.
+3. LANGUAGE: Every field except "french" MUST be in $targetLanguage. 
+4. DEPTH: Match the quality of a professional textbook. 
+5. NO PREAMBLE: Start with '{'. Never apologize or talk to the user.
 '''            },
             {
               'role': 'user',
