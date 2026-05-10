@@ -776,7 +776,7 @@ class _LessonsPageState extends State<LessonsPage> {
                     ? TextDirection.rtl 
                     : TextDirection.ltr,
                 ),
-                }),
+                const SizedBox(height: 12),
               ],
             ),
           ),
