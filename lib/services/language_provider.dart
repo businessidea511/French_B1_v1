@@ -25,6 +25,7 @@ class LanguageProvider extends ChangeNotifier {
   static const String _prefKey = 'selected_language';
 
   LanguageProvider() {
+    debugPrint("🌐 LanguageProvider initialized");
     _loadLanguage();
   }
 
@@ -32,14 +33,20 @@ class LanguageProvider extends ChangeNotifier {
   bool get isRTL => _currentLanguage.isRTL;
 
   Future<void> _loadLanguage() async {
-    final prefs = await SharedPreferences.getInstance();
-    final savedCode = prefs.getString(_prefKey);
-    if (savedCode != null) {
-      _currentLanguage = AppLanguage.values.firstWhere(
-        (l) => l.code == savedCode,
-        orElse: () => AppLanguage.english,
-      );
-      notifyListeners();
+    try {
+      debugPrint("🌐 Loading language from prefs...");
+      final prefs = await SharedPreferences.getInstance();
+      final savedCode = prefs.getString(_prefKey);
+      if (savedCode != null) {
+        _currentLanguage = AppLanguage.values.firstWhere(
+          (l) => l.code == savedCode,
+          orElse: () => AppLanguage.english,
+        );
+        notifyListeners();
+      }
+      debugPrint("🌐 Language loaded: ${_currentLanguage.code}");
+    } catch (e) {
+      debugPrint("🌐 Language load error: $e");
     }
   }
 

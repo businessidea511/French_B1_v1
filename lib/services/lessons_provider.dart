@@ -21,6 +21,7 @@ class LessonsProvider extends ChangeNotifier {
   }
 
   LessonsProvider() {
+    debugPrint("📚 LessonsProvider initialized");
     _loadData();
   }
 
@@ -28,21 +29,27 @@ class LessonsProvider extends ChangeNotifier {
   List<GrammarTopic> get allGrammar => [...grammarTopics, ..._customGrammar];
 
   Future<void> _loadData() async {
-    final prefs = await SharedPreferences.getInstance();
-    
-    // 1. Load Local Data first (Instant UI)
-    final String? lessonsJson = prefs.getString(_prefKeyLessons);
-    if (lessonsJson != null) {
-      final List<dynamic> decoded = jsonDecode(lessonsJson);
-      _customLessons = decoded.map((item) => LessonTopic.fromJson(item)).toList();
-      notifyListeners();
-    }
+    try {
+      debugPrint("📚 Loading lessons from prefs...");
+      final prefs = await SharedPreferences.getInstance();
+      
+      // 1. Load Local Data first (Instant UI)
+      final String? lessonsJson = prefs.getString(_prefKeyLessons);
+      if (lessonsJson != null) {
+        final List<dynamic> decoded = jsonDecode(lessonsJson);
+        _customLessons = decoded.map((item) => LessonTopic.fromJson(item)).toList();
+        notifyListeners();
+      }
 
-    final String? grammarJson = prefs.getString(_prefKeyGrammar);
-    if (grammarJson != null) {
-      final List<dynamic> decoded = jsonDecode(grammarJson);
-      _customGrammar = decoded.map((item) => GrammarTopic.fromJson(item)).toList();
-      notifyListeners();
+      final String? grammarJson = prefs.getString(_prefKeyGrammar);
+      if (grammarJson != null) {
+        final List<dynamic> decoded = jsonDecode(grammarJson);
+        _customGrammar = decoded.map((item) => GrammarTopic.fromJson(item)).toList();
+        notifyListeners();
+      }
+      debugPrint("📚 Local data loaded");
+    } catch (e) {
+      debugPrint("📚 Local data load error: $e");
     }
     
     // 2. Sync from Supabase Cloud (Background)

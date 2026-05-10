@@ -10,47 +10,19 @@ import 'services/language_provider.dart';
 import 'services/lessons_provider.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+  // Capture all Flutter errors
+  FlutterError.onError = (details) {
+    FlutterError.presentError(details);
+    debugPrint("🔥 Flutter Error: ${details.exception}");
+  };
 
-  // Try loading from multiple locations to be safe
-  final possiblePaths = [".env", "assets/.env", "assets/env/.env"];
-  bool loaded = false;
-  
-  for (String path in possiblePaths) {
-    try {
-      await dotenv.load(fileName: path);
-      debugPrint("Success: Loaded environment from $path");
-      loaded = true;
-      break;
-    } catch (_) {}
+  try {
+    WidgetsFlutterBinding.ensureInitialized();
+  } catch (e) {
+    debugPrint("Binding error: $e");
   }
 
-  if (!loaded) {
-    debugPrint("Warning: Could not load .env file from any of the standard locations.");
-  }
-
-  // Initialize Supabase
-  final supabaseUrl = String.fromEnvironment('SUPABASE_URL').isNotEmpty 
-      ? String.fromEnvironment('SUPABASE_URL') 
-      : (dotenv.env['SUPABASE_URL'] ?? '');
-  final supabaseAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY').isNotEmpty 
-      ? String.fromEnvironment('SUPABASE_ANON_KEY') 
-      : (dotenv.env['SUPABASE_ANON_KEY'] ?? '');
-
-  if (supabaseUrl.isNotEmpty && supabaseAnonKey.isNotEmpty) {
-    try {
-      await Supabase.initialize(
-        url: supabaseUrl,
-        anonKey: supabaseAnonKey,
-      );
-      debugPrint('✅ Supabase Initialized successfully');
-    } catch (e) {
-      debugPrint('❌ Supabase Init Error: $e');
-    }
-  } else {
-    debugPrint('⚠️ Supabase URL or Anon Key is missing. Cloud sync will be disabled.');
-  }
-
+  // Run app immediately
   runApp(
     MultiProvider(
       providers: [
@@ -60,6 +32,45 @@ void main() async {
       child: const FrenchB1App(),
     ),
   );
+
+  // Background initialization with delay to ensure UI is ready
+  Future.delayed(const Duration(milliseconds: 500), () {
+    _initializeServices().catchError((e) {
+      debugPrint("Init service error: $e");
+    });
+  });
+}
+
+Future<void> _initializeServices() async {
+  // 1. Try loading environment
+  final possiblePaths = [".env", "assets/.env", "assets/env/.env"];
+  for (String path in possiblePaths) {
+    try {
+      await dotenv.load(fileName: path);
+      debugPrint("Success: Loaded environment from $path");
+      break;
+    } catch (_) {}
+  }
+
+  // 2. Initialize Supabase
+  try {
+    final supabaseUrl = String.fromEnvironment('SUPABASE_URL').isNotEmpty 
+        ? String.fromEnvironment('SUPABASE_URL') 
+        : (dotenv.env['SUPABASE_URL'] ?? '');
+    final supabaseAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY').isNotEmpty 
+        ? String.fromEnvironment('SUPABASE_ANON_KEY') 
+        : (dotenv.env['SUPABASE_ANON_KEY'] ?? '');
+
+    if (supabaseUrl.isNotEmpty && supabaseAnonKey.isNotEmpty) {
+      await Supabase.initialize(
+        url: supabaseUrl,
+        anonKey: supabaseAnonKey,
+      );
+      debugPrint('✅ Supabase Initialized');
+    }
+  } catch (e) {
+    debugPrint('❌ Supabase Init Error: $e');
+  }
 }
 
 class FrenchB1App extends StatelessWidget {
