@@ -470,7 +470,7 @@ class DeepSeekService {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final String translated = data['choices'][0]['message']['content'].toString().trim();
+        final String translated = (data['choices']?[0]?['message']?['content'] ?? text).toString().trim();
         
         // 4. Save to both caches
         _memoryCache[cacheKey] = translated;

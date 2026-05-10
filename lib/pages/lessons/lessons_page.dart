@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
@@ -273,6 +272,9 @@ class _LessonsPageState extends State<LessonsPage> {
 
     setState(() => _isGenerating = true);
 
+    final lp = Provider.of<LanguageProvider>(context, listen: false);
+    final lessonsProvider = Provider.of<LessonsProvider>(context, listen: false);
+
     try {
       final List<String> base64Images = [];
       String? mimeType;
@@ -282,9 +284,6 @@ class _LessonsPageState extends State<LessonsPage> {
         base64Images.add(base64Encode(bytes));
         mimeType ??= file.name.toLowerCase().endsWith('.png') ? 'image/png' : 'image/jpeg';
       }
-
-      final lp = Provider.of<LanguageProvider>(context, listen: false);
-      final lessonsProvider = Provider.of<LessonsProvider>(context, listen: false);
 
       final lessonData = await DeepSeekService.generateLessonFromImages(
         base64Images,
@@ -322,30 +321,30 @@ class _LessonsPageState extends State<LessonsPage> {
       } catch (e) {
         _showError('Failed to process PDF: $e');
       } finally {
-        setState(() => _isGenerating = false);
+        if (mounted) setState(() => _isGenerating = false);
       }
     }
   }
 
   Future<void> _generateLesson({required String topic, String? pdfText}) async {
+    final lp = Provider.of<LanguageProvider>(context, listen: false);
+    final lessonsProvider = Provider.of<LessonsProvider>(context, listen: false);
     setState(() => _isGenerating = true);
     
     try {
-      final lp = Provider.of<LanguageProvider>(context, listen: false);
-      final lessonsProvider = Provider.of<LessonsProvider>(context, listen: false);
-      
       final lessonData = await DeepSeekService.generateFullLesson(
         topic,
         lp.currentLanguage.englishName,
         pdfText: pdfText,
       );
       
+      if (!mounted) return;
       await lessonsProvider.addLesson(lessonData);
       _showSuccess('Lesson "$topic" added successfully!');
     } catch (e) {
       _showError('Failed to generate lesson: $e');
     } finally {
-      setState(() => _isGenerating = false);
+      if (mounted) setState(() => _isGenerating = false);
     }
   }
 
@@ -414,6 +413,9 @@ class _LessonsPageState extends State<LessonsPage> {
     if (selectedFiles.isEmpty) return;
     setState(() => _isGenerating = true);
 
+    final lp = Provider.of<LanguageProvider>(context, listen: false);
+    final lessonsProvider = Provider.of<LessonsProvider>(context, listen: false);
+
     try {
       final List<String> base64Images = [];
       String? mimeType;
@@ -422,9 +424,6 @@ class _LessonsPageState extends State<LessonsPage> {
         base64Images.add(base64Encode(bytes));
         mimeType ??= file.name.toLowerCase().endsWith('.png') ? 'image/png' : 'image/jpeg';
       }
-
-      final lp = Provider.of<LanguageProvider>(context, listen: false);
-      final lessonsProvider = Provider.of<LessonsProvider>(context, listen: false);
 
       final updatedData = await DeepSeekService.updateLessonFromImages(
         {'title': topic.title, 'subtitle': topic.subtitle, 'icon': topic.icon, 'sections': topic.content, 'id': topic.id},
@@ -444,14 +443,14 @@ class _LessonsPageState extends State<LessonsPage> {
   }
 
   Future<void> _pickAndUpdateWithPdf(LessonTopic topic) async {
+    final lp = Provider.of<LanguageProvider>(context, listen: false);
+    final lessonsProvider = Provider.of<LessonsProvider>(context, listen: false);
     final result = await FilePicker.platform.pickFiles(type: FileType.custom, allowedExtensions: ['pdf']);
     if (result == null || result.files.single.path == null) return;
 
     setState(() => _isGenerating = true);
     try {
       final text = await PdfHelper.extractText(result.files.single.path!);
-      final lp = Provider.of<LanguageProvider>(context, listen: false);
-      final lessonsProvider = Provider.of<LessonsProvider>(context, listen: false);
 
       final updatedData = await DeepSeekService.updateLessonWithPdf(
         {'title': topic.title, 'subtitle': topic.subtitle, 'icon': topic.icon, 'sections': topic.content, 'id': topic.id},
@@ -459,12 +458,13 @@ class _LessonsPageState extends State<LessonsPage> {
         lp.currentLanguage.englishName,
       );
 
+      if (!mounted) return;
       await lessonsProvider.updateLesson(topic.id, updatedData);
       _showSuccess('Lesson updated from PDF content! 📄');
     } catch (e) {
       _showError('Failed to update from PDF: $e');
     } finally {
-      setState(() => _isGenerating = false);
+      if (mounted) setState(() => _isGenerating = false);
     }
   }
 

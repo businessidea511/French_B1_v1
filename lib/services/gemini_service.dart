@@ -68,7 +68,7 @@ class GeminiService {
         if (response.statusCode == 200) {
           final data = jsonDecode(response.body);
           debugPrint('✅ Success with Multi-Image on: $modelId!');
-          return data['candidates'][0]['content']['parts'][0]['text'] as String;
+          return (data['candidates']?[0]?['content']?['parts']?[0]?['text'] ?? "Error parsing response") as String;
         }
         debugPrint('❌ $modelId failed (${response.statusCode})');
       } catch (e) {
