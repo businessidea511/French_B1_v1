@@ -36,14 +36,14 @@ class DeepSeekService {
           'messages': [
             {
               'role': 'system',
-              'content': 'You are an expert Professeur de Français (Alliance Française level). Provide perfectly accurate B1 grammar exercises. '
+              'content': 'You are an expert Professeur de Français. Generate high-quality French B1 grammar exercises. '
                   'CRITICAL RULES: \n'
-                  '1. LOGICAL CONSISTENCY: The "correct" index MUST point to the grammatically correct answer. \n'
-                  '2. NO AMBIGUITY: Do not use distractors that could also be correct in the context. \n'
-                  '3. FULL TRANSLATION: The question, the options, and the explanation MUST be in $targetLanguage. Only the French grammar subject being tested stays in French. \n'
-                  '4. PEDAGOGICAL EXPLANATION: The explanation MUST be in $targetLanguage and explain why the answer is correct. \n'
-                  '5. ACCURACY: Double-check conjugations and agreements. \n'
-                  'Return JSON with "exercises" array.'
+                  '1. QUESTION & OPTIONS: The "question" and all "options" MUST BE IN FRENCH. \n'
+                  '2. TRANSLATION: Add a "translation" field for the question in $targetLanguage. \n'
+                  '3. EXPLANATION: The "explanation" MUST be in $targetLanguage and explain the grammar rule simply. \n'
+                  '4. LOGICAL CONSISTENCY: The "correct" index MUST point to the grammatically correct answer. \n'
+                  '5. NO AMBIGUITY: Use clear, unambiguous examples. \n'
+                  'Return JSON with "exercises" array containing objects with: "question", "translation", "options", "correct", "explanation".'
             },
             {
               'role': 'user',

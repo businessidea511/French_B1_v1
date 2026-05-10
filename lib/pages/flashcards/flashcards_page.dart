@@ -225,7 +225,7 @@ class _FlashcardsPageState extends State<FlashcardsPage> {
                               letterSpacing: 2,
                               fontSize: 12,
                               fontWeight: FontWeight.bold,
-                              color: Colors.white.withValues(alpha: 0.1)),
+                              color: Colors.white.withValues(alpha: 0.5)),
                         ),
                         const SizedBox(height: 32),
                         Text(
@@ -233,9 +233,38 @@ class _FlashcardsPageState extends State<FlashcardsPage> {
                           textAlign: TextAlign.center,
                           style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white),
                         ),
+                        if (showAnswer && card['explanation'] != null) ...[
+                          const SizedBox(height: 24),
+                          Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: Column(
+                              children: [
+                                const Text(
+                                  'EXPLICATION',
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: 1.2,
+                                    color: Colors.white70,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  card['explanation']!,
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(fontSize: 14, color: Colors.white),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                         const SizedBox(height: 32),
                         Icon(showAnswer ? Icons.check_circle_outline : Icons.help_outline,
-                            color: Colors.white.withValues(alpha: 0.1), size: 48),
+                            color: Colors.white.withValues(alpha: 0.3), size: 48),
                       ],
                     ),
                   ),

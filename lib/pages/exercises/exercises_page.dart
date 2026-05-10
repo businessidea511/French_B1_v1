@@ -308,6 +308,25 @@ class _ExercisesPageState extends State<ExercisesPage> {
             question['question'],
             style: Theme.of(context).textTheme.headlineMedium,
           ),
+          if (question['translation'] != null) ...[
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                const Icon(Icons.translate, size: 16, color: AppTheme.primary),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    question['translation'],
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.white.withValues(alpha: 0.7),
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
           const SizedBox(height: 40),
           ...List.generate(
             (question['options'] as List).length,
@@ -369,9 +388,19 @@ class _ExercisesPageState extends State<ExercisesPage> {
               ],
             ),
             const SizedBox(height: 16),
+            const Text(
+              'EXPLICATION',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 1.2,
+                color: AppTheme.textTertiary,
+              ),
+            ),
+            const SizedBox(height: 8),
             Text(
               questions[currentQuestion]['explanation'],
-              style: const TextStyle(fontSize: 16, height: 1.5),
+              style: const TextStyle(fontSize: 16, height: 1.5, color: Colors.white),
             ),
             const SizedBox(height: 32),
             ElevatedButton(
