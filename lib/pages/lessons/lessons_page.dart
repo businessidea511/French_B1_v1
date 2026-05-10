@@ -641,33 +641,59 @@ class _LessonsPageState extends State<LessonsPage> {
                   ],
                 ),
                 const Spacer(),
-                FutureBuilder<String>(
-                  future: lp.currentLanguage == AppLanguage.english
-                      ? Future.value(topic.title)
-                      : DeepSeekService.translateText(topic.title, lp.currentLanguage.name),
-                  builder: (context, snapshot) {
+                // Show title directly — only translate if NOT English or Arabic
+                // (Arabic titles from AI-generated lessons are already in Arabic)
+                Builder(builder: (context) {
+                  final needsTranslation = lp.currentLanguage != AppLanguage.english &&
+                      lp.currentLanguage != AppLanguage.arabic;
+                  if (!needsTranslation) {
                     return Text(
-                      snapshot.data ?? topic.title,
+                      topic.title,
                       style: Theme.of(context).textTheme.headlineMedium,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     );
-                  },
-                ),
+                  }
+                  return FutureBuilder<String>(
+                    future: DeepSeekService.translateText(topic.title, lp.currentLanguage.name),
+                    builder: (context, snapshot) {
+                      return Text(
+                        snapshot.data ?? topic.title,
+                        style: Theme.of(context).textTheme.headlineMedium,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      );
+                    },
+                  );
+                }),
                 const SizedBox(height: 4),
-                FutureBuilder<String>(
-                  future: lp.currentLanguage == AppLanguage.english
-                      ? Future.value(topic.subtitle)
-                      : DeepSeekService.translateText(topic.subtitle, lp.currentLanguage.name),
-                  builder: (context, snapshot) {
+                Builder(builder: (context) {
+                  final needsTranslation = lp.currentLanguage != AppLanguage.english &&
+                      lp.currentLanguage != AppLanguage.arabic;
+                  if (!needsTranslation) {
                     return Text(
-                      snapshot.data ?? topic.subtitle,
+                      topic.subtitle,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: AppTheme.textTertiary,
-                          ),
+                        color: AppTheme.textTertiary,
+                      ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     );
-                  },
-                ),
+                  }
+                  return FutureBuilder<String>(
+                    future: DeepSeekService.translateText(topic.subtitle, lp.currentLanguage.name),
+                    builder: (context, snapshot) {
+                      return Text(
+                        snapshot.data ?? topic.subtitle,
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: AppTheme.textTertiary,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      );
+                    },
+                  );
+                }),
               ],
             ),
           ),

@@ -448,27 +448,39 @@ class _GrammarPageState extends State<GrammarPage> {
                 Text(
                   topic.title,
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontSize: 20),
-                  maxLines: 1,
+                  maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 6),
-                FutureBuilder<String>(
-                  future: lp.currentLanguage == AppLanguage.english
-                      ? Future.value(topic.subtitle)
-                      : DeepSeekService.translateText(
-                          topic.subtitle, lp.currentLanguage.name),
-                  builder: (context, snapshot) {
+                Builder(builder: (context) {
+                  final needsTranslation = lp.currentLanguage != AppLanguage.english &&
+                      lp.currentLanguage != AppLanguage.arabic;
+                  if (!needsTranslation) {
                     return Text(
-                      snapshot.data ?? topic.subtitle,
+                      topic.subtitle,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: AppTheme.textTertiary,
-                            fontSize: 13,
-                          ),
+                        color: AppTheme.textTertiary,
+                        fontSize: 13,
+                      ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     );
-                  },
-                ),
+                  }
+                  return FutureBuilder<String>(
+                    future: DeepSeekService.translateText(topic.subtitle, lp.currentLanguage.name),
+                    builder: (context, snapshot) {
+                      return Text(
+                        snapshot.data ?? topic.subtitle,
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: AppTheme.textTertiary,
+                          fontSize: 13,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      );
+                    },
+                  );
+                }),
               ],
             ),
           ),

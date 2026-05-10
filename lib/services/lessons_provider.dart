@@ -143,19 +143,26 @@ class LessonsProvider extends ChangeNotifier {
 
     // Push to Cloud
     final client = _supabase;
-    if (client != null) {
-      try {
-        await client.from('lessons').upsert({
-          'id': id,
-          'title': newLesson.title,
-          'subtitle': newLesson.subtitle,
-          'icon': newLesson.icon,
-          'description': newLesson.description,
-          'content': newLesson.content,
-        });
-      } catch (e) {
-        debugPrint('Cloud insert error: $e');
-      }
+    if (client == null) {
+      debugPrint('⚠️ Supabase client is NULL - skipping cloud push');
+      return;
+    }
+    try {
+      debugPrint('☁️ Pushing lesson to Supabase: $id');
+      final response = await client.from('lessons').upsert({
+        'id': id,
+        'title': newLesson.title,
+        'subtitle': newLesson.subtitle,
+        'icon': newLesson.icon,
+        'description': newLesson.description,
+        'content': newLesson.content,
+      }).select();
+      debugPrint('✅ Lesson saved to cloud: ${response.length} rows affected');
+    } catch (e, stack) {
+      debugPrint('❌ Cloud insert error: $e');
+      debugPrint('Stack: $stack');
+      // Rethrow so UI can show the real error
+      rethrow;
     }
   }
 
@@ -210,19 +217,25 @@ class LessonsProvider extends ChangeNotifier {
 
     // Push to Cloud
     final client = _supabase;
-    if (client != null) {
-      try {
-        await client.from('grammar').upsert({
-          'id': id,
-          'title': newGrammar.title,
-          'subtitle': newGrammar.subtitle,
-          'icon': newGrammar.icon,
-          'description': newGrammar.description,
-          'content': newGrammar.content,
-        });
-      } catch (e) {
-        debugPrint('Cloud grammar insert error: $e');
-      }
+    if (client == null) {
+      debugPrint('⚠️ Supabase client is NULL - skipping cloud push');
+      return;
+    }
+    try {
+      debugPrint('☁️ Pushing grammar to Supabase: $id');
+      final response = await client.from('grammar').upsert({
+        'id': id,
+        'title': newGrammar.title,
+        'subtitle': newGrammar.subtitle,
+        'icon': newGrammar.icon,
+        'description': newGrammar.description,
+        'content': newGrammar.content,
+      }).select();
+      debugPrint('✅ Grammar saved to cloud: ${response.length} rows affected');
+    } catch (e, stack) {
+      debugPrint('❌ Cloud grammar insert error: $e');
+      debugPrint('Stack: $stack');
+      rethrow;
     }
   }
 
