@@ -193,6 +193,10 @@ class LessonsProvider extends ChangeNotifier {
       icon: lessonData['icon'] ?? '📖',
       description: lessonData['subtitle'] ?? title,
       content: normalizedWidgets,
+      // Store translations for dynamic UI updates
+      metadata: {
+        'localized_subtitles': lessonData['localized_subtitles'] ?? {},
+      },
     );
 
     if (normalizedWidgets.isEmpty) {

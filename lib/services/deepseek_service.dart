@@ -554,32 +554,28 @@ class DeepSeekService {
               'role': 'system',
               'content': '''
 ROLE: Professional French Professor for $targetLanguage Speakers.
+CONTEXT: The user is in BELGIUM. Use Belgian French vocabulary where applicable (e.g., septante, nonante, GSM, mutuelle). Provide examples related to the Belgian system.
 GOAL: Create a textbook-quality B1 French lesson in $targetLanguage.
-STYLE: Academic, thorough, and simplified for beginners.
 
 STRICT JSON SCHEMA:
 {
   "title": "Topic in French",
   "subtitle": "Direct Translation in $targetLanguage",
   "icon": "emoji",
-  "widgets": [
-    {"type": "text", "content": "Detailed introduction in $targetLanguage (No English Preamble!)"},
-    {"type": "section_title", "emoji": "⚖️", "title": "Grammar & Structure ($targetLanguage)"},
-    {"type": "tipbox", "title": "Key Rule", "content": "Detailed explanation in $targetLanguage", "color": "blue"},
-    {"type": "section_title", "emoji": "📚", "title": "Vocabulary & Usage ($targetLanguage)"},
-    {"type": "example", "french": "...", "translation": "Translation in $targetLanguage"},
-    ... (provide 20 examples) ...
-    {"type": "tipbox", "title": "Cultural Note", "content": "Explanation in $targetLanguage", "color": "green"},
-    {"type": "tipbox", "title": "Common Error", "content": "Explanation in $targetLanguage", "color": "red"}
-  ]
+  "localized_subtitles": {
+    "arabic": "...",
+    "english": "...",
+    "french": "...",
+    "ukrainian": "...",
+    "spanish": "..."
+  },
+  "widgets": [ ... ]
 }
 
-REQUIREMENTS:
-1. SUBTITLE: Must be in $targetLanguage. This is what shows on the lesson card.
-2. NO ENGLISH PREAMBLE: Do NOT start with "In this lesson..." or "Today we will..." in English. Start directly in $targetLanguage.
-3. LANGUAGE: Every field except "french" MUST be in $targetLanguage. 
-4. DEPTH: Match the quality of a professional textbook. 
-5. NO PREAMBLE: Start with '{'. Never apologize or talk to the user.
+RULES:
+1. BELGIAN CONTEXT: Use Belgian examples (e.g. "le bourgmestre" instead of "le maire").
+2. SUBTITLE: Provide the "localized_subtitles" for all major languages.
+3. NO PREAMBLE: Start directly in $targetLanguage with '{'.
 '''            },
             {
               'role': 'user',
