@@ -509,24 +509,30 @@ class _LessonsPageState extends State<LessonsPage> {
                 thumbVisibility: true,
                 trackVisibility: true,
                 interactive: true,
-                child: GridView.builder(
-                  controller: _scrollController,
-                  padding: const EdgeInsets.all(24),
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: MediaQuery.of(context).size.width > 900
-                        ? 3
-                        : MediaQuery.of(context).size.width > 600
-                            ? 2
-                            : 1,
-                    mainAxisSpacing: 20,
-                    crossAxisSpacing: 20,
-                    childAspectRatio: 1.6,
+                child: RefreshIndicator(
+                  onRefresh: () => lessonsProvider.syncFromCloud(),
+                  color: AppTheme.primary,
+                  backgroundColor: AppTheme.surface,
+                  child: GridView.builder(
+                    controller: _scrollController,
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: const EdgeInsets.all(24),
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: MediaQuery.of(context).size.width > 900
+                          ? 3
+                          : MediaQuery.of(context).size.width > 600
+                              ? 2
+                              : 1,
+                      mainAxisSpacing: 20,
+                      crossAxisSpacing: 20,
+                      childAspectRatio: 1.6,
+                    ),
+                    itemCount: lessons.length,
+                    itemBuilder: (context, index) {
+                      final topic = lessons[index];
+                      return _buildTopicCard(context, topic, lp);
+                    },
                   ),
-                  itemCount: lessons.length,
-                  itemBuilder: (context, index) {
-                    final topic = lessons[index];
-                    return _buildTopicCard(context, topic, lp);
-                  },
                 ),
               ),
             ),

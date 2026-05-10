@@ -82,25 +82,47 @@ class LessonsProvider extends ChangeNotifier {
     syncFromCloud(); // Don't await here to prevent blocking UI
   }
 
+  bool _isSyncing = false;
+  bool get isSyncing => _isSyncing;
+
   Future<void> syncFromCloud() async {
+    if (_isSyncing) return;
+    
     try {
+      _isSyncing = true;
+      notifyListeners();
+      
       debugPrint('☁️ Syncing from Supabase Cloud...');
       final client = _supabase;
-      if (client == null) return;
+      if (client == null) {
+        debugPrint('❌ Supabase client is NULL');
+        _isSyncing = false;
+        notifyListeners();
+        return;
+      }
 
       // Sync Lessons
       final List<dynamic> cloudLessons = await client.from('lessons').select();
-      _customLessons = cloudLessons.map((item) => LessonTopic.fromJson(item)).toList();
+      _customLessons = cloudLessons
+          .where((item) => (item['id'] as String).startsWith('custom_'))
+          .map((item) => LessonTopic.fromJson(item))
+          .toList();
       
       // Sync Grammar
       final List<dynamic> cloudGrammar = await client.from('grammar').select();
-      _customGrammar = cloudGrammar.map((item) => GrammarTopic.fromJson(item)).toList();
+      _customGrammar = cloudGrammar
+          .where((item) => (item['id'] as String).startsWith('custom_'))
+          .map((item) => GrammarTopic.fromJson(item))
+          .toList();
 
       notifyListeners();
       await _saveLocalData();
-      debugPrint('✅ Cloud Sync Complete');
+      debugPrint('✅ Cloud Sync Complete: ${_customLessons.length} custom lessons found');
     } catch (e) {
       debugPrint('⚠️ Cloud sync failed: $e');
+    } finally {
+      _isSyncing = false;
+      notifyListeners();
     }
   }
 

@@ -10,19 +10,40 @@ import 'services/language_provider.dart';
 import 'services/lessons_provider.dart';
 
 void main() async {
-  // Capture all Flutter errors
-  FlutterError.onError = (details) {
-    FlutterError.presentError(details);
-    debugPrint("🔥 Flutter Error: ${details.exception}");
-  };
+  WidgetsFlutterBinding.ensureInitialized();
 
+  // 1. Initialize Services (Supabase, Env) BEFORE UI
   try {
-    WidgetsFlutterBinding.ensureInitialized();
+    // Try loading environment from multiple possible locations
+    final possiblePaths = [".env", "assets/.env", "assets/env/.env"];
+    bool envLoaded = false;
+    for (String path in possiblePaths) {
+      try {
+        await dotenv.load(fileName: path);
+        debugPrint("Success: Loaded environment from $path");
+        envLoaded = true;
+        break;
+      } catch (_) {}
+    }
+
+    if (envLoaded) {
+      await Supabase.initialize(
+        url: dotenv.env['SUPABASE_URL']!,
+        anonKey: dotenv.env['SUPABASE_ANON_KEY']!,
+      );
+      debugPrint("✅ Supabase Initialized Successfully");
+    }
   } catch (e) {
-    debugPrint("Binding error: $e");
+    debugPrint("🔥 Initialization Error: $e");
   }
 
-  // Run app immediately
+  // 2. Set UI Orientations
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.landscapeLeft,
+    DeviceOrientation.landscapeRight,
+  ]);
+
   runApp(
     MultiProvider(
       providers: [
@@ -32,46 +53,8 @@ void main() async {
       child: const FrenchB1App(),
     ),
   );
-
-  // Background initialization with delay to ensure UI is ready
-  Future.delayed(const Duration(milliseconds: 500), () {
-    _initializeServices().catchError((e) {
-      debugPrint("Init service error: $e");
-    });
-  });
 }
 
-Future<void> _initializeServices() async {
-  // 1. Try loading environment
-  final possiblePaths = [".env", "assets/.env", "assets/env/.env"];
-  for (String path in possiblePaths) {
-    try {
-      await dotenv.load(fileName: path);
-      debugPrint("Success: Loaded environment from $path");
-      break;
-    } catch (_) {}
-  }
-
-  // 2. Initialize Supabase
-  try {
-    final supabaseUrl = String.fromEnvironment('SUPABASE_URL').isNotEmpty 
-        ? String.fromEnvironment('SUPABASE_URL') 
-        : (dotenv.env['SUPABASE_URL'] ?? '');
-    final supabaseAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY').isNotEmpty 
-        ? String.fromEnvironment('SUPABASE_ANON_KEY') 
-        : (dotenv.env['SUPABASE_ANON_KEY'] ?? '');
-
-    if (supabaseUrl.isNotEmpty && supabaseAnonKey.isNotEmpty) {
-      await Supabase.initialize(
-        url: supabaseUrl,
-        anonKey: supabaseAnonKey,
-      );
-      debugPrint('✅ Supabase Initialized');
-    }
-  } catch (e) {
-    debugPrint('❌ Supabase Init Error: $e');
-  }
-}
 
 class FrenchB1App extends StatelessWidget {
   const FrenchB1App({super.key});
