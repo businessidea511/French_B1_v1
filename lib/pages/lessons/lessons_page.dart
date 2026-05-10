@@ -884,32 +884,6 @@ class _LessonsPageState extends State<LessonsPage> {
     );
   }
 
-  void _confirmDelete(LessonTopic topic) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppTheme.surface,
-        title: const Text('Delete Lesson', style: TextStyle(color: Colors.white)),
-        content: Text('Are you sure you want to delete "${topic.title}"?',
-            style: const TextStyle(color: Colors.white70)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () {
-              Provider.of<LessonsProvider>(context, listen: false)
-                  .removeLesson(topic.id);
-              Navigator.pop(context);
-            },
-            child: const Text('Delete', style: TextStyle(color: AppTheme.error)),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _getLessonPage(LessonTopic topic) {
     if (topic.content != null && topic.content!.isNotEmpty) {
       return DynamicLessonPage(topic: topic);

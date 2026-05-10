@@ -583,28 +583,6 @@ class _GrammarPageState extends State<GrammarPage> {
     );
   }
 
-  void _showDeleteConfirm(String id) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppTheme.surface,
-        title: const Text('Delete Topic?', style: TextStyle(color: Colors.white)),
-        content: const Text('Are you sure you want to remove this custom grammar guide?', style: TextStyle(color: Colors.white70)),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
-          TextButton(
-            onPressed: () {
-              Provider.of<LessonsProvider>(context, listen: false).removeGrammar(id);
-              Navigator.pop(context);
-              _showSuccess('Topic removed');
-            },
-            child: const Text('Delete', style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _getGrammarPage(GrammarTopic topic) {
     // If it has cloud content, use the dynamic viewer
     if (topic.content != null && topic.content!.isNotEmpty) {

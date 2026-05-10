@@ -413,30 +413,6 @@ class LessonsProvider extends ChangeNotifier {
     debugPrint('✅ Seeding complete');
   }
 
-  Future<void> removeLesson(String id) async {
-    _customLessons.removeWhere((l) => l.id == id);
-    notifyListeners();
-    await _saveLocalData();
-    final client = _supabase;
-    if (client != null) {
-      try {
-        await client.from('lessons').delete().eq('id', id);
-      } catch (_) {}
-    }
-  }
-
-  Future<void> removeGrammar(String id) async {
-    _customGrammar.removeWhere((g) => g.id == id);
-    notifyListeners();
-    await _saveLocalData();
-    final client = _supabase;
-    if (client != null) {
-      try {
-        await client.from('grammar').delete().eq('id', id);
-      } catch (_) {}
-    }
-  }
-
   Future<void> _saveLocalData() async {
     final prefs = await SharedPreferences.getInstance();
     final String encodedLessons = jsonEncode(_customLessons.map((l) => l.toJson()).toList());
