@@ -590,16 +590,22 @@ class _LessonsPageState extends State<LessonsPage> {
                 ],
               ),
               const Spacer(),
-              Text(
-                topic.title,
-                style: Theme.of(context).textTheme.headlineMedium,
+              FutureBuilder<String>(
+                future: lp.currentLanguage == AppLanguage.english
+                    ? Future.value(topic.title)
+                    : DeepSeekService.translateText(topic.title, lp.currentLanguage.name),
+                builder: (context, snapshot) {
+                  return Text(
+                    snapshot.data ?? topic.title,
+                    style: Theme.of(context).textTheme.headlineMedium,
+                  );
+                },
               ),
               const SizedBox(height: 4),
               FutureBuilder<String>(
                 future: lp.currentLanguage == AppLanguage.english
                     ? Future.value(topic.subtitle)
-                    : DeepSeekService.translateText(
-                        topic.subtitle, lp.currentLanguage.name),
+                    : DeepSeekService.translateText(topic.subtitle, lp.currentLanguage.name),
                 builder: (context, snapshot) {
                   return Text(
                     snapshot.data ?? topic.subtitle,
