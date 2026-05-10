@@ -687,21 +687,21 @@ class DeepSeekService {
     }
   }
 
-  // ── Generate lesson from a photo (Vision via Proxy) ──────────────────────
-  static Future<Map<String, dynamic>> generateLessonFromImage(
-    String base64Image,
+  // ── Generate lesson from multiple photos (Vision via Proxy) ────────────────
+  static Future<Map<String, dynamic>> generateLessonFromImages(
+    List<String> base64Images,
     String mimeType,
     String targetLanguage,
   ) async {
     try {
-      // 1. Get description of the image using Gemini
-      final description = await GeminiService.describeImage(base64Image, mimeType);
+      // 1. Get description of ALL images using Gemini
+      final description = await GeminiService.describeImages(base64Images, mimeType);
       
       if (description.startsWith('ERROR') || description.startsWith('EXCEPTION')) {
         throw Exception(description);
       }
 
-      debugPrint('📸 Image Description for Lesson: $description');
+      debugPrint('📸 Multi-Image Description for Lesson: $description');
 
       // 2. Ask DeepSeek to generate lesson based on description
       final response = await http.post(
@@ -716,10 +716,10 @@ class DeepSeekService {
             {
               'role': 'system',
               'content':
-                  'You are an expert French B1 teacher. Based on this image description: "$description", create a comprehensive French B1 lesson. '
+                  'You are an expert French B1 teacher. Based on this multi-page lesson description: "$description", create a comprehensive French B1 lesson. '
                   'The lesson explanation must be in $targetLanguage. '
                   'Return ONLY valid JSON in this exact format: '
-                  '{"id":"img_lesson_<timestamp>","title":"<French topic title>","subtitle":"<subtitle in $targetLanguage>","icon":"📷","content":{'
+                  '{"id":"img_lesson_<timestamp>","title":"<French topic title>","subtitle":"<subtitle in $targetLanguage>","icon":"📚","content":{'
                   '"introduction":"<introduction in $targetLanguage>","vocabulary":[{"french":"","translation":"","example":""}],'
                   '"grammar":{"title":"","explanation":"","examples":[""]},'
                   '"exercises":[{"question":"","answer":""}],'
@@ -727,7 +727,7 @@ class DeepSeekService {
             },
             {
               'role': 'user',
-              'content': 'Create a B1 French lesson for the scene described as: "$description".'
+              'content': 'Create a cohesive B1 French lesson combining all concepts from the described pages: "$description".'
             }
           ],
           'max_tokens': 4000,
@@ -746,27 +746,27 @@ class DeepSeekService {
         throw Exception('DeepSeek API error: ${response.statusCode}');
       }
     } catch (e) {
-      debugPrint('Error generating lesson from image proxy: $e');
+      debugPrint('Error generating lesson from multi-image proxy: $e');
       rethrow;
     }
   }
 
-  // ── Ask a question about an image (Vision via Proxy) ──────────────────────
-  static Future<String> askQuestionWithImage(
+  // ── Ask a question about multiple images (Vision via Proxy) ────────────────
+  static Future<String> askQuestionWithImages(
     String question,
-    String base64Image,
+    List<String> base64Images,
     String mimeType,
     String targetLanguage,
   ) async {
     try {
-      // 1. Get description of the image using Gemini
-      final description = await GeminiService.describeImage(base64Image, mimeType);
+      // 1. Get description of ALL images using Gemini
+      final description = await GeminiService.describeImages(base64Images, mimeType);
       
       if (description.startsWith('ERROR') || description.startsWith('EXCEPTION')) {
         throw Exception(description);
       }
 
-      debugPrint('📸 Image Description: $description');
+      debugPrint('📸 Multi-Image Description: $description');
 
       // 2. Ask DeepSeek to explain based on description
       final response = await http.post(
@@ -781,14 +781,14 @@ class DeepSeekService {
             {
               'role': 'system',
               'content':
-                  'You are an expert French B1 teacher. The user has provided an image which is described as: "$description". '
-                  'Answer the user\'s question about this scene/content. '
+                  'You are an expert French B1 teacher. The user has provided multiple images (pages) described as: "$description". '
+                  'Answer the user\'s question about this content. '
                   'The explanation MUST be in $targetLanguage. Use markdown for formatting.'
             },
             {
               'role': 'user',
               'content': question.isEmpty
-                  ? 'Please explain the French vocabulary and grammar related to this description: "$description".'
+                  ? 'Please explain the French vocabulary and grammar related to these pages: "$description".'
                   : question
             }
           ],
@@ -803,8 +803,8 @@ class DeepSeekService {
         throw Exception('DeepSeek API error: ${response.statusCode}');
       }
     } catch (e) {
-      debugPrint('Error in vision-proxy: $e');
-      return "Désolé, an error occurred: $e\n\nPlease try again with a clearer photo or check your API keys.";
+      debugPrint('Error in multi-image vision-proxy: $e');
+      return "Désolé, an error occurred: $e\n\nPlease try again with clearer photos.";
     }
   }
 }

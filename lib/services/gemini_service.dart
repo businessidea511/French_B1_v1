@@ -27,7 +27,7 @@ class GeminiService {
     return key;
   }
 
-  static Future<String> describeImage(String base64Image, String mimeType) async {
+  static Future<String> describeImages(List<String> base64Images, String mimeType) async {
     final key = _getNextKey();
     if (key.isEmpty) return "ERROR: No Gemini API keys found.";
 
@@ -44,7 +44,7 @@ class GeminiService {
       try {
         final version = attempt['ver'];
         final modelId = attempt['model'];
-        debugPrint('💎 Trying Future Gemini $modelId ($version)...');
+        debugPrint('💎 Trying Future Gemini $modelId ($version) for ${base64Images.length} images...');
 
         final url = 'https://generativelanguage.googleapis.com/$version/models/$modelId:generateContent';
         
@@ -57,16 +57,18 @@ class GeminiService {
           body: jsonEncode({
             "contents": [{
               "parts": [
-                {"text": "Describe this image in detail for a French B1 student. Transcribe any French text exactly."},
-                {"inline_data": {"mime_type": mimeType, "data": base64Image}}
+                {"text": "These are ${base64Images.length} images from a French grammar lesson. Describe them in detail for a French B1 student. Transcribe any French text exactly and maintain the order of the pages."},
+                ...base64Images.map((img) => {
+                  "inline_data": {"mime_type": mimeType, "data": img}
+                }).toList()
               ]
             }]
           }),
-        ).timeout(const Duration(seconds: 15));
+        ).timeout(const Duration(seconds: 25)); // Increased timeout for multi-image
 
         if (response.statusCode == 200) {
           final data = jsonDecode(response.body);
-          debugPrint('✅ Success with Future model: $modelId!');
+          debugPrint('✅ Success with Multi-Image on: $modelId!');
           return data['candidates'][0]['content']['parts'][0]['text'] as String;
         }
         debugPrint('❌ $modelId failed (${response.statusCode})');
@@ -75,6 +77,6 @@ class GeminiService {
       }
     }
 
-    return "EXCEPTION: Your 2026 Google AI Studio models returned 404/Error. Please ensure the model IDs in Vercel are correct.";
+    return "EXCEPTION: Your 2026 Google AI Studio models returned 404/Error for multi-image.";
   }
 }

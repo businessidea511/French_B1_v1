@@ -24,14 +24,21 @@ class _AskAIBoxState extends State<AskAIBox> with AutomaticKeepAliveClientMixin 
   final TextEditingController _controller = TextEditingController();
   bool _isLoading = false;
   String? _response;
-  XFile? _selectedImage;
-  String? _base64Image;
+  final List<XFile> _selectedImages = [];
+  final List<String> _base64Images = [];
   String? _mimeType;
 
   @override
   bool get wantKeepAlive => true;
 
   Future<void> _pickImage() async {
+    if (_selectedImages.length >= 10) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Maximum 10 images allowed per lesson.')),
+      );
+      return;
+    }
+
     final picker = ImagePicker();
     showModalBottomSheet(
       context: context,
@@ -49,8 +56,8 @@ class _AskAIBoxState extends State<AskAIBox> with AutomaticKeepAliveClientMixin 
               Navigator.pop(context);
               final image = await picker.pickImage(
                 source: ImageSource.camera, 
-                imageQuality: 40, // Reduced quality to save memory
-                maxWidth: 800,    // Limited size to prevent crash
+                imageQuality: 40,
+                maxWidth: 800,
                 maxHeight: 800,
               );
               if (image != null) _processImage(image);
@@ -61,13 +68,19 @@ class _AskAIBoxState extends State<AskAIBox> with AutomaticKeepAliveClientMixin 
             title: const Text('Choose from Gallery', style: TextStyle(color: Colors.white)),
             onTap: () async {
               Navigator.pop(context);
-              final image = await picker.pickImage(
-                source: ImageSource.gallery, 
+              // For gallery, we can pick multiple at once
+              final images = await picker.pickMultiImage(
                 imageQuality: 40,
                 maxWidth: 800,
                 maxHeight: 800,
               );
-              if (image != null) _processImage(image);
+              if (images.isNotEmpty) {
+                for (var img in images) {
+                  if (_selectedImages.length < 10) {
+                    await _processImage(img);
+                  }
+                }
+              }
             },
           ),
         ],
@@ -78,14 +91,14 @@ class _AskAIBoxState extends State<AskAIBox> with AutomaticKeepAliveClientMixin 
   Future<void> _processImage(XFile image) async {
     final bytes = await image.readAsBytes();
     setState(() {
-      _selectedImage = image;
-      _base64Image = base64Encode(bytes);
+      _selectedImages.add(image);
+      _base64Images.add(base64Encode(bytes));
       _mimeType = image.name.toLowerCase().endsWith('.png') ? 'image/png' : 'image/jpeg';
     });
   }
 
   Future<void> _askQuestion() async {
-    if (_controller.text.trim().isEmpty && _selectedImage == null) return;
+    if (_controller.text.trim().isEmpty && _selectedImages.isEmpty) return;
 
     setState(() {
       _isLoading = true;
@@ -93,14 +106,14 @@ class _AskAIBoxState extends State<AskAIBox> with AutomaticKeepAliveClientMixin 
     });
 
     final lp = Provider.of<LanguageProvider>(context, listen: false);
-    final targetLang = lp.currentLanguage.englishName; // Use the English name like 'Arabic' or 'Ukrainian'
+    final targetLang = lp.currentLanguage.englishName;
 
     try {
       String answer;
-      if (_base64Image != null) {
-        answer = await DeepSeekService.askQuestionWithImage(
+      if (_base64Images.isNotEmpty) {
+        answer = await DeepSeekService.askQuestionWithImages(
           _controller.text.trim(),
-          _base64Image!,
+          _base64Images,
           _mimeType!,
           targetLang,
         );
@@ -115,12 +128,11 @@ class _AskAIBoxState extends State<AskAIBox> with AutomaticKeepAliveClientMixin 
       setState(() {
         _response = answer;
         _isLoading = false;
-        _selectedImage = null; // Clear image after success
-        _base64Image = null;
+        _selectedImages.clear();
+        _base64Images.clear();
         _controller.clear();
       });
       
-      // Auto-scroll to show the response
       Future.delayed(const Duration(milliseconds: 300), () {
         if (mounted) {
           final primaryController = PrimaryScrollController.maybeOf(context);
@@ -328,45 +340,56 @@ class _AskAIBoxState extends State<AskAIBox> with AutomaticKeepAliveClientMixin 
                   const SizedBox(height: 20),
                 ],
                 
-                // Image Preview
-                if (_selectedImage != null)
+                // Multiple Images Preview
+                if (_selectedImages.isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.only(bottom: 15),
-                    child: Stack(
-                      children: [
-                        Container(
-                          height: 120,
-                          width: 120,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(15),
-                            border: Border.all(color: AppTheme.primary, width: 2),
-                            image: DecorationImage(
-                              image: kIsWeb 
-                                ? NetworkImage(_selectedImage!.path) as ImageProvider
-                                : FileImage(File(_selectedImage!.path)),
-                              fit: BoxFit.cover,
-                            ),
-                          ),
-                        ),
-                        Positioned(
-                          top: 5,
-                          right: 5,
-                          child: GestureDetector(
-                            onTap: () => setState(() {
-                              _selectedImage = null;
-                              _base64Image = null;
-                            }),
-                            child: Container(
-                              padding: const EdgeInsets.all(4),
-                              decoration: const BoxDecoration(
-                                color: Colors.black54,
-                                shape: BoxShape.circle,
+                    child: SizedBox(
+                      height: 100,
+                      child: ListView.separated(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: _selectedImages.length,
+                        separatorBuilder: (context, index) => const SizedBox(width: 10),
+                        itemBuilder: (context, index) {
+                          final img = _selectedImages[index];
+                          return Stack(
+                            children: [
+                              Container(
+                                height: 100,
+                                width: 100,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(15),
+                                  border: Border.all(color: AppTheme.primary, width: 2),
+                                  image: DecorationImage(
+                                    image: kIsWeb 
+                                      ? NetworkImage(img.path) as ImageProvider
+                                      : FileImage(File(img.path)),
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
                               ),
-                              child: const Icon(Icons.close, color: Colors.white, size: 16),
-                            ),
-                          ),
-                        ),
-                      ],
+                              Positioned(
+                                top: 5,
+                                right: 5,
+                                child: GestureDetector(
+                                  onTap: () => setState(() {
+                                    _selectedImages.removeAt(index);
+                                    _base64Images.removeAt(index);
+                                  }),
+                                  child: Container(
+                                    padding: const EdgeInsets.all(4),
+                                    decoration: const BoxDecoration(
+                                      color: Colors.black54,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: const Icon(Icons.close, color: Colors.white, size: 16),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                      ),
                     ),
                   ),
 
@@ -374,8 +397,8 @@ class _AskAIBoxState extends State<AskAIBox> with AutomaticKeepAliveClientMixin 
                   children: [
                     IconButton(
                       icon: Icon(
-                        _selectedImage != null ? Icons.add_a_photo : Icons.camera_alt_outlined,
-                        color: _selectedImage != null ? AppTheme.success : AppTheme.textSecondary,
+                        _selectedImages.isNotEmpty ? Icons.add_a_photo : Icons.camera_alt_outlined,
+                        color: _selectedImages.isNotEmpty ? AppTheme.success : AppTheme.textSecondary,
                       ),
                       onPressed: _isLoading ? null : _pickImage,
                     ),
