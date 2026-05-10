@@ -182,6 +182,7 @@ class DynamicLessonPage extends StatelessWidget {
         'per your instructions', 'sorry', 'cannot translate', 'assist with this',
         'intended to provide', 'appears you may', 'already in arabic',
         'preserve', 'i have kept', 'requested content', 'given text',
+        'instruction was to', 'please provide a french', 'into arabic',
         'تم الاحتفاظ', 'وفقًا للتعليمات', 'ملاحظة:', 'محتوى الدرس',
         'عذراً', 'لا يمكنني', 'بالفعل باللغة العربية', 'موجود بالفعل',
         'تمت الترجمة', 'أنا آسف', 'يبدو أن', 'يرجى تقديم'
