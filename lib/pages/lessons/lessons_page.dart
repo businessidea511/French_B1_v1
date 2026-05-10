@@ -225,7 +225,7 @@ class _LessonsPageState extends State<LessonsPage> {
                 color: AppTheme.secondary,
                 onTap: () {
                   Navigator.pop(context);
-                  _pickAndGenerateFromImage(ImageSource.camera);
+                  _pickAndGenerateFromImages(ImageSource.camera);
                 },
               ),
             if (!kIsWeb) const SizedBox(height: 12),
@@ -236,7 +236,7 @@ class _LessonsPageState extends State<LessonsPage> {
               color: AppTheme.accent,
               onTap: () {
                 Navigator.pop(context);
-                _pickAndGenerateFromImage(ImageSource.gallery);
+                _pickAndGenerateFromImages(ImageSource.gallery);
               },
             ),
           ],
@@ -245,39 +245,57 @@ class _LessonsPageState extends State<LessonsPage> {
     );
   }
 
-  Future<void> _pickAndGenerateFromImage(ImageSource source) async {
+  Future<void> _pickAndGenerateFromImages(ImageSource source) async {
     final picker = ImagePicker();
-    final XFile? image = await picker.pickImage(
-      source: source,
-      imageQuality: 85,
-      maxWidth: 1920,
-    );
+    List<XFile> selectedFiles = [];
 
-    if (image == null) return;
+    if (source == ImageSource.gallery) {
+      selectedFiles = await picker.pickMultiImage(
+        imageQuality: 40,
+        maxWidth: 800,
+        maxHeight: 800,
+      );
+    } else {
+      final XFile? image = await picker.pickImage(
+        source: source,
+        imageQuality: 40,
+        maxWidth: 800,
+        maxHeight: 800,
+      );
+      if (image != null) selectedFiles = [image];
+    }
+
+    if (selectedFiles.isEmpty) return;
+    if (selectedFiles.length > 10) {
+      selectedFiles = selectedFiles.sublist(0, 10);
+      _showError('Only the first 10 images will be used.');
+    }
 
     setState(() => _isGenerating = true);
 
     try {
-      // Convert image to base64
-      final bytes = await image.readAsBytes();
-      final base64Image = base64Encode(bytes);
-      final mimeType = image.name.toLowerCase().endsWith('.png')
-          ? 'image/png'
-          : 'image/jpeg';
+      final List<String> base64Images = [];
+      String? mimeType;
+
+      for (var file in selectedFiles) {
+        final bytes = await file.readAsBytes();
+        base64Images.add(base64Encode(bytes));
+        mimeType ??= file.name.toLowerCase().endsWith('.png') ? 'image/png' : 'image/jpeg';
+      }
 
       final lp = Provider.of<LanguageProvider>(context, listen: false);
       final lessonsProvider = Provider.of<LessonsProvider>(context, listen: false);
 
-      final lessonData = await DeepSeekService.generateLessonFromImage(
-        base64Image,
-        mimeType,
+      final lessonData = await DeepSeekService.generateLessonFromImages(
+        base64Images,
+        mimeType ?? 'image/jpeg',
         lp.currentLanguage.englishName,
       );
 
       await lessonsProvider.addLesson(lessonData);
-      _showSuccess('Lesson generated from photo successfully! 📸');
+      _showSuccess('Lesson generated from ${selectedFiles.length} photo(s) successfully! 📸');
     } catch (e) {
-      _showError('Failed to analyze image: $e');
+      _showError('Failed to analyze images: $e');
     } finally {
       setState(() => _isGenerating = false);
     }
