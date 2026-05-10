@@ -31,10 +31,17 @@ class DynamicLessonPage extends StatelessWidget {
       const Color(0xFFEC4899),
     ];
 
-    for (int i = 0; i < sections.length; i++) {
-      final section = sections[i];
-      final String title = section['title'] ?? 'Section ${i + 1}';
-      final String content = section['content'] ?? '';
+    // Filter out preamble sections
+    final validSections = sections.where((s) {
+      final t = (s['title'] ?? '').toString().toLowerCase();
+      return !t.contains('here is') && !t.contains('following your') &&
+             !t.contains('translation of') && !t.contains('محتوى الدرس:');
+    }).toList();
+
+    for (int i = 0; i < validSections.length; i++) {
+      final section = validSections[i];
+      final String title = _cleanText(section['title'] ?? 'Section ${i + 1}');
+      final String content = _cleanText(section['content'] ?? '');
       final Color sectionColor = sectionColors[i % sectionColors.length];
       final String emoji = _emojiForSection(title);
 
@@ -99,6 +106,23 @@ class DynamicLessonPage extends StatelessWidget {
     }
 
     return widgets;
+  }
+
+  /// Strips markdown symbols and preamble phrases from AI-generated text
+  String _cleanText(String text) {
+    return text
+        // Remove markdown bold/italic
+        .replaceAll('**', '')
+        .replaceAll('* ', '')
+        // Remove heading markers
+        .replaceAll(RegExp(r'^#{1,6}\s*', multiLine: true), '')
+        // Remove preamble lines
+        .replaceAll(RegExp(r'Here is the translation.*?\n', caseSensitive: false), '')
+        .replaceAll(RegExp(r'Following your instructions.*?\n', caseSensitive: false), '')
+        .replaceAll(RegExp(r'محتوى الدرس:.*?\n'), '')
+        // Clean up extra blank lines
+        .replaceAll(RegExp(r'\n{3,}'), '\n\n')
+        .trim();
   }
 
   bool _isExample(String line) {

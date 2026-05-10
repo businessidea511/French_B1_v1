@@ -164,6 +164,7 @@ class _LessonsPageState extends State<LessonsPage> {
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                textDirection: lp.currentLanguage.isRTL ? TextDirection.rtl : TextDirection.ltr,
                 children: [
                   Text(title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                   Text(subtitle, style: TextStyle(color: Colors.white.withValues(alpha: 0.6), fontSize: 12)),

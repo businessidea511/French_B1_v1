@@ -554,13 +554,16 @@ class DeepSeekService {
               'role': 'system',
               'content':
                   'You are a French B1 teacher. Generate a comprehensive lesson in JSON format. '
-                      'The lesson must be "for dummies" (simple, clear, engaging). '
-                      'CRITICAL RULE: ALL explanations, descriptions, and section content MUST be written in $targetLanguage. '
-                      'French examples and vocabulary MUST stay in French but ALWAYS include translations in $targetLanguage. '
-                      'Do NOT use English if $targetLanguage is different from English. '
+                      'The lesson must be simple, clear, and engaging (for beginners). '
+                      'CRITICAL RULES: '
+                      '1. ALL content MUST be in $targetLanguage (no English unless $targetLanguage is English). '
+                      '2. French vocabulary/examples stay in French but always with $targetLanguage translation. '
+                      '3. NEVER use markdown symbols like ** or * or # in ANY field. Use plain text only. '
+                      '4. NEVER add preambles like "Here is the translation" or "Following your instructions". '
+                      '5. Start content directly without any introduction sentence. '
                       'Return a JSON object with: '
-                      '"title" (String), "subtitle" (String), "icon" (String emoji), '
-                      '"sections" (Array of objects with "title" (in $targetLanguage) and "content" (Markdown string in $targetLanguage)).'
+                      '"title" (String in $targetLanguage or French), "subtitle" (String in $targetLanguage), "icon" (single emoji), '
+                      '"sections" (Array of objects: {"title": String in $targetLanguage, "content": plain text string in $targetLanguage}).'
             },
             {
               'role': 'user',
@@ -604,12 +607,16 @@ class DeepSeekService {
               'role': 'system',
               'content':
                   'You are a French Grammar expert. Generate a comprehensive B1 grammar guide in JSON format. '
-                      'The guide must be "for dummies" (simple, clear, logical). '
-                      'CRITICAL RULE: ALL explanations, descriptions, and section content MUST be written in $targetLanguage. '
-                      'French examples, conjugations, and grammar rules MUST stay in French but ALWAYS include translations in $targetLanguage. '
+                      'The guide must be simple, clear, and logical (for beginners). '
+                      'CRITICAL RULES: '
+                      '1. ALL content MUST be in $targetLanguage. '
+                      '2. French grammar examples stay in French but always with $targetLanguage translation. '
+                      '3. NEVER use markdown symbols like ** or * or # in ANY field. Use plain text only. '
+                      '4. NEVER add preambles like "Here is the translation" or "Following your instructions". '
+                      '5. Start content directly without any introduction sentence. '
                       'Return a JSON object with: '
-                      '"title" (String - e.g. "Le Subjonctif"), "subtitle" (String - e.g. "Wishes and Doubts"), "icon" (String emoji), '
-                      '"sections" (Array of objects with "title" (in $targetLanguage) and "content" (Markdown string in $targetLanguage)).'
+                      '"title" (String - the grammar topic in French e.g. "Le Subjonctif"), "subtitle" (String in $targetLanguage), "icon" (single emoji), '
+                      '"sections" (Array of objects: {"title": String in $targetLanguage, "content": plain text string in $targetLanguage}).'
             },
             {
               'role': 'user',
