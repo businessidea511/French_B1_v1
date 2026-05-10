@@ -129,7 +129,7 @@ class _ExercisesPageState extends State<ExercisesPage> {
         Card(
           margin: const EdgeInsets.only(bottom: 24),
           elevation: 4,
-          shadowColor: AppTheme.primary.withOpacity(0.5),
+          shadowColor: AppTheme.primary.withValues(alpha: 0.1),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(24),
             side: const BorderSide(color: AppTheme.primary, width: 2),
@@ -139,8 +139,8 @@ class _ExercisesPageState extends State<ExercisesPage> {
               borderRadius: BorderRadius.circular(24),
               gradient: LinearGradient(
                 colors: [
-                  AppTheme.primary.withOpacity(0.1),
-                  AppTheme.accent.withOpacity(0.1),
+                  AppTheme.primary.withValues(alpha: 0.1),
+                  AppTheme.accent.withValues(alpha: 0.1),
                 ],
               ),
             ),
@@ -190,7 +190,7 @@ class _ExercisesPageState extends State<ExercisesPage> {
         leading: Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: AppTheme.primary.withOpacity(0.1),
+            color: AppTheme.primary.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Text(icon, style: const TextStyle(fontSize: 24)),
@@ -333,7 +333,7 @@ class _ExercisesPageState extends State<ExercisesPage> {
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: AppTheme.primary.withOpacity(0.1),
+                color: AppTheme.primary.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: const Text('🎯', style: TextStyle(fontSize: 64)),
@@ -353,8 +353,8 @@ class _ExercisesPageState extends State<ExercisesPage> {
               padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
               decoration: BoxDecoration(
                 color: percentage >= 70
-                    ? AppTheme.success.withOpacity(0.1)
-                    : AppTheme.warning.withOpacity(0.1),
+                    ? AppTheme.success.withValues(alpha: 0.1)
+                    : AppTheme.warning.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(100),
               ),
               child: Text(

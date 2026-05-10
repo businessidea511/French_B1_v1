@@ -84,7 +84,7 @@ class HomePage extends StatelessWidget {
               width: 300,
               height: 300,
               decoration: BoxDecoration(
-                color: AppTheme.primary.withOpacity(0.15),
+                color: AppTheme.primary.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: BackdropFilter(
@@ -116,9 +116,9 @@ class HomePage extends StatelessWidget {
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                                   decoration: BoxDecoration(
-                                    color: AppTheme.primary.withOpacity(0.1),
+                                    color: AppTheme.primary.withValues(alpha: 0.1),
                                     borderRadius: BorderRadius.circular(100),
-                                    border: Border.all(color: AppTheme.primary.withOpacity(0.2)),
+                                    border: Border.all(color: AppTheme.primary.withValues(alpha: 0.1)),
                                   ),
                                   child: const Text('🇫🇷 NIVEAU B1', 
                                     style: TextStyle(color: AppTheme.primary, fontWeight: FontWeight.bold, fontSize: 10)),
@@ -251,15 +251,15 @@ class HomePage extends StatelessWidget {
               borderRadius: BorderRadius.circular(24),
               child: Container(
                 decoration: BoxDecoration(
-                  color: AppTheme.surface.withOpacity(0.4),
+                  color: AppTheme.surface.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(24),
                   border: Border.all(
-                    color: isHovered ? color.withOpacity(0.5) : Colors.white.withOpacity(0.05),
+                    color: isHovered ? color.withValues(alpha: 0.1) : Colors.white.withValues(alpha: 0.1),
                     width: 1.5,
                   ),
                   boxShadow: [
                     if (isHovered)
-                      BoxShadow(color: color.withOpacity(0.2), blurRadius: 20, offset: const Offset(0, 10)),
+                      BoxShadow(color: color.withValues(alpha: 0.1), blurRadius: 20, offset: const Offset(0, 10)),
                   ],
                 ),
                 child: ClipRRect(
@@ -273,7 +273,7 @@ class HomePage extends StatelessWidget {
                           width: 80,
                           height: 80,
                           decoration: BoxDecoration(
-                            color: color.withOpacity(0.1),
+                            color: color.withValues(alpha: 0.1),
                             shape: BoxShape.circle,
                           ),
                         ),
@@ -286,7 +286,7 @@ class HomePage extends StatelessWidget {
                             Container(
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
-                                color: color.withOpacity(0.1),
+                                color: color.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(16),
                               ),
                               child: Text(icon, style: const TextStyle(fontSize: 28)),

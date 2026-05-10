@@ -180,7 +180,7 @@ class _AIBookPageState extends State<AIBookPage> {
               const SizedBox(height: 10),
               Text(
                 'Building an immersive story with your topics...',
-                style: TextStyle(color: Colors.white.withValues(alpha: )),
+                style: TextStyle(color: Colors.white.withValues(alpha: 0.1)),
               ),
             ],
           ),
@@ -238,7 +238,7 @@ class _AIBookPageState extends State<AIBookPage> {
                       }
                     });
                   },
-                  selectedColor: AppTheme.primary.withValues(alpha: ),
+                  selectedColor: AppTheme.primary.withValues(alpha: 0.1),
                   checkmarkColor: AppTheme.primary,
                 );
               }).toList(),
@@ -263,7 +263,7 @@ class _AIBookPageState extends State<AIBookPage> {
                       }
                     });
                   },
-                  selectedColor: AppTheme.secondary.withValues(alpha: ),
+                  selectedColor: AppTheme.secondary.withValues(alpha: 0.1),
                   checkmarkColor: AppTheme.secondary,
                 );
               }).toList(),
@@ -326,8 +326,8 @@ class _AIBookPageState extends State<AIBookPage> {
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
                   color: _ttsEngine == 'neural'
-                      ? AppTheme.primary.withValues(alpha: )
-                      : Colors.orange.withValues(alpha: ),
+                      ? AppTheme.primary.withValues(alpha: 0.1)
+                      : Colors.orange.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(10),
                   border: Border.all(
                     color: _ttsEngine == 'neural' ? AppTheme.primary : Colors.orange,
@@ -380,9 +380,9 @@ class _AIBookPageState extends State<AIBookPage> {
                   padding: const EdgeInsets.all(24),
                   width: double.infinity,
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: ),
+                    color: Colors.white.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(30),
-                    border: Border.all(color: Colors.white.withValues(alpha: )),
+                    border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
                   ),
                   child: MarkdownBody(
                     data: rawText,
@@ -417,9 +417,9 @@ class _AIBookPageState extends State<AIBookPage> {
                           margin: const EdgeInsets.only(bottom: 12),
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            color: AppTheme.primary.withValues(alpha: ),
+                            color: AppTheme.primary.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(15),
-                            border: Border.all(color: AppTheme.primary.withValues(alpha: )),
+                            border: Border.all(color: AppTheme.primary.withValues(alpha: 0.1)),
                           ),
                           child: Text(
                             anno,
@@ -434,9 +434,9 @@ class _AIBookPageState extends State<AIBookPage> {
                         margin: const EdgeInsets.only(bottom: 12),
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: AppTheme.primary.withValues(alpha: ),
+                          color: AppTheme.primary.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(15),
-                          border: Border.all(color: AppTheme.primary.withValues(alpha: )),
+                          border: Border.all(color: AppTheme.primary.withValues(alpha: 0.1)),
                         ),
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -464,7 +464,7 @@ class _AIBookPageState extends State<AIBookPage> {
                                   const SizedBox(height: 4),
                                   Text(
                                     annotation['explanation']?.toString() ?? '',
-                                    style: TextStyle(color: Colors.white.withValues(alpha: ), fontSize: 14),
+                                    style: TextStyle(color: Colors.white.withValues(alpha: 0.1), fontSize: 14),
                                   ),
                                 ],
                               ),
@@ -485,7 +485,7 @@ class _AIBookPageState extends State<AIBookPage> {
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
           color: AppTheme.surface,
-          border: Border(top: BorderSide(color: Colors.white.withValues(alpha: ))),
+          border: Border(top: BorderSide(color: Colors.white.withValues(alpha: 0.1))),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,

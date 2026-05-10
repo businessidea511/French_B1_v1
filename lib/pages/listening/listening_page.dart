@@ -459,7 +459,7 @@ class _ListeningPageState extends State<ListeningPage> {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
                   side: BorderSide(
-                    color: Colors.white.withOpacity(0.1),
+                    color: Colors.white.withValues(alpha: 0.1),
                     width: 1,
                   ),
                 ),
@@ -483,7 +483,7 @@ class _ListeningPageState extends State<ListeningPage> {
                             iconEnabledColor: Colors.white,
                             underline: Container(
                               height: 1,
-                              color: Colors.white.withOpacity(0.3),
+                              color: Colors.white.withValues(alpha: 0.1),
                             ),
                             items: [0.5, 0.75, 0.9, 1.0, 1.25, 1.5]
                                 .map((r) => DropdownMenuItem(
@@ -551,7 +551,7 @@ class _ListeningPageState extends State<ListeningPage> {
                               inactiveTrackColor: Colors.white24,
                               thumbColor: Colors.white,
                               overlayColor:
-                                  AppTheme.primary.withOpacity(0.2),
+                                  AppTheme.primary.withValues(alpha: 0.1),
                               trackHeight: 4.0,
                               thumbShape: const RoundSliderThumbShape(
                                   enabledThumbRadius: 8.0),
@@ -646,7 +646,7 @@ class _ListeningPageState extends State<ListeningPage> {
                             child: Container(
                               decoration: BoxDecoration(
                                 color: isPlaying
-                                    ? AppTheme.accent.withOpacity(0.2)
+                                    ? AppTheme.accent.withValues(alpha: 0.1)
                                     : Colors.transparent,
                                 borderRadius: BorderRadius.circular(4),
                               ),
@@ -710,10 +710,10 @@ class _ListeningPageState extends State<ListeningPage> {
                           Color? tileColor;
                           if (_checked) {
                             if (isThisOptionCorrect) {
-                              tileColor = Colors.green.withOpacity(0.1);
+                              tileColor = Colors.green.withValues(alpha: 0.1);
                             }
                             if (isThisOptionSelected && !isThisOptionCorrect) {
-                              tileColor = Colors.red.withOpacity(0.1);
+                              tileColor = Colors.red.withValues(alpha: 0.1);
                             }
                           }
 
