@@ -123,12 +123,82 @@ class LessonsProvider extends ChangeNotifier {
     }
   }
 
+  Future<void> addGrammar(Map<String, dynamic> grammarData) async {
+    final String id = 'custom_grammar_${DateTime.now().millisecondsSinceEpoch}';
+    final newGrammar = GrammarTopic(
+      id: id,
+      title: grammarData['title'],
+      subtitle: grammarData['subtitle'],
+      icon: grammarData['icon'],
+      description: (grammarData['sections'] ?? grammarData['content'] ?? []).map((s) => s['title']).join(', '),
+      content: grammarData['sections'] ?? grammarData['content'],
+    );
+
+    _customGrammar.add(newGrammar);
+    notifyListeners();
+    await _saveLocalData();
+
+    // Push to Cloud
+    try {
+      await _supabase.from('grammar').upsert({
+        'id': id,
+        'title': newGrammar.title,
+        'subtitle': newGrammar.subtitle,
+        'icon': newGrammar.icon,
+        'description': newGrammar.description,
+        'content': newGrammar.content,
+      });
+    } catch (e) {
+      debugPrint('Cloud grammar insert error: $e');
+    }
+  }
+
+  Future<void> updateGrammar(String id, Map<String, dynamic> grammarData) async {
+    final index = _customGrammar.indexWhere((g) => g.id == id);
+    if (index != -1) {
+      final updated = GrammarTopic(
+        id: id,
+        title: grammarData['title'],
+        subtitle: grammarData['subtitle'],
+        icon: grammarData['icon'],
+        description: (grammarData['content'] ?? grammarData['sections'] as List).map((s) => s['title']).join(', '),
+        content: grammarData['content'] ?? grammarData['sections'],
+      );
+      _customGrammar[index] = updated;
+      notifyListeners();
+      await _saveLocalData();
+
+      // Update Cloud
+      try {
+        await _supabase.from('grammar').upsert({
+          'id': id,
+          'title': updated.title,
+          'subtitle': updated.subtitle,
+          'icon': updated.icon,
+          'description': updated.description,
+          'content': updated.content,
+        });
+      } catch (e) {
+        debugPrint('Cloud grammar update error: $e');
+      }
+    }
+  }
+
   Future<void> removeLesson(String id) async {
     _customLessons.removeWhere((l) => l.id == id);
     notifyListeners();
     await _saveLocalData();
     try {
       await _supabase.from('lessons').delete().eq('id', id);
+    } catch (_) {}
+  }
+
+  Future<void> removeGrammar(String id) async {
+    _customGrammar.removeWhere((g) => g.id == id);
+    notifyListeners();
+    await _saveLocalData();
+    try {
+      await _supabase.from('grammar').delete().eq('id', id);
     } catch (_) {}
   }
 
