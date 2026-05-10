@@ -164,7 +164,6 @@ class _LessonsPageState extends State<LessonsPage> {
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                textDirection: lp.currentLanguage.isRTL ? TextDirection.rtl : TextDirection.ltr,
                 children: [
                   Text(title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                   Text(subtitle, style: TextStyle(color: Colors.white.withValues(alpha: 0.6), fontSize: 12)),
@@ -757,15 +756,20 @@ class _LessonsPageState extends State<LessonsPage> {
                   ],
                 ),
                 const Spacer(),
-                // Show title directly — only translate if NOT English or Arabic
-                // (Arabic titles from AI-generated lessons are already in Arabic)
+                // Auto-detect RTL for Arabic titles
                 Builder(builder: (context) {
+                  // Check if title contains Arabic characters
+                  final isArabic = RegExp(r'[\u0600-\u06FF]').hasMatch(topic.title);
+                  final textDir = isArabic ? TextDirection.rtl : TextDirection.ltr;
+
                   final needsTranslation = lp.currentLanguage != AppLanguage.english &&
                       lp.currentLanguage != AppLanguage.arabic;
                   if (!needsTranslation) {
                     return Text(
                       topic.title,
                       style: Theme.of(context).textTheme.headlineMedium,
+                      textDirection: textDir,
+                      textAlign: isArabic ? TextAlign.right : TextAlign.left,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     );
@@ -776,6 +780,8 @@ class _LessonsPageState extends State<LessonsPage> {
                       return Text(
                         snapshot.data ?? topic.title,
                         style: Theme.of(context).textTheme.headlineMedium,
+                        textDirection: textDir,
+                        textAlign: isArabic ? TextAlign.right : TextAlign.left,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       );
