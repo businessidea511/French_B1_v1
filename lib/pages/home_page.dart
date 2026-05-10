@@ -156,15 +156,15 @@ class HomePage extends StatelessWidget {
                     _buildFeatureCard(
                       context,
                       title: lp.translate('grammar'),
-                      subtitle: 'Master the rules',
+                      subtitle: lp.translate('master_rules'),
                       icon: '📚',
                       color: AppTheme.primary,
                       onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const GrammarPage())),
                     ),
                     _buildFeatureCard(
                       context,
-                      title: 'AI Story Book',
-                      subtitle: 'Interactive tales',
+                      title: lp.translate('ai_book'),
+                      subtitle: lp.translate('ai_book_desc'),
                       icon: '✨',
                       color: Colors.amber,
                       onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AIBookPage())),
@@ -172,7 +172,7 @@ class HomePage extends StatelessWidget {
                     _buildFeatureCard(
                       context,
                       title: lp.translate('exercises'),
-                      subtitle: 'Daily practice',
+                      subtitle: lp.translate('daily_practice'),
                       icon: '✍️',
                       color: AppTheme.secondary,
                       onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ExercisesPage())),
@@ -180,7 +180,7 @@ class HomePage extends StatelessWidget {
                     _buildFeatureCard(
                       context,
                       title: lp.translate('lessons'),
-                      subtitle: 'Culture & Vocab',
+                      subtitle: lp.translate('culture_vocab'),
                       icon: '📖',
                       color: Colors.purple,
                       onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const LessonsPage())),
@@ -188,7 +188,7 @@ class HomePage extends StatelessWidget {
                     _buildFeatureCard(
                       context,
                       title: lp.translate('flashcards'),
-                      subtitle: 'Memorize smart',
+                      subtitle: lp.translate('memorize_smart'),
                       icon: '🎴',
                       color: AppTheme.success,
                       onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const FlashcardsPage())),
@@ -196,7 +196,7 @@ class HomePage extends StatelessWidget {
                     _buildFeatureCard(
                       context,
                       title: lp.translate('verbs'),
-                      subtitle: 'Conjugations',
+                      subtitle: lp.translate('conjugations'),
                       icon: '🔄',
                       color: AppTheme.warning,
                       onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const VerbsPage())),
@@ -204,7 +204,7 @@ class HomePage extends StatelessWidget {
                     _buildFeatureCard(
                       context,
                       title: lp.translate('daily_phrases'),
-                      subtitle: 'Common talk',
+                      subtitle: lp.translate('common_talk'),
                       icon: '🗣️',
                       color: Colors.indigo,
                       onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const DailyPhrasesPage())),
@@ -212,7 +212,7 @@ class HomePage extends StatelessWidget {
                     _buildFeatureCard(
                       context,
                       title: lp.translate('listening'),
-                      subtitle: 'Audio skills',
+                      subtitle: lp.translate('audio_skills'),
                       icon: '🎧',
                       color: Colors.teal,
                       onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ListeningPage())),

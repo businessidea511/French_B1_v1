@@ -131,8 +131,9 @@ class _AIBookPageState extends State<AIBookPage> {
 
   Future<void> _generateStory() async {
     if (_selectedGrammar.isEmpty && _selectedLessons.isEmpty) {
+      final lp = Provider.of<LanguageProvider>(context, listen: false);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select at least one topic!')),
+        SnackBar(content: Text(lp.translate('select_topic_error'))),
       );
       return;
     }
@@ -173,14 +174,16 @@ class _AIBookPageState extends State<AIBookPage> {
             children: [
               const SpinKitWanderingCubes(color: AppTheme.primary, size: 100),
               const SizedBox(height: 40),
-              const Text(
-                'Professeur AI is writing your novel...',
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
+              Text(
+                Provider.of<LanguageProvider>(context).translate('writing_novel'),
+                style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
+                textAlign: TextAlign.center,
               ),
               const SizedBox(height: 10),
               Text(
-                'Building an immersive story with your topics...',
-                style: TextStyle(color: Colors.white.withValues(alpha: 0.1)),
+                Provider.of<LanguageProvider>(context).translate('building_story'),
+                style: TextStyle(color: Colors.white.withValues(alpha: 0.3)),
+                textAlign: TextAlign.center,
               ),
             ],
           ),
@@ -202,25 +205,25 @@ class _AIBookPageState extends State<AIBookPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('AI Novelist'),
+        title: Text(lp.translate('ai_novelist')),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Create Your Magic Story ✨',
-              style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white),
+            Text(
+              lp.translate('create_magic_story'),
+              style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white),
             ),
             const SizedBox(height: 10),
-            const Text(
-              'Pick your favorite grammar and vocabulary topics.',
-              style: TextStyle(color: AppTheme.textTertiary, fontSize: 16),
+            Text(
+              lp.translate('pick_topics'),
+              style: const TextStyle(color: AppTheme.textTertiary, fontSize: 16),
             ),
             const SizedBox(height: 40),
             
-            _buildSectionTitle('Grammar to Use', Icons.history_edu_rounded),
+            _buildSectionTitle(lp.translate('grammar_to_use'), Icons.history_edu_rounded),
             Wrap(
               spacing: 10,
               runSpacing: 10,
@@ -245,7 +248,7 @@ class _AIBookPageState extends State<AIBookPage> {
             ),
 
             const SizedBox(height: 40),
-            _buildSectionTitle('Vocabulary Focus', Icons.auto_stories_rounded),
+            _buildSectionTitle(lp.translate('vocab_focus'), Icons.auto_stories_rounded),
             Wrap(
               spacing: 10,
               runSpacing: 10,
@@ -276,7 +279,7 @@ class _AIBookPageState extends State<AIBookPage> {
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _generateStory,
-        label: const Text('Create My Novel'),
+        label: Text(lp.translate('create_my_novel')),
         icon: const Icon(Icons.auto_awesome_rounded),
         backgroundColor: AppTheme.primary,
         extendedPadding: const EdgeInsets.symmetric(horizontal: 40, vertical: 20),
@@ -306,7 +309,7 @@ class _AIBookPageState extends State<AIBookPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(_story!['title'] ?? 'Your AI Story'),
+        title: Text(_story!['title'] ?? lp.translate('ai_novelist')),
         leading: IconButton(
           icon: const Icon(Icons.close),
           onPressed: () {
@@ -393,9 +396,9 @@ class _AIBookPageState extends State<AIBookPage> {
                 ),
                 const SizedBox(height: 40),
                 if (page['annotations'] != null) ...[
-                  const Text(
-                    '✨ Learning Points',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.primary),
+                  Text(
+                    '✨ ${lp.translate('learning_points')}',
+                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.primary),
                   ),
                   const SizedBox(height: 16),
                   ...(() {
@@ -495,7 +498,7 @@ class _AIBookPageState extends State<AIBookPage> {
                  const Icon(Icons.auto_stories, color: AppTheme.textTertiary, size: 16),
                  const SizedBox(width: 8),
                  Text(
-                    'Page ${_currentPageIndex + 1} of ${pages.length}',
+                    '${lp.translate('page')} ${_currentPageIndex + 1} ${lp.translate('of')} ${pages.length}',
                     style: const TextStyle(color: AppTheme.textTertiary, fontSize: 12),
                   ),
                ],
@@ -510,7 +513,7 @@ class _AIBookPageState extends State<AIBookPage> {
                 });
               },
               icon: const Icon(Icons.refresh_rounded),
-              label: const Text('New Story'),
+              label: Text(lp.translate('new_story')),
             ),
           ],
         ),
