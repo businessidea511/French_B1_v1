@@ -108,7 +108,7 @@ class DynamicLessonPage extends StatelessWidget {
             result.add(TipBox(
               title: title,
               content: content,
-              icon: Icons.Extension_rounded,
+              icon: Icons.extension_rounded,
               color: Colors.grey.shade700,
             ));
           }
