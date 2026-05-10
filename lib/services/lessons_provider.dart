@@ -12,7 +12,13 @@ class LessonsProvider extends ChangeNotifier {
   static const String _prefKeyLessons = 'custom_lessons';
   static const String _prefKeyGrammar = 'custom_grammar';
 
-  final _supabase = Supabase.instance.client;
+  SupabaseClient? get _supabase {
+    try {
+      return Supabase.instance.client;
+    } catch (_) {
+      return null;
+    }
+  }
 
   LessonsProvider() {
     _loadData();
@@ -40,18 +46,21 @@ class LessonsProvider extends ChangeNotifier {
     }
     
     // 2. Sync from Supabase Cloud (Background)
-    await syncFromCloud();
+    syncFromCloud(); // Don't await here to prevent blocking UI
   }
 
   Future<void> syncFromCloud() async {
     try {
       debugPrint('☁️ Syncing from Supabase Cloud...');
+      final client = _supabase;
+      if (client == null) return;
+
       // Sync Lessons
-      final List<dynamic> cloudLessons = await _supabase.from('lessons').select();
+      final List<dynamic> cloudLessons = await client.from('lessons').select();
       _customLessons = cloudLessons.map((item) => LessonTopic.fromJson(item)).toList();
       
       // Sync Grammar
-      final List<dynamic> cloudGrammar = await _supabase.from('grammar').select();
+      final List<dynamic> cloudGrammar = await client.from('grammar').select();
       _customGrammar = cloudGrammar.map((item) => GrammarTopic.fromJson(item)).toList();
 
       notifyListeners();
@@ -78,17 +87,20 @@ class LessonsProvider extends ChangeNotifier {
     await _saveLocalData();
 
     // Push to Cloud
-    try {
-      await _supabase.from('lessons').upsert({
-        'id': id,
-        'title': newLesson.title,
-        'subtitle': newLesson.subtitle,
-        'icon': newLesson.icon,
-        'description': newLesson.description,
-        'content': newLesson.content,
-      });
-    } catch (e) {
-      debugPrint('Cloud insert error: $e');
+    final client = _supabase;
+    if (client != null) {
+      try {
+        await client.from('lessons').upsert({
+          'id': id,
+          'title': newLesson.title,
+          'subtitle': newLesson.subtitle,
+          'icon': newLesson.icon,
+          'description': newLesson.description,
+          'content': newLesson.content,
+        });
+      } catch (e) {
+        debugPrint('Cloud insert error: $e');
+      }
     }
   }
 
@@ -108,17 +120,20 @@ class LessonsProvider extends ChangeNotifier {
       await _saveLocalData();
 
       // Update Cloud
-      try {
-        await _supabase.from('lessons').upsert({
-          'id': id,
-          'title': updated.title,
-          'subtitle': updated.subtitle,
-          'icon': updated.icon,
-          'description': updated.description,
-          'content': updated.content,
-        });
-      } catch (e) {
-        debugPrint('Cloud update error: $e');
+      final client = _supabase;
+      if (client != null) {
+        try {
+          await client.from('lessons').upsert({
+            'id': id,
+            'title': updated.title,
+            'subtitle': updated.subtitle,
+            'icon': updated.icon,
+            'description': updated.description,
+            'content': updated.content,
+          });
+        } catch (e) {
+          debugPrint('Cloud update error: $e');
+        }
       }
     }
   }
@@ -139,17 +154,20 @@ class LessonsProvider extends ChangeNotifier {
     await _saveLocalData();
 
     // Push to Cloud
-    try {
-      await _supabase.from('grammar').upsert({
-        'id': id,
-        'title': newGrammar.title,
-        'subtitle': newGrammar.subtitle,
-        'icon': newGrammar.icon,
-        'description': newGrammar.description,
-        'content': newGrammar.content,
-      });
-    } catch (e) {
-      debugPrint('Cloud grammar insert error: $e');
+    final client = _supabase;
+    if (client != null) {
+      try {
+        await client.from('grammar').upsert({
+          'id': id,
+          'title': newGrammar.title,
+          'subtitle': newGrammar.subtitle,
+          'icon': newGrammar.icon,
+          'description': newGrammar.description,
+          'content': newGrammar.content,
+        });
+      } catch (e) {
+        debugPrint('Cloud grammar insert error: $e');
+      }
     }
   }
 
@@ -169,17 +187,20 @@ class LessonsProvider extends ChangeNotifier {
       await _saveLocalData();
 
       // Update Cloud
-      try {
-        await _supabase.from('grammar').upsert({
-          'id': id,
-          'title': updated.title,
-          'subtitle': updated.subtitle,
-          'icon': updated.icon,
-          'description': updated.description,
-          'content': updated.content,
-        });
-      } catch (e) {
-        debugPrint('Cloud grammar update error: $e');
+      final client = _supabase;
+      if (client != null) {
+        try {
+          await client.from('grammar').upsert({
+            'id': id,
+            'title': updated.title,
+            'subtitle': updated.subtitle,
+            'icon': updated.icon,
+            'description': updated.description,
+            'content': updated.content,
+          });
+        } catch (e) {
+          debugPrint('Cloud grammar update error: $e');
+        }
       }
     }
   }
@@ -188,18 +209,24 @@ class LessonsProvider extends ChangeNotifier {
     _customLessons.removeWhere((l) => l.id == id);
     notifyListeners();
     await _saveLocalData();
-    try {
-      await _supabase.from('lessons').delete().eq('id', id);
-    } catch (_) {}
+    final client = _supabase;
+    if (client != null) {
+      try {
+        await client.from('lessons').delete().eq('id', id);
+      } catch (_) {}
+    }
   }
 
   Future<void> removeGrammar(String id) async {
     _customGrammar.removeWhere((g) => g.id == id);
     notifyListeners();
     await _saveLocalData();
-    try {
-      await _supabase.from('grammar').delete().eq('id', id);
-    } catch (_) {}
+    final client = _supabase;
+    if (client != null) {
+      try {
+        await client.from('grammar').delete().eq('id', id);
+      } catch (_) {}
+    }
   }
 
   Future<void> _saveLocalData() async {

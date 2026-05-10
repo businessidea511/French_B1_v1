@@ -47,6 +47,8 @@ void main() async {
     } catch (e) {
       debugPrint('❌ Supabase Init Error: $e');
     }
+  } else {
+    debugPrint('⚠️ Supabase URL or Anon Key is missing. Cloud sync will be disabled.');
   }
 
   runApp(
