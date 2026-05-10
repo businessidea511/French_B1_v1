@@ -9,24 +9,6 @@ import '../../services/lessons_provider.dart';
 import '../../services/deepseek_service.dart';
 import '../../services/pdf_helper.dart';
 import '../lessons/dynamic_lesson_page.dart';
-import 'lessons/passe_compose_page.dart';
-import 'lessons/present_page.dart';
-import 'lessons/imparfait_page.dart';
-import 'lessons/plus_que_parfait_page.dart';
-import 'lessons/conditionnel_page.dart';
-import 'lessons/negative_complex_page.dart';
-import 'lessons/futur_proche_page.dart';
-import 'lessons/futur_simple_page.dart';
-import 'lessons/cod_coi_page.dart';
-import 'lessons/si_seulement_page.dart';
-import 'lessons/voix_passive_page.dart';
-import 'lessons/adverbes_ment_page.dart';
-import 'lessons/subjonctif_page.dart';
-import 'lessons/comparatif_page.dart';
-import 'lessons/duration_prepositions_page.dart';
-import 'lessons/connectors_page.dart';
-
-// Import the common dynamic page (or we can use it for both)
 import '../../models/lesson_topic.dart';
 
 class GrammarPage extends StatefulWidget {
@@ -225,9 +207,11 @@ class _GrammarPageState extends State<GrammarPage> {
 
     setState(() => _isGenerating = true);
     try {
+      final text = await PdfHelper.extractText(result.files.single.path!);
+
+      if (!mounted) return;
       final lp = Provider.of<LanguageProvider>(context, listen: false);
       final lessonsProvider = Provider.of<LessonsProvider>(context, listen: false);
-      final text = await PdfHelper.extractText(result.files.single.path!);
 
       final updatedData = await DeepSeekService.updateGrammarWithPdf(
         {'title': topic.title, 'subtitle': topic.subtitle, 'icon': topic.icon, 'sections': topic.content, 'id': topic.id},
@@ -459,7 +443,5 @@ class _GrammarPageState extends State<GrammarPage> {
         ],
       ),
     );
-  }
-
   }
 }
