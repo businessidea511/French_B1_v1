@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class GeminiService {
   static List<String> get _keys {
@@ -60,7 +59,7 @@ class GeminiService {
                 {"text": "These are ${base64Images.length} images from a French grammar lesson. Describe them in detail for a French B1 student. Transcribe any French text exactly and maintain the order of the pages."},
                 ...base64Images.map((img) => {
                   "inline_data": {"mime_type": mimeType, "data": img}
-                }).toList()
+                })
               ]
             }]
           }),

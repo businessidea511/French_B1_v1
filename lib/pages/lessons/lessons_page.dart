@@ -49,7 +49,7 @@ class _LessonsPageState extends State<LessonsPage> {
                 style: const TextStyle(color: Colors.white),
                 decoration: InputDecoration(
                   hintText: 'Enter Password',
-                  hintStyle: TextStyle(color: Colors.white.withOpacity(0.3)),
+                  hintStyle: TextStyle(color: Colors.white.withValues(alpha: )),
                   prefixIcon: const Icon(Icons.lock, color: AppTheme.primary),
                 ),
               ),
@@ -147,9 +147,9 @@ class _LessonsPageState extends State<LessonsPage> {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          border: Border.all(color: iconColor.withOpacity(0.3)),
+          border: Border.all(color: iconColor.withValues(alpha: )),
           borderRadius: BorderRadius.circular(12),
-          color: iconColor.withOpacity(0.05),
+          color: iconColor.withValues(alpha: ),
         ),
         child: Row(
           children: [
@@ -160,11 +160,11 @@ class _LessonsPageState extends State<LessonsPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                  Text(subtitle, style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 12)),
+                  Text(subtitle, style: TextStyle(color: Colors.white.withValues(alpha: ), fontSize: 12)),
                 ],
               ),
             ),
-            Icon(Icons.arrow_forward_ios, color: iconColor.withOpacity(0.5), size: 14),
+            Icon(Icons.arrow_forward_ios, color: iconColor.withValues(alpha: ), size: 14),
           ],
         ),
       ),
@@ -292,12 +292,13 @@ class _LessonsPageState extends State<LessonsPage> {
         lp.currentLanguage.englishName,
       );
 
+      if (!mounted) return;
       await lessonsProvider.addLesson(lessonData);
       _showSuccess('Lesson generated from ${selectedFiles.length} photo(s) successfully! 📸');
     } catch (e) {
       _showError('Failed to analyze images: $e');
     } finally {
-      setState(() => _isGenerating = false);
+      if (mounted) setState(() => _isGenerating = false);
     }
   }
 
@@ -432,12 +433,13 @@ class _LessonsPageState extends State<LessonsPage> {
         lp.currentLanguage.englishName,
       );
 
+      if (!mounted) return;
       await lessonsProvider.updateLesson(topic.id, updatedData);
       _showSuccess('Lesson updated with new pages! 📚');
     } catch (e) {
       _showError('Failed to update lesson: $e');
     } finally {
-      setState(() => _isGenerating = false);
+      if (mounted) setState(() => _isGenerating = false);
     }
   }
 
@@ -515,7 +517,7 @@ class _LessonsPageState extends State<LessonsPage> {
           ),
           if (_isGenerating)
             Container(
-              color: Colors.black.withOpacity(0.7),
+              color: Colors.black.withValues(alpha: ),
               child: Center(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -529,7 +531,7 @@ class _LessonsPageState extends State<LessonsPage> {
                     const SizedBox(height: 10),
                     Text(
                       'This might take a few seconds',
-                      style: TextStyle(color: Colors.white.withOpacity(0.7)),
+                      style: TextStyle(color: Colors.white.withValues(alpha: )),
                     ),
                   ],
                 ),
@@ -568,7 +570,7 @@ class _LessonsPageState extends State<LessonsPage> {
                     width: 48,
                     height: 48,
                     decoration: BoxDecoration(
-                      color: AppTheme.primary.withOpacity(0.1),
+                      color: AppTheme.primary.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Center(

@@ -127,8 +127,8 @@ class _DialogueDetailPageState extends State<DialogueDetailPage> {
                           Icons.volume_up_rounded,
                           size: 20,
                           color: isAgent
-                              ? AppTheme.primary.withOpacity(0.7)
-                              : Colors.white.withOpacity(0.9),
+                              ? AppTheme.primary.withValues(alpha: )
+                              : Colors.white.withValues(alpha: ),
                         ),
                       ),
                     ],
