@@ -37,12 +37,11 @@ class DynamicLessonPage extends StatelessWidget {
     }
   }
 
-  // ─── NEW FORMAT: widget-based JSON ───────────────────────────────────────
   List<Widget> _buildFromWidgetFormat(List<dynamic> widgetList) {
     final List<Widget> result = [];
 
     for (final w in widgetList) {
-      if (w is! Map) continue;
+      if (w == null || w is! Map) continue;
       final type = (w['type'] ?? '').toString();
       final rawContent = (w['content'] ?? '').toString();
 

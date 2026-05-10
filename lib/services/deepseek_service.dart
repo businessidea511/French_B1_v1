@@ -582,7 +582,17 @@ INSTRUCTIONS:
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        return jsonDecode(data['choices'][0]['message']['content']);
+        String content = data['choices'][0]['message']['content'].toString().trim();
+        
+        // Find the actual JSON object (start at { and end at last })
+        final start = content.indexOf('{');
+        final end = content.lastIndexOf('}');
+        
+        if (start != -1 && end != -1 && end > start) {
+          content = content.substring(start, end + 1);
+        }
+
+        return jsonDecode(content);
       } else {
         throw Exception('Failed to generate lesson: ${response.statusCode}');
       }
