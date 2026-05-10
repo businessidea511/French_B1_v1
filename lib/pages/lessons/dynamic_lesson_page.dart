@@ -173,10 +173,17 @@ class DynamicLessonPage extends StatelessWidget {
       if (lower.contains('translation of')) return false;
       if (lower.contains('as per your')) return false;
       if (lower.contains('per your instructions')) return false;
+      if (lower.contains('sorry')) return false;
+      if (lower.contains('cannot translate')) return false;
       if (lower.contains('تم الاحتفاظ')) return false;
       if (lower.contains('وفقًا للتعليمات')) return false;
       if (lower.contains('ملاحظة:')) return false;
       if (lower.contains('محتوى الدرس')) return false;
+      if (lower.contains('عذراً')) return false;
+      if (lower.contains('لا يمكنني')) return false;
+      if (lower.contains('بالفعل باللغة العربية')) return false;
+      if (lower.contains('موجود بالفعل')) return false;
+      if (lower.contains('تمت الترجمة')) return false;
       return true;
     }).map((line) {
       // Remove markdown from each line
