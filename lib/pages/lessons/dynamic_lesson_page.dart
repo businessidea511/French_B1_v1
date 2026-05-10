@@ -37,11 +37,12 @@ class DynamicLessonPage extends StatelessWidget {
     }
   }
 
+  // ─── NEW FORMAT: widget-based JSON ───────────────────────────────────────
   List<Widget> _buildFromWidgetFormat(List<dynamic> widgetList) {
     final List<Widget> result = [];
 
     for (final w in widgetList) {
-      if (w == null || w is! Map) continue;
+      if (w is! Map) continue;
       final type = (w['type'] ?? '').toString();
       final rawContent = (w['content'] ?? '').toString();
 
@@ -98,18 +99,11 @@ class DynamicLessonPage extends StatelessWidget {
           break;
 
         default:
-          // SMART FALLBACK: If AI creates a new type (like 'conjugation'), 
-          // don't dump raw text. Wrap it nicely.
-          final title = (w['title'] ?? w['type'] ?? 'Info').toString().toUpperCase();
-          final content = _clean(rawContent.isNotEmpty ? rawContent : w.toString());
-          
-          if (content.isNotEmpty) {
-            result.add(TipBox(
-              title: title,
-              content: content,
-              icon: Icons.extension_rounded,
-              color: Colors.grey.shade700,
-            ));
+          // Fallback: render as plain text
+          final text = _clean(rawContent);
+          if (text.isNotEmpty) {
+            result.add(Text(text,
+                style: const TextStyle(fontSize: 16, height: 1.6, color: Colors.white)));
           }
       }
 

@@ -553,20 +553,33 @@ class DeepSeekService {
             {
               'role': 'system',
               'content': '''
-ROLE: Professional French Professor for $targetLanguage Speakers in BELGIUM.
-FORMAT: JSON ONLY. START WITH '{'.
+ROLE: Professional French Professor for $targetLanguage Speakers.
+GOAL: Create a textbook-quality B1 French lesson in $targetLanguage.
+STYLE: Academic, thorough, and simplified for beginners.
 
-ALLOWED WIDGET TYPES (DO NOT USE OTHERS):
-1. {"type": "text", "content": "..."} - For long explanations.
-2. {"type": "section_title", "emoji": "...", "title": "..."} - For headings.
-3. {"type": "example", "french": "...", "translation": "..."} - For vocab/sentences.
-4. {"type": "tipbox", "title": "...", "content": "...", "color": "blue/red/green"} - For rules/notes.
+STRICT JSON SCHEMA:
+{
+  "title": "Topic in French",
+  "subtitle": "Direct Translation in $targetLanguage",
+  "icon": "emoji",
+  "widgets": [
+    {"type": "text", "content": "Detailed introduction in $targetLanguage (No English Preamble!)"},
+    {"type": "section_title", "emoji": "⚖️", "title": "Grammar & Structure ($targetLanguage)"},
+    {"type": "tipbox", "title": "Key Rule", "content": "Detailed explanation in $targetLanguage", "color": "blue"},
+    {"type": "section_title", "emoji": "📚", "title": "Vocabulary & Usage ($targetLanguage)"},
+    {"type": "example", "french": "...", "translation": "Translation in $targetLanguage"},
+    ... (provide 20 examples) ...
+    {"type": "tipbox", "title": "Cultural Note", "content": "Explanation in $targetLanguage", "color": "green"},
+    {"type": "tipbox", "title": "Common Error", "content": "Explanation in $targetLanguage", "color": "red"}
+  ]
+}
 
-INSTRUCTIONS:
-- SUBTITLE: Must be in $targetLanguage.
-- CONTENT: Deep, academic, and focused on BELGIAN French (septante, GSM, etc.).
-- NO OTHER KEYS: Do NOT use "conjugation", "verbs", or custom keys. Put everything into the 4 types above.
-- NO PREAMBLE: No English "In this lesson". Start directly in $targetLanguage.
+REQUIREMENTS:
+1. SUBTITLE: Must be in $targetLanguage. This is what shows on the lesson card.
+2. NO ENGLISH PREAMBLE: Do NOT start with "In this lesson..." or "Today we will..." in English. Start directly in $targetLanguage.
+3. LANGUAGE: Every field except "french" MUST be in $targetLanguage. 
+4. DEPTH: Match the quality of a professional textbook. 
+5. NO PREAMBLE: Start with '{'. Never apologize or talk to the user.
 '''            },
             {
               'role': 'user',
@@ -582,17 +595,7 @@ INSTRUCTIONS:
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        String content = data['choices'][0]['message']['content'].toString().trim();
-        
-        // Find the actual JSON object (start at { and end at last })
-        final start = content.indexOf('{');
-        final end = content.lastIndexOf('}');
-        
-        if (start != -1 && end != -1 && end > start) {
-          content = content.substring(start, end + 1);
-        }
-
-        return jsonDecode(content);
+        return jsonDecode(data['choices'][0]['message']['content']);
       } else {
         throw Exception('Failed to generate lesson: ${response.statusCode}');
       }
