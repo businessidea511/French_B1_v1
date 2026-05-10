@@ -77,7 +77,15 @@ class DynamicLessonPage extends StatelessWidget {
           final french = _clean(w['french'] ?? '');
           final translation = _clean(w['translation'] ?? '');
           if (french.isEmpty) break;
-          result.add(ExampleBox(french: french, english: translation));
+          
+          // Safety check: If translation is mostly English but target is Arabic, hide it
+          final bool isEnglishLeak = RegExp(r'[a-zA-Z]{5,}').hasMatch(translation) && 
+                                    !RegExp(r'[\u0600-\u06FF]').hasMatch(translation);
+
+          result.add(ExampleBox(
+            french: french, 
+            english: isEnglishLeak ? '' : translation
+          ));
           break;
 
         case 'tipbox':
@@ -167,23 +175,24 @@ class DynamicLessonPage extends StatelessWidget {
       final t = line.trim();
       if (t.isEmpty) return false;
       final lower = t.toLowerCase();
-      // Drop any line that contains AI meta-commentary
-      if (lower.contains('here is')) return false;
-      if (lower.contains('following your')) return false;
-      if (lower.contains('translation of')) return false;
-      if (lower.contains('as per your')) return false;
-      if (lower.contains('per your instructions')) return false;
-      if (lower.contains('sorry')) return false;
-      if (lower.contains('cannot translate')) return false;
-      if (lower.contains('تم الاحتفاظ')) return false;
-      if (lower.contains('وفقًا للتعليمات')) return false;
-      if (lower.contains('ملاحظة:')) return false;
-      if (lower.contains('محتوى الدرس')) return false;
-      if (lower.contains('عذراً')) return false;
-      if (lower.contains('لا يمكنني')) return false;
-      if (lower.contains('بالفعل باللغة العربية')) return false;
-      if (lower.contains('موجود بالفعل')) return false;
-      if (lower.contains('تمت الترجمة')) return false;
+      // Drop any line that contains AI meta-commentary or apologies
+      final lower = line.toLowerCase().trim();
+      if (lower.isEmpty) return false;
+      
+      // Nuclear list of AI "apologies" and "meta-talk"
+      final badPhrases = [
+        'here is', 'following your', 'translation of', 'as per your', 
+        'per your instructions', 'sorry', 'cannot translate', 'assist with this',
+        'intended to provide', 'appears you may', 'already in arabic',
+        'preserve', 'i have kept', 'requested content', 'given text',
+        'تم الاحتفاظ', 'وفقًا للتعليمات', 'ملاحظة:', 'محتوى الدرس',
+        'عذراً', 'لا يمكنني', 'بالفعل باللغة العربية', 'موجود بالفعل',
+        'تمت الترجمة', 'أنا آسف', 'يبدو أن', 'يرجى تقديم'
+      ];
+
+      for (var phrase in badPhrases) {
+        if (lower.contains(phrase)) return false;
+      }
       return true;
     }).map((line) {
       // Remove markdown from each line

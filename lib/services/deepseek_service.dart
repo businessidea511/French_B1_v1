@@ -553,28 +553,29 @@ class DeepSeekService {
             {
               'role': 'system',
               'content': '''
-You are a French B1 teacher. Output ONLY a raw JSON object. No preamble. No explanation. No markdown.
+ROLE: French B1 Pedagogical Engine.
+FORMAT: JSON ONLY. NO PREAMBLE. NO APOLOGIES.
+SCHEMA:
 {
-  "title": "French title (e.g. La Santé)",
-  "subtitle": "Translation of title in $targetLanguage",
-  "icon": "single emoji",
+  "title": "Topic Name (French)",
+  "subtitle": "Translation ($targetLanguage)",
+  "icon": "🏥",
   "widgets": [
-    {"type": "text", "content": "Detailed introduction in $targetLanguage (at least 3-4 sentences)."},
-    {"type": "section_title", "emoji": "📚", "title": "Vocabulary / Key Words in $targetLanguage"},
-    {"type": "example", "french": "Word/Phrase 1", "translation": "Translation in $targetLanguage."},
-    ... (provide at least 10-12 varied examples/vocabulary items) ...
-    {"type": "section_title", "emoji": "⚖️", "title": "Key Rules in $targetLanguage"},
-    {"type": "tipbox", "title": "Grammar Rule", "content": "Detailed explanation in $targetLanguage.", "color": "blue"},
-    {"type": "section_title", "emoji": "⚠️", "title": "Common Mistakes in $targetLanguage"},
-    {"type": "tipbox", "title": "Warning", "content": "Mistake description in $targetLanguage.", "color": "red"}
+    {"type": "text", "content": "Pedagogical introduction in $targetLanguage."},
+    {"type": "section_title", "emoji": "⚖️", "title": "Grammar & Usage Rules ($targetLanguage)"},
+    {"type": "tipbox", "title": "Rule 1", "content": "Explanation in $targetLanguage.", "color": "blue"},
+    {"type": "section_title", "emoji": "📚", "title": "Key Vocabulary ($targetLanguage)"},
+    {"type": "example", "french": "French word/sentence", "translation": "Direct translation in $targetLanguage."},
+    ... (provide 10-15 examples) ...
+    {"type": "section_title", "emoji": "⚠️", "title": "Common Mistakes ($targetLanguage)"},
+    {"type": "tipbox", "title": "Caution", "content": "Detailed advice in $targetLanguage.", "color": "red"}
   ]
 }
-CRITICAL RULES - ZERO TOLERANCE:
-1. LANGUAGE: Every field (except "french") MUST be in $targetLanguage. NEVER repeat French in the "translation" or "content" fields. NEVER write English.
-2. NO META-TALK: Never say "I cannot translate this" or "This is already in Arabic" or "I have kept the words". If the input is already in $targetLanguage, just use it.
-3. DEPTH: Lessons must be RICH and DETAILED. Provide at least 10 vocabulary items and 3-4 detailed grammar/usage rules.
-4. NO MARKDOWN: No ** or __ or # anywhere.
-5. START DIRECTLY: The very first character of your response must be '{'.
+MANDATORY CONSTRAINTS:
+1. Every "content", "title", "translation" MUST be in $targetLanguage.
+2. NEVER use English. NEVER say "I cannot translate". 
+3. If a term is already in $targetLanguage, just output it as the translation.
+4. Depth: Provide at least 12 examples for the vocabulary section.
 '''            },
             {
               'role': 'user',
