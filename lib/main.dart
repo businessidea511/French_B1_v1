@@ -1,8 +1,6 @@
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter/gestures.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'theme/app_theme.dart';
 import 'pages/home_page.dart';
 import 'services/language_provider.dart';
@@ -26,6 +24,26 @@ void main() async {
 
   if (!loaded) {
     debugPrint("Warning: Could not load .env file from any of the standard locations.");
+  }
+
+  // Initialize Supabase
+  final supabaseUrl = String.fromEnvironment('SUPABASE_URL').isNotEmpty 
+      ? String.fromEnvironment('SUPABASE_URL') 
+      : (dotenv.env['SUPABASE_URL'] ?? '');
+  final supabaseAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY').isNotEmpty 
+      ? String.fromEnvironment('SUPABASE_ANON_KEY') 
+      : (dotenv.env['SUPABASE_ANON_KEY'] ?? '');
+
+  if (supabaseUrl.isNotEmpty && supabaseAnonKey.isNotEmpty) {
+    try {
+      await Supabase.initialize(
+        url: supabaseUrl,
+        anonKey: supabaseAnonKey,
+      );
+      debugPrint('✅ Supabase Initialized successfully');
+    } catch (e) {
+      debugPrint('❌ Supabase Init Error: $e');
+    }
   }
 
   runApp(
