@@ -24,6 +24,13 @@ class LessonsPage extends StatefulWidget {
 
 class _LessonsPageState extends State<LessonsPage> {
   bool _isGenerating = false;
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
 
   void _showAddLessonDialog() {
     final TextEditingController passwordController = TextEditingController();
@@ -497,23 +504,30 @@ class _LessonsPageState extends State<LessonsPage> {
           Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 1200),
-              child: GridView.builder(
-                padding: const EdgeInsets.all(24),
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: MediaQuery.of(context).size.width > 900
-                      ? 3
-                      : MediaQuery.of(context).size.width > 600
-                          ? 2
-                          : 1,
-                  mainAxisSpacing: 20,
-                  crossAxisSpacing: 20,
-                  childAspectRatio: 1.6,
+              child: Scrollbar(
+                controller: _scrollController,
+                thumbVisibility: true,
+                trackVisibility: true,
+                interactive: true,
+                child: GridView.builder(
+                  controller: _scrollController,
+                  padding: const EdgeInsets.all(24),
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: MediaQuery.of(context).size.width > 900
+                        ? 3
+                        : MediaQuery.of(context).size.width > 600
+                            ? 2
+                            : 1,
+                    mainAxisSpacing: 20,
+                    crossAxisSpacing: 20,
+                    childAspectRatio: 1.6,
+                  ),
+                  itemCount: lessons.length,
+                  itemBuilder: (context, index) {
+                    final topic = lessons[index];
+                    return _buildTopicCard(context, topic, lp);
+                  },
                 ),
-                itemCount: lessons.length,
-                itemBuilder: (context, index) {
-                  final topic = lessons[index];
-                  return _buildTopicCard(context, topic, lp);
-                },
               ),
             ),
           ),
@@ -628,7 +642,7 @@ class _LessonsPageState extends State<LessonsPage> {
   }
 
   Widget _getLessonPage(LessonTopic topic) {
-    if (topic.content != null) {
+    if (topic.content != null && topic.content!.isNotEmpty) {
       return DynamicLessonPage(topic: topic);
     }
     
@@ -636,7 +650,10 @@ class _LessonsPageState extends State<LessonsPage> {
       case 'metiers':
         return const MetiersPage();
       default:
-        return const Scaffold(body: Center(child: Text('Lesson not found')));
+        return Scaffold(
+          appBar: AppBar(title: Text(topic.title)),
+          body: const Center(child: Text('Lesson content coming soon!')),
+        );
     }
   }
 }

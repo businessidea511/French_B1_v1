@@ -12,8 +12,21 @@ import 'listening/listening_page.dart';
 import 'lessons/lessons_page.dart';
 import 'ai_book/ai_book_page.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
 
   void _showLanguageSelector(BuildContext context) {
     showModalBottomSheet(
@@ -94,7 +107,13 @@ class HomePage extends StatelessWidget {
             ),
           ),
           
-          CustomScrollView(
+          Scrollbar(
+            controller: _scrollController,
+            thumbVisibility: true,
+            trackVisibility: true,
+            interactive: true,
+            child: CustomScrollView(
+              controller: _scrollController,
             slivers: [
               SliverAppBar(
                 expandedHeight: 240,
@@ -223,6 +242,7 @@ class HomePage extends StatelessWidget {
               
               const SliverToBoxAdapter(child: SizedBox(height: 100)),
             ],
+            ),
           ),
         ],
       ),

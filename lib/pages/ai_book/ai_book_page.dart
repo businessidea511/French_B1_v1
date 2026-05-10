@@ -31,6 +31,10 @@ class _AIBookPageState extends State<AIBookPage> {
   bool _isLoadingAudio = false;
   int _currentPageIndex = 0;
   String _ttsEngine = ''; // 'neural' or 'system'
+  
+  // Scroll Controllers for Desktop
+  final ScrollController _selectionScrollController = ScrollController();
+  final ScrollController _viewerScrollController = ScrollController();
 
   @override
   void initState() {
@@ -66,6 +70,8 @@ class _AIBookPageState extends State<AIBookPage> {
   void dispose() {
     _audioPlayer.dispose();
     _flutterTts.stop();
+    _selectionScrollController.dispose();
+    _viewerScrollController.dispose();
     super.dispose();
   }
 
@@ -158,8 +164,9 @@ class _AIBookPageState extends State<AIBookPage> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _isGenerating = false);
+      final lp = Provider.of<LanguageProvider>(context, listen: false);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to generate story: $e')),
+        SnackBar(content: Text('${lp.translate('error')}: $e')),
       );
     }
   }
@@ -208,7 +215,13 @@ class _AIBookPageState extends State<AIBookPage> {
       appBar: AppBar(
         title: Text(lp.translate('ai_novelist')),
       ),
-      body: SingleChildScrollView(
+      body: Scrollbar(
+        controller: _selectionScrollController,
+        thumbVisibility: true,
+        trackVisibility: true,
+        interactive: true,
+        child: SingleChildScrollView(
+          controller: _selectionScrollController,
         padding: const EdgeInsets.all(24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -275,6 +288,7 @@ class _AIBookPageState extends State<AIBookPage> {
 
             const SizedBox(height: 100),
           ],
+          ),
         ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
@@ -340,7 +354,7 @@ class _AIBookPageState extends State<AIBookPage> {
                   ),
                 ),
                 child: Text(
-                  _ttsEngine == 'neural' ? '✨ Neural' : '🔊 System',
+                  _ttsEngine == 'neural' ? lp.translate('neural_voice') : lp.translate('system_voice'),
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.bold,
@@ -376,8 +390,14 @@ class _AIBookPageState extends State<AIBookPage> {
           final page = pages[index];
           final String rawText = page['text'];
 
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(32),
+          return Scrollbar(
+            controller: _viewerScrollController,
+            thumbVisibility: true,
+            trackVisibility: true,
+            interactive: true,
+            child: SingleChildScrollView(
+              controller: _viewerScrollController,
+              padding: const EdgeInsets.all(32),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -469,7 +489,7 @@ class _AIBookPageState extends State<AIBookPage> {
                                   const SizedBox(height: 4),
                                   Text(
                                     annotation['explanation']?.toString() ?? '',
-                                    style: TextStyle(color: Colors.white.withValues(alpha: 0.1), fontSize: 14),
+                                    style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 14),
                                   ),
                                 ],
                               ),
@@ -483,6 +503,7 @@ class _AIBookPageState extends State<AIBookPage> {
                 const SizedBox(height: 100),
               ],
             ),
+          ),
           );
         },
       ),

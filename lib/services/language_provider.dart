@@ -98,6 +98,9 @@ class LanguageProvider extends ChangeNotifier {
         'page': 'Page',
         'of': 'of',
         'select_topic_error': 'Please select at least one topic!',
+        'neural_voice': 'Neural Voice',
+        'system_voice': 'System Voice',
+        'error': 'Error',
       },
       'fr': {
         'greeting': 'Bonjour!',
@@ -135,6 +138,9 @@ class LanguageProvider extends ChangeNotifier {
         'page': 'Page',
         'of': 'sur',
         'select_topic_error': 'Veuillez sélectionner au moins un sujet !',
+        'neural_voice': 'Voix Neurale',
+        'system_voice': 'Voix Système',
+        'error': 'Erreur',
       },
       'ar': {
         'greeting': 'مرحباً!',
@@ -172,6 +178,9 @@ class LanguageProvider extends ChangeNotifier {
         'page': 'صفحة',
         'of': 'من',
         'select_topic_error': 'يرجى اختيار موضوع واحد على الأقل!',
+        'neural_voice': 'صوت عصبي (ممتاز)',
+        'system_voice': 'صوت النظام',
+        'error': 'خطأ',
       },
       'uk': {
         'greeting': 'Привіт!',

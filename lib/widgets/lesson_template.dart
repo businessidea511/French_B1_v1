@@ -5,7 +5,7 @@ import '../pages/exercises/exercises_page.dart';
 import '../pages/flashcards/flashcards_page.dart';
 import '../theme/app_theme.dart';
 
-class LessonTemplate extends StatelessWidget {
+class LessonTemplate extends StatefulWidget {
   final String title;
   final String icon;
   final String? topic; // Optional: used for AI questions
@@ -18,6 +18,19 @@ class LessonTemplate extends StatelessWidget {
     this.topic,
     required this.children,
   });
+
+  @override
+  State<LessonTemplate> createState() => _LessonTemplateState();
+}
+
+class _LessonTemplateState extends State<LessonTemplate> {
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -33,8 +46,14 @@ class LessonTemplate extends StatelessWidget {
             end: Alignment.bottomCenter,
           ),
         ),
-        child: CustomScrollView(
-          physics: const ClampingScrollPhysics(),
+        child: Scrollbar(
+          controller: _scrollController,
+          thumbVisibility: true,
+          trackVisibility: true,
+          interactive: true,
+          child: CustomScrollView(
+            controller: _scrollController,
+            physics: const ClampingScrollPhysics(),
           slivers: [
             SliverAppBar(
               expandedHeight: 120,
@@ -42,7 +61,7 @@ class LessonTemplate extends StatelessWidget {
               pinned: true,
               backgroundColor: Colors.transparent,
               flexibleSpace: FlexibleSpaceBar(
-                title: Text('$icon $title', 
+                title: Text('${widget.icon} ${widget.title}', 
                   style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.white)),
                 centerTitle: true,
                 background: Container(
@@ -60,10 +79,10 @@ class LessonTemplate extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20),
               sliver: SliverList(
                 delegate: SliverChildListDelegate([
-                  ...children,
-                  if (topic != null) ...[
+                  ...widget.children,
+                  if (widget.topic != null) ...[
                     const SizedBox(height: 60),
-                    AskAIBox(topic: topic!),
+                    AskAIBox(topic: widget.topic!),
                     const SizedBox(height: 40),
                     const SectionTitle('Practice & Memorize', emoji: '🎯'),
                     const SizedBox(height: 20),
@@ -77,7 +96,7 @@ class LessonTemplate extends StatelessWidget {
                             color: AppTheme.secondary,
                             onTap: () => Navigator.push(
                               context,
-                              MaterialPageRoute(builder: (_) => ExercisesPage(initialTopic: topic)),
+                              MaterialPageRoute(builder: (_) => ExercisesPage(initialTopic: widget.topic)),
                             ),
                           ),
                         ),
@@ -90,7 +109,7 @@ class LessonTemplate extends StatelessWidget {
                             color: AppTheme.success,
                             onTap: () => Navigator.push(
                               context,
-                              MaterialPageRoute(builder: (_) => FlashcardsPage(initialTopic: topic)),
+                              MaterialPageRoute(builder: (_) => FlashcardsPage(initialTopic: widget.topic)),
                             ),
                           ),
                         ),
@@ -104,8 +123,9 @@ class LessonTemplate extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildActionButton(BuildContext context,
       {required String title,
@@ -190,10 +210,10 @@ class ExampleBox extends StatelessWidget {
       margin: const EdgeInsets.symmetric(vertical: 8),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.1),
+        color: Colors.white.withValues(alpha: 0.7),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: Colors.white.withValues(alpha: 0.1),
+          color: Colors.white.withValues(alpha: 0.7),
           width: 1,
         ),
       ),
@@ -213,13 +233,13 @@ class ExampleBox extends StatelessWidget {
           Row(
             children: [
               Text('→ ',
-                  style: TextStyle(color: Colors.white.withValues(alpha: 0.1))),
+                  style: TextStyle(color: Colors.white.withValues(alpha: 0.7))),
               Expanded(
                 child: TranslatedText(
                   english,
                   style: TextStyle(
                     fontSize: 15,
-                    color: Colors.white.withValues(alpha: 0.1),
+                    color: Colors.white.withValues(alpha: 0.7),
                     fontStyle: FontStyle.italic,
                   ),
                 ),
@@ -286,7 +306,7 @@ class TipBox extends StatelessWidget {
                   content,
                   style: TextStyle(
                     fontSize: 15,
-                    color: Colors.white.withValues(alpha: 0.1),
+                    color: Colors.white.withValues(alpha: 0.7),
                     height: 1.5,
                   ),
                 ),
@@ -356,7 +376,7 @@ class FrenchTipBox extends StatelessWidget {
                   frenchText,
                   style: TextStyle(
                     fontSize: 15,
-                    color: Colors.white.withValues(alpha: 0.1),
+                    color: Colors.white.withValues(alpha: 0.7),
                     height: 1.7,
                     fontFamily: 'monospace',
                   ),

@@ -10,6 +10,22 @@ import '../../services/deepseek_service.dart';
 import '../../services/pdf_helper.dart';
 import '../lessons/dynamic_lesson_page.dart';
 import '../../models/lesson_topic.dart';
+import 'lessons/present_page.dart';
+import 'lessons/passe_compose_page.dart';
+import 'lessons/imparfait_page.dart';
+import 'lessons/plus_que_parfait_page.dart';
+import 'lessons/conditionnel_page.dart';
+import 'lessons/negative_complex_page.dart';
+import 'lessons/futur_proche_page.dart';
+import 'lessons/futur_simple_page.dart';
+import 'lessons/cod_coi_page.dart';
+import 'lessons/si_seulement_page.dart';
+import 'lessons/voix_passive_page.dart';
+import 'lessons/adverbes_ment_page.dart';
+import 'lessons/subjonctif_page.dart';
+import 'lessons/comparatif_page.dart';
+import 'lessons/duration_prepositions_page.dart';
+import 'lessons/connectors_page.dart';
 
 class GrammarPage extends StatefulWidget {
   const GrammarPage({super.key});
@@ -20,6 +36,13 @@ class GrammarPage extends StatefulWidget {
 
 class _GrammarPageState extends State<GrammarPage> {
   bool _isGenerating = false;
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
 
   void _showTopicNameDialog() {
     final TextEditingController controller = TextEditingController();
@@ -256,23 +279,30 @@ class _GrammarPageState extends State<GrammarPage> {
           Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 1200),
-              child: GridView.builder(
-                padding: const EdgeInsets.all(24),
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: MediaQuery.of(context).size.width > 900
-                      ? 3
-                      : MediaQuery.of(context).size.width > 600
-                          ? 2
-                          : 1,
-                  mainAxisSpacing: 20,
-                  crossAxisSpacing: 20,
-                  childAspectRatio: 1.6,
+              child: Scrollbar(
+                controller: _scrollController,
+                thumbVisibility: true,
+                trackVisibility: true,
+                interactive: true,
+                child: GridView.builder(
+                  controller: _scrollController,
+                  padding: const EdgeInsets.all(24),
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: MediaQuery.of(context).size.width > 900
+                        ? 3
+                        : MediaQuery.of(context).size.width > 600
+                            ? 2
+                            : 1,
+                    mainAxisSpacing: 20,
+                    crossAxisSpacing: 20,
+                    childAspectRatio: 1.6,
+                  ),
+                  itemCount: grammarItems.length,
+                  itemBuilder: (context, index) {
+                    final topic = grammarItems[index];
+                    return _buildTopicCard(context, topic, lp);
+                  },
                 ),
-                itemCount: grammarItems.length,
-                itemBuilder: (context, index) {
-                  final topic = grammarItems[index];
-                  return _buildTopicCard(context, topic, lp);
-                },
               ),
             ),
           ),
@@ -350,16 +380,7 @@ class _GrammarPageState extends State<GrammarPage> {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => DynamicLessonPage(
-                  topic: LessonTopic(
-                    id: topic.id,
-                    title: topic.title,
-                    subtitle: topic.subtitle,
-                    icon: topic.icon,
-                    description: topic.description,
-                    content: topic.content,
-                  ),
-                ),
+                builder: (context) => _getGrammarPage(topic),
               ),
             );
         },
@@ -443,5 +464,47 @@ class _GrammarPageState extends State<GrammarPage> {
         ],
       ),
     );
+  }
+
+  Widget _getGrammarPage(GrammarTopic topic) {
+    // If it has cloud content, use the dynamic viewer
+    if (topic.content != null && topic.content!.isNotEmpty) {
+      return DynamicLessonPage(
+        topic: LessonTopic(
+          id: topic.id,
+          title: topic.title,
+          subtitle: topic.subtitle,
+          icon: topic.icon,
+          description: topic.description,
+          content: topic.content,
+        ),
+      );
+    }
+
+    // Fallback to hardcoded pages
+    switch (topic.id) {
+      case 'present': return const PresentPage();
+      case 'passe_compose': return const PasseComposePage();
+      case 'imparfait': return const ImparfaitPage();
+      case 'plus_que_parfait': return const PlusQueParfaitPage();
+      case 'conditionnel': return const ConditionnelPage();
+      case 'negative_complex': return const NegativeComplexPage();
+      case 'futur_proche': return const FuturProchePage();
+      case 'futur_simple': return const FuturSimplePage();
+      case 'cod_coi': return const CodCoiPage();
+      case 'si_seulement': return const SiSeulementPage();
+      case 'voix_passive': return const VoixPassivePage();
+      case 'adverbes_ment': return const AdverbesMentPage();
+      case 'subjonctif': return const SubjonctifPage();
+      case 'comparatif': return const ComparatifPage();
+      case 'time_prepositions': return const DurationPrepositionsPage();
+      case 'connectors': return const ConnectorsPage();
+      default:
+        // For truly custom ones that somehow lack content
+        return Scaffold(
+          appBar: AppBar(title: Text(topic.title)),
+          body: const Center(child: Text('No content available yet.')),
+        );
+    }
   }
 }
