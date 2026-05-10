@@ -165,37 +165,55 @@ class LessonsProvider extends ChangeNotifier {
   Future<void> addLesson(Map<String, dynamic> lessonData) async {
     final String id = 'custom_lesson_${DateTime.now().millisecondsSinceEpoch}';
     
-    // Intelligent content extraction & normalization
-    final List<dynamic> rawWidgets = (lessonData['widgets'] ?? lessonData['sections'] ?? lessonData['content'] ?? []) as List;
+    // Normalize Top-Level Keys (Handle Case Sensitivity and Synonyms)
+    String title = 'Untitled Lesson';
+    if (lessonData['title'] != null) title = lessonData['title'].toString();
+    else if (lessonData['Title'] != null) title = lessonData['Title'].toString();
+    else if (lessonData['topic'] != null) title = lessonData['topic'].toString();
+    else if (lessonData['Topic'] != null) title = lessonData['Topic'].toString();
+
+    final List<dynamic> rawWidgets = (
+      lessonData['widgets'] ?? 
+      lessonData['Widgets'] ??
+      lessonData['sections'] ?? 
+      lessonData['Sections'] ??
+      lessonData['content'] ?? 
+      lessonData['Content'] ??
+      []
+    ) as List;
+
     final List<Map<String, dynamic>> normalizedWidgets = rawWidgets.map((w) {
       if (w is! Map) return <String, dynamic>{};
       final Map<String, dynamic> map = Map<String, dynamic>.from(w);
-      // Map common alternative keys to standard ones
-      if (map.containsKey('meaning')) map['translation'] = map['meaning'];
-      if (map.containsKey('english') && !map.containsKey('translation')) map['translation'] = map['english'];
-      if (map.containsKey('arabic') && !map.containsKey('translation')) map['translation'] = map['arabic'];
+      
+      // Normalize widget keys
+      if (map['type'] == null && map['Type'] != null) map['type'] = map['Type'];
+      if (map['content'] == null && map['Content'] != null) map['content'] = map['Content'];
+      if (map['title'] == null && map['Title'] != null) map['title'] = map['Title'];
+      if (map['french'] == null && map['French'] != null) map['french'] = map['French'];
+      if (map['translation'] == null && map['Translation'] != null) map['translation'] = map['Translation'];
+      
+      if (map.containsKey('meaning') && !map.containsKey('translation')) map['translation'] = map['meaning'];
       if (map.containsKey('explanation') && !map.containsKey('content')) map['content'] = map['explanation'];
-      if (map.containsKey('text') && !map.containsKey('content')) map['content'] = map['text'];
+      
       return map;
-    }).where((w) => w.isNotEmpty).toList();
+    }).where((m) => m.isNotEmpty).toList();
 
-    // Robust Title extraction
-    String title = lessonData['title'] ?? lessonData['topic'] ?? 'Untitled Lesson';
+    // Final title check
     if (title == 'Untitled Lesson' && normalizedWidgets.isNotEmpty) {
-      final first = normalizedWidgets.first;
-      title = first['title'] ?? first['content']?.toString().split('\n').first ?? title;
+       final first = normalizedWidgets.first;
+       title = first['title'] ?? first['content']?.toString().split('\n').first ?? title;
     }
 
     final newLesson = LessonTopic(
       id: id,
       title: title,
-      subtitle: lessonData['subtitle'] ?? lessonData['description'] ?? '',
-      icon: lessonData['icon'] ?? '📖',
-      description: lessonData['subtitle'] ?? title,
+      subtitle: (lessonData['subtitle'] ?? lessonData['Subtitle'] ?? lessonData['description'] ?? '').toString(),
+      icon: (lessonData['icon'] ?? lessonData['Icon'] ?? '📖').toString(),
+      description: title,
       content: normalizedWidgets,
-      // Store translations for dynamic UI updates
       metadata: {
-        'localized_subtitles': lessonData['localized_subtitles'] ?? {},
+        'localized_subtitles': lessonData['localized_subtitles'] ?? lessonData['Localized_subtitles'] ?? {},
       },
     );
 
