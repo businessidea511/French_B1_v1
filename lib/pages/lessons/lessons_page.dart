@@ -477,6 +477,106 @@ class _LessonsPageState extends State<LessonsPage> {
     }
   }
 
+  void _showDiagnostics(BuildContext context, LessonsProvider lp) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppTheme.surface,
+        title: const Row(
+          children: [
+            Icon(Icons.cloud_sync, color: AppTheme.primary),
+            SizedBox(width: 12),
+            Text('Cloud Diagnostics', style: TextStyle(color: Colors.white)),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildDiagRow('Status', lp.lastError != null ? 'Error' : 'Connected', 
+                lp.lastError != null ? Colors.red : Colors.green),
+            if (lp.lastError != null) ...[
+              const SizedBox(height: 12),
+              const Text('Last Error:', style: TextStyle(color: AppTheme.textTertiary, fontSize: 12)),
+              Text(lp.lastError!, style: const TextStyle(color: Colors.redAccent, fontSize: 13)),
+            ],
+            const Divider(height: 32, color: Colors.white10),
+            ElevatedButton.icon(
+              onPressed: () async {
+                final result = await lp.testConnection();
+                if (!context.mounted) return;
+                _showTestResults(context, result);
+              },
+              icon: const Icon(Icons.speed),
+              label: const Text('Run Connection Test'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primary.withValues(alpha: 0.2),
+                foregroundColor: AppTheme.primary,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+          ElevatedButton(
+            onPressed: lp.isSyncing ? null : () {
+              Navigator.pop(context);
+              lp.syncFromCloud();
+            },
+            child: const Text('Sync Now'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showTestResults(BuildContext context, Map<String, dynamic> result) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppTheme.surface,
+        title: const Text('Test Results', style: TextStyle(color: Colors.white)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _buildDiagRow('Supabase', result['status'] == 'success' ? 'Connected' : 'Failed',
+                result['status'] == 'success' ? Colors.green : Colors.red),
+            if (result['status'] == 'success') ...[
+              _buildDiagRow('Latency', result['latency'], Colors.white),
+              _buildDiagRow('Cloud Rows', '${result['rows']}', Colors.white),
+              _buildDiagRow('Schema', result['schema'], result['schemaOk'] ? Colors.green : Colors.orange),
+            ] else ...[
+              Text(result['message'] ?? 'Unknown error', style: const TextStyle(color: Colors.red)),
+            ],
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Got it')),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDiagRow(String label, String value, Color color) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: const TextStyle(color: AppTheme.textSecondary)),
+          Flexible(
+            child: Text(value, 
+              textAlign: TextAlign.end,
+              style: TextStyle(color: color, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _showError(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message), backgroundColor: Colors.red),
@@ -506,10 +606,8 @@ class _LessonsPageState extends State<LessonsPage> {
                   lp.isSyncing ? Icons.sync : Icons.cloud_done_rounded,
                   color: lp.lastError != null ? Colors.red : (lp.isSyncing ? Colors.orange : Colors.green),
                 ),
-                onPressed: lp.lastError != null 
-                  ? () => _showError('Cloud Error: ${lp.lastError}')
-                  : () => lp.syncFromCloud(),
-                tooltip: lp.lastError ?? 'Cloud Connected',
+                onPressed: () => _showDiagnostics(context, lp),
+                tooltip: 'Cloud Status',
               );
             },
           ),

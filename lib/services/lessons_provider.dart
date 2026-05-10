@@ -87,6 +87,38 @@ class LessonsProvider extends ChangeNotifier {
   String? _lastError;
   String? get lastError => _lastError;
 
+  Future<Map<String, dynamic>> testConnection() async {
+    final client = _supabase;
+    if (client == null) return {'status': 'error', 'message': 'Supabase not initialized'};
+    
+    try {
+      final startTime = DateTime.now();
+      // Test simple select
+      final response = await client.from('lessons').select('id').limit(1);
+      final duration = DateTime.now().difference(startTime).inMilliseconds;
+      
+      // Test schema (check if columns exist)
+      bool schemaOk = true;
+      String schemaMsg = 'Schema OK';
+      try {
+        await client.from('lessons').select('description, content').limit(1);
+      } catch (e) {
+        schemaOk = false;
+        schemaMsg = 'Missing columns: description or content. Run the SQL fix.';
+      }
+      
+      return {
+        'status': 'success',
+        'latency': '${duration}ms',
+        'rows': response.length,
+        'schema': schemaMsg,
+        'schemaOk': schemaOk,
+      };
+    } catch (e) {
+      return {'status': 'error', 'message': e.toString()};
+    }
+  }
+
   Future<void> syncFromCloud() async {
     if (_isSyncing) return;
     
