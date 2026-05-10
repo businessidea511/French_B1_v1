@@ -78,23 +78,9 @@ class DynamicLessonPage extends StatelessWidget {
           final translation = _clean(w['translation'] ?? '');
           if (french.isEmpty) break;
           
-          // Intelligent Leak Detection: 
-          // 1. Only filter if we expect Arabic but get English.
-          // 2. Only filter long sentences (AI apologies are long, translations are usually short).
-          final bool isArabicTarget = RegExp(r'[\u0600-\u06FF]').hasMatch(translation) || 
-                                     RegExp(r'[\u0600-\u06FF]').hasMatch(w['content'] ?? '');
-          
-          bool shouldHide = false;
-          if (isArabicTarget) {
-             // If we expect Arabic but it's only English and it's long (> 20 chars), it's probably a leak/apology
-             if (RegExp(r'^[a-zA-Z\s\.\,\?\!]+$').hasMatch(translation) && translation.length > 20) {
-               shouldHide = true;
-             }
-          }
-
           result.add(ExampleBox(
             french: french, 
-            english: shouldHide ? '' : translation
+            english: translation
           ));
           break;
 
