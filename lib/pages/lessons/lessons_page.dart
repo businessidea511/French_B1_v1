@@ -756,65 +756,26 @@ class _LessonsPageState extends State<LessonsPage> {
                   ],
                 ),
                 const Spacer(),
-                // Auto-detect RTL for Arabic titles
-                Builder(builder: (context) {
-                  // Check if title contains Arabic characters
-                  final isArabic = RegExp(r'[\u0600-\u06FF]').hasMatch(topic.title);
-                  final textDir = isArabic ? TextDirection.rtl : TextDirection.ltr;
-
-                  final needsTranslation = lp.currentLanguage != AppLanguage.english &&
-                      lp.currentLanguage != AppLanguage.arabic;
-                  if (!needsTranslation) {
-                    return Text(
-                      topic.title,
-                      style: Theme.of(context).textTheme.headlineMedium,
-                      textDirection: textDir,
-                      textAlign: isArabic ? TextAlign.right : TextAlign.left,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    );
-                  }
-                  return FutureBuilder<String>(
-                    future: DeepSeekService.translateText(topic.title, lp.currentLanguage.name),
-                    builder: (context, snapshot) {
-                      return Text(
-                        snapshot.data ?? topic.title,
-                        style: Theme.of(context).textTheme.headlineMedium,
-                        textDirection: textDir,
-                        textAlign: isArabic ? TextAlign.right : TextAlign.left,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      );
-                    },
-                  );
-                }),
+                // Title is always French now (from AI)
+                Text(
+                  topic.title,
+                  style: Theme.of(context).textTheme.headlineMedium,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
                 const SizedBox(height: 4),
-                Builder(builder: (context) {
-                  final needsTranslation = lp.currentLanguage != AppLanguage.english &&
-                      lp.currentLanguage != AppLanguage.arabic;
-                  if (!needsTranslation) {
-                    return Text(
-                      topic.subtitle,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: AppTheme.textTertiary,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    );
-                  }
-                  return FutureBuilder<String>(
-                    future: DeepSeekService.translateText(topic.subtitle, lp.currentLanguage.name),
-                    builder: (context, snapshot) {
-                      return Text(
-                        snapshot.data ?? topic.subtitle,
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: AppTheme.textTertiary,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      );
-                    },
-                  );
+                // Subtitle is the translation in user's language
+                Text(
+                  topic.subtitle,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: AppTheme.textSecondary,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  textDirection: RegExp(r'[\u0600-\u06FF]').hasMatch(topic.subtitle) 
+                    ? TextDirection.rtl 
+                    : TextDirection.ltr,
+                ),
                 }),
               ],
             ),

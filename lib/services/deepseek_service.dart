@@ -553,16 +553,17 @@ class DeepSeekService {
             {
               'role': 'system',
               'content':
-                  'You are a French B1 teacher. Generate a comprehensive lesson in JSON format. '
-                      'The lesson must be simple, clear, and engaging (for beginners). '
+                  'You are a French B1 teacher. Generate a comprehensive, DETAILED lesson in JSON format. '
+                      'The lesson must be very simple to understand but rich in content. '
                       'CRITICAL RULES: '
-                      '1. ALL content MUST be in $targetLanguage (no English unless $targetLanguage is English). '
-                      '2. French vocabulary/examples stay in French but always with $targetLanguage translation. '
-                      '3. NEVER use markdown symbols like ** or * or # in ANY field. Use plain text only. '
-                      '4. NEVER add preambles like "Here is the translation" or "Following your instructions". '
-                      '5. Start content directly without any introduction sentence. '
+                      '1. "title" MUST ALWAYS BE IN FRENCH (e.g., "La Santé"). '
+                      '2. "subtitle" MUST BE THE TRANSLATION of the title in $targetLanguage. '
+                      '3. ALL explanations and section "title"s MUST be in $targetLanguage. '
+                      '4. French sentences/examples MUST stay in French. Do NOT translate the French words themselves inside the sentence. Provide a separate translation in $targetLanguage. '
+                      '5. NEVER use markdown symbols (** or #). Use plain text. '
+                      '6. NEVER add preambles or introductions. '
                       'Return a JSON object with: '
-                      '"title" (String in $targetLanguage or French), "subtitle" (String in $targetLanguage), "icon" (single emoji), '
+                      '"title" (String in French), "subtitle" (String in $targetLanguage), "icon" (single emoji), '
                       '"sections" (Array of objects: {"title": String in $targetLanguage, "content": plain text string in $targetLanguage}).'
             },
             {
@@ -606,16 +607,17 @@ class DeepSeekService {
             {
               'role': 'system',
               'content':
-                  'You are a French Grammar expert. Generate a comprehensive B1 grammar guide in JSON format. '
-                      'The guide must be simple, clear, and logical (for beginners). '
+                  'You are a French Grammar expert. Generate a DETAILED B1 grammar guide in JSON format. '
+                      'The guide must be pedagogical, simple, and very clear for beginners. '
                       'CRITICAL RULES: '
-                      '1. ALL content MUST be in $targetLanguage. '
-                      '2. French grammar examples stay in French but always with $targetLanguage translation. '
-                      '3. NEVER use markdown symbols like ** or * or # in ANY field. Use plain text only. '
-                      '4. NEVER add preambles like "Here is the translation" or "Following your instructions". '
-                      '5. Start content directly without any introduction sentence. '
+                      '1. "title" MUST ALWAYS BE IN FRENCH (e.g., "Le Subjonctif"). '
+                      '2. "subtitle" MUST BE THE TRANSLATION of the title in $targetLanguage. '
+                      '3. ALL explanations and section "title"s MUST be in $targetLanguage. '
+                      '4. French grammar examples MUST stay in French. Provide a separate translation in $targetLanguage. '
+                      '5. NEVER use markdown symbols (** or #). Use plain text. '
+                      '6. NEVER add preambles or introductions. '
                       'Return a JSON object with: '
-                      '"title" (String - the grammar topic in French e.g. "Le Subjonctif"), "subtitle" (String in $targetLanguage), "icon" (single emoji), '
+                      '"title" (String in French), "subtitle" (String in $targetLanguage), "icon" (single emoji), '
                       '"sections" (Array of objects: {"title": String in $targetLanguage, "content": plain text string in $targetLanguage}).'
             },
             {
