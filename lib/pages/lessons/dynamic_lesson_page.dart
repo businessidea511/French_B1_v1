@@ -31,11 +31,20 @@ class DynamicLessonPage extends StatelessWidget {
       const Color(0xFFEC4899),
     ];
 
-    // Filter out preamble sections
+    // Aggressive filter for preamble sections
     final validSections = sections.where((s) {
-      final t = (s['title'] ?? '').toString().toLowerCase();
-      return !t.contains('here is') && !t.contains('following your') &&
-             !t.contains('translation of') && !t.contains('محتوى الدرس:');
+      final title = (s['title'] ?? '').toString().toLowerCase();
+      final content = (s['content'] ?? '').toString().toLowerCase();
+      
+      bool isPreamble(String text) {
+        return text.contains('here is') || 
+               text.contains('following your') || 
+               text.contains('translation of') ||
+               text.contains('ترجمة') ||
+               text.contains('محتوى الدرس');
+      }
+
+      return !isPreamble(title) && !isPreamble(content.split('\n').first);
     }).toList();
 
     for (int i = 0; i < validSections.length; i++) {
@@ -116,10 +125,12 @@ class DynamicLessonPage extends StatelessWidget {
         .replaceAll('* ', '')
         // Remove heading markers
         .replaceAll(RegExp(r'^#{1,6}\s*', multiLine: true), '')
-        // Remove preamble lines
-        .replaceAll(RegExp(r'Here is the translation.*?\n', caseSensitive: false), '')
-        .replaceAll(RegExp(r'Following your instructions.*?\n', caseSensitive: false), '')
-        .replaceAll(RegExp(r'محتوى الدرس:.*?\n'), '')
+        // Aggressively remove preamble sentences and meta-talk
+        .replaceAll(RegExp(r'.*?here is the translation.*?\n?', caseSensitive: false), '')
+        .replaceAll(RegExp(r'.*?following your instructions.*?\n?', caseSensitive: false), '')
+        .replaceAll(RegExp(r'.*?translation of the lesson content.*?\n?', caseSensitive: false), '')
+        .replaceAll(RegExp(r'.*?محتوى الدرس.*?\n?', caseSensitive: false), '')
+        .replaceAll(RegExp(r'.*?نظراً لأن النص الأصلي.*?\n?', caseSensitive: false), '')
         // Clean up extra blank lines
         .replaceAll(RegExp(r'\n{3,}'), '\n\n')
         .trim();
