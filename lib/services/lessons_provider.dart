@@ -164,14 +164,24 @@ class LessonsProvider extends ChangeNotifier {
 
   Future<void> addLesson(Map<String, dynamic> lessonData) async {
     final String id = 'custom_lesson_${DateTime.now().millisecondsSinceEpoch}';
-    // Support new 'widgets' format AND old 'sections'/'content' format
+    
+    // Intelligent content extraction
     final dynamic rawContent = lessonData['widgets'] ?? lessonData['sections'] ?? lessonData['content'] ?? [];
+    
+    // Robust Title extraction
+    String title = lessonData['title'] ?? lessonData['topic'] ?? 'Untitled Lesson';
+    if (title == 'Untitled Lesson' && rawContent is List && rawContent.isNotEmpty) {
+      // Fallback: try to get title from first section or text
+      final first = rawContent.first;
+      if (first is Map) title = first['title'] ?? first['content']?.toString().split('\n').first ?? title;
+    }
+
     final newLesson = LessonTopic(
       id: id,
-      title: lessonData['title'] ?? 'Untitled',
-      subtitle: lessonData['subtitle'] ?? '',
+      title: title,
+      subtitle: lessonData['subtitle'] ?? lessonData['description'] ?? '',
       icon: lessonData['icon'] ?? '📖',
-      description: lessonData['subtitle'] ?? lessonData['title'] ?? '',
+      description: lessonData['subtitle'] ?? title,
       content: rawContent is List ? rawContent : [],
     );
 
