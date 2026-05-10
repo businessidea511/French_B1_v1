@@ -14,7 +14,16 @@ void main() async {
 
   // 1. Initialize Services (Supabase, Env) BEFORE UI
   try {
-    // Get keys from either String.fromEnvironment (Vercel Build Args) or dotenv (Local)
+    // Try loading environment from multiple possible locations
+    final possiblePaths = [".env", "assets/.env", "assets/env/.env", "env/.env"];
+    for (String path in possiblePaths) {
+      try {
+        await dotenv.load(fileName: path);
+        debugPrint("✅ Loaded environment from $path");
+      } catch (_) {}
+    }
+    
+    // Get keys with priority: 1. Build Args, 2. Env File
     final String supabaseUrl = const String.fromEnvironment('SUPABASE_URL').isNotEmpty
         ? const String.fromEnvironment('SUPABASE_URL')
         : (dotenv.env['SUPABASE_URL'] ?? '');
@@ -28,12 +37,12 @@ void main() async {
         url: supabaseUrl,
         anonKey: supabaseKey,
       );
-      debugPrint("✅ Supabase Initialized Successfully");
+      debugPrint("🚀 Supabase Initialized Successfully");
     } else {
-      debugPrint("⚠️ Supabase keys missing! Check .env or Vercel Environment Variables");
+      debugPrint("❌ Supabase keys NOT FOUND. Available env keys: ${dotenv.env.keys}");
     }
   } catch (e) {
-    debugPrint("🔥 Initialization Error: $e");
+    debugPrint("🔥 Initialization Critical Error: $e");
   }
 
   // 2. Set UI Orientations
