@@ -68,6 +68,38 @@ class LessonsProvider extends ChangeNotifier {
     await _saveData();
   }
 
+  Future<void> updateLesson(String id, Map<String, dynamic> lessonData) async {
+    final index = _customLessons.indexWhere((l) => l.id == id);
+    if (index != -1) {
+      _customLessons[index] = LessonTopic(
+        id: id,
+        title: lessonData['title'],
+        subtitle: lessonData['subtitle'],
+        icon: lessonData['icon'],
+        description: (lessonData['content'] ?? lessonData['sections'] as List).map((s) => s['title']).join(', '),
+        content: lessonData['content'] ?? lessonData['sections'],
+      );
+      notifyListeners();
+      await _saveData();
+    }
+  }
+
+  Future<void> updateGrammar(String id, Map<String, dynamic> grammarData) async {
+    final index = _customGrammar.indexWhere((g) => g.id == id);
+    if (index != -1) {
+      _customGrammar[index] = GrammarTopic(
+        id: id,
+        title: grammarData['title'],
+        subtitle: grammarData['subtitle'],
+        icon: grammarData['icon'],
+        description: (grammarData['content'] ?? grammarData['sections'] as List).map((s) => s['title']).join(', '),
+        content: grammarData['content'] ?? grammarData['sections'],
+      );
+      notifyListeners();
+      await _saveData();
+    }
+  }
+
   Future<void> _saveData() async {
     final prefs = await SharedPreferences.getInstance();
     

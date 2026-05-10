@@ -807,6 +807,116 @@ class DeepSeekService {
       return "Désolé, an error occurred: $e\n\nPlease try again with clearer photos.";
     }
   }
+
+  // ── Update an existing lesson with new photos ────────────────────────────
+  static Future<Map<String, dynamic>> updateLessonFromImages(
+    Map<String, dynamic> existingLesson,
+    List<String> newBase64Images,
+    String mimeType,
+    String targetLanguage,
+  ) async {
+    try {
+      // 1. Get description of NEW images
+      final newDescription = await GeminiService.describeImages(newBase64Images, mimeType);
+      
+      if (newDescription.startsWith('ERROR') || newDescription.startsWith('EXCEPTION')) {
+        throw Exception(newDescription);
+      }
+
+      // 2. Ask DeepSeek to MERGE new content into existing lesson
+      final response = await http.post(
+        Uri.parse('$baseUrl/chat/completions'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $apiKey',
+        },
+        body: jsonEncode({
+          'model': 'deepseek-chat',
+          'messages': [
+            {
+              'role': 'system',
+              'content':
+                  'You are an expert French B1 teacher. You will be given an EXISTING lesson in JSON format and a description of NEW pages from a textbook. '
+                  'Your task is to UPDATE the existing lesson by adding new information from the new description. '
+                  'CRITICAL RULES: \n'
+                  '1. NO DUPLICATION: If a vocabulary word or grammar rule is already in the existing lesson, do NOT add it again. \n'
+                  '2. MERGING: Add new vocabulary to the "vocabulary" list, new grammar points to the "grammar" section, and new exercises. \n'
+                  '3. CONSISTENCY: Keep the same tone and format. ALL explanations must stay in $targetLanguage. \n'
+                  '4. Return ONLY the updated JSON object in the same format.'
+            },
+            {
+              'role': 'user',
+              'content': 'Existing Lesson JSON: \n${jsonEncode(existingLesson)}\n\nNew Content Description: \n$newDescription'
+            }
+          ],
+          'response_format': {'type': 'json_object'},
+          'temperature': 0.5,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        String content = data['choices'][0]['message']['content'];
+        content = content.replaceAll('```json', '').replaceAll('```', '').trim();
+        final updatedLesson = jsonDecode(content);
+        updatedLesson['id'] = existingLesson['id']; // Keep the same ID
+        return updatedLesson;
+      } else {
+        throw Exception('DeepSeek update error: ${response.statusCode}');
+      }
+    } catch (e) {
+      debugPrint('Error updating lesson: $e');
+      rethrow;
+    }
+  }
+
+  // ── Update an existing lesson with PDF text ──────────────────────────────
+  static Future<Map<String, dynamic>> updateLessonWithPdf(
+    Map<String, dynamic> existingLesson,
+    String newPdfText,
+    String targetLanguage,
+  ) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/chat/completions'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $apiKey',
+        },
+        body: jsonEncode({
+          'model': 'deepseek-chat',
+          'messages': [
+            {
+              'role': 'system',
+              'content':
+                  'Update the EXISTING French B1 lesson JSON with NEW information from this PDF text. '
+                  'Merge vocabulary, grammar, and exercises without duplication. '
+                  'Explanations must be in $targetLanguage. Return ONLY the updated JSON.'
+            },
+            {
+              'role': 'user',
+              'content': 'Existing Lesson: \n${jsonEncode(existingLesson)}\n\nNew PDF Text: \n$newPdfText'
+            }
+          ],
+          'response_format': {'type': 'json_object'},
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        String content = data['choices'][0]['message']['content'];
+        content = content.replaceAll('```json', '').replaceAll('```', '').trim();
+        final updatedLesson = jsonDecode(content);
+        updatedLesson['id'] = existingLesson['id'];
+        return updatedLesson;
+      } else {
+        throw Exception('DeepSeek PDF update error: ${response.statusCode}');
+      }
+    } catch (e) {
+      debugPrint('Error updating lesson with PDF: $e');
+      rethrow;
+    }
+  }
 }
 
 

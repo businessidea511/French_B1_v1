@@ -348,6 +348,124 @@ class _LessonsPageState extends State<LessonsPage> {
     }
   }
 
+  // ── UPDATE LESSON LOGIC ─────────────────────────────────
+
+  void _showUpdateOptions(LessonTopic topic) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: AppTheme.surface,
+          title: Text('Update "${topic.title}"', style: const TextStyle(color: Colors.white)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _buildAddOption(
+                icon: Icons.camera_alt_rounded,
+                title: 'Add More Photos',
+                subtitle: 'Capture new pages from textbook',
+                color: AppTheme.primary,
+                onTap: () {
+                  Navigator.pop(context);
+                  _pickAndUpdateFromImages(topic, ImageSource.camera);
+                },
+              ),
+              const SizedBox(height: 12),
+              _buildAddOption(
+                icon: Icons.photo_library_rounded,
+                title: 'Add from Gallery',
+                subtitle: 'Select saved textbook pages',
+                color: AppTheme.secondary,
+                onTap: () {
+                  Navigator.pop(context);
+                  _pickAndUpdateFromImages(topic, ImageSource.gallery);
+                },
+              ),
+              const SizedBox(height: 12),
+              _buildAddOption(
+                icon: Icons.picture_as_pdf,
+                title: 'Add from PDF',
+                subtitle: 'Add content from another PDF',
+                color: AppTheme.accent,
+                onTap: () {
+                  Navigator.pop(context);
+                  _pickAndUpdateWithPdf(topic);
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _pickAndUpdateFromImages(LessonTopic topic, ImageSource source) async {
+    final picker = ImagePicker();
+    List<XFile> selectedFiles = [];
+
+    if (source == ImageSource.gallery) {
+      selectedFiles = await picker.pickMultiImage(imageQuality: 40, maxWidth: 800, maxHeight: 800);
+    } else {
+      final XFile? image = await picker.pickImage(source: source, imageQuality: 40, maxWidth: 800, maxHeight: 800);
+      if (image != null) selectedFiles = [image];
+    }
+
+    if (selectedFiles.isEmpty) return;
+    setState(() => _isGenerating = true);
+
+    try {
+      final List<String> base64Images = [];
+      String? mimeType;
+      for (var file in selectedFiles) {
+        final bytes = await file.readAsBytes();
+        base64Images.add(base64Encode(bytes));
+        mimeType ??= file.name.toLowerCase().endsWith('.png') ? 'image/png' : 'image/jpeg';
+      }
+
+      final lp = Provider.of<LanguageProvider>(context, listen: false);
+      final lessonsProvider = Provider.of<LessonsProvider>(context, listen: false);
+
+      final updatedData = await DeepSeekService.updateLessonFromImages(
+        {'title': topic.title, 'subtitle': topic.subtitle, 'icon': topic.icon, 'sections': topic.content, 'id': topic.id},
+        base64Images,
+        mimeType ?? 'image/jpeg',
+        lp.currentLanguage.englishName,
+      );
+
+      await lessonsProvider.updateLesson(topic.id, updatedData);
+      _showSuccess('Lesson updated with new pages! 📚');
+    } catch (e) {
+      _showError('Failed to update lesson: $e');
+    } finally {
+      setState(() => _isGenerating = false);
+    }
+  }
+
+  Future<void> _pickAndUpdateWithPdf(LessonTopic topic) async {
+    final result = await FilePicker.platform.pickFiles(type: FileType.custom, allowedExtensions: ['pdf']);
+    if (result == null || result.files.single.path == null) return;
+
+    setState(() => _isGenerating = true);
+    try {
+      final text = await PdfHelper.extractText(result.files.single.path!);
+      final lp = Provider.of<LanguageProvider>(context, listen: false);
+      final lessonsProvider = Provider.of<LessonsProvider>(context, listen: false);
+
+      final updatedData = await DeepSeekService.updateLessonWithPdf(
+        {'title': topic.title, 'subtitle': topic.subtitle, 'icon': topic.icon, 'sections': topic.content, 'id': topic.id},
+        text,
+        lp.currentLanguage.englishName,
+      );
+
+      await lessonsProvider.updateLesson(topic.id, updatedData);
+      _showSuccess('Lesson updated from PDF content! 📄');
+    } catch (e) {
+      _showError('Failed to update from PDF: $e');
+    } finally {
+      setState(() => _isGenerating = false);
+    }
+  }
+
   void _showError(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message), backgroundColor: Colors.red),
@@ -461,6 +579,12 @@ class _LessonsPageState extends State<LessonsPage> {
                     ),
                   ),
                   const Spacer(),
+                  if (topic.id.startsWith('custom_'))
+                    IconButton(
+                      icon: const Icon(Icons.sync_rounded, color: AppTheme.primary, size: 22),
+                      tooltip: 'Update this lesson with more pages',
+                      onPressed: () => _showUpdateOptions(topic),
+                    ),
                   const Icon(Icons.arrow_forward,
                       color: AppTheme.textTertiary, size: 20),
                 ],
