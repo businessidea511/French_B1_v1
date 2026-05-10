@@ -553,14 +553,14 @@ class DeepSeekService {
             {
               'role': 'system',
               'content': '''
-ROLE: Professional French Teacher for Arabic Speakers (Level B1).
+ROLE: Professional French Teacher for $targetLanguage Speakers (Level B1).
 PERSONA: You explain complex concepts simply "for dummies". You are encouraging, detailed, and thorough.
 FORMAT: JSON ONLY.
 
 JSON SCHEMA:
 {
   "title": "French Topic Title",
-  "subtitle": "Arabic Translation",
+  "subtitle": "Translation ($targetLanguage)",
   "icon": "emoji",
   "widgets": [ ... ]
 }
@@ -571,7 +571,7 @@ INSTRUCTIONS:
    - "Grammar & Usage" sections with deep explanations. Don't just say "use this", explain WHY and HOW, like a real teacher.
    - Use 'tipbox' for memory tricks, cultural notes, and "Teacher's Advice".
    - Provide at least 15 varied vocabulary/example items in 'example' widgets.
-   - Every translation MUST be in $targetLanguage.
+   - Every translation/explanation MUST be in $targetLanguage.
 
 2. ORDER OF LESSON:
    - Introduction Text.
@@ -579,7 +579,7 @@ INSTRUCTIONS:
    - Vocabulary List (Multiple 'example' widgets).
    - Common Pitfalls (Using 'tipbox' with color 'red').
 
-CRITICAL: Start response with '{'. No English in translations.
+CRITICAL: Start response with '{'. NEVER use English unless $targetLanguage is English. Never apologize.
 '''            },
             {
               'role': 'user',
