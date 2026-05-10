@@ -31,20 +31,23 @@ class DynamicLessonPage extends StatelessWidget {
       const Color(0xFFEC4899),
     ];
 
-    // Aggressive filter for preamble sections
+    // Extremely aggressive filter for preamble sections
     final validSections = sections.where((s) {
       final title = (s['title'] ?? '').toString().toLowerCase();
       final content = (s['content'] ?? '').toString().toLowerCase();
       
       bool isPreamble(String text) {
-        return text.contains('here is') || 
-               text.contains('following your') || 
-               text.contains('translation of') ||
-               text.contains('ترجمة') ||
-               text.contains('محتوى الدرس');
+        final t = text.toLowerCase().trim();
+        return t.contains('here is') || 
+               t.contains('following your') || 
+               t.contains('translation of') ||
+               t.contains('ترجمة') ||
+               t.contains('محتوى الدرس') ||
+               t.startsWith(':') || 
+               t.length < 2;
       }
 
-      return !isPreamble(title) && !isPreamble(content.split('\n').first);
+      return !isPreamble(title) && !isPreamble(content.split('\n').take(2).join(' '));
     }).toList();
 
     for (int i = 0; i < validSections.length; i++) {
@@ -119,18 +122,20 @@ class DynamicLessonPage extends StatelessWidget {
 
   /// Strips markdown symbols and preamble phrases from AI-generated text
   String _cleanText(String text) {
+    if (text.isEmpty) return '';
+    
     return text
-        // Remove markdown bold/italic
+        // Remove markdown symbols everywhere
         .replaceAll('**', '')
+        .replaceAll('__', '')
         .replaceAll('* ', '')
+        .replaceAll('- ', '')
         // Remove heading markers
         .replaceAll(RegExp(r'^#{1,6}\s*', multiLine: true), '')
-        // Aggressively remove preamble sentences and meta-talk
-        .replaceAll(RegExp(r'.*?here is the translation.*?\n?', caseSensitive: false), '')
-        .replaceAll(RegExp(r'.*?following your instructions.*?\n?', caseSensitive: false), '')
-        .replaceAll(RegExp(r'.*?translation of the lesson content.*?\n?', caseSensitive: false), '')
-        .replaceAll(RegExp(r'.*?محتوى الدرس.*?\n?', caseSensitive: false), '')
-        .replaceAll(RegExp(r'.*?نظراً لأن النص الأصلي.*?\n?', caseSensitive: false), '')
+        // Aggressively remove any line containing preamble keywords
+        .replaceAll(RegExp(r'^.*?(here is|following your|translation of|محتوى الدرس|ترجمة).*?(\n|$)', caseSensitive: false, multiLine: true), '')
+        // Remove leading colons or dots that AI sometimes adds
+        .replaceFirst(RegExp(r'^[:\.\s]+'), '')
         // Clean up extra blank lines
         .replaceAll(RegExp(r'\n{3,}'), '\n\n')
         .trim();
