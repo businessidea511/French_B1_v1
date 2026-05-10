@@ -235,6 +235,7 @@ class _GrammarPageState extends State<GrammarPage> {
         lp.currentLanguage.englishName,
       );
 
+      if (!mounted) return;
       await lessonsProvider.updateGrammar(topic.id, updatedData);
       _showSuccess('Grammar guide updated successfully! 📄');
     } catch (e) {
@@ -460,42 +461,5 @@ class _GrammarPageState extends State<GrammarPage> {
     );
   }
 
-  Widget _getLessonPage(String topicId) {
-    switch (topicId) {
-      case 'present':
-        return const PresentPage();
-      case 'passe_compose':
-        return const PasseComposePage();
-      case 'imparfait':
-        return const ImparfaitPage();
-      case 'plus_que_parfait':
-        return const PlusQueParfaitPage();
-      case 'conditionnel':
-        return const ConditionnelPage();
-      case 'negative_complex':
-        return const NegativeComplexPage();
-      case 'futur_proche':
-        return const FuturProchePage();
-      case 'futur_simple':
-        return const FuturSimplePage();
-      case 'cod_coi':
-        return const CodCoiPage();
-      case 'si_seulement':
-        return const SiSeulementPage();
-      case 'voix_passive':
-        return const VoixPassivePage();
-      case 'adverbes_ment':
-        return const AdverbesMentPage();
-      case 'subjonctif':
-        return const SubjonctifPage();
-      case 'comparatif':
-        return const ComparatifPage();
-      case 'time_prepositions':
-        return const DurationPrepositionsPage();
-      case 'connectors':
-        return const ConnectorsPage();
-      default:
-        return const Scaffold(body: Center(child: Text('Lesson not found')));
-    }
   }
 }

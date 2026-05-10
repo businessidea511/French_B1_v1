@@ -916,6 +916,8 @@ class DeepSeekService {
       debugPrint('Error updating lesson with PDF: $e');
       rethrow;
     }
+  }
+
   // ── Update an existing grammar guide with PDF text ───────────────────────
   static Future<Map<String, dynamic>> updateGrammarWithPdf(
     Map<String, dynamic> existingGrammar,

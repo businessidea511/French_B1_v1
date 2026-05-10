@@ -272,10 +272,11 @@ class _LessonsPageState extends State<LessonsPage> {
 
     setState(() => _isGenerating = true);
 
-    final lp = Provider.of<LanguageProvider>(context, listen: false);
-    final lessonsProvider = Provider.of<LessonsProvider>(context, listen: false);
+      if (!mounted) return;
+      final lp = Provider.of<LanguageProvider>(context, listen: false);
+      final lessonsProvider = Provider.of<LessonsProvider>(context, listen: false);
 
-    try {
+      try {
       final List<String> base64Images = [];
       String? mimeType;
 
@@ -413,10 +414,11 @@ class _LessonsPageState extends State<LessonsPage> {
     if (selectedFiles.isEmpty) return;
     setState(() => _isGenerating = true);
 
-    final lp = Provider.of<LanguageProvider>(context, listen: false);
-    final lessonsProvider = Provider.of<LessonsProvider>(context, listen: false);
+      if (!mounted) return;
+      final lp = Provider.of<LanguageProvider>(context, listen: false);
+      final lessonsProvider = Provider.of<LessonsProvider>(context, listen: false);
 
-    try {
+      try {
       final List<String> base64Images = [];
       String? mimeType;
       for (var file in selectedFiles) {
