@@ -195,6 +195,9 @@ class _DynamicLessonPageState extends State<DynamicLessonPage> {
     return t.contains('here is') ||
         t.contains('following your') ||
         t.contains('translation of') ||
+        t.contains('in this lesson') ||
+        t.contains('today we will') ||
+        t.contains('explore the topic') ||
         t.contains('ترجمة') ||
         t.contains('محتوى الدرس') ||
         (t.startsWith(':') && t.length < 10);
@@ -212,6 +215,7 @@ class _DynamicLessonPageState extends State<DynamicLessonPage> {
         'intended to provide', 'appears you may', 'already in arabic',
         'preserve', 'i have kept', 'requested content', 'given text',
         'instruction was to', 'please provide a french', 'into arabic',
+        'in this lesson', 'today we will', 'we will explore',
         'تم الاحتفاظ', 'وفقًا للتعليمات', 'ملاحظة:', 'محتوى الدرس',
         'عذراً', 'لا يمكنني', 'بالفعل باللغة العربية', 'موجود بالفعل',
         'تمت الترجمة', 'أنا آسف', 'يبدو أن', 'يرجى تقديم'
@@ -277,23 +281,20 @@ class _TranslatedWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // If it's already in the target language (rough detection), just show it
-    final bool isArabic = RegExp(r'[\u0600-\u06FF]').hasMatch(originalText);
-    final bool wantArabic = targetLanguage.toLowerCase().contains('arab');
-    
-    // If text is long and looks like English, but we want Arabic/Ukrainian/etc.
-    // We use DeepSeekService.translateText for on-the-fly translation
+    // If text is short and looks like it's already translated, just show it
+    // Otherwise, force translation via DeepSeek
     return FutureBuilder<String>(
       future: DeepSeekService.translateText(originalText, targetLanguage),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          // While waiting, show original text with slight opacity or a tiny loader
           return Opacity(
-            opacity: 0.7,
+            opacity: 0.5,
             child: builder(originalText),
           );
         }
-        return builder(snapshot.data ?? originalText);
+        // If snapshot has data and it's different from original, show it
+        final translated = snapshot.data ?? originalText;
+        return builder(translated);
       },
     );
   }

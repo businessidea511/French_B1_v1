@@ -584,11 +584,11 @@ STRICT JSON SCHEMA:
 
 REQUIREMENTS:
 1. SUBTITLE: Must be in $targetLanguage. This is what shows on the lesson card.
-2. NO ENGLISH PREAMBLE: Do NOT start with "In this lesson..." or "Today we will..." in English. Start directly in $targetLanguage.
+2. NO ENGLISH PREAMBLE: Do NOT start with "In this lesson...", "Today we will...", or any introductory chatter in English. Start directly in $targetLanguage.
 3. LANGUAGE: Every field except "french" MUST be in $targetLanguage.
 4. BELGIAN FIRST: Every practical example and cultural note must reference Belgium, not France.
 5. DEPTH: Match the quality of a professional textbook.
-6. NO PREAMBLE: Start with '{'. Never apologize or talk to the user.
+6. NO PREAMBLE: Start with '{'. Never apologize, explain your choices, or talk to the user.
 '''            },
             {
               'role': 'user',
