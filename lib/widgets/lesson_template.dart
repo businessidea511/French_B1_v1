@@ -207,15 +207,22 @@ class ExampleBox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.symmetric(vertical: 8),
-      padding: const EdgeInsets.all(20),
+      margin: const EdgeInsets.symmetric(vertical: 10),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.7),
-        borderRadius: BorderRadius.circular(20),
+        color: AppTheme.surface.withValues(alpha: 0.6),
+        borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color: Colors.white.withValues(alpha: 0.7),
-          width: 1,
+          color: Colors.white.withValues(alpha: 0.15),
+          width: 1.5,
         ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -233,13 +240,13 @@ class ExampleBox extends StatelessWidget {
           Row(
             children: [
               Text('→ ',
-                  style: TextStyle(color: Colors.white.withValues(alpha: 0.7))),
+                  style: TextStyle(color: AppTheme.primary.withValues(alpha: 0.8), fontWeight: FontWeight.bold)),
               Expanded(
                 child: TranslatedText(
                   english,
-                  style: TextStyle(
-                    fontSize: 15,
-                    color: Colors.white.withValues(alpha: 0.7),
+                  style: const TextStyle(
+                    fontSize: 16,
+                    color: AppTheme.textSecondary,
                     fontStyle: FontStyle.italic,
                   ),
                 ),
@@ -272,9 +279,9 @@ class TipBox extends StatelessWidget {
       margin: const EdgeInsets.symmetric(vertical: 20),
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
+        color: color.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: color.withValues(alpha: 0.1), width: 1.5),
+        border: Border.all(color: color.withValues(alpha: 0.3), width: 2),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -282,7 +289,7 @@ class TipBox extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.1),
+              color: color.withValues(alpha: 0.15),
               shape: BoxShape.circle,
             ),
             child: Icon(icon, color: color, size: 24),
@@ -301,13 +308,13 @@ class TipBox extends StatelessWidget {
                     fontFamily: 'Outfit',
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 12),
                 TranslatedText(
                   content,
-                  style: TextStyle(
-                    fontSize: 15,
-                    color: Colors.white.withValues(alpha: 0.7),
-                    height: 1.5,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    color: AppTheme.textPrimary,
+                    height: 1.6,
                   ),
                 ),
               ],
@@ -341,9 +348,9 @@ class FrenchTipBox extends StatelessWidget {
       margin: const EdgeInsets.symmetric(vertical: 20),
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
+        color: color.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: color.withValues(alpha: 0.1), width: 1.5),
+        border: Border.all(color: color.withValues(alpha: 0.3), width: 2),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -351,7 +358,7 @@ class FrenchTipBox extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.1),
+              color: color.withValues(alpha: 0.15),
               shape: BoxShape.circle,
             ),
             child: Icon(icon, color: color, size: 24),
@@ -370,15 +377,15 @@ class FrenchTipBox extends StatelessWidget {
                     fontFamily: 'Outfit',
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 12),
                 // Plain Text: French content is NEVER auto-translated
                 Text(
                   frenchText,
-                  style: TextStyle(
-                    fontSize: 15,
-                    color: Colors.white.withValues(alpha: 0.7),
+                  style: const TextStyle(
+                    fontSize: 16,
+                    color: AppTheme.textPrimary,
                     height: 1.7,
-                    fontFamily: 'monospace',
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
               ],

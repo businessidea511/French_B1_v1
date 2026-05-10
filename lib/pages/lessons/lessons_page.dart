@@ -566,77 +566,131 @@ class _LessonsPageState extends State<LessonsPage> {
 
   Widget _buildTopicCard(
       BuildContext context, LessonTopic topic, LanguageProvider lp) {
-    return Card(
+    return Container(
+      decoration: BoxDecoration(
+        color: AppTheme.surface,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.1), width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.2),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
       clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => _getLessonPage(topic)),
-          );
-        },
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color: AppTheme.primary.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Center(
-                      child: Text(
-                        topic.icon,
-                        style: const TextStyle(fontSize: 24),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => _getLessonPage(topic)),
+            );
+          },
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      width: 56,
+                      height: 56,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            AppTheme.primary.withValues(alpha: 0.2),
+                            AppTheme.primary.withValues(alpha: 0.05),
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: AppTheme.primary.withValues(alpha: 0.2)),
+                      ),
+                      child: Center(
+                        child: Text(
+                          topic.icon,
+                          style: const TextStyle(fontSize: 28),
+                        ),
                       ),
                     ),
-                  ),
-                  const Spacer(),
-                  IconButton(
-                    icon: const Icon(Icons.sync_rounded, color: AppTheme.primary, size: 22),
-                    tooltip: 'Update this lesson with more pages',
-                    onPressed: () => _showUpdateOptions(topic),
-                  ),
-                  const Icon(Icons.arrow_forward,
-                      color: AppTheme.textTertiary, size: 20),
-                ],
-              ),
-              const Spacer(),
-              FutureBuilder<String>(
-                future: lp.currentLanguage == AppLanguage.english
-                    ? Future.value(topic.title)
-                    : DeepSeekService.translateText(topic.title, lp.currentLanguage.name),
-                builder: (context, snapshot) {
-                  return Text(
-                    snapshot.data ?? topic.title,
-                    style: Theme.of(context).textTheme.headlineMedium,
-                  );
-                },
-              ),
-              const SizedBox(height: 4),
-              FutureBuilder<String>(
-                future: lp.currentLanguage == AppLanguage.english
-                    ? Future.value(topic.subtitle)
-                    : DeepSeekService.translateText(topic.subtitle, lp.currentLanguage.name),
-                builder: (context, snapshot) {
-                  return Text(
-                    snapshot.data ?? topic.subtitle,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: AppTheme.textTertiary,
-                        ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  );
-                },
-              ),
-            ],
+                    const Spacer(),
+                    IconButton(
+                      icon: const Icon(Icons.sync_rounded, color: AppTheme.primary, size: 22),
+                      tooltip: 'Update',
+                      onPressed: () => _showUpdateOptions(topic),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.delete_outline_rounded, color: AppTheme.error, size: 22),
+                      tooltip: 'Delete',
+                      onPressed: () => _confirmDelete(topic),
+                    ),
+                    const Icon(Icons.arrow_forward_ios_rounded,
+                        color: AppTheme.textTertiary, size: 14),
+                  ],
+                ),
+                const Spacer(),
+                FutureBuilder<String>(
+                  future: lp.currentLanguage == AppLanguage.english
+                      ? Future.value(topic.title)
+                      : DeepSeekService.translateText(topic.title, lp.currentLanguage.name),
+                  builder: (context, snapshot) {
+                    return Text(
+                      snapshot.data ?? topic.title,
+                      style: Theme.of(context).textTheme.headlineMedium,
+                    );
+                  },
+                ),
+                const SizedBox(height: 4),
+                FutureBuilder<String>(
+                  future: lp.currentLanguage == AppLanguage.english
+                      ? Future.value(topic.subtitle)
+                      : DeepSeekService.translateText(topic.subtitle, lp.currentLanguage.name),
+                  builder: (context, snapshot) {
+                    return Text(
+                      snapshot.data ?? topic.subtitle,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: AppTheme.textTertiary,
+                          ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    );
+                  },
+                ),
+              ],
+            ),
           ),
         ),
+      ),
+    );
+  }
+
+  void _confirmDelete(LessonTopic topic) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppTheme.surface,
+        title: const Text('Delete Lesson', style: TextStyle(color: Colors.white)),
+        content: Text('Are you sure you want to delete "${topic.title}"?',
+            style: const TextStyle(color: Colors.white70)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              Provider.of<LessonsProvider>(context, listen: false)
+                  .removeLesson(topic.id);
+              Navigator.pop(context);
+            },
+            child: const Text('Delete', style: TextStyle(color: AppTheme.error)),
+          ),
+        ],
       ),
     );
   }
@@ -645,7 +699,7 @@ class _LessonsPageState extends State<LessonsPage> {
     if (topic.content != null && topic.content!.isNotEmpty) {
       return DynamicLessonPage(topic: topic);
     }
-    
+
     switch (topic.id) {
       case 'metiers':
         return const MetiersPage();

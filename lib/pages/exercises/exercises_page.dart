@@ -126,48 +126,74 @@ class _ExercisesPageState extends State<ExercisesPage> {
       padding: const EdgeInsets.all(24),
       children: [
         // Special Mixed Review Card
-        Card(
+        // Special Mixed Review Card
+        Container(
           margin: const EdgeInsets.only(bottom: 24),
-          elevation: 4,
-          shadowColor: AppTheme.primary.withValues(alpha: 0.1),
-          shape: RoundedRectangleBorder(
+          decoration: BoxDecoration(
+            color: AppTheme.surface,
             borderRadius: BorderRadius.circular(24),
-            side: const BorderSide(color: AppTheme.primary, width: 2),
+            border: Border.all(color: AppTheme.primary.withValues(alpha: 0.3), width: 2),
+            boxShadow: [
+              BoxShadow(
+                color: AppTheme.primary.withValues(alpha: 0.1),
+                blurRadius: 20,
+                offset: const Offset(0, 8),
+              ),
+            ],
           ),
-          child: Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(24),
-              gradient: LinearGradient(
-                colors: [
-                  AppTheme.primary.withValues(alpha: 0.1),
-                  AppTheme.accent.withValues(alpha: 0.1),
-                ],
-              ),
-            ),
-            child: ListTile(
-              contentPadding: const EdgeInsets.all(24),
-              leading: Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: AppTheme.primary,
-                  borderRadius: BorderRadius.circular(16),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(24),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () => _startAIExercises('mixed_review'),
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              AppTheme.primary.withValues(alpha: 0.8),
+                              AppTheme.primary,
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: const Text('⭐', style: TextStyle(fontSize: 32)),
+                      ),
+                      const SizedBox(width: 20),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'B1 General Review',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 20,
+                                color: Colors.white,
+                                fontFamily: 'Outfit',
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'Final Exam style: All tenses + COD/COI',
+                              style: TextStyle(
+                                color: Colors.white.withValues(alpha: 0.6),
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Icon(Icons.auto_awesome, color: AppTheme.primary, size: 24),
+                    ],
+                  ),
                 ),
-                child: const Text('⭐', style: TextStyle(fontSize: 32)),
               ),
-              title: const Text(
-                'B1 General Review',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 20,
-                  fontFamily: 'Outfit',
-                ),
-              ),
-              subtitle: const Padding(
-                padding: EdgeInsets.only(top: 8.0),
-                child: Text('Final Exam style: All tenses + COD/COI'),
-              ),
-              trailing: const Icon(Icons.auto_awesome, color: AppTheme.primary, size: 32),
-              onTap: () => _startAIExercises('mixed_review'),
             ),
           ),
         ),
@@ -183,22 +209,62 @@ class _ExercisesPageState extends State<ExercisesPage> {
   }
 
   Widget _buildTopicTile(String title, String icon, String id) {
-    return Card(
+    return Container(
       margin: const EdgeInsets.only(bottom: 16),
-      child: ListTile(
-        contentPadding: const EdgeInsets.all(16),
-        leading: Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: AppTheme.primary.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(12),
+      decoration: BoxDecoration(
+        color: AppTheme.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.05), width: 1.5),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => _startAIExercises(title),
+          borderRadius: BorderRadius.circular(20),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Row(
+              children: [
+                Container(
+                  width: 52,
+                  height: 52,
+                  decoration: BoxDecoration(
+                    color: AppTheme.primary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Center(
+                    child: Text(icon, style: const TextStyle(fontSize: 24)),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'Generate 10 dynamic exercises',
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.4),
+                          fontSize: 13,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Icon(Icons.auto_awesome, color: AppTheme.primary, size: 20),
+              ],
+            ),
           ),
-          child: Text(icon, style: const TextStyle(fontSize: 24)),
         ),
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
-        subtitle: const Text('Generate 10 dynamic exercises'),
-        trailing: const Icon(Icons.auto_awesome, color: AppTheme.primary),
-        onTap: () => _startAIExercises(title), // Use title for AI context
       ),
     );
   }

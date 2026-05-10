@@ -109,22 +109,62 @@ class _FlashcardsPageState extends State<FlashcardsPage> {
   }
 
   Widget _buildTopicTile(String title, String icon) {
-    return Card(
+    return Container(
       margin: const EdgeInsets.only(bottom: 16),
-      child: ListTile(
-        contentPadding: const EdgeInsets.all(16),
-        leading: Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: AppTheme.secondary.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(12),
+      decoration: BoxDecoration(
+        color: AppTheme.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.05), width: 1.5),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => _startAIFlashcards(title),
+          borderRadius: BorderRadius.circular(20),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Row(
+              children: [
+                Container(
+                  width: 52,
+                  height: 52,
+                  decoration: BoxDecoration(
+                    color: AppTheme.secondary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Center(
+                    child: Text(icon, style: const TextStyle(fontSize: 24)),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'Generate 10 dynamic cards',
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.4),
+                          fontSize: 13,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Icon(Icons.auto_awesome, color: AppTheme.secondary, size: 20),
+              ],
+            ),
           ),
-          child: Text(icon, style: const TextStyle(fontSize: 24)),
         ),
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
-        subtitle: const Text('Generate 10 dynamic cards'),
-        trailing: const Icon(Icons.auto_awesome, color: AppTheme.secondary),
-        onTap: () => _startAIFlashcards(title),
       ),
     );
   }

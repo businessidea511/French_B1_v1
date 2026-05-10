@@ -649,78 +649,96 @@ class _VerbsPageState extends State<VerbsPage> {
   }
 
   Widget _buildVerbSearchAndSelect() {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Search or Select Verb',
-              style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  fontFamily: 'Outfit'),
-            ),
-            const SizedBox(height: 12),
-            Stack(
-              children: [
-                Autocomplete<String>(
-                  optionsBuilder: (TextEditingValue textEditingValue) {
-                    if (textEditingValue.text.isEmpty) {
-                      return verbs.take(10); // Show first 10 by default
-                    }
-                    final filtered = verbs.where((String option) {
-                      return option
-                          .toLowerCase()
-                          .contains(textEditingValue.text.toLowerCase());
-                    }).toList();
+    return Container(
+      decoration: BoxDecoration(
+        color: AppTheme.surface,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.1), width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.15),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Search or Select Verb',
+            style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+                fontFamily: 'Outfit'),
+          ),
+          const SizedBox(height: 16),
+          Stack(
+            children: [
+              Autocomplete<String>(
+                optionsBuilder: (TextEditingValue textEditingValue) {
+                  if (textEditingValue.text.isEmpty) {
+                    return verbs.take(10); // Show first 10 by default
+                  }
+                  final filtered = verbs.where((String option) {
+                    return option
+                        .toLowerCase()
+                        .contains(textEditingValue.text.toLowerCase());
+                  }).toList();
 
-                    // If no direct matches, or even if there are, allow user to custom conjugate
-                    if (!filtered
-                            .contains(textEditingValue.text.toLowerCase()) &&
-                        textEditingValue.text.isNotEmpty) {
-                      return [
-                        ...filtered,
-                        'Conjugate "${textEditingValue.text}" with AI...'
-                      ];
+                  // If no direct matches, or even if there are, allow user to custom conjugate
+                  if (!filtered
+                          .contains(textEditingValue.text.toLowerCase()) &&
+                      textEditingValue.text.isNotEmpty) {
+                    return [
+                      ...filtered,
+                      'Conjugate "${textEditingValue.text}" with AI...'
+                    ];
+                  }
+                  return filtered;
+                },
+                onSelected: (String selection) {
+                  if (selection.startsWith('Conjugate "')) {
+                    // Extract the verb from the special string
+                    final verb = selection.split('"')[1].toLowerCase();
+                    _fetchAIConjugation(verb);
+                  } else {
+                    setState(() => selectedVerb = selection);
+                    if (!conjugations.containsKey(selection)) {
+                      _fetchAIConjugation(selection);
                     }
-                    return filtered;
-                  },
-                  onSelected: (String selection) {
-                    if (selection.startsWith('Conjugate "')) {
-                      // Extract the verb from the special string
-                      final verb = selection.split('"')[1].toLowerCase();
-                      _fetchAIConjugation(verb);
-                    } else {
-                      setState(() => selectedVerb = selection);
-                      if (!conjugations.containsKey(selection)) {
-                        _fetchAIConjugation(selection);
+                  }
+                },
+                fieldViewBuilder:
+                    (context, controller, focusNode, onFieldSubmitted) {
+                  return TextField(
+                    controller: controller,
+                    focusNode: focusNode,
+                    decoration: const InputDecoration(
+                      hintText: 'Type a verb (e.g. vouloir)',
+                      prefixIcon: Icon(Icons.search),
+                    ),
+                    onSubmitted: (value) {
+                      if (value.isNotEmpty) {
+                        _fetchAIConjugation(value);
                       }
-                    }
-                  },
-                  fieldViewBuilder:
-                      (context, controller, focusNode, onFieldSubmitted) {
-                    return TextField(
-                      controller: controller,
-                      focusNode: focusNode,
-                      decoration: const InputDecoration(
-                        hintText: 'Type a verb (e.g. vouloir)',
-                        prefixIcon: Icon(Icons.search),
-                      ),
-                      onSubmitted: (value) {
-                        if (value.isNotEmpty) {
-                          _fetchAIConjugation(value);
-                        }
-                      },
-                    );
-                  },
-                  optionsViewBuilder: (context, onSelected, options) {
-                    return Align(
-                      alignment: Alignment.topLeft,
-                      child: Material(
-                        elevation: 4,
-                        borderRadius: BorderRadius.circular(12),
+                    },
+                  );
+                },
+                optionsViewBuilder: (context, onSelected, options) {
+                  return Align(
+                    alignment: Alignment.topLeft,
+                    child: Material(
+                      elevation: 8,
+                      color: AppTheme.surface,
+                      borderRadius: BorderRadius.circular(16),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+                        ),
                         child: ConstrainedBox(
                           constraints: const BoxConstraints(
                               maxHeight: 300, maxWidth: 400),
@@ -755,56 +773,83 @@ class _VerbsPageState extends State<VerbsPage> {
                           ),
                         ),
                       ),
-                    );
-                  },
-                ),
-                if (_isLoading)
-                  Positioned.fill(
-                    child: Container(
+                    ),
+                  );
+                },
+              ),
+              if (_isLoading)
+                Positioned.fill(
+                  child: Container(
+                    decoration: BoxDecoration(
                       color: AppTheme.surface.withValues(alpha: 0.1),
-                      child: const Center(
-                        child: CircularProgressIndicator(),
-                      ),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Center(
+                      child: CircularProgressIndicator(),
                     ),
                   ),
-              ],
-            ),
-          ],
-        ),
+                ),
+            ],
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildTenseSelector() {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('Tenses', style: TextStyle(fontWeight: FontWeight.bold)),
-            const SizedBox(height: 12),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: tenses.map((tense) {
-                final isSelected = tense == selectedTense;
-                return ChoiceChip(
-                  label: Text(tense),
-                  selected: isSelected,
-                  onSelected: (selected) {
-                    if (selected) {
-                      setState(() => selectedTense = tense);
-                    }
-                  },
-                );
-              }).toList(),
+    return Container(
+      decoration: BoxDecoration(
+        color: AppTheme.surface,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.1), width: 1.5),
+      ),
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Tenses',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+              fontFamily: 'Outfit',
             ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 16),
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: tenses.map((tense) {
+              final isSelected = tense == selectedTense;
+              return ChoiceChip(
+                label: Text(tense),
+                selected: isSelected,
+                onSelected: (selected) {
+                  if (selected) {
+                    setState(() => selectedTense = tense);
+                  }
+                },
+                selectedColor: AppTheme.primary,
+                labelStyle: TextStyle(
+                  color: isSelected ? Colors.white : Colors.white70,
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                ),
+                backgroundColor: Colors.white.withValues(alpha: 0.05),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  side: BorderSide(
+                    color: isSelected ? AppTheme.primary : Colors.white.withValues(alpha: 0.1),
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ],
       ),
     );
   }
+
 
   Widget _buildConjugationResults() {
     final verbData = conjugations[selectedVerb];

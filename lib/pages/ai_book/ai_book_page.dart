@@ -402,12 +402,19 @@ class _AIBookPageState extends State<AIBookPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Container(
-                  padding: const EdgeInsets.all(24),
+                  padding: const EdgeInsets.all(28),
                   width: double.infinity,
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(30),
-                    border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+                    color: AppTheme.surface.withValues(alpha: 0.8),
+                    borderRadius: BorderRadius.circular(32),
+                    border: Border.all(color: Colors.white.withValues(alpha: 0.1), width: 1.5),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.15),
+                        blurRadius: 20,
+                        offset: const Offset(0, 10),
+                      ),
+                    ],
                   ),
                   child: MarkdownBody(
                     data: rawText,

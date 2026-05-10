@@ -771,151 +771,150 @@ class _DailyPhrasesPageState extends State<DailyPhrasesPage> {
       appBar: AppBar(
         title: Text(languageProvider.currentLanguage == AppLanguage.french
             ? 'Phrases Quotidiennes'
-            : 'Daily Phrases (${languageProvider.translate('daily_phrases')})'),
-        backgroundColor: AppTheme.primary,
-        foregroundColor: Colors.white,
+            : 'Daily Phrases'),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
       ),
-      body: ListView.builder(
-        padding: const EdgeInsets.all(24.0),
-        itemCount: _sections.length,
-        itemBuilder: (context, index) {
-          final section = _sections[index];
-          return _buildExpansionSection(section, languageProvider);
-        },
+      body: Column(
+        children: [
+          if (_isTranslating)
+            const LinearProgressIndicator(
+              backgroundColor: Colors.transparent,
+              valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primary),
+              minHeight: 2,
+            ),
+          Expanded(
+            child: ListView.builder(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+              itemCount: _sections.length,
+              itemBuilder: (context, index) {
+                final section = _sections[index];
+                return _buildExpansionSection(section, languageProvider);
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildExpansionSection(
       Map<String, dynamic> section, LanguageProvider lp) {
+    final isArabic = lp.currentLanguage == AppLanguage.arabic;
+    
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: const EdgeInsets.only(bottom: 20),
       decoration: BoxDecoration(
-        color: AppTheme.surface.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+        color: AppTheme.surface,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.1), width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.2),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
-      child: Theme(
-        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-        child: ExpansionTile(
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          collapsedShape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          backgroundColor: Colors.transparent,
-          collapsedBackgroundColor: Colors.transparent,
-          leading: Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: AppTheme.primary.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Text(section['icon'], style: const TextStyle(fontSize: 24)),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: Theme(
+          data: Theme.of(context).copyWith(
+            dividerColor: Colors.transparent,
+            splashColor: AppTheme.primary.withValues(alpha: 0.1),
           ),
-          title: Text(
-            section['title'],
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: AppTheme.textPrimary,
-            ),
-          ),
-          subtitle: FutureBuilder<String>(
-            future: lp.currentLanguage == AppLanguage.arabic
-                ? Future.value(section['arabicTitle'])
-                : DeepSeekService.translateText(
-                    section['title'], lp.currentLanguage.name),
-            builder: (context, snapshot) {
-              return Text(
-                snapshot.data ?? section['arabicTitle'],
-                style: const TextStyle(
-                  fontSize: 13,
-                  color: AppTheme.textTertiary,
-                  fontFamily: 'Arial',
-                ),
-              );
-            },
-          ),
-          children: (section['phrases'] as List).map((phrase) {
-            final id = "${section['title']}_${phrase['fr']}";
-            final isPlaying = _currentlyPlayingId == id;
-            final isTranslationVisible = _visibleTranslations.contains(id);
-
-            return Container(
+          child: ExpansionTile(
+            tilePadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            leading: Container(
+              padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                border: Border(
-                    top: BorderSide(color: Colors.white.withValues(alpha: 0.1))),
+                color: AppTheme.primary.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(16),
               ),
-              child: ListTile(
-                contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                title: Text(
-                  phrase['fr'],
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                    color: AppTheme.textPrimary,
+              child: Text(section['icon'], style: const TextStyle(fontSize: 24)),
+            ),
+            title: Text(
+              isArabic ? section['arabicTitle'] : section['title'],
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+                color: Colors.white,
+                fontFamily: 'Outfit',
+              ),
+            ),
+            subtitle: Text(
+              '${(section['phrases'] as List).length} phrases',
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.5),
+                fontSize: 13,
+              ),
+            ),
+            iconColor: AppTheme.primary,
+            collapsedIconColor: Colors.white54,
+            childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            children: (section['phrases'] as List).map<Widget>((phrase) {
+              final id = '${section['title']}_${phrase['fr']}';
+              final isPlaying = _currentlyPlayingId == id;
+              final showTranslation = _visibleTranslations.contains(id);
+
+              return Container(
+                margin: const EdgeInsets.only(bottom: 12),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.05),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: isPlaying ? AppTheme.primary.withValues(alpha: 0.4) : Colors.transparent,
+                    width: 1.5,
                   ),
                 ),
-                subtitle: isTranslationVisible
-                    ? Padding(
-                        padding: const EdgeInsets.only(top: 8.0),
-                        child: Text(
-                          lp.currentLanguage == AppLanguage.arabic
-                              ? phrase['ar']
-                              : (_dynamicTranslations[id] ?? phrase['ar']),
-                          textDirection:
-                              lp.isRTL ? TextDirection.rtl : TextDirection.ltr,
-                          style: const TextStyle(
-                            fontSize: 14,
-                            color: AppTheme.textSecondary,
-                            fontFamily: 'Arial',
-                          ),
-                        ),
-                      )
-                    : null,
-                trailing: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    IconButton(
-                      icon: _isTranslating &&
-                              !_visibleTranslations.contains(id) &&
-                              !_dynamicTranslations.containsKey(id)
-                          ? const SizedBox(
-                              width: 22,
-                              height: 22,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(
-                                    AppTheme.warning),
-                              ),
-                            )
-                          : Icon(
-                              isTranslationVisible
-                                  ? Icons.translate
-                                  : Icons.translate_outlined,
-                              color: isTranslationVisible
-                                  ? AppTheme.warning
-                                  : AppTheme.textTertiary,
-                              size: 22,
+                child: ListTile(
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                  title: Text(
+                    phrase['fr'],
+                    style: TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w600,
+                      color: isPlaying ? AppTheme.primary : Colors.white,
+                    ),
+                  ),
+                  subtitle: showTranslation
+                      ? Padding(
+                          padding: const EdgeInsets.only(top: 8.0),
+                          child: Text(
+                            _dynamicTranslations[id] ?? phrase['ar'],
+                            style: TextStyle(
+                              color: Colors.white.withValues(alpha: 0.6),
+                              fontSize: 15,
+                              fontStyle: isArabic ? FontStyle.normal : FontStyle.italic,
                             ),
-                      onPressed: () => _handleTranslation(
-                          phrase['fr'], phrase['ar'], id, lp),
-                      tooltip: 'Traduire',
-                    ),
-                    IconButton(
-                      icon: Icon(
-                        isPlaying ? Icons.stop_circle : Icons.play_circle_fill,
-                        color: isPlaying ? AppTheme.warning : AppTheme.accent,
-                        size: 28,
+                          ),
+                        )
+                      : null,
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        icon: Icon(
+                          showTranslation ? Icons.visibility : Icons.visibility_off_outlined,
+                          color: showTranslation ? AppTheme.primary : Colors.white38,
+                          size: 22,
+                        ),
+                        onPressed: () => _handleTranslation(phrase['fr'], phrase['ar'], id, lp),
                       ),
-                      onPressed: () => _playAudio(phrase['fr'], id),
-                    ),
-                  ],
+                      IconButton(
+                        icon: Icon(
+                          isPlaying ? Icons.stop_circle_rounded : Icons.play_circle_filled_rounded,
+                          color: isPlaying ? AppTheme.primary : AppTheme.secondary,
+                          size: 32,
+                        ),
+                        onPressed: () => _playAudio(phrase['fr'], id),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            );
-          }).toList(),
+              );
+            }).toList(),
+          ),
         ),
       ),
     );

@@ -271,15 +271,16 @@ class _HomePageState extends State<HomePage> {
               borderRadius: BorderRadius.circular(24),
               child: Container(
                 decoration: BoxDecoration(
-                  color: AppTheme.surface.withValues(alpha: 0.1),
+                  color: AppTheme.surface.withValues(alpha: 0.6),
                   borderRadius: BorderRadius.circular(24),
                   border: Border.all(
-                    color: isHovered ? color.withValues(alpha: 0.1) : Colors.white.withValues(alpha: 0.1),
-                    width: 1.5,
+                    color: isHovered ? color.withValues(alpha: 0.4) : Colors.white.withValues(alpha: 0.1),
+                    width: 2,
                   ),
                   boxShadow: [
                     if (isHovered)
-                      BoxShadow(color: color.withValues(alpha: 0.1), blurRadius: 20, offset: const Offset(0, 10)),
+                      BoxShadow(color: color.withValues(alpha: 0.2), blurRadius: 20, offset: const Offset(0, 10)),
+                    BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 10, offset: const Offset(0, 4)),
                   ],
                 ),
                 child: ClipRRect(
