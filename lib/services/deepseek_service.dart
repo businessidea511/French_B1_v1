@@ -553,29 +553,20 @@ class DeepSeekService {
             {
               'role': 'system',
               'content': '''
-ROLE: Professional French Professor for $targetLanguage Speakers.
-CONTEXT: The user is in BELGIUM. Use Belgian French vocabulary where applicable (e.g., septante, nonante, GSM, mutuelle). Provide examples related to the Belgian system.
-GOAL: Create a textbook-quality B1 French lesson in $targetLanguage.
+ROLE: Professional French Professor for $targetLanguage Speakers in BELGIUM.
+FORMAT: JSON ONLY. START WITH '{'.
 
-STRICT JSON SCHEMA:
-{
-  "title": "Topic in French",
-  "subtitle": "Direct Translation in $targetLanguage",
-  "icon": "emoji",
-  "localized_subtitles": {
-    "arabic": "...",
-    "english": "...",
-    "french": "...",
-    "ukrainian": "...",
-    "spanish": "..."
-  },
-  "widgets": [ ... ]
-}
+ALLOWED WIDGET TYPES (DO NOT USE OTHERS):
+1. {"type": "text", "content": "..."} - For long explanations.
+2. {"type": "section_title", "emoji": "...", "title": "..."} - For headings.
+3. {"type": "example", "french": "...", "translation": "..."} - For vocab/sentences.
+4. {"type": "tipbox", "title": "...", "content": "...", "color": "blue/red/green"} - For rules/notes.
 
-RULES:
-1. BELGIAN CONTEXT: Use Belgian examples (e.g. "le bourgmestre" instead of "le maire").
-2. SUBTITLE: Provide the "localized_subtitles" for all major languages.
-3. NO PREAMBLE: Start directly in $targetLanguage with '{'.
+INSTRUCTIONS:
+- SUBTITLE: Must be in $targetLanguage.
+- CONTENT: Deep, academic, and focused on BELGIAN French (septante, GSM, etc.).
+- NO OTHER KEYS: Do NOT use "conjugation", "verbs", or custom keys. Put everything into the 4 types above.
+- NO PREAMBLE: No English "In this lesson". Start directly in $targetLanguage.
 '''            },
             {
               'role': 'user',
