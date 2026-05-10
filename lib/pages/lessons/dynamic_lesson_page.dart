@@ -55,10 +55,16 @@ class DynamicLessonPage extends StatelessWidget {
       final String title = _cleanText(section['title'] ?? 'Section ${i + 1}');
       final String content = _cleanText(section['content'] ?? '');
       final Color sectionColor = sectionColors[i % sectionColors.length];
-      final String emoji = _emojiForSection(title);
+      // Use dynamic emojis based on title
+      String sectionEmoji = '📝';
+      final lowerTitle = title.toLowerCase();
+      if (lowerTitle.contains('intro')) sectionEmoji = '🚀';
+      if (lowerTitle.contains('rule') || lowerTitle.contains('قاعدة')) sectionEmoji = '⚖️';
+      if (lowerTitle.contains('example') || lowerTitle.contains('مثال')) sectionEmoji = '💡';
+      if (lowerTitle.contains('mistake') || lowerTitle.contains('خطأ')) sectionEmoji = '⚠️';
+      if (lowerTitle.contains('practice') || lowerTitle.contains('تدريب')) sectionEmoji = '🎯';
 
-      // Section header
-      widgets.add(SectionTitle(title, emoji: emoji));
+      widgets.add(SectionTitle(title, emoji: sectionEmoji));
 
       // Parse content lines into styled widgets
       final lines = content.split('\n').where((l) => l.trim().isNotEmpty).toList();
@@ -80,14 +86,34 @@ class DynamicLessonPage extends StatelessWidget {
         }
       }
 
-      // Render prose as a styled tip box
-      if (prose.isNotEmpty) {
+      // Render content based on section type
+      final isExampleSection = lowerTitle.contains('example') || lowerTitle.contains('مثال') || lowerTitle.contains('phrases');
+      final isRuleSection = lowerTitle.contains('rule') || lowerTitle.contains('explanation') || lowerTitle.contains('قاعدة') || lowerTitle.contains('شرح');
+
+      if (isRuleSection) {
         widgets.add(
           TipBox(
             title: title,
-            content: prose.join('\n'),
+            content: prose.isNotEmpty ? prose.join('\n') : content,
             icon: _iconForSection(title),
             color: sectionColor,
+          ),
+        );
+      } else if (isExampleSection && examples.isNotEmpty) {
+        widgets.add(_buildVocabTable(examples, sectionColor));
+      } else if (prose.isNotEmpty) {
+        widgets.add(
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: AppTheme.surface,
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: sectionColor.withValues(alpha: 0.1), width: 1.5),
+            ),
+            child: Text(
+              prose.join('\n'),
+              style: const TextStyle(fontSize: 16, height: 1.6, color: Colors.white),
+            ),
           ),
         );
       }

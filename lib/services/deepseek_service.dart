@@ -553,18 +553,16 @@ class DeepSeekService {
             {
               'role': 'system',
               'content':
-                  'You are a French B1 teacher. Generate a comprehensive, DETAILED lesson in JSON format. '
-                      'The lesson must be very simple to understand but rich in content. '
+                  'You are a French B1 teacher. Generate a highly detailed, professional, and pedagogical lesson in JSON format. '
+                      'The lesson must be structured like a textbook chapter for beginners. '
                       'CRITICAL RULES: '
-                      '1. "title" MUST ALWAYS BE IN FRENCH (e.g., "La Santé"). '
-                      '2. "subtitle" MUST BE THE TRANSLATION of the title in $targetLanguage. '
-                      '3. ALL explanations and section "title"s MUST be in $targetLanguage. '
-                      '4. French sentences/examples MUST stay in French. Do NOT translate the French words themselves inside the sentence. Provide a separate translation in $targetLanguage. '
-                      '5. NEVER use markdown symbols (** or #). Use plain text. '
-                      '6. NEVER add preambles or introductions. '
-                      'Return a JSON object with: '
-                      '"title" (String in French), "subtitle" (String in $targetLanguage), "icon" (single emoji), '
-                      '"sections" (Array of objects: {"title": String in $targetLanguage, "content": plain text string in $targetLanguage}).'
+                      '1. "title" ALWAYS IN FRENCH. "subtitle" in $targetLanguage. '
+                      '2. CONTENT DEPTH: Each section must be rich and detailed. Do NOT be brief. '
+                      '3. STRUCTURE: Include "Introduction", "Detailed Explanation", "Key Rules", "Numerous Examples", and "Common Mistakes". '
+                      '4. FRENCH FOCUS: French sentences stay in French. Provide translations separately. '
+                      '5. CLEANLINESS: No markdown (**), no preambles. '
+                      '6. RICHNESS: Use multiple examples for each rule. '
+                      'Return JSON: {"title": French, "subtitle": $targetLanguage, "icon": emoji, "sections": [{"title": $targetLanguage, "content": Detailed text in $targetLanguage}]}.'
             },
             {
               'role': 'user',
@@ -607,18 +605,15 @@ class DeepSeekService {
             {
               'role': 'system',
               'content':
-                  'You are a French Grammar expert. Generate a DETAILED B1 grammar guide in JSON format. '
-                      'The guide must be pedagogical, simple, and very clear for beginners. '
+                  'You are a French Grammar expert. Generate a MASTERCLASS level B1 grammar guide in JSON format. '
+                      'The guide must be extremely detailed, logical, and easy to follow. '
                       'CRITICAL RULES: '
-                      '1. "title" MUST ALWAYS BE IN FRENCH (e.g., "Le Subjonctif"). '
-                      '2. "subtitle" MUST BE THE TRANSLATION of the title in $targetLanguage. '
-                      '3. ALL explanations and section "title"s MUST be in $targetLanguage. '
-                      '4. French grammar examples MUST stay in French. Provide a separate translation in $targetLanguage. '
-                      '5. NEVER use markdown symbols (** or #). Use plain text. '
-                      '6. NEVER add preambles or introductions. '
-                      'Return a JSON object with: '
-                      '"title" (String in French), "subtitle" (String in $targetLanguage), "icon" (single emoji), '
-                      '"sections" (Array of objects: {"title": String in $targetLanguage, "content": plain text string in $targetLanguage}).'
+                      '1. "title" ALWAYS IN FRENCH. "subtitle" in $targetLanguage. '
+                      '2. DEPTH: Explain the "why" and "how". Provide step-by-step conjugation or usage rules. '
+                      '3. EXAMPLES: Provide at least 5 varied examples for each rule. '
+                      '4. SECTIONS: Include "Overview", "Usage Rules", "Conjugation/Formation", "Special Cases", and "Practice Tips". '
+                      '5. CLEANLINESS: No markdown (**), no preambles. '
+                      'Return JSON: {"title": French, "subtitle": $targetLanguage, "icon": emoji, "sections": [{"title": $targetLanguage, "content": Detailed text in $targetLanguage}]}.'
             },
             {
               'role': 'user',
