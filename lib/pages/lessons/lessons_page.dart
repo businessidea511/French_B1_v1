@@ -624,11 +624,12 @@ class _LessonsPageState extends State<LessonsPage> {
                       tooltip: 'Update',
                       onPressed: () => _showUpdateOptions(topic),
                     ),
-                    IconButton(
-                      icon: const Icon(Icons.delete_outline_rounded, color: AppTheme.error, size: 22),
-                      tooltip: 'Delete',
-                      onPressed: () => _confirmDelete(topic),
-                    ),
+                    if (topic.id.startsWith('custom_'))
+                      IconButton(
+                        icon: const Icon(Icons.delete_outline_rounded, color: AppTheme.error, size: 22),
+                        tooltip: 'Delete',
+                        onPressed: () => _confirmDelete(topic),
+                      ),
                     const Icon(Icons.arrow_forward_ios_rounded,
                         color: AppTheme.textTertiary, size: 14),
                   ],
