@@ -47,7 +47,12 @@ class _AskAIBoxState extends State<AskAIBox> with AutomaticKeepAliveClientMixin 
             title: const Text('Take a Photo', style: TextStyle(color: Colors.white)),
             onTap: () async {
               Navigator.pop(context);
-              final image = await picker.pickImage(source: ImageSource.camera, imageQuality: 70);
+              final image = await picker.pickImage(
+                source: ImageSource.camera, 
+                imageQuality: 40, // Reduced quality to save memory
+                maxWidth: 800,    // Limited size to prevent crash
+                maxHeight: 800,
+              );
               if (image != null) _processImage(image);
             },
           ),
@@ -56,7 +61,12 @@ class _AskAIBoxState extends State<AskAIBox> with AutomaticKeepAliveClientMixin 
             title: const Text('Choose from Gallery', style: TextStyle(color: Colors.white)),
             onTap: () async {
               Navigator.pop(context);
-              final image = await picker.pickImage(source: ImageSource.gallery, imageQuality: 70);
+              final image = await picker.pickImage(
+                source: ImageSource.gallery, 
+                imageQuality: 40,
+                maxWidth: 800,
+                maxHeight: 800,
+              );
               if (image != null) _processImage(image);
             },
           ),
