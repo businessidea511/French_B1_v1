@@ -552,23 +552,36 @@ class DeepSeekService {
           'messages': [
             {
               'role': 'system',
-              'content':
-                  'You are a French B1 teacher. Generate a highly detailed, professional, and pedagogical lesson in JSON format. '
-                      'The lesson must be structured like a textbook chapter for beginners. '
-                      'CRITICAL RULES: '
-                      '1. "title" ALWAYS IN FRENCH. "subtitle" in $targetLanguage. '
-                      '2. CONTENT DEPTH: Each section must be rich and detailed. Do NOT be brief. '
-                      '3. STRUCTURE: Include "Introduction", "Detailed Explanation", "Key Rules", "Numerous Examples", and "Common Mistakes". '
-                      '4. FRENCH FOCUS: French sentences stay in French. Provide translations separately. '
-                      '5. CLEANLINESS: No markdown (**), no preambles. '
-                      '6. RICHNESS: Use multiple examples for each rule. '
-                      'Return JSON: {"title": French, "subtitle": $targetLanguage, "icon": emoji, "sections": [{"title": $targetLanguage, "content": Detailed text in $targetLanguage}]}.'
-            },
+              'content': '''
+You are a French B1 teacher. Output a lesson as a JSON object with this EXACT structure:
+{
+  "title": "French title (e.g. La Santé)",
+  "subtitle": "Translation of title in $targetLanguage",
+  "icon": "single emoji",
+  "widgets": [
+    {"type": "text", "content": "Introductory paragraph in $targetLanguage. No markdown."},
+    {"type": "section_title", "emoji": "📚", "title": "Section name in $targetLanguage"},
+    {"type": "text", "content": "Explanation paragraph in $targetLanguage."},
+    {"type": "example", "french": "French sentence.", "translation": "$targetLanguage translation."},
+    {"type": "example", "french": "Another French sentence.", "translation": "$targetLanguage translation."},
+    {"type": "tipbox", "title": "Note title", "content": "Tip content in $targetLanguage.", "color": "blue"},
+    {"type": "section_title", "emoji": "⚠️", "title": "Common Mistakes"},
+    {"type": "tipbox", "title": "Warning", "content": "Mistake description in $targetLanguage.", "color": "red"}
+  ]
+}
+CRITICAL RULES:
+1. Use ONLY these widget types: text, section_title, example, tipbox
+2. NEVER use markdown (**text**, #heading). Plain text only.
+3. NEVER add sentences like "Here is the translation" or "Following your instructions". Output ONLY the JSON.
+4. French sentences in "french" field stay in French. All explanations in $targetLanguage.
+5. Include at least 3 section_title blocks and 5 example blocks.
+6. tipbox colors: "blue", "green", "red", "yellow", "purple"
+'''            },
             {
               'role': 'user',
               'content': pdfText != null
-                  ? 'Generate a French B1 lesson based on this PDF text: \n\n $pdfText \n\n Focus on the main topic: $topic. Explanation language: $targetLanguage.'
-                  : 'Generate a French B1 lesson about: $topic. Explanation language: $targetLanguage.'
+                  ? 'Generate a detailed French B1 lesson based on this PDF: \n\n$pdfText\n\nTopic: $topic. Language: $targetLanguage.'
+                  : 'Generate a detailed French B1 lesson about: $topic. Language: $targetLanguage.'
             }
           ],
           'response_format': {'type': 'json_object'},
@@ -604,22 +617,39 @@ class DeepSeekService {
           'messages': [
             {
               'role': 'system',
-              'content':
-                  'You are a French Grammar expert. Generate a MASTERCLASS level B1 grammar guide in JSON format. '
-                      'The guide must be extremely detailed, logical, and easy to follow. '
-                      'CRITICAL RULES: '
-                      '1. "title" ALWAYS IN FRENCH. "subtitle" in $targetLanguage. '
-                      '2. DEPTH: Explain the "why" and "how". Provide step-by-step conjugation or usage rules. '
-                      '3. EXAMPLES: Provide at least 5 varied examples for each rule. '
-                      '4. SECTIONS: Include "Overview", "Usage Rules", "Conjugation/Formation", "Special Cases", and "Practice Tips". '
-                      '5. CLEANLINESS: No markdown (**), no preambles. '
-                      'Return JSON: {"title": French, "subtitle": $targetLanguage, "icon": emoji, "sections": [{"title": $targetLanguage, "content": Detailed text in $targetLanguage}]}.'
-            },
+              'content': '''
+You are a French Grammar expert. Output a grammar guide as a JSON object with this EXACT structure:
+{
+  "title": "French grammar topic (e.g. Le Subjonctif)",
+  "subtitle": "Translation in $targetLanguage",
+  "icon": "single emoji",
+  "widgets": [
+    {"type": "text", "content": "Overview paragraph explaining what this grammar is and when to use it. In $targetLanguage."},
+    {"type": "section_title", "emoji": "🔧", "title": "Formation / How to Build It"},
+    {"type": "tipbox", "title": "Formula", "content": "Step-by-step formation rule in $targetLanguage.", "color": "blue"},
+    {"type": "text", "content": "Detailed conjugation explanation in $targetLanguage."},
+    {"type": "section_title", "emoji": "💬", "title": "Examples"},
+    {"type": "example", "french": "French sentence.", "translation": "$targetLanguage translation."},
+    {"type": "example", "french": "Another example.", "translation": "$targetLanguage translation."},
+    {"type": "section_title", "emoji": "⚠️", "title": "Common Mistakes"},
+    {"type": "tipbox", "title": "Mistake", "content": "Description of common mistake.", "color": "red"},
+    {"type": "section_title", "emoji": "🎯", "title": "Practice Tips"},
+    {"type": "tipbox", "title": "Tip", "content": "Helpful memory trick or practice suggestion.", "color": "green"}
+  ]
+}
+CRITICAL RULES:
+1. Use ONLY these widget types: text, section_title, example, tipbox
+2. NEVER use markdown (**text**, #heading). Plain text only.
+3. NEVER add sentences like "Here is the translation" or "Following your instructions". Output ONLY the JSON.
+4. French sentences in "french" field stay in French. All explanations in $targetLanguage.
+5. Include at least 5 example blocks and 3 section_title blocks.
+6. tipbox colors: "blue", "green", "red", "yellow", "purple"
+'''            },
             {
               'role': 'user',
               'content': pdfText != null
-                  ? 'Generate a French B1 grammar guide based on this PDF text: \n\n $pdfText \n\n Focus on the topic: $topic. Explanation language: $targetLanguage.'
-                  : 'Generate a French B1 grammar guide about: $topic. Explanation language: $targetLanguage.'
+                  ? 'Generate a detailed French B1 grammar guide based on this PDF: \n\n$pdfText\n\nTopic: $topic. Language: $targetLanguage.'
+                  : 'Generate a detailed French B1 grammar guide about: $topic. Language: $targetLanguage.'
             }
           ],
           'response_format': {'type': 'json_object'},

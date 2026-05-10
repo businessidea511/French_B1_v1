@@ -10,289 +10,202 @@ class DynamicLessonPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final List<dynamic> sections = topic.content ?? [];
-
     return LessonTemplate(
       title: topic.title,
       icon: topic.icon,
       topic: topic.title,
-      children: _buildSections(sections),
+      children: _buildWidgets(),
     );
   }
 
-  List<Widget> _buildSections(List<dynamic> sections) {
-    final List<Widget> widgets = [];
-    final sectionColors = [
-      AppTheme.primary,
-      AppTheme.secondary,
-      AppTheme.accent,
-      AppTheme.success,
-      const Color(0xFFF59E0B),
-      const Color(0xFFEC4899),
-    ];
+  List<Widget> _buildWidgets() {
+    final List<Widget> result = [];
 
-    // Extremely aggressive filter for preamble sections
-    final validSections = sections.where((s) {
-      final title = (s['title'] ?? '').toString().toLowerCase();
-      final content = (s['content'] ?? '').toString().toLowerCase();
-      
-      bool isPreamble(String text) {
-        final t = text.toLowerCase().trim();
-        return t.contains('here is') || 
-               t.contains('following your') || 
-               t.contains('translation of') ||
-               t.contains('ترجمة') ||
-               t.contains('محتوى الدرس') ||
-               t.startsWith(':') || 
-               t.length < 2;
-      }
+    // Support both old format (sections[]) and new format (widgets[])
+    final rawWidgets = topic.content;
+    if (rawWidgets == null || rawWidgets.isEmpty) return result;
 
-      return !isPreamble(title) && !isPreamble(content.split('\n').take(2).join(' '));
-    }).toList();
+    // Detect format: new format has "type" key, old format has "title"+"content"
+    final isNewFormat = rawWidgets.isNotEmpty &&
+        rawWidgets.first is Map &&
+        (rawWidgets.first as Map).containsKey('type');
 
-    for (int i = 0; i < validSections.length; i++) {
-      final section = validSections[i];
-      final String title = _cleanText(section['title'] ?? 'Section ${i + 1}');
-      final String content = _cleanText(section['content'] ?? '');
-      final Color sectionColor = sectionColors[i % sectionColors.length];
-      // Use dynamic emojis based on title
-      String sectionEmoji = '📝';
-      final lowerTitle = title.toLowerCase();
-      if (lowerTitle.contains('intro')) sectionEmoji = '🚀';
-      if (lowerTitle.contains('rule') || lowerTitle.contains('قاعدة')) sectionEmoji = '⚖️';
-      if (lowerTitle.contains('example') || lowerTitle.contains('مثال')) sectionEmoji = '💡';
-      if (lowerTitle.contains('mistake') || lowerTitle.contains('خطأ')) sectionEmoji = '⚠️';
-      if (lowerTitle.contains('practice') || lowerTitle.contains('تدريب')) sectionEmoji = '🎯';
-
-      widgets.add(SectionTitle(title, emoji: sectionEmoji));
-
-      // Parse content lines into styled widgets
-      final lines = content.split('\n').where((l) => l.trim().isNotEmpty).toList();
-      final List<List<String>> examples = [];
-      final List<String> bullets = [];
-      final List<String> tips = [];
-      final List<String> prose = [];
-
-      for (final line in lines) {
-        final t = line.trim();
-        if (_isExample(t)) {
-          examples.add(_parseExample(t));
-        } else if (_isTip(t)) {
-          tips.add(t.replaceAll(RegExp(r'^[⚠️💡📌✅❌🔑🎯➡️•\-\*]\s*'), ''));
-        } else if (_isBullet(t)) {
-          bullets.add(t.replaceAll(RegExp(r'^[-•*]\s*'), ''));
-        } else {
-          prose.add(t);
-        }
-      }
-
-      // Render content based on section type
-      final isExampleSection = lowerTitle.contains('example') || lowerTitle.contains('مثال') || lowerTitle.contains('phrases');
-      final isRuleSection = lowerTitle.contains('rule') || lowerTitle.contains('explanation') || lowerTitle.contains('قاعدة') || lowerTitle.contains('شرح');
-
-      if (isRuleSection) {
-        widgets.add(
-          TipBox(
-            title: title,
-            content: prose.isNotEmpty ? prose.join('\n') : content,
-            icon: _iconForSection(title),
-            color: sectionColor,
-          ),
-        );
-      } else if (isExampleSection && examples.isNotEmpty) {
-        widgets.add(_buildVocabTable(examples, sectionColor));
-      } else if (prose.isNotEmpty) {
-        widgets.add(
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: AppTheme.surface,
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: sectionColor.withValues(alpha: 0.1), width: 1.5),
-            ),
-            child: Text(
-              prose.join('\n'),
-              style: const TextStyle(fontSize: 16, height: 1.6, color: Colors.white),
-            ),
-          ),
-        );
-      }
-
-      // Render examples
-      if (examples.isNotEmpty) {
-        widgets.add(_buildVocabTable(examples, sectionColor));
-      }
-
-      // Render bullets as a styled card
-      if (bullets.isNotEmpty) {
-        widgets.add(_buildBulletCard(bullets, sectionColor));
-      }
-
-      // Render tips
-      for (final tip in tips) {
-        widgets.add(
-          TipBox(
-            title: '💡 Note',
-            content: tip,
-            icon: Icons.lightbulb_outline,
-            color: const Color(0xFFF59E0B),
-          ),
-        );
-      }
-
-      widgets.add(const SizedBox(height: 8));
+    if (isNewFormat) {
+      return _buildFromWidgetFormat(rawWidgets);
+    } else {
+      return _buildFromSectionsFormat(rawWidgets);
     }
-
-    return widgets;
   }
 
-  /// Strips markdown symbols and preamble phrases from AI-generated text
-  String _cleanText(String text) {
+  // ─── NEW FORMAT: widget-based JSON ───────────────────────────────────────
+  List<Widget> _buildFromWidgetFormat(List<dynamic> widgetList) {
+    final List<Widget> result = [];
+
+    for (final w in widgetList) {
+      if (w is! Map) continue;
+      final type = (w['type'] ?? '').toString();
+      final rawContent = (w['content'] ?? '').toString();
+
+      // Skip any preamble the AI might have slipped in
+      if (_isPreamble(rawContent) || _isPreamble(w['title']?.toString() ?? '')) {
+        continue;
+      }
+
+      switch (type) {
+        case 'section_title':
+          final title = _clean(w['title'] ?? '');
+          final emoji = (w['emoji'] ?? '📖').toString();
+          if (title.isEmpty) break;
+          result.add(SectionTitle(title, emoji: emoji));
+          break;
+
+        case 'text':
+          final text = _clean(rawContent);
+          if (text.isEmpty) break;
+          result.add(
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Text(
+                text,
+                style: const TextStyle(fontSize: 16, height: 1.6, color: Colors.white),
+              ),
+            ),
+          );
+          break;
+
+        case 'example':
+          final french = _clean(w['french'] ?? '');
+          final translation = _clean(w['translation'] ?? '');
+          if (french.isEmpty) break;
+          result.add(ExampleBox(french: french, english: translation));
+          break;
+
+        case 'tipbox':
+          final title = _clean(w['title'] ?? 'Note');
+          final content = _clean(rawContent);
+          final color = _colorFromString(w['color']?.toString() ?? 'blue');
+          final icon = _iconFromColor(w['color']?.toString() ?? 'blue');
+          if (content.isEmpty) break;
+          result.add(TipBox(
+            title: title,
+            content: content,
+            icon: icon,
+            color: color,
+          ));
+          break;
+
+        default:
+          // Fallback: render as plain text
+          final text = _clean(rawContent);
+          if (text.isNotEmpty) {
+            result.add(Text(text,
+                style: const TextStyle(fontSize: 16, height: 1.6, color: Colors.white)));
+          }
+      }
+
+      result.add(const SizedBox(height: 8));
+    }
+
+    return result;
+  }
+
+  // ─── OLD FORMAT: sections-based JSON (backward compatibility) ────────────
+  List<Widget> _buildFromSectionsFormat(List<dynamic> sections) {
+    final List<Widget> result = [];
+    final colors = [
+      AppTheme.primary, AppTheme.secondary, AppTheme.accent,
+      AppTheme.success, const Color(0xFFF59E0B), const Color(0xFFEC4899),
+    ];
+
+    final valid = sections.where((s) {
+      final t = _clean((s['title'] ?? '').toString());
+      final c = (s['content'] ?? '').toString();
+      return !_isPreamble(t) && !_isPreamble(c.split('\n').take(2).join(' '));
+    }).toList();
+
+    for (int i = 0; i < valid.length; i++) {
+      final title = _clean(valid[i]['title'] ?? 'Section ${i + 1}');
+      final content = _clean(valid[i]['content'] ?? '');
+      final color = colors[i % colors.length];
+      final emoji = _emojiFor(title);
+
+      result.add(SectionTitle(title, emoji: emoji));
+      result.add(const SizedBox(height: 8));
+
+      if (content.isNotEmpty) {
+        result.add(TipBox(
+          title: title,
+          content: content,
+          icon: Icons.info_outline_rounded,
+          color: color,
+        ));
+      }
+      result.add(const SizedBox(height: 16));
+    }
+
+    return result;
+  }
+
+  // ─── Helpers ──────────────────────────────────────────────────────────────
+
+  bool _isPreamble(String text) {
+    final t = text.toLowerCase().trim();
+    return t.contains('here is') ||
+        t.contains('following your') ||
+        t.contains('translation of') ||
+        t.contains('ترجمة') ||
+        t.contains('محتوى الدرس') ||
+        (t.startsWith(':') && t.length < 10);
+  }
+
+  /// Strip markdown symbols and any preamble lines
+  String _clean(String text) {
     if (text.isEmpty) return '';
-    
     return text
-        // Remove markdown symbols everywhere
         .replaceAll('**', '')
         .replaceAll('__', '')
-        .replaceAll('* ', '')
-        .replaceAll('- ', '')
-        // Remove heading markers
         .replaceAll(RegExp(r'^#{1,6}\s*', multiLine: true), '')
-        // Aggressively remove any line containing preamble keywords
-        .replaceAll(RegExp(r'^.*?(here is|following your|translation of|محتوى الدرس|ترجمة).*?(\n|$)', caseSensitive: false, multiLine: true), '')
-        // Remove leading colons or dots that AI sometimes adds
-        .replaceFirst(RegExp(r'^[:\.\s]+'), '')
-        // Clean up extra blank lines
+        .replaceAll(
+          RegExp(
+            r'^.*(here is|following your|translation of|محتوى الدرس|ترجمة).*(\n|$)',
+            caseSensitive: false,
+            multiLine: true,
+          ),
+          '',
+        )
         .replaceAll(RegExp(r'\n{3,}'), '\n\n')
         .trim();
   }
 
-  bool _isExample(String line) {
-    return line.contains('→') || line.contains('->') ||
-        (line.contains(':') && line.length < 120 && !line.startsWith('http'));
-  }
-
-  bool _isTip(String line) {
-    return line.startsWith('💡') || line.startsWith('⚠️') ||
-        line.startsWith('📌') || line.startsWith('🔑') ||
-        line.startsWith('✅') || line.startsWith('❌');
-  }
-
-  bool _isBullet(String line) {
-    return line.startsWith('-') || line.startsWith('•') || line.startsWith('*');
-  }
-
-  List<String> _parseExample(String line) {
-    if (line.contains('→')) return line.split('→').map((e) => e.trim()).toList();
-    if (line.contains('->')) return line.split('->').map((e) => e.trim()).toList();
-    if (line.contains(':')) {
-      final idx = line.indexOf(':');
-      return [line.substring(0, idx).trim(), line.substring(idx + 1).trim()];
+  Color _colorFromString(String c) {
+    switch (c) {
+      case 'red':    return const Color(0xFFEF4444);
+      case 'green':  return const Color(0xFF10B981);
+      case 'yellow': return const Color(0xFFF59E0B);
+      case 'purple': return const Color(0xFF8B5CF6);
+      default:       return const Color(0xFF6366F1); // blue
     }
-    return [line, ''];
   }
 
-  Widget _buildVocabTable(List<List<String>> rows, Color color) {
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 12),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.06),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withValues(alpha: 0.2)),
-      ),
-      child: Column(
-        children: rows.map((row) {
-          return Container(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-            decoration: BoxDecoration(
-              border: Border(
-                bottom: BorderSide(color: color.withValues(alpha: 0.1)),
-              ),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    row.isNotEmpty ? row[0] : '',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 15,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-                Icon(Icons.arrow_forward_rounded, color: color, size: 16),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    row.length > 1 ? row[1] : '',
-                    style: TextStyle(color: color.withValues(alpha: 0.9), fontSize: 15),
-                    textAlign: TextAlign.end,
-                  ),
-                ),
-              ],
-            ),
-          );
-        }).toList(),
-      ),
-    );
+  IconData _iconFromColor(String c) {
+    switch (c) {
+      case 'red':    return Icons.warning_amber_rounded;
+      case 'green':  return Icons.check_circle_outline;
+      case 'yellow': return Icons.lightbulb_outline;
+      case 'purple': return Icons.auto_awesome;
+      default:       return Icons.info_outline_rounded;
+    }
   }
 
-  Widget _buildBulletCard(List<String> bullets, Color color) {
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 12),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: AppTheme.surface.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withValues(alpha: 0.2)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: bullets.map((b) {
-          return Padding(
-            padding: const EdgeInsets.symmetric(vertical: 6),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  width: 8,
-                  height: 8,
-                  margin: const EdgeInsets.only(top: 6, right: 12),
-                  decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-                ),
-                Expanded(
-                  child: Text(
-                    b,
-                    style: const TextStyle(color: Colors.white, fontSize: 15, height: 1.5),
-                  ),
-                ),
-              ],
-            ),
-          );
-        }).toList(),
-      ),
-    );
-  }
-
-  String _emojiForSection(String title) {
+  String _emojiFor(String title) {
     final t = title.toLowerCase();
-    if (t.contains('vocab') || t.contains('مفرد') || t.contains('mot')) return '📚';
-    if (t.contains('example') || t.contains('مثال') || t.contains('exemple')) return '💬';
-    if (t.contains('grammar') || t.contains('قاعد') || t.contains('grammaire')) return '📐';
-    if (t.contains('tip') || t.contains('note') || t.contains('ملاحظ')) return '💡';
-    if (t.contains('exercise') || t.contains('تمرين') || t.contains('exercice')) return '✏️';
-    if (t.contains('culture') || t.contains('ثقاف')) return '🌍';
-    if (t.contains('express') || t.contains('تعبير')) return '🗣️';
+    if (t.contains('intro') || t.contains('مقدمة')) return '🚀';
+    if (t.contains('rule') || t.contains('قاعدة')) return '⚖️';
+    if (t.contains('example') || t.contains('مثال')) return '💬';
+    if (t.contains('mistake') || t.contains('خطأ')) return '⚠️';
+    if (t.contains('practice') || t.contains('تدريب')) return '🎯';
+    if (t.contains('vocab') || t.contains('مفردات')) return '📚';
+    if (t.contains('tip') || t.contains('ملاحظة')) return '💡';
     return '📖';
-  }
-
-  IconData _iconForSection(String title) {
-    final t = title.toLowerCase();
-    if (t.contains('vocab') || t.contains('مفرد')) return Icons.menu_book_rounded;
-    if (t.contains('grammar') || t.contains('قاعد')) return Icons.rule_rounded;
-    if (t.contains('tip') || t.contains('note')) return Icons.lightbulb_outline;
-    if (t.contains('exercise') || t.contains('تمرين')) return Icons.edit_note_rounded;
-    return Icons.info_outline_rounded;
   }
 }

@@ -164,13 +164,15 @@ class LessonsProvider extends ChangeNotifier {
 
   Future<void> addLesson(Map<String, dynamic> lessonData) async {
     final String id = 'custom_lesson_${DateTime.now().millisecondsSinceEpoch}';
+    // Support new 'widgets' format AND old 'sections'/'content' format
+    final dynamic rawContent = lessonData['widgets'] ?? lessonData['sections'] ?? lessonData['content'] ?? [];
     final newLesson = LessonTopic(
       id: id,
-      title: lessonData['title'],
-      subtitle: lessonData['subtitle'],
-      icon: lessonData['icon'],
-      description: (lessonData['sections'] ?? lessonData['content'] ?? []).map((s) => s['title']).join(', '),
-      content: lessonData['sections'] ?? lessonData['content'],
+      title: lessonData['title'] ?? 'Untitled',
+      subtitle: lessonData['subtitle'] ?? '',
+      icon: lessonData['icon'] ?? '📖',
+      description: lessonData['subtitle'] ?? lessonData['title'] ?? '',
+      content: rawContent is List ? rawContent : [],
     );
 
     _customLessons.add(newLesson);
@@ -207,13 +209,14 @@ class LessonsProvider extends ChangeNotifier {
   Future<void> updateLesson(String id, Map<String, dynamic> lessonData) async {
     final index = _customLessons.indexWhere((l) => l.id == id);
     if (index != -1) {
+      final dynamic rawContent = lessonData['widgets'] ?? lessonData['content'] ?? lessonData['sections'] ?? [];
       final updated = LessonTopic(
         id: id,
-        title: lessonData['title'],
-        subtitle: lessonData['subtitle'],
-        icon: lessonData['icon'],
-        description: (lessonData['content'] ?? lessonData['sections'] as List).map((s) => s['title']).join(', '),
-        content: lessonData['content'] ?? lessonData['sections'],
+        title: lessonData['title'] ?? 'Untitled',
+        subtitle: lessonData['subtitle'] ?? '',
+        icon: lessonData['icon'] ?? '📖',
+        description: lessonData['subtitle'] ?? lessonData['title'] ?? '',
+        content: rawContent is List ? rawContent : [],
       );
       _customLessons[index] = updated;
       notifyListeners();
@@ -240,13 +243,15 @@ class LessonsProvider extends ChangeNotifier {
 
   Future<void> addGrammar(Map<String, dynamic> grammarData) async {
     final String id = 'custom_grammar_${DateTime.now().millisecondsSinceEpoch}';
+    // Support new 'widgets' format AND old 'sections'/'content' format
+    final dynamic rawContent = grammarData['widgets'] ?? grammarData['sections'] ?? grammarData['content'] ?? [];
     final newGrammar = GrammarTopic(
       id: id,
-      title: grammarData['title'],
-      subtitle: grammarData['subtitle'],
-      icon: grammarData['icon'],
-      description: (grammarData['sections'] ?? grammarData['content'] ?? []).map((s) => s['title']).join(', '),
-      content: grammarData['sections'] ?? grammarData['content'],
+      title: grammarData['title'] ?? 'Untitled',
+      subtitle: grammarData['subtitle'] ?? '',
+      icon: grammarData['icon'] ?? '📖',
+      description: grammarData['subtitle'] ?? grammarData['title'] ?? '',
+      content: rawContent is List ? rawContent : [],
     );
 
     _customGrammar.add(newGrammar);
@@ -280,13 +285,14 @@ class LessonsProvider extends ChangeNotifier {
   Future<void> updateGrammar(String id, Map<String, dynamic> grammarData) async {
     final index = _customGrammar.indexWhere((g) => g.id == id);
     if (index != -1) {
+      final dynamic rawContent = grammarData['widgets'] ?? grammarData['content'] ?? grammarData['sections'] ?? [];
       final updated = GrammarTopic(
         id: id,
-        title: grammarData['title'],
-        subtitle: grammarData['subtitle'],
-        icon: grammarData['icon'],
-        description: (grammarData['content'] ?? grammarData['sections'] as List).map((s) => s['title']).join(', '),
-        content: grammarData['content'] ?? grammarData['sections'],
+        title: grammarData['title'] ?? 'Untitled',
+        subtitle: grammarData['subtitle'] ?? '',
+        icon: grammarData['icon'] ?? '📖',
+        description: grammarData['subtitle'] ?? grammarData['title'] ?? '',
+        content: rawContent is List ? rawContent : [],
       );
       _customGrammar[index] = updated;
       notifyListeners();
