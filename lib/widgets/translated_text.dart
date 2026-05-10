@@ -25,12 +25,33 @@ class _TranslatedTextState extends State<TranslatedText> {
   AppLanguage? _lastLanguage;
 
   @override
+  void initState() {
+    super.initState();
+    // Check memory cache immediately to avoid flicker
+    final lp = Provider.of<LanguageProvider>(context, listen: false);
+    _translatedText = DeepSeekService.getCachedTranslation(widget.text, lp.currentLanguage.name);
+    _lastLanguage = lp.currentLanguage;
+    if (_translatedText == null) {
+      _translate();
+    }
+  }
+
+  @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     final lp = Provider.of<LanguageProvider>(context);
     if (_lastLanguage != lp.currentLanguage) {
       _lastLanguage = lp.currentLanguage;
-      _translate();
+      // Try to get from memory cache first before showing spinner
+      final instant = DeepSeekService.getCachedTranslation(widget.text, lp.currentLanguage.name);
+      if (instant != null) {
+        setState(() {
+          _translatedText = instant;
+          _isLoading = false;
+        });
+      } else {
+        _translate();
+      }
     }
   }
 
@@ -42,6 +63,16 @@ class _TranslatedTextState extends State<TranslatedText> {
     if (lp.currentLanguage == AppLanguage.english) {
       setState(() {
         _translatedText = widget.text;
+      });
+      return;
+    }
+
+    // Double check memory cache before showing spinner
+    final instant = DeepSeekService.getCachedTranslation(widget.text, lp.currentLanguage.name);
+    if (instant != null) {
+      setState(() {
+        _translatedText = instant;
+        _isLoading = false;
       });
       return;
     }

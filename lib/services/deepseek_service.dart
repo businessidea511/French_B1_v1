@@ -8,6 +8,7 @@ import 'gemini_service.dart';
 
 class DeepSeekService {
   static const String baseUrl = 'https://api.deepseek.com/v1';
+  static final Map<String, String> _memoryCache = {};
 
   static String get apiKey {
     const String dKey = String.fromEnvironment('DEEPSEEK_API_KEY');
@@ -409,23 +410,34 @@ class DeepSeekService {
   }
 
   // Translate text to a target language
-  // Translate text to a target language with Local Cache
+  // Synchronous check for memory cache
+  static String? getCachedTranslation(String text, String targetLanguage) {
+    final String cacheKey = 'trans_${targetLanguage}_${text.hashCode}';
+    return _memoryCache[cacheKey];
+  }
+
+  // Translate text to a target language with Dual-Layer Cache (Memory + Disk)
   static Future<String> translateText(String text, String targetLanguage) async {
     if (text.trim().isEmpty) return text;
     
+    final String cacheKey = 'trans_${targetLanguage}_${text.hashCode}';
+
+    // 1. Check Memory Cache (Instant)
+    if (_memoryCache.containsKey(cacheKey)) {
+      return _memoryCache[cacheKey]!;
+    }
+    
     try {
       final prefs = await SharedPreferences.getInstance();
-      // Create a unique key for this text and language
-      final String cacheKey = 'trans_${targetLanguage}_${text.hashCode}';
       
-      // 1. Check local cache first
+      // 2. Check Disk Cache (Async)
       final String? cachedTranslation = prefs.getString(cacheKey);
       if (cachedTranslation != null) {
-        debugPrint('💾 Using cached translation for: ${text.substring(0, min(20, text.length))}...');
+        _memoryCache[cacheKey] = cachedTranslation; // Hydrate memory cache
         return cachedTranslation;
       }
 
-      // 2. If not cached, call DeepSeek
+      // 3. Call API
       final response = await http.post(
         Uri.parse('$baseUrl/chat/completions'),
         headers: {
@@ -460,9 +472,9 @@ class DeepSeekService {
         final data = jsonDecode(response.body);
         final String translated = data['choices'][0]['message']['content'].toString().trim();
         
-        // 3. Save to local cache for future use
+        // 4. Save to both caches
+        _memoryCache[cacheKey] = translated;
         await prefs.setString(cacheKey, translated);
-        debugPrint('✅ New translation cached for: $targetLanguage');
         
         return translated;
       }
