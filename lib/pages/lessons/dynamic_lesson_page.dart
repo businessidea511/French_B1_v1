@@ -174,12 +174,9 @@ class DynamicLessonPage extends StatelessWidget {
     final lines = text.split('\n').where((line) {
       final t = line.trim();
       if (t.isEmpty) return false;
-      final lower = t.toLowerCase();
-      // Drop any line that contains AI meta-commentary or apologies
-      final lower = line.toLowerCase().trim();
-      if (lower.isEmpty) return false;
       
       // Nuclear list of AI "apologies" and "meta-talk"
+      final lowerLine = t.toLowerCase();
       final badPhrases = [
         'here is', 'following your', 'translation of', 'as per your', 
         'per your instructions', 'sorry', 'cannot translate', 'assist with this',
@@ -191,7 +188,7 @@ class DynamicLessonPage extends StatelessWidget {
       ];
 
       for (var phrase in badPhrases) {
-        if (lower.contains(phrase)) return false;
+        if (lowerLine.contains(phrase)) return false;
       }
       return true;
     }).map((line) {
