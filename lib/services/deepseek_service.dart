@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/foundation.dart';
 import 'dart:math';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'gemini_service.dart';
 
 class DeepSeekService {
@@ -408,9 +409,23 @@ class DeepSeekService {
   }
 
   // Translate text to a target language
-  // Translate text to a target language
+  // Translate text to a target language with Local Cache
   static Future<String> translateText(String text, String targetLanguage) async {
+    if (text.trim().isEmpty) return text;
+    
     try {
+      final prefs = await SharedPreferences.getInstance();
+      // Create a unique key for this text and language
+      final String cacheKey = 'trans_${targetLanguage}_${text.hashCode}';
+      
+      // 1. Check local cache first
+      final String? cachedTranslation = prefs.getString(cacheKey);
+      if (cachedTranslation != null) {
+        debugPrint('💾 Using cached translation for: ${text.substring(0, min(20, text.length))}...');
+        return cachedTranslation;
+      }
+
+      // 2. If not cached, call DeepSeek
       final response = await http.post(
         Uri.parse('$baseUrl/chat/completions'),
         headers: {
@@ -443,7 +458,13 @@ class DeepSeekService {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        return data['choices'][0]['message']['content'].toString().trim();
+        final String translated = data['choices'][0]['message']['content'].toString().trim();
+        
+        // 3. Save to local cache for future use
+        await prefs.setString(cacheKey, translated);
+        debugPrint('✅ New translation cached for: $targetLanguage');
+        
+        return translated;
       }
       return text;
     } catch (e) {
