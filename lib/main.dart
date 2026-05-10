@@ -14,24 +14,23 @@ void main() async {
 
   // 1. Initialize Services (Supabase, Env) BEFORE UI
   try {
-    // Try loading environment from multiple possible locations
-    final possiblePaths = [".env", "assets/.env", "assets/env/.env"];
-    bool envLoaded = false;
-    for (String path in possiblePaths) {
-      try {
-        await dotenv.load(fileName: path);
-        debugPrint("Success: Loaded environment from $path");
-        envLoaded = true;
-        break;
-      } catch (_) {}
-    }
+    // Get keys from either String.fromEnvironment (Vercel Build Args) or dotenv (Local)
+    final String supabaseUrl = const String.fromEnvironment('SUPABASE_URL').isNotEmpty
+        ? const String.fromEnvironment('SUPABASE_URL')
+        : (dotenv.env['SUPABASE_URL'] ?? '');
+        
+    final String supabaseKey = const String.fromEnvironment('SUPABASE_ANON_KEY').isNotEmpty
+        ? const String.fromEnvironment('SUPABASE_ANON_KEY')
+        : (dotenv.env['SUPABASE_ANON_KEY'] ?? '');
 
-    if (envLoaded) {
+    if (supabaseUrl.isNotEmpty && supabaseKey.isNotEmpty) {
       await Supabase.initialize(
-        url: dotenv.env['SUPABASE_URL']!,
-        anonKey: dotenv.env['SUPABASE_ANON_KEY']!,
+        url: supabaseUrl,
+        anonKey: supabaseKey,
       );
       debugPrint("✅ Supabase Initialized Successfully");
+    } else {
+      debugPrint("⚠️ Supabase keys missing! Check .env or Vercel Environment Variables");
     }
   } catch (e) {
     debugPrint("🔥 Initialization Error: $e");
