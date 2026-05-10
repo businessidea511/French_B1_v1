@@ -4,7 +4,8 @@ class LessonTopic {
   final String subtitle;
   final String icon;
   final String description;
-  final List<dynamic>? content; // For AI-generated dynamic content
+  final List<dynamic>? content; 
+  final Map<String, dynamic>? metadata;
 
   const LessonTopic({
     required this.id,
@@ -13,6 +14,7 @@ class LessonTopic {
     required this.icon,
     required this.description,
     this.content,
+    this.metadata,
   });
 
   Map<String, dynamic> toJson() {
@@ -23,6 +25,7 @@ class LessonTopic {
       'icon': icon,
       'description': description,
       'content': content,
+      'metadata': metadata,
     };
   }
 
@@ -34,6 +37,7 @@ class LessonTopic {
       icon: json['icon'],
       description: json['description'],
       content: json['content'],
+      metadata: json['metadata'],
     );
   }
 }
