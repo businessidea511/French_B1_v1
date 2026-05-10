@@ -119,6 +119,131 @@ class _GrammarPageState extends State<GrammarPage> {
     }
   }
 
+  void _showUpdateOptions(GrammarTopic topic) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: AppTheme.surface,
+          title: Text('Update "${topic.title}"', style: const TextStyle(color: Colors.white)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _buildAddOption(
+                icon: Icons.edit_note,
+                title: 'Add via Topic Name',
+                subtitle: 'Extend this guide with AI',
+                onTap: () {
+                  Navigator.pop(context);
+                  _showTopicUpdateDialog(topic);
+                },
+              ),
+              const SizedBox(height: 12),
+              _buildAddOption(
+                icon: Icons.picture_as_pdf,
+                title: 'Add from PDF',
+                subtitle: 'Add content from another PDF',
+                onTap: () {
+                  Navigator.pop(context);
+                  _pickAndUpdateWithPdf(topic);
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildAddOption({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+    Color? color,
+  }) {
+    final iconColor = color ?? AppTheme.primary;
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          border: Border.all(color: iconColor.withValues(alpha: 0.2)),
+          borderRadius: BorderRadius.circular(12),
+          color: iconColor.withValues(alpha: 0.05),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, color: iconColor, size: 32),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  Text(subtitle, style: TextStyle(color: Colors.white.withValues(alpha: 0.6), fontSize: 12)),
+                ],
+              ),
+            ),
+            Icon(Icons.arrow_forward_ios, color: iconColor.withValues(alpha: 0.5), size: 14),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showTopicUpdateDialog(GrammarTopic topic) {
+    final TextEditingController controller = TextEditingController(text: topic.title);
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppTheme.surface,
+        title: const Text('Update Topic', style: TextStyle(color: Colors.white)),
+        content: TextField(
+          controller: controller,
+          style: const TextStyle(color: Colors.white),
+          decoration: const InputDecoration(hintText: 'Enter sub-topic to add...'),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _generateGrammar(topic: controller.text.trim());
+            },
+            child: const Text('Update'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _pickAndUpdateWithPdf(GrammarTopic topic) async {
+    final result = await FilePicker.platform.pickFiles(type: FileType.custom, allowedExtensions: ['pdf']);
+    if (result == null || result.files.single.path == null) return;
+
+    setState(() => _isGenerating = true);
+    try {
+      final lp = Provider.of<LanguageProvider>(context, listen: false);
+      final lessonsProvider = Provider.of<LessonsProvider>(context, listen: false);
+      final text = await PdfHelper.extractText(result.files.single.path!);
+
+      final updatedData = await DeepSeekService.updateGrammarWithPdf(
+        {'title': topic.title, 'subtitle': topic.subtitle, 'icon': topic.icon, 'sections': topic.content, 'id': topic.id},
+        text,
+        lp.currentLanguage.englishName,
+      );
+
+      await lessonsProvider.updateGrammar(topic.id, updatedData);
+      _showSuccess('Grammar guide updated successfully! 📄');
+    } catch (e) {
+      _showError('Failed to update from PDF: $e');
+    } finally {
+      setState(() => _isGenerating = false);
+    }
+  }
+
   void _showError(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message), backgroundColor: Colors.red),
@@ -237,8 +362,6 @@ class _GrammarPageState extends State<GrammarPage> {
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: () {
-          if (isCustom) {
-            // Use DynamicLessonPage but we need to convert GrammarTopic to LessonTopic or handle both
             Navigator.push(
               context,
               MaterialPageRoute(
@@ -254,12 +377,6 @@ class _GrammarPageState extends State<GrammarPage> {
                 ),
               ),
             );
-          } else {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => _getLessonPage(topic.id)),
-            );
-          }
         },
         onLongPress: isCustom ? () => _showDeleteConfirm(topic.id) : null,
         child: Padding(
@@ -284,10 +401,12 @@ class _GrammarPageState extends State<GrammarPage> {
                     ),
                   ),
                   const Spacer(),
-                  if (isCustom)
-                    const Icon(Icons.auto_awesome, color: AppTheme.secondary, size: 20)
-                  else
-                    const Icon(Icons.arrow_forward, color: AppTheme.textTertiary, size: 20),
+                  IconButton(
+                    icon: const Icon(Icons.sync_rounded, color: AppTheme.primary, size: 22),
+                    tooltip: 'Update this grammar guide',
+                    onPressed: () => _showUpdateOptions(topic),
+                  ),
+                  const Icon(Icons.arrow_forward, color: AppTheme.textTertiary, size: 20),
                 ],
               ),
               const Spacer(),

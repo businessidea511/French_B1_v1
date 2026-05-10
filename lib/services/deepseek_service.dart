@@ -916,6 +916,52 @@ class DeepSeekService {
       debugPrint('Error updating lesson with PDF: $e');
       rethrow;
     }
+  // ── Update an existing grammar guide with PDF text ───────────────────────
+  static Future<Map<String, dynamic>> updateGrammarWithPdf(
+    Map<String, dynamic> existingGrammar,
+    String newPdfText,
+    String targetLanguage,
+  ) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/chat/completions'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $apiKey',
+        },
+        body: jsonEncode({
+          'model': 'deepseek-chat',
+          'messages': [
+            {
+              'role': 'system',
+              'content':
+                  'Update the EXISTING French B1 grammar guide JSON with NEW information from this PDF text. '
+                  'Merge sections, rules, and examples without duplication. '
+                  'Explanations must be in $targetLanguage. Return ONLY the updated JSON.'
+            },
+            {
+              'role': 'user',
+              'content': 'Existing Grammar JSON: \n${jsonEncode(existingGrammar)}\n\nNew PDF Text: \n$newPdfText'
+            }
+          ],
+          'response_format': {'type': 'json_object'},
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        String content = data['choices'][0]['message']['content'];
+        content = content.replaceAll('```json', '').replaceAll('```', '').trim();
+        final updatedGrammar = jsonDecode(content);
+        updatedGrammar['id'] = existingGrammar['id'];
+        return updatedGrammar;
+      } else {
+        throw Exception('DeepSeek Grammar update error: ${response.statusCode}');
+      }
+    } catch (e) {
+      debugPrint('Error updating grammar with PDF: $e');
+      rethrow;
+    }
   }
 }
 

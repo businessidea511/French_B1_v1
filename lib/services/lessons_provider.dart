@@ -22,11 +22,37 @@ class LessonsProvider extends ChangeNotifier {
 
   LessonsProvider() {
     debugPrint("📚 LessonsProvider initialized");
-    _loadData();
+    _init();
   }
 
-  List<LessonTopic> get allLessons => [...lessonTopics, ..._customLessons];
-  List<GrammarTopic> get allGrammar => [...grammarTopics, ..._customGrammar];
+  Future<void> _init() async {
+    await _loadData();
+    await seedData(); // Ensure original content is in cloud
+  }
+
+  List<LessonTopic> get allLessons {
+    final Map<String, LessonTopic> merged = {};
+    // Add hardcoded first
+    for (var l in lessonTopics) {
+      merged[l.id] = l;
+    }
+    // Overwrite with cloud/custom versions if they exist
+    for (var l in _customLessons) {
+      merged[l.id] = l;
+    }
+    return merged.values.toList();
+  }
+
+  List<GrammarTopic> get allGrammar {
+    final Map<String, GrammarTopic> merged = {};
+    for (var g in grammarTopics) {
+      merged[g.id] = g;
+    }
+    for (var g in _customGrammar) {
+      merged[g.id] = g;
+    }
+    return merged.values.toList();
+  }
 
   Future<void> _loadData() async {
     try {
@@ -210,6 +236,46 @@ class LessonsProvider extends ChangeNotifier {
         }
       }
     }
+  }
+
+  Future<void> seedData() async {
+    final client = _supabase;
+    if (client == null) return;
+
+    debugPrint('🌱 Seeding original content to cloud...');
+    
+    // Seed Lessons
+    for (var lesson in lessonTopics) {
+      try {
+        await client.from('lessons').upsert({
+          'id': lesson.id,
+          'title': lesson.title,
+          'subtitle': lesson.subtitle,
+          'icon': lesson.icon,
+          'description': lesson.description,
+          'content': lesson.content,
+        }, onConflict: 'id'); // Don't overwrite if already changed in cloud
+      } catch (e) {
+        debugPrint('Seed error (lesson ${lesson.id}): $e');
+      }
+    }
+
+    // Seed Grammar
+    for (var grammar in grammarTopics) {
+      try {
+        await client.from('grammar').upsert({
+          'id': grammar.id,
+          'title': grammar.title,
+          'subtitle': grammar.subtitle,
+          'icon': grammar.icon,
+          'description': grammar.description,
+          'content': grammar.content,
+        }, onConflict: 'id');
+      } catch (e) {
+        debugPrint('Seed error (grammar ${grammar.id}): $e');
+      }
+    }
+    debugPrint('✅ Seeding complete');
   }
 
   Future<void> removeLesson(String id) async {

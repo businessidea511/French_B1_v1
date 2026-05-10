@@ -581,12 +581,11 @@ class _LessonsPageState extends State<LessonsPage> {
                     ),
                   ),
                   const Spacer(),
-                  if (topic.id.startsWith('custom_'))
-                    IconButton(
-                      icon: const Icon(Icons.sync_rounded, color: AppTheme.primary, size: 22),
-                      tooltip: 'Update this lesson with more pages',
-                      onPressed: () => _showUpdateOptions(topic),
-                    ),
+                  IconButton(
+                    icon: const Icon(Icons.sync_rounded, color: AppTheme.primary, size: 22),
+                    tooltip: 'Update this lesson with more pages',
+                    onPressed: () => _showUpdateOptions(topic),
+                  ),
                   const Icon(Icons.arrow_forward,
                       color: AppTheme.textTertiary, size: 20),
                 ],
