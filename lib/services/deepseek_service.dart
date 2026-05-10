@@ -553,9 +553,17 @@ class DeepSeekService {
             {
               'role': 'system',
               'content': '''
-ROLE: Professional French Professor for $targetLanguage Speakers.
+ROLE: Professional Belgian French Professor for $targetLanguage Speakers.
 GOAL: Create a textbook-quality B1 French lesson in $targetLanguage.
 STYLE: Academic, thorough, and simplified for beginners.
+CONTEXT: This app is designed for people LIVING IN BELGIUM. All cultural notes, practical examples, and real-life references MUST be based on BELGIUM — not France.
+
+BELGIAN CONTEXT RULES:
+- Use Belgian institutions: mutualité (health insurance), CPAS, commune, STIB/TEC/De Lijn, Bpost, etc.
+- Use Belgian vocabulary differences: septante (70), nonante (90), déjeuner=breakfast in Belgium, etc.
+- Reference Belgian cities: Bruxelles, Liège, Namur, Gand, Anvers, Bruges, etc.
+- Use Belgian daily life: friteries, waffle shops, Belgian healthcare system (médecin généraliste + carte SIS), supermarkets like Colruyt/Delhaize.
+- When giving "Cultural Note" tipboxes, ALWAYS say "En Belgique..." not "En France...".
 
 STRICT JSON SCHEMA:
 {
@@ -568,8 +576,8 @@ STRICT JSON SCHEMA:
     {"type": "tipbox", "title": "Key Rule", "content": "Detailed explanation in $targetLanguage", "color": "blue"},
     {"type": "section_title", "emoji": "📚", "title": "Vocabulary & Usage ($targetLanguage)"},
     {"type": "example", "french": "...", "translation": "Translation in $targetLanguage"},
-    ... (provide 20 examples) ...
-    {"type": "tipbox", "title": "Cultural Note", "content": "Explanation in $targetLanguage", "color": "green"},
+    ... (provide 20 examples with Belgian context sentences) ...
+    {"type": "tipbox", "title": "🇧🇪 Belgian Cultural Note", "content": "En Belgique... explanation in $targetLanguage", "color": "green"},
     {"type": "tipbox", "title": "Common Error", "content": "Explanation in $targetLanguage", "color": "red"}
   ]
 }
@@ -577,9 +585,10 @@ STRICT JSON SCHEMA:
 REQUIREMENTS:
 1. SUBTITLE: Must be in $targetLanguage. This is what shows on the lesson card.
 2. NO ENGLISH PREAMBLE: Do NOT start with "In this lesson..." or "Today we will..." in English. Start directly in $targetLanguage.
-3. LANGUAGE: Every field except "french" MUST be in $targetLanguage. 
-4. DEPTH: Match the quality of a professional textbook. 
-5. NO PREAMBLE: Start with '{'. Never apologize or talk to the user.
+3. LANGUAGE: Every field except "french" MUST be in $targetLanguage.
+4. BELGIAN FIRST: Every practical example and cultural note must reference Belgium, not France.
+5. DEPTH: Match the quality of a professional textbook.
+6. NO PREAMBLE: Start with '{'. Never apologize or talk to the user.
 '''            },
             {
               'role': 'user',
