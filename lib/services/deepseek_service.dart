@@ -553,29 +553,28 @@ class DeepSeekService {
             {
               'role': 'system',
               'content': '''
-You are a French B1 teacher. Output a lesson as a JSON object with this EXACT structure:
+You are a French B1 teacher. Output ONLY a raw JSON object. No preamble. No explanation. No markdown.
 {
   "title": "French title (e.g. La Santé)",
   "subtitle": "Translation of title in $targetLanguage",
   "icon": "single emoji",
   "widgets": [
-    {"type": "text", "content": "Introductory paragraph in $targetLanguage. No markdown."},
+    {"type": "text", "content": "Introduction in $targetLanguage."},
     {"type": "section_title", "emoji": "📚", "title": "Section name in $targetLanguage"},
-    {"type": "text", "content": "Explanation paragraph in $targetLanguage."},
-    {"type": "example", "french": "French sentence.", "translation": "$targetLanguage translation."},
-    {"type": "example", "french": "Another French sentence.", "translation": "$targetLanguage translation."},
-    {"type": "tipbox", "title": "Note title", "content": "Tip content in $targetLanguage.", "color": "blue"},
-    {"type": "section_title", "emoji": "⚠️", "title": "Common Mistakes"},
-    {"type": "tipbox", "title": "Warning", "content": "Mistake description in $targetLanguage.", "color": "red"}
+    {"type": "text", "content": "Explanation in $targetLanguage."},
+    {"type": "example", "french": "French sentence.", "translation": "Translation in $targetLanguage."},
+    {"type": "tipbox", "title": "Note", "content": "Tip in $targetLanguage.", "color": "blue"},
+    {"type": "section_title", "emoji": "⚠️", "title": "Common Mistakes in $targetLanguage"},
+    {"type": "tipbox", "title": "Warning", "content": "Mistake in $targetLanguage.", "color": "red"}
   ]
 }
-CRITICAL RULES:
-1. Use ONLY these widget types: text, section_title, example, tipbox
-2. NEVER use markdown (**text**, #heading). Plain text only.
-3. NEVER add sentences like "Here is the translation" or "Following your instructions". Output ONLY the JSON.
-4. French sentences in "french" field stay in French. All explanations in $targetLanguage.
-5. Include at least 3 section_title blocks and 5 example blocks.
-6. tipbox colors: "blue", "green", "red", "yellow", "purple"
+CRITICAL RULES - ZERO TOLERANCE:
+1. LANGUAGE: Every "content", "title", "translation", "subtitle" field MUST be written in $targetLanguage. NOT English. NOT French. ONLY $targetLanguage.
+2. EXCEPTION: The "french" field in examples stays in French. The top-level "title" stays in French.
+3. NO MARKDOWN: No ** or __ or # anywhere.
+4. NO PREAMBLE: Do NOT write "Here is", "Note:", "Following your instructions", "I have kept", or any meta-commentary. Start directly with the JSON.
+5. COMPLETENESS: Include at least 4 section_title blocks and 6 example blocks.
+6. Colors: "blue", "green", "red", "yellow", "purple"
 '''            },
             {
               'role': 'user',
@@ -618,32 +617,30 @@ CRITICAL RULES:
             {
               'role': 'system',
               'content': '''
-You are a French Grammar expert. Output a grammar guide as a JSON object with this EXACT structure:
+You are a French Grammar expert. Output ONLY a raw JSON object. No preamble. No explanation. No markdown.
 {
   "title": "French grammar topic (e.g. Le Subjonctif)",
   "subtitle": "Translation in $targetLanguage",
   "icon": "single emoji",
   "widgets": [
-    {"type": "text", "content": "Overview paragraph explaining what this grammar is and when to use it. In $targetLanguage."},
-    {"type": "section_title", "emoji": "🔧", "title": "Formation / How to Build It"},
-    {"type": "tipbox", "title": "Formula", "content": "Step-by-step formation rule in $targetLanguage.", "color": "blue"},
-    {"type": "text", "content": "Detailed conjugation explanation in $targetLanguage."},
-    {"type": "section_title", "emoji": "💬", "title": "Examples"},
-    {"type": "example", "french": "French sentence.", "translation": "$targetLanguage translation."},
-    {"type": "example", "french": "Another example.", "translation": "$targetLanguage translation."},
-    {"type": "section_title", "emoji": "⚠️", "title": "Common Mistakes"},
-    {"type": "tipbox", "title": "Mistake", "content": "Description of common mistake.", "color": "red"},
-    {"type": "section_title", "emoji": "🎯", "title": "Practice Tips"},
-    {"type": "tipbox", "title": "Tip", "content": "Helpful memory trick or practice suggestion.", "color": "green"}
+    {"type": "text", "content": "Overview in $targetLanguage."},
+    {"type": "section_title", "emoji": "🔧", "title": "Formation in $targetLanguage"},
+    {"type": "tipbox", "title": "Formula", "content": "Rule in $targetLanguage.", "color": "blue"},
+    {"type": "section_title", "emoji": "💬", "title": "Examples in $targetLanguage"},
+    {"type": "example", "french": "French sentence.", "translation": "Translation in $targetLanguage."},
+    {"type": "section_title", "emoji": "⚠️", "title": "Common Mistakes in $targetLanguage"},
+    {"type": "tipbox", "title": "Mistake", "content": "Description in $targetLanguage.", "color": "red"},
+    {"type": "section_title", "emoji": "🎯", "title": "Practice Tips in $targetLanguage"},
+    {"type": "tipbox", "title": "Tip", "content": "Memory trick in $targetLanguage.", "color": "green"}
   ]
 }
-CRITICAL RULES:
-1. Use ONLY these widget types: text, section_title, example, tipbox
-2. NEVER use markdown (**text**, #heading). Plain text only.
-3. NEVER add sentences like "Here is the translation" or "Following your instructions". Output ONLY the JSON.
-4. French sentences in "french" field stay in French. All explanations in $targetLanguage.
-5. Include at least 5 example blocks and 3 section_title blocks.
-6. tipbox colors: "blue", "green", "red", "yellow", "purple"
+CRITICAL RULES - ZERO TOLERANCE:
+1. LANGUAGE: Every "content", "title", "translation", "subtitle" field MUST be written in $targetLanguage. NOT English. NOT French. ONLY $targetLanguage.
+2. EXCEPTION: The "french" field in examples stays in French. The top-level "title" stays in French.
+3. NO MARKDOWN: No ** or __ or # anywhere.
+4. NO PREAMBLE: Do NOT write "Here is", "Note:", "Following your instructions", "I have kept", or any meta-commentary. Start directly with the JSON.
+5. COMPLETENESS: Include at least 5 example blocks and 4 section_title blocks.
+6. Colors: "blue", "green", "red", "yellow", "purple"
 '''            },
             {
               'role': 'user',

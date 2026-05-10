@@ -158,23 +158,36 @@ class DynamicLessonPage extends StatelessWidget {
         (t.startsWith(':') && t.length < 10);
   }
 
-  /// Strip markdown symbols and any preamble lines
+  /// Strips markdown symbols and ANY preamble line from text
   String _clean(String text) {
     if (text.isEmpty) return '';
-    return text
-        .replaceAll('**', '')
-        .replaceAll('__', '')
-        .replaceAll(RegExp(r'^#{1,6}\s*', multiLine: true), '')
-        .replaceAll(
-          RegExp(
-            r'^.*(here is|following your|translation of|محتوى الدرس|ترجمة).*(\n|$)',
-            caseSensitive: false,
-            multiLine: true,
-          ),
-          '',
-        )
-        .replaceAll(RegExp(r'\n{3,}'), '\n\n')
-        .trim();
+    
+    // Split into lines, filter out preamble lines, rejoin
+    final lines = text.split('\n').where((line) {
+      final t = line.trim();
+      if (t.isEmpty) return false;
+      final lower = t.toLowerCase();
+      // Drop any line that contains AI meta-commentary
+      if (lower.contains('here is')) return false;
+      if (lower.contains('following your')) return false;
+      if (lower.contains('translation of')) return false;
+      if (lower.contains('as per your')) return false;
+      if (lower.contains('per your instructions')) return false;
+      if (lower.contains('تم الاحتفاظ')) return false;
+      if (lower.contains('وفقًا للتعليمات')) return false;
+      if (lower.contains('ملاحظة:')) return false;
+      if (lower.contains('محتوى الدرس')) return false;
+      return true;
+    }).map((line) {
+      // Remove markdown from each line
+      return line
+          .replaceAll('**', '')
+          .replaceAll('__', '')
+          .replaceAll(RegExp(r'^#{1,6}\s*'), '')
+          .trim();
+    }).where((line) => line.isNotEmpty).toList();
+    
+    return lines.join('\n').trim();
   }
 
   Color _colorFromString(String c) {
