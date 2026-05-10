@@ -341,6 +341,38 @@ class LessonsProvider extends ChangeNotifier {
     }
   }
 
+  /// Delete a custom lesson by ID (local + cloud)
+  Future<void> removeLesson(String id) async {
+    _customLessons.removeWhere((l) => l.id == id);
+    notifyListeners();
+    await _saveLocalData();
+    final client = _supabase;
+    if (client != null) {
+      try {
+        await client.from('lessons').delete().eq('id', id);
+        debugPrint('🗑️ Lesson deleted from cloud: $id');
+      } catch (e) {
+        debugPrint('Cloud delete lesson error: $e');
+      }
+    }
+  }
+
+  /// Delete a custom grammar topic by ID (local + cloud)
+  Future<void> removeGrammar(String id) async {
+    _customGrammar.removeWhere((g) => g.id == id);
+    notifyListeners();
+    await _saveLocalData();
+    final client = _supabase;
+    if (client != null) {
+      try {
+        await client.from('grammar').delete().eq('id', id);
+        debugPrint('🗑️ Grammar deleted from cloud: $id');
+      } catch (e) {
+        debugPrint('Cloud delete grammar error: $e');
+      }
+    }
+  }
+
   Future<void> seedData() async {
     final client = _supabase;
     if (client == null) return;

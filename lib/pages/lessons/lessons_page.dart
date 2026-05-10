@@ -212,6 +212,105 @@ class _LessonsPageState extends State<LessonsPage> {
     );
   }
 
+  // ── ADMIN DELETE ──────────────────────────────────────
+
+  void _confirmDelete(LessonTopic topic) {
+    final TextEditingController passController = TextEditingController();
+    bool obscure = true;
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDlgState) => AlertDialog(
+          backgroundColor: AppTheme.surface,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Row(
+            children: const [
+              Icon(Icons.admin_panel_settings_rounded, color: AppTheme.error),
+              SizedBox(width: 10),
+              Text('Admin Delete', style: TextStyle(color: Colors.white, fontSize: 18)),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppTheme.error.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: AppTheme.error.withValues(alpha: 0.3)),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.warning_amber_rounded, color: AppTheme.error, size: 18),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Delete "${topic.title}"? This cannot be undone.',
+                        style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: passController,
+                obscureText: obscure,
+                autofocus: true,
+                style: const TextStyle(color: Colors.white),
+                decoration: InputDecoration(
+                  hintText: 'Admin Password',
+                  prefixIcon: const Icon(Icons.lock_outline, color: AppTheme.error),
+                  suffixIcon: IconButton(
+                    icon: Icon(obscure ? Icons.visibility_off : Icons.visibility, color: AppTheme.textSecondary),
+                    onPressed: () => setDlgState(() => obscure = !obscure),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton.icon(
+              icon: const Icon(Icons.delete_forever_rounded, size: 18),
+              label: const Text('Delete'),
+              style: ElevatedButton.styleFrom(backgroundColor: AppTheme.error),
+              onPressed: () {
+                const String envPass = String.fromEnvironment('ADMIN_PASSWORD');
+                final String adminPass = envPass.isNotEmpty
+                    ? envPass
+                    : (dotenv.env['ADMIN_PASSWORD'] ?? 'admin123');
+
+                if (passController.text == adminPass) {
+                  Navigator.pop(ctx);
+                  Provider.of<LessonsProvider>(context, listen: false).removeLesson(topic.id);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('✅ "${topic.title}" deleted successfully'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('❌ Incorrect password'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   // ── IMAGE CAPTURE ──────────────────────────────────────
 
   void _showImageSourceDialog() {
