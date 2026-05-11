@@ -154,11 +154,90 @@ class _GrammarPageState extends State<GrammarPage> {
                   _pickAndUpdateWithPdf(topic);
                 },
               ),
+              const SizedBox(height: 12),
+              _buildAddOption(
+                icon: Icons.auto_awesome_rounded,
+                title: 'Update by AI',
+                subtitle: 'Tell AI what to add (e.g. "Add subjonctif rules")',
+                color: Colors.amber,
+                onTap: () {
+                  Navigator.pop(context);
+                  _showAIUpdateDialog(topic);
+                },
+              ),
             ],
           ),
         );
       },
     );
+  }
+
+  void _showAIUpdateDialog(GrammarTopic topic) {
+    final TextEditingController controller = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: AppTheme.surface,
+          title: Text('Update Grammar with AI: ${topic.title}', style: const TextStyle(color: Colors.white)),
+          content: TextField(
+            controller: controller,
+            autofocus: true,
+            maxLines: 3,
+            decoration: const InputDecoration(
+              hintText: 'e.g. Add more examples of irregular verbs to this guide...',
+              hintStyle: TextStyle(color: Colors.white54),
+            ),
+            style: const TextStyle(color: Colors.white),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                final instructions = controller.text.trim();
+                if (instructions.isNotEmpty) {
+                  Navigator.pop(context);
+                  _updateGrammarWithAI(topic, instructions);
+                }
+              },
+              child: const Text('Update'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _updateGrammarWithAI(GrammarTopic topic, String instructions) async {
+    final lp = Provider.of<LanguageProvider>(context, listen: false);
+    final lessonsProvider = Provider.of<LessonsProvider>(context, listen: false);
+    
+    setState(() => _isGenerating = true);
+    
+    try {
+      final updatedData = await DeepSeekService.updateGrammarWithAI(
+        {
+          'title': topic.title,
+          'subtitle': topic.subtitle,
+          'icon': topic.icon,
+          'sections': topic.content,
+          'id': topic.id
+        },
+        instructions,
+        lp.currentLanguage.englishName,
+      );
+
+      if (!mounted) return;
+      await lessonsProvider.updateGrammar(topic.id, updatedData);
+      _showSuccess('Grammar updated by AI successfully! ✨');
+    } catch (e) {
+      _showError('Failed to update with AI: $e');
+    } finally {
+      if (mounted) setState(() => _isGenerating = false);
+    }
   }
 
   Widget _buildAddOption({

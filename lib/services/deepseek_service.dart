@@ -1007,6 +1007,102 @@ CRITICAL RULES - ZERO TOLERANCE:
       rethrow;
     }
   }
+
+  // ── Update an existing lesson with user instructions (AI Update) ────────
+  static Future<Map<String, dynamic>> updateLessonWithAI(
+    Map<String, dynamic> existingLesson,
+    String userInstructions,
+    String targetLanguage,
+  ) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/chat/completions'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $apiKey',
+        },
+        body: jsonEncode({
+          'model': 'deepseek-chat',
+          'messages': [
+            {
+              'role': 'system',
+              'content':
+                  'Update the EXISTING French B1 lesson JSON based on the user instructions. '
+                  'Merge new vocabulary, grammar points, or exercises as requested. '
+                  'Explanations must be in $targetLanguage. Return ONLY the updated JSON.'
+            },
+            {
+              'role': 'user',
+              'content': 'Existing Lesson: \n${jsonEncode(existingLesson)}\n\nInstructions: \n$userInstructions'
+            }
+          ],
+          'response_format': {'type': 'json_object'},
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        String content = data['choices'][0]['message']['content'];
+        content = content.replaceAll('```json', '').replaceAll('```', '').trim();
+        final updatedLesson = jsonDecode(content);
+        updatedLesson['id'] = existingLesson['id'];
+        return updatedLesson;
+      } else {
+        throw Exception('DeepSeek AI update error: ${response.statusCode}');
+      }
+    } catch (e) {
+      debugPrint('Error updating lesson with AI: $e');
+      rethrow;
+    }
+  }
+
+  // ── Update an existing grammar guide with user instructions (AI Update) ──
+  static Future<Map<String, dynamic>> updateGrammarWithAI(
+    Map<String, dynamic> existingGrammar,
+    String userInstructions,
+    String targetLanguage,
+  ) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/chat/completions'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $apiKey',
+        },
+        body: jsonEncode({
+          'model': 'deepseek-chat',
+          'messages': [
+            {
+              'role': 'system',
+              'content':
+                  'Update the EXISTING French B1 grammar guide JSON based on the user instructions. '
+                  'Add or modify rules, examples, or sections as requested. '
+                  'Explanations must be in $targetLanguage. Return ONLY the updated JSON.'
+            },
+            {
+              'role': 'user',
+              'content': 'Existing Grammar: \n${jsonEncode(existingGrammar)}\n\nInstructions: \n$userInstructions'
+            }
+          ],
+          'response_format': {'type': 'json_object'},
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        String content = data['choices'][0]['message']['content'];
+        content = content.replaceAll('```json', '').replaceAll('```', '').trim();
+        final updatedGrammar = jsonDecode(content);
+        updatedGrammar['id'] = existingGrammar['id'];
+        return updatedGrammar;
+      } else {
+        throw Exception('DeepSeek Grammar AI update error: ${response.statusCode}');
+      }
+    } catch (e) {
+      debugPrint('Error updating grammar with AI: $e');
+      rethrow;
+    }
+  }
 }
 
 
