@@ -136,23 +136,21 @@ class LessonsProvider extends ChangeNotifier {
         return;
       }
 
-      // Sync Lessons
+      // Sync Lessons - pull ALL cloud items (both custom and updated hardcoded)
       final List<dynamic> cloudLessons = await client.from('lessons').select();
       _customLessons = cloudLessons
-          .where((item) => (item['id'] as String).startsWith('custom_'))
           .map((item) => LessonTopic.fromJson(item))
           .toList();
       
-      // Sync Grammar
+      // Sync Grammar - pull ALL cloud items
       final List<dynamic> cloudGrammar = await client.from('grammar').select();
       _customGrammar = cloudGrammar
-          .where((item) => (item['id'] as String).startsWith('custom_'))
           .map((item) => GrammarTopic.fromJson(item))
           .toList();
 
       notifyListeners();
       await _saveLocalData();
-      debugPrint('✅ Cloud Sync Complete: ${_customLessons.length} custom lessons found');
+      debugPrint('✅ Cloud Sync Complete: ${_customLessons.length} lessons, ${_customGrammar.length} grammar from cloud');
     } catch (e) {
       _lastError = e.toString();
       debugPrint('⚠️ Cloud sync failed: $e');
@@ -231,13 +229,15 @@ class LessonsProvider extends ChangeNotifier {
   }
 
   Future<void> updateLesson(String id, Map<String, dynamic> lessonData) async {
+    // Find the original topic to preserve metadata if DeepSeek didn't return them
+    final original = allLessons.where((l) => l.id == id).firstOrNull;
     final dynamic rawContent = lessonData['widgets'] ?? lessonData['content'] ?? lessonData['sections'] ?? [];
     final updated = LessonTopic(
       id: id,
-      title: lessonData['title'] ?? 'Untitled',
-      subtitle: lessonData['subtitle'] ?? '',
-      icon: lessonData['icon'] ?? '📖',
-      description: lessonData['subtitle'] ?? lessonData['title'] ?? '',
+      title: lessonData['title'] ?? original?.title ?? 'Untitled',
+      subtitle: lessonData['subtitle'] ?? original?.subtitle ?? '',
+      icon: lessonData['icon'] ?? original?.icon ?? '📖',
+      description: lessonData['subtitle'] ?? original?.description ?? '',
       content: rawContent is List ? rawContent : [],
     );
 
@@ -312,13 +312,15 @@ class LessonsProvider extends ChangeNotifier {
   }
 
   Future<void> updateGrammar(String id, Map<String, dynamic> grammarData) async {
+    // Find the original topic to preserve metadata if DeepSeek didn't return them
+    final original = allGrammar.where((g) => g.id == id).firstOrNull;
     final dynamic rawContent = grammarData['widgets'] ?? grammarData['content'] ?? grammarData['sections'] ?? [];
     final updated = GrammarTopic(
       id: id,
-      title: grammarData['title'] ?? 'Untitled',
-      subtitle: grammarData['subtitle'] ?? '',
-      icon: grammarData['icon'] ?? '📖',
-      description: grammarData['subtitle'] ?? grammarData['title'] ?? '',
+      title: grammarData['title'] ?? original?.title ?? 'Untitled',
+      subtitle: grammarData['subtitle'] ?? original?.subtitle ?? '',
+      icon: grammarData['icon'] ?? original?.icon ?? '📖',
+      description: grammarData['subtitle'] ?? original?.description ?? '',
       content: rawContent is List ? rawContent : [],
     );
 
