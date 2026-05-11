@@ -98,7 +98,7 @@ class FrenchB1App extends StatelessWidget {
             focusNode: rootFocusNode,
             autofocus: true,
             child: MaterialApp(
-              title: 'French B1 Learning',
+              title: 'PolyLearn French',
               theme: AppTheme.darkTheme,
               debugShowCheckedModeBanner: false,
               scrollBehavior: const MaterialScrollBehavior().copyWith(
