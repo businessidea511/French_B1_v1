@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:audioplayers/audioplayers.dart';
 import '../../theme/app_theme.dart';
 import '../../services/deepseek_service.dart';
 import '../../services/tts_service.dart';
+import '../../services/hugging_face_tts_service.dart';
 
 class ListeningPage extends StatefulWidget {
   const ListeningPage({super.key});
@@ -41,6 +44,10 @@ class _ListeningPageState extends State<ListeningPage> {
   List<String> _sentences = [];
   int _currentSentenceIndex = -1;
   bool _isAudioLoading = false;
+  String _ttsEngine = ''; // 'neural' or 'system'
+
+  // Neural Audio Player (HuggingFace)
+  final AudioPlayer _audioPlayer = AudioPlayer();
 
   // Voice management
   List<Map<dynamic, dynamic>> _frenchVoices = [];
@@ -51,6 +58,7 @@ class _ListeningPageState extends State<ListeningPage> {
   void initState() {
     super.initState();
     _initVoices();
+    // System TTS completion → auto-advance to next sentence
     _ttsService.flutterTts.setCompletionHandler(() {
       if (mounted) {
         if (_currentSentenceIndex < _sentences.length - 1 && _isPlaying) {
@@ -61,6 +69,24 @@ class _ListeningPageState extends State<ListeningPage> {
             _currentSentenceIndex = -1;
           });
         }
+      }
+    });
+    // Neural AudioPlayer completion → auto-advance to next sentence
+    _audioPlayer.onPlayerComplete.listen((_) {
+      if (mounted) {
+        if (_currentSentenceIndex < _sentences.length - 1 && _isPlaying) {
+          _nextSentence();
+        } else {
+          setState(() {
+            _isPlaying = false;
+            _currentSentenceIndex = -1;
+          });
+        }
+      }
+    });
+    _audioPlayer.onPlayerStateChanged.listen((state) {
+      if (mounted && state == PlayerState.stopped) {
+        // Don't override if we're auto-advancing
       }
     });
   }
@@ -103,6 +129,7 @@ class _ListeningPageState extends State<ListeningPage> {
   @override
   void dispose() {
     _ttsService.stop();
+    _audioPlayer.dispose();
     super.dispose();
   }
 
@@ -189,39 +216,65 @@ class _ListeningPageState extends State<ListeningPage> {
   Future<void> _playSentence(int index) async {
     if (index < 0 || index >= _sentences.length) return;
 
+    // Stop any current playback
+    await _audioPlayer.stop();
+    await _ttsService.stop();
+
     setState(() {
       _currentSentenceIndex = index;
       _isPlaying = true;
       _isAudioLoading = true;
+      _ttsEngine = '';
     });
 
     String sentence = _sentences[index];
-    String spokenText = sentence; // Text to be spoken
+    String spokenText = sentence;
 
-    // Voice switching logic
-    if (sentence.toLowerCase().startsWith('client:') &&
-        _selectedClientVoice != null) {
-      await _ttsService.flutterTts
-          .setVoice(Map<String, String>.from(_selectedClientVoice!));
-      spokenText = sentence.replaceAll(
-          RegExp(r'^Client\s*:\s*', caseSensitive: false), '');
-    } else if (sentence.toLowerCase().startsWith('agence:') &&
-        _selectedAgenceVoice != null) {
-      await _ttsService.flutterTts
-          .setVoice(Map<String, String>.from(_selectedAgenceVoice!));
-      spokenText = sentence.replaceAll(
-          RegExp(r'^Agence\s*:\s*', caseSensitive: false), '');
+    // Clean tags for speech
+    if (sentence.toLowerCase().startsWith('client:')) {
+      spokenText = sentence.replaceAll(RegExp(r'^Client\s*:\s*', caseSensitive: false), '');
+    } else if (sentence.toLowerCase().startsWith('agence:')) {
+      spokenText = sentence.replaceAll(RegExp(r'^Agence\s*:\s*', caseSensitive: false), '');
     }
 
-    await _ttsService.setRate(_playbackRate);
-    await Future.delayed(
-        const Duration(milliseconds: 100)); // Slight delay for voice switch
-    await _ttsService.speak(spokenText);
+    // ── TIER 1: HuggingFace Neural Voice (Premium) ──
+    try {
+      debugPrint('🎙️ [Listening] Trying HuggingFace Neural voice...');
+      final audioPath = await HuggingFaceTtsService.synthesizeAndSave(spokenText)
+          .timeout(const Duration(seconds: 20));
 
+      if (audioPath != null && mounted) {
+        setState(() {
+          _ttsEngine = 'neural';
+          _isAudioLoading = false;
+        });
+        if (kIsWeb) {
+          await _audioPlayer.play(UrlSource(audioPath));
+        } else {
+          await _audioPlayer.play(DeviceFileSource(audioPath));
+        }
+        return;
+      }
+    } catch (e) {
+      debugPrint('⚠️ [Listening] HF TTS failed: $e — falling back...');
+    }
+
+    // ── TIER 2: System TTS Fallback ──
     if (mounted) {
+      // Voice switching for dialogues
+      if (sentence.toLowerCase().startsWith('client:') && _selectedClientVoice != null) {
+        await _ttsService.flutterTts.setVoice(Map<String, String>.from(_selectedClientVoice!));
+      } else if (sentence.toLowerCase().startsWith('agence:') && _selectedAgenceVoice != null) {
+        await _ttsService.flutterTts.setVoice(Map<String, String>.from(_selectedAgenceVoice!));
+      }
+
+      await _ttsService.setRate(_playbackRate);
       setState(() {
+        _ttsEngine = 'system';
         _isAudioLoading = false;
       });
+      debugPrint('🔄 [Listening] Using system TTS fallback.');
+      await _ttsService.speak(spokenText);
     }
   }
 
@@ -229,6 +282,7 @@ class _ListeningPageState extends State<ListeningPage> {
     if (_sentences.isEmpty) return;
 
     if (_isPlaying) {
+      await _audioPlayer.stop();
       await _ttsService.stop();
       setState(() {
         _isPlaying = false;
@@ -499,6 +553,43 @@ class _ListeningPageState extends State<ListeningPage> {
                           ),
                         ],
                       ),
+                      const SizedBox(height: 8),
+                      // TTS Engine Badge
+                      if (_ttsEngine.isNotEmpty)
+                        Center(
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: _ttsEngine == 'neural'
+                                  ? AppTheme.primary.withValues(alpha: 0.1)
+                                  : Colors.orange.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: _ttsEngine == 'neural' ? AppTheme.primary : Colors.orange,
+                                width: 1,
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  _ttsEngine == 'neural' ? Icons.auto_awesome : Icons.volume_up,
+                                  size: 14,
+                                  color: _ttsEngine == 'neural' ? AppTheme.primary : Colors.orange,
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  _ttsEngine == 'neural' ? 'Neural Voice' : 'System Voice',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                    color: _ttsEngine == 'neural' ? AppTheme.primary : Colors.orange,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
                       const SizedBox(height: 16),
                       // Playback Controls
                       Row(
