@@ -850,6 +850,26 @@ CRITICAL RULES - ZERO TOLERANCE:
     }
   }
 
+  /// Limits the size of existing content to avoid DeepSeek 400 errors (token overflow)
+  static Map<String, dynamic> _limitContent(Map<String, dynamic> existing) {
+    final limited = Map<String, dynamic>.from(existing);
+    final widgets = limited['widgets'] ?? limited['sections'] ?? limited['content'];
+    if (widgets is List && widgets.length > 40) {
+      debugPrint('⚠️ Content too large (${widgets.length} widgets). Keeping last 40 to avoid token overflow.');
+      limited['widgets'] = widgets.sublist(widgets.length - 40);
+    }
+    // Also ensure the JSON string isn't massive
+    final jsonStr = jsonEncode(limited);
+    if (jsonStr.length > 20000) {
+      debugPrint('⚠️ JSON too large (${jsonStr.length} chars). Trimming widgets...');
+      final w = limited['widgets'] ?? limited['sections'] ?? limited['content'];
+      if (w is List && w.length > 20) {
+        limited['widgets'] = w.sublist(w.length - 20);
+      }
+    }
+    return limited;
+  }
+
   // ── Update an existing lesson with new photos ────────────────────────────
   static Future<Map<String, dynamic>> updateLessonFromImages(
     Map<String, dynamic> existingLesson,
@@ -866,6 +886,8 @@ CRITICAL RULES - ZERO TOLERANCE:
       }
 
       // 2. Ask DeepSeek to MERGE new content into existing lesson
+      final limited = _limitContent(existingLesson);
+      debugPrint('📦 Sending ${jsonEncode(limited).length} chars to DeepSeek for merge...');
       final response = await http.post(
         Uri.parse('$baseUrl/chat/completions'),
         headers: {
@@ -885,23 +907,18 @@ WIDGET FORMAT RULES (you MUST follow this exactly):
 - Plain text/explanations: {"type": "text", "content": "explanation text in $targetLanguage"}
 - Vocabulary items: {"type": "example", "french": "le médicament", "translation": "the medicine (in $targetLanguage)"}
 - Tips/Notes: {"type": "tipbox", "title": "Note Title", "content": "content in $targetLanguage", "color": "blue"}
-- Cultural notes: {"type": "tipbox", "title": "🇧🇪 Belgian Note", "content": "En Belgique...", "color": "green"}
-- Warnings: {"type": "tipbox", "title": "Common Error", "content": "...", "color": "red"}
 
 CRITICAL RULES:
-1. KEEP all existing widgets EXACTLY as they are. Append new widgets at the end.
-2. For each NEW vocabulary category, add a "section_title" widget first, then individual "example" widgets for each word.
-3. Each vocabulary "example" must have "french" (with article: le/la/les/un/une/des) and "translation" in $targetLanguage.
-4. NO raw JSON objects as text. Each item must be a separate widget.
-5. NO duplication of existing content.
-6. ALL text except "french" field must be in $targetLanguage.
-7. Return the COMPLETE lesson JSON with all original + new widgets.'''
+1. KEEP all existing widgets. Append new widgets at the end.
+2. For each NEW vocabulary category, add a "section_title" widget first, then individual "example" widgets.
+3. Each vocabulary "example" must have "french" (with article) and "translation" in $targetLanguage.
+4. NO raw JSON objects as text. Each item = separate widget.
+5. NO duplication.
+6. Return the COMPLETE lesson JSON with "widgets" array.'''
             },
             {
               'role': 'user',
-              'content': 'EXISTING LESSON JSON:\n${jsonEncode(existingLesson)}\n\n'
-                  'NEW TEXTBOOK CONTENT TO ADD:\n$newDescription\n\n'
-                  'Add all new vocabulary, exercises, and tips as properly formatted widgets.'
+              'content': 'EXISTING LESSON:\n${jsonEncode(limited)}\n\nNEW TEXTBOOK CONTENT:\n$newDescription'
             }
           ],
           'response_format': {'type': 'json_object'},
@@ -917,6 +934,7 @@ CRITICAL RULES:
         updatedLesson['id'] = existingLesson['id']; // Keep the same ID
         return updatedLesson;
       } else {
+        debugPrint('❌ DeepSeek update error ${response.statusCode}: ${response.body.substring(0, response.body.length > 300 ? 300 : response.body.length)}');
         throw Exception('DeepSeek update error: ${response.statusCode}');
       }
     } catch (e) {
@@ -932,6 +950,7 @@ CRITICAL RULES:
     String targetLanguage,
   ) async {
     try {
+      final limited = _limitContent(existingLesson);
       final response = await http.post(
         Uri.parse('$baseUrl/chat/completions'),
         headers: {
@@ -949,11 +968,12 @@ Use the EXACT widget format:
 - {"type": "text", "content": "explanation in $targetLanguage"}
 - {"type": "example", "french": "le mot", "translation": "translation in $targetLanguage"}
 - {"type": "tipbox", "title": "Note", "content": "...", "color": "blue"}
-KEEP all existing widgets. APPEND new ones. NO duplication. Each vocabulary word = separate "example" widget.'''
+KEEP all existing widgets. APPEND new ones. NO duplication. Each vocabulary word = separate "example" widget.
+Return complete JSON with "widgets" array.'''
             },
             {
               'role': 'user',
-              'content': 'EXISTING LESSON:\n${jsonEncode(existingLesson)}\n\nNEW PDF TEXT:\n$newPdfText'
+              'content': 'EXISTING LESSON:\n${jsonEncode(limited)}\n\nNEW PDF TEXT:\n$newPdfText'
             }
           ],
           'response_format': {'type': 'json_object'},
@@ -1031,6 +1051,7 @@ KEEP all existing widgets. APPEND new ones. NO duplication. Each vocabulary word
     String targetLanguage,
   ) async {
     try {
+      final limited = _limitContent(existingLesson);
       final response = await http.post(
         Uri.parse('$baseUrl/chat/completions'),
         headers: {
@@ -1048,11 +1069,12 @@ Use the EXACT widget format:
 - {"type": "text", "content": "explanation in $targetLanguage"}
 - {"type": "example", "french": "le mot", "translation": "translation in $targetLanguage"}
 - {"type": "tipbox", "title": "Note", "content": "...", "color": "blue"}
-KEEP all existing widgets. APPEND new ones. NO duplication. Each vocabulary word = separate "example" widget.'''
+KEEP all existing widgets. APPEND new ones. NO duplication. Each vocabulary word = separate "example" widget.
+Return complete JSON with "widgets" array.'''
             },
             {
               'role': 'user',
-              'content': 'EXISTING LESSON:\n${jsonEncode(existingLesson)}\n\nUSER INSTRUCTIONS:\n$userInstructions'
+              'content': 'EXISTING LESSON:\n${jsonEncode(limited)}\n\nUSER INSTRUCTIONS:\n$userInstructions'
             }
           ],
           'response_format': {'type': 'json_object'},
@@ -1082,6 +1104,7 @@ KEEP all existing widgets. APPEND new ones. NO duplication. Each vocabulary word
     String targetLanguage,
   ) async {
     try {
+      final limited = _limitContent(existingGrammar);
       final response = await http.post(
         Uri.parse('$baseUrl/chat/completions'),
         headers: {
@@ -1093,14 +1116,18 @@ KEEP all existing widgets. APPEND new ones. NO duplication. Each vocabulary word
           'messages': [
             {
               'role': 'system',
-              'content':
-                  'Update the EXISTING French B1 grammar guide JSON based on the user instructions. '
-                  'Add or modify rules, examples, or sections as requested. '
-                  'Explanations must be in $targetLanguage. Return ONLY the updated JSON.'
+              'content': '''Update the EXISTING French B1 grammar guide based on user instructions.
+Use the EXACT widget format:
+- {"type": "section_title", "emoji": "📖", "title": "Section Name"}
+- {"type": "text", "content": "explanation in $targetLanguage"}
+- {"type": "example", "french": "le mot", "translation": "translation in $targetLanguage"}
+- {"type": "tipbox", "title": "Note", "content": "...", "color": "blue"}
+KEEP all existing widgets. APPEND new ones. NO duplication.
+Return complete JSON with "widgets" array.'''
             },
             {
               'role': 'user',
-              'content': 'Existing Grammar: \n${jsonEncode(existingGrammar)}\n\nInstructions: \n$userInstructions'
+              'content': 'EXISTING GRAMMAR:\n${jsonEncode(limited)}\n\nUSER INSTRUCTIONS:\n$userInstructions'
             }
           ],
           'response_format': {'type': 'json_object'},

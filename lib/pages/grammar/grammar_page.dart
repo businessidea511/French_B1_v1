@@ -223,7 +223,7 @@ class _GrammarPageState extends State<GrammarPage> {
           'title': topic.title,
           'subtitle': topic.subtitle,
           'icon': topic.icon,
-          'sections': topic.content,
+          'widgets': topic.content ?? [],
           'id': topic.id
         },
         instructions,
@@ -317,7 +317,7 @@ class _GrammarPageState extends State<GrammarPage> {
       final lessonsProvider = Provider.of<LessonsProvider>(context, listen: false);
 
       final updatedData = await DeepSeekService.updateGrammarWithPdf(
-        {'title': topic.title, 'subtitle': topic.subtitle, 'icon': topic.icon, 'sections': topic.content, 'id': topic.id},
+        {'title': topic.title, 'subtitle': topic.subtitle, 'icon': topic.icon, 'widgets': topic.content ?? [], 'id': topic.id},
         text,
         lp.currentLanguage.englishName,
       );

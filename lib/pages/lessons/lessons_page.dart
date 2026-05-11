@@ -568,7 +568,7 @@ class _LessonsPageState extends State<LessonsPage> {
           'title': topic.title,
           'subtitle': topic.subtitle,
           'icon': topic.icon,
-          'sections': topic.content,
+          'widgets': topic.content ?? [],
           'id': topic.id
         },
         instructions,
@@ -613,7 +613,7 @@ class _LessonsPageState extends State<LessonsPage> {
       }
 
       final updatedData = await DeepSeekService.updateLessonFromImages(
-        {'title': topic.title, 'subtitle': topic.subtitle, 'icon': topic.icon, 'sections': topic.content, 'id': topic.id},
+        {'title': topic.title, 'subtitle': topic.subtitle, 'icon': topic.icon, 'widgets': topic.content ?? [], 'id': topic.id},
         base64Images,
         mimeType ?? 'image/jpeg',
         lp.currentLanguage.englishName,
