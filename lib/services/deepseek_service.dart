@@ -1064,17 +1064,17 @@ Return complete JSON with "widgets" array.'''
             {
               'role': 'system',
               'content': '''Update the EXISTING French B1 lesson based on user instructions.
-CRITICAL RULES:
-1. STYLE PRESERVATION: Maintain the existing tone, formatting, and pedagogical approach.
-2. INCREMENTAL UPDATE: Only modify or add the specific parts mentioned in the instructions.
-3. WIDGET FORMAT:
-   - {"type": "section_title", "emoji": "📖", "title": "Section Name"}
-   - {"type": "text", "content": "explanation in $targetLanguage"}
-   - {"type": "example", "french": "le mot", "translation": "translation in $targetLanguage"}
-   - {"type": "tipbox", "title": "Note", "content": "...", "color": "blue"}
-4. METADATA: You MUST return "title", "subtitle", and "icon" fields. Preserve original values if no changes requested.
-5. NO DUPLICATION: Do not repeat or duplicate existing widgets.
-Return the COMPLETE updated lesson JSON with "title", "subtitle", "icon", and "widgets" array.'''
+CRITICAL SAFETY RULES:
+1. NEVER DELETE EXISTING CONTENT: Your response MUST include ALL original widgets from the "EXISTING LESSON" plus any new ones.
+2. APPEND MODE: If asked to add something, append it as new widgets at the end of the array.
+3. STYLE PRESERVATION: Keep the original formatting and tone.
+4. METADATA: Return the original "title", "subtitle", and "icon" unless specified otherwise.
+5. FORMAT:
+   - {"type": "section_title", "emoji": "📖", "title": "..."}
+   - {"type": "text", "content": "..."}
+   - {"type": "example", "french": "...", "translation": "..."}
+   - {"type": "tipbox", "title": "...", "content": "...", "color": "..."}
+Return the COMPLETE updated JSON.'''
             },
             {
               'role': 'user',
@@ -1121,17 +1121,17 @@ Return the COMPLETE updated lesson JSON with "title", "subtitle", "icon", and "w
             {
               'role': 'system',
               'content': '''Update the EXISTING French B1 grammar guide based on user instructions.
-CRITICAL RULES:
-1. STYLE PRESERVATION: DO NOT change the existing writing style or formatting.
-2. INCREMENTAL UPDATE: Only add, remove, or modify specific widgets as requested.
-3. WIDGET FORMAT: Use the EXACT widget format:
-   - {"type": "section_title", "emoji": "📖", "title": "Section Name"}
-   - {"type": "text", "content": "explanation in $targetLanguage"}
-   - {"type": "example", "french": "le mot", "translation": "translation in $targetLanguage"}
-   - {"type": "tipbox", "title": "Note", "content": "...", "color": "blue"}
-4. METADATA: You MUST return the "title", "subtitle", and "icon" fields. If the user didn't ask to change them, return the values from the EXISTING GRAMMAR.
-5. NO DUPLICATION: Do not repeat existing content.
-Return the COMPLETE updated JSON with "title", "subtitle", "icon", and "widgets" array.'''
+CRITICAL SAFETY RULES:
+1. NEVER DELETE EXISTING CONTENT: Your response MUST include ALL widgets from the "EXISTING GRAMMAR" plus any new ones. Do not skip or omit any original widgets.
+2. APPEND NEW CONTENT: If the user asks to add something, add it at the end of the "widgets" array.
+3. STYLE PRESERVATION: Maintain the exact tone and formatting of original widgets.
+4. METADATA: Return "title", "subtitle", and "icon" from the existing guide unless explicitly told to change them.
+5. JSON FORMAT:
+   - {"type": "section_title", "emoji": "📖", "title": "..."}
+   - {"type": "text", "content": "..."}
+   - {"type": "example", "french": "...", "translation": "..."}
+   - {"type": "tipbox", "title": "...", "content": "...", "color": "..."}
+Return the COMPLETE JSON with all original + new widgets.'''
             },
             {
               'role': 'user',
