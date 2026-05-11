@@ -877,25 +877,31 @@ CRITICAL RULES - ZERO TOLERANCE:
           'messages': [
             {
               'role': 'system',
-              'content':
-                  'You are an expert French B1 teacher. You will receive an EXISTING lesson JSON and a DETAILED EXTRACTION from new textbook pages. '
-                  'Your task is to INTELLIGENTLY MERGE the new content into the existing lesson. '
-                  'CRITICAL RULES: \n'
-                  '1. NO DUPLICATION: Skip words/rules already present. \n'
-                  '2. VOCABULARY: Add new French words with articles (le/la/les/un/une/des) to the correct section. '
-                  'Organize by category (e.g., "Les symptômes", "Les médicaments", "Les parties du corps", "Les accessoires médicaux"). \n'
-                  '3. EXERCISES: Add new comprehension questions, vocabulary games, or fill-in-the-blank exercises from the textbook. \n'
-                  '4. STRUCTURE: Each vocabulary section should have: "title" (French), "type" (vocabulary/grammar/exercise/tip), '
-                  '"content" with proper items. Each vocabulary item needs "french", "translation" (in $targetLanguage), and optionally "example". \n'
-                  '5. EXPLANATIONS: ALL explanations and translations must be in $targetLanguage. \n'
-                  '6. PRESERVE: Keep ALL existing content intact. Only ADD new items. \n'
-                  '7. Return ONLY the complete updated JSON object in the exact same format as the input.'
+              'content': '''You are an expert French B1 teacher. You will receive an EXISTING lesson in widget-based JSON format and NEW content extracted from textbook pages.
+Your task is to ADD the new content into the existing lesson's "widgets" array using the EXACT SAME widget format.
+
+WIDGET FORMAT RULES (you MUST follow this exactly):
+- Section headers: {"type": "section_title", "emoji": "🩺", "title": "Section Name"}
+- Plain text/explanations: {"type": "text", "content": "explanation text in $targetLanguage"}
+- Vocabulary items: {"type": "example", "french": "le médicament", "translation": "the medicine (in $targetLanguage)"}
+- Tips/Notes: {"type": "tipbox", "title": "Note Title", "content": "content in $targetLanguage", "color": "blue"}
+- Cultural notes: {"type": "tipbox", "title": "🇧🇪 Belgian Note", "content": "En Belgique...", "color": "green"}
+- Warnings: {"type": "tipbox", "title": "Common Error", "content": "...", "color": "red"}
+
+CRITICAL RULES:
+1. KEEP all existing widgets EXACTLY as they are. Append new widgets at the end.
+2. For each NEW vocabulary category, add a "section_title" widget first, then individual "example" widgets for each word.
+3. Each vocabulary "example" must have "french" (with article: le/la/les/un/une/des) and "translation" in $targetLanguage.
+4. NO raw JSON objects as text. Each item must be a separate widget.
+5. NO duplication of existing content.
+6. ALL text except "french" field must be in $targetLanguage.
+7. Return the COMPLETE lesson JSON with all original + new widgets.'''
             },
             {
               'role': 'user',
               'content': 'EXISTING LESSON JSON:\n${jsonEncode(existingLesson)}\n\n'
-                  'NEW TEXTBOOK CONTENT EXTRACTED:\n$newDescription\n\n'
-                  'Please merge all new vocabulary, exercises, and content into the existing lesson.'
+                  'NEW TEXTBOOK CONTENT TO ADD:\n$newDescription\n\n'
+                  'Add all new vocabulary, exercises, and tips as properly formatted widgets.'
             }
           ],
           'response_format': {'type': 'json_object'},
@@ -937,14 +943,17 @@ CRITICAL RULES - ZERO TOLERANCE:
           'messages': [
             {
               'role': 'system',
-              'content':
-                  'Update the EXISTING French B1 lesson JSON with NEW information from this PDF text. '
-                  'Merge vocabulary, grammar, and exercises without duplication. '
-                  'Explanations must be in $targetLanguage. Return ONLY the updated JSON.'
+              'content': '''Update the EXISTING French B1 lesson by adding NEW content from PDF text.
+Use the EXACT widget format:
+- {"type": "section_title", "emoji": "📖", "title": "Section Name"}
+- {"type": "text", "content": "explanation in $targetLanguage"}
+- {"type": "example", "french": "le mot", "translation": "translation in $targetLanguage"}
+- {"type": "tipbox", "title": "Note", "content": "...", "color": "blue"}
+KEEP all existing widgets. APPEND new ones. NO duplication. Each vocabulary word = separate "example" widget.'''
             },
             {
               'role': 'user',
-              'content': 'Existing Lesson: \n${jsonEncode(existingLesson)}\n\nNew PDF Text: \n$newPdfText'
+              'content': 'EXISTING LESSON:\n${jsonEncode(existingLesson)}\n\nNEW PDF TEXT:\n$newPdfText'
             }
           ],
           'response_format': {'type': 'json_object'},
@@ -1033,14 +1042,17 @@ CRITICAL RULES - ZERO TOLERANCE:
           'messages': [
             {
               'role': 'system',
-              'content':
-                  'Update the EXISTING French B1 lesson JSON based on the user instructions. '
-                  'Merge new vocabulary, grammar points, or exercises as requested. '
-                  'Explanations must be in $targetLanguage. Return ONLY the updated JSON.'
+              'content': '''Update the EXISTING French B1 lesson based on user instructions.
+Use the EXACT widget format:
+- {"type": "section_title", "emoji": "📖", "title": "Section Name"}
+- {"type": "text", "content": "explanation in $targetLanguage"}
+- {"type": "example", "french": "le mot", "translation": "translation in $targetLanguage"}
+- {"type": "tipbox", "title": "Note", "content": "...", "color": "blue"}
+KEEP all existing widgets. APPEND new ones. NO duplication. Each vocabulary word = separate "example" widget.'''
             },
             {
               'role': 'user',
-              'content': 'Existing Lesson: \n${jsonEncode(existingLesson)}\n\nInstructions: \n$userInstructions'
+              'content': 'EXISTING LESSON:\n${jsonEncode(existingLesson)}\n\nUSER INSTRUCTIONS:\n$userInstructions'
             }
           ],
           'response_format': {'type': 'json_object'},
