@@ -878,21 +878,28 @@ CRITICAL RULES - ZERO TOLERANCE:
             {
               'role': 'system',
               'content':
-                  'You are an expert French B1 teacher. You will be given an EXISTING lesson in JSON format and a description of NEW pages from a textbook. '
-                  'Your task is to UPDATE the existing lesson by adding new information from the new description. '
+                  'You are an expert French B1 teacher. You will receive an EXISTING lesson JSON and a DETAILED EXTRACTION from new textbook pages. '
+                  'Your task is to INTELLIGENTLY MERGE the new content into the existing lesson. '
                   'CRITICAL RULES: \n'
-                  '1. NO DUPLICATION: If a vocabulary word or grammar rule is already in the existing lesson, do NOT add it again. \n'
-                  '2. MERGING: Add new vocabulary to the "vocabulary" list, new grammar points to the "grammar" section, and new exercises. \n'
-                  '3. CONSISTENCY: Keep the same tone and format. ALL explanations must stay in $targetLanguage. \n'
-                  '4. Return ONLY the updated JSON object in the same format.'
+                  '1. NO DUPLICATION: Skip words/rules already present. \n'
+                  '2. VOCABULARY: Add new French words with articles (le/la/les/un/une/des) to the correct section. '
+                  'Organize by category (e.g., "Les symptômes", "Les médicaments", "Les parties du corps", "Les accessoires médicaux"). \n'
+                  '3. EXERCISES: Add new comprehension questions, vocabulary games, or fill-in-the-blank exercises from the textbook. \n'
+                  '4. STRUCTURE: Each vocabulary section should have: "title" (French), "type" (vocabulary/grammar/exercise/tip), '
+                  '"content" with proper items. Each vocabulary item needs "french", "translation" (in $targetLanguage), and optionally "example". \n'
+                  '5. EXPLANATIONS: ALL explanations and translations must be in $targetLanguage. \n'
+                  '6. PRESERVE: Keep ALL existing content intact. Only ADD new items. \n'
+                  '7. Return ONLY the complete updated JSON object in the exact same format as the input.'
             },
             {
               'role': 'user',
-              'content': 'Existing Lesson JSON: \n${jsonEncode(existingLesson)}\n\nNew Content Description: \n$newDescription'
+              'content': 'EXISTING LESSON JSON:\n${jsonEncode(existingLesson)}\n\n'
+                  'NEW TEXTBOOK CONTENT EXTRACTED:\n$newDescription\n\n'
+                  'Please merge all new vocabulary, exercises, and content into the existing lesson.'
             }
           ],
           'response_format': {'type': 'json_object'},
-          'temperature': 0.5,
+          'temperature': 0.3,
         }),
       );
 

@@ -42,35 +42,68 @@ class GeminiService {
     return keys[_currentKeyIndex];
   }
 
+  /// Describes images from French textbook pages with detailed extraction
   static Future<String> describeImages(List<String> base64Images, String mimeType) async {
     final allKeys = _keys;
     if (allKeys.isEmpty) return "ERROR: No Gemini API keys found.";
 
-    // 2026 Future Models from user's Google AI Studio screenshot
+    debugPrint('🔑 Found ${allKeys.length} Gemini API keys');
+
+    // Correct 2026 Google AI API model IDs (from Google AI Studio Rate Limit page)
+    // Note: API uses "gemini-2.0-flash" NOT "gemini-2-flash"
     final models = [
       {'ver': 'v1beta', 'model': 'gemini-2.5-flash'},
-      {'ver': 'v1beta', 'model': 'gemini-3-flash'},
-      {'ver': 'v1beta', 'model': 'gemini-3.1-flash'},
-      {'ver': 'v1beta', 'model': 'gemini-2-flash'},
-      {'ver': 'v1', 'model': 'gemini-2.5-flash'}, // Try v1 endpoint as fallback
-      {'ver': 'v1beta', 'model': 'gemini-1.5-flash'}, // Final legacy fallback
+      {'ver': 'v1beta', 'model': 'gemini-2.0-flash'},
+      {'ver': 'v1beta', 'model': 'gemini-2.5-flash-lite'},
+      {'ver': 'v1beta', 'model': 'gemini-1.5-flash'},
     ];
+
+    // Detailed extraction prompt for French textbook content
+    const prompt = '''You are an expert French language teacher analyzing textbook pages.
+TASK: Extract ALL French learning content from these images with extreme precision.
+
+For EACH image, extract:
+1. **Vocabulary Lists**: Every French word/phrase with its category (e.g., "les symptômes", "les médicaments", "les parties du corps", "les accessoires")
+2. **Medical/Health Items**: If health-related, list ALL items with their French names (e.g., "un thermomètre", "des pansements", "un masque", "des ciseaux")
+3. **Grammar Points**: Any grammar rules, conjugations, or structures shown
+4. **Exercises**: Questions, fill-in-the-blank, comprehension questions
+5. **Mind Maps**: If there's a vocabulary mind map, list ALL categories and their items
+6. **Handwritten Notes**: Transcribe any handwritten text visible
+
+FORMAT your response as a structured extraction:
+---VOCABULARY---
+Category: [category name]
+- French word/phrase (with article if noun)
+...
+
+---EXERCISES---
+- Exercise description and content
+...
+
+---NOTES---
+- Any additional context, tips, or cultural notes
+
+Be EXHAUSTIVE. Do NOT skip any text visible in the images. Transcribe French text EXACTLY as written.''';
 
     for (var modelInfo in models) {
       final version = modelInfo['ver'];
       final modelId = modelInfo['model'];
       
-      // For each model, try up to 3 different keys if we get rate limited or service busy
-      int keyAttempts = allKeys.length > 3 ? 3 : allKeys.length;
+      // For each model, try ALL keys if we get rate limited
+      int keyAttempts = allKeys.length;
       
       for (int i = 0; i < keyAttempts; i++) {
         final key = _getNextKey();
-        final keyDisplay = key.length > 8 ? "${key.substring(0, 4)}...${key.substring(key.length - 4)}" : "Key";
+        final keyIdx = allKeys.indexOf(key) + 1;
         
         try {
-          debugPrint('💎 Trying Gemini $modelId ($version) with Key $keyDisplay...');
+          debugPrint('💎 Trying $modelId ($version) with Key #$keyIdx for ${base64Images.length} image(s)...');
 
           final url = 'https://generativelanguage.googleapis.com/$version/models/$modelId:generateContent';
+          
+          final imageParts = base64Images.map((img) => {
+            "inline_data": {"mime_type": mimeType, "data": img}
+          }).toList();
           
           final response = await http.post(
             Uri.parse(url),
@@ -81,36 +114,46 @@ class GeminiService {
             body: jsonEncode({
               "contents": [{
                 "parts": [
-                  {"text": "These are ${base64Images.length} images from a French grammar lesson. Describe them in detail for a French B1 student. Transcribe any French text exactly and maintain the order of the pages."},
-                  ...base64Images.map((img) => {
-                    "inline_data": {"mime_type": mimeType, "data": img}
-                  })
+                  {"text": prompt},
+                  ...imageParts,
                 ]
-              }]
+              }],
+              "generationConfig": {
+                "maxOutputTokens": 4096,
+                "temperature": 0.2,
+              }
             }),
-          ).timeout(const Duration(seconds: 30));
+          ).timeout(const Duration(seconds: 60)); // 60s for multi-image
 
           if (response.statusCode == 200) {
             final data = jsonDecode(response.body);
-            debugPrint('✅ Success with Model: $modelId using Key $keyDisplay!');
-            return (data['candidates']?[0]?['content']?['parts']?[0]?['text'] ?? "Error parsing response") as String;
-          }
-          
-          if (response.statusCode == 404) {
-            debugPrint('❌ $modelId NOT FOUND (404) on $version. Trying next model...');
-            break; // Move to next model if this one doesn't exist
+            final text = data['candidates']?[0]?['content']?['parts']?[0]?['text'];
+            if (text != null && text.toString().isNotEmpty) {
+              debugPrint('✅ Success with $modelId using Key #$keyIdx! (${text.toString().length} chars)');
+              return text.toString();
+            }
+            debugPrint('⚠️ $modelId returned empty response');
+          } else if (response.statusCode == 404) {
+            debugPrint('❌ $modelId NOT FOUND (404). Trying next model...');
+            break; // Model doesn't exist, try next
           } else if (response.statusCode == 429 || response.statusCode == 503) {
-            debugPrint('⚠️ $modelId BUSY/LIMIT (${response.statusCode}) with $keyDisplay. Retrying with different key...');
+            debugPrint('⚠️ $modelId RATE LIMITED/BUSY (${response.statusCode}) with Key #$keyIdx. Switching key...');
+            await Future.delayed(const Duration(milliseconds: 500)); // Brief pause before retry
             continue; // Try different key for SAME model
           } else {
-            debugPrint('❌ $modelId failed (${response.statusCode})');
+            debugPrint('❌ $modelId failed (${response.statusCode}): ${response.body.substring(0, (response.body.length > 200) ? 200 : response.body.length)}');
+            break; // Unknown error, try next model
           }
         } catch (e) {
-          debugPrint('❌ Exception for $modelId: $e');
+          debugPrint('❌ Exception for $modelId with Key #$keyIdx: $e');
+          if (e.toString().contains('TimeoutException')) {
+            debugPrint('⏰ Timeout - trying next key...');
+            continue;
+          }
         }
       }
     }
 
-    return "EXCEPTION: All Gemini models ($models) and keys failed. Possible reasons: API limit, incorrect model names for your region, or network issues.";
+    return "EXCEPTION: All Gemini models and all ${allKeys.length} keys failed. Check your API keys in Vercel and ensure at least one model is available.";
   }
 }
