@@ -626,11 +626,12 @@ class _GrammarPageState extends State<GrammarPage> {
                 ),
                 const SizedBox(height: 6),
                 Builder(builder: (context) {
-                  final needsTranslation = lp.currentLanguage != AppLanguage.english &&
-                      lp.currentLanguage != AppLanguage.arabic;
-                  if (!needsTranslation) {
+                  final subtitle = topic.subtitle ?? '';
+                  if (subtitle.isEmpty) return const SizedBox.shrink();
+                  // Always translate unless user's language is English (original subtitle lang)
+                  if (lp.currentLanguage == AppLanguage.english) {
                     return Text(
-                      topic.subtitle,
+                      subtitle,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: AppTheme.textTertiary,
                         fontSize: 13,
@@ -640,16 +641,20 @@ class _GrammarPageState extends State<GrammarPage> {
                     );
                   }
                   return FutureBuilder<String>(
-                    future: DeepSeekService.translateText(topic.subtitle, lp.currentLanguage.name),
+                    future: DeepSeekService.translateText(subtitle, lp.currentLanguage.name),
                     builder: (context, snapshot) {
+                      final displayText = snapshot.data ?? subtitle;
                       return Text(
-                        snapshot.data ?? topic.subtitle,
+                        displayText,
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: AppTheme.textTertiary,
                           fontSize: 13,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
+                        textDirection: RegExp(r'[\u0600-\u06FF]').hasMatch(displayText)
+                            ? TextDirection.rtl
+                            : TextDirection.ltr,
                       );
                     },
                   );
