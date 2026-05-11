@@ -385,7 +385,7 @@ class LessonsProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> _seedOriginalContent() async {
+  Future<void> seedData() async {
     final client = _supabase;
     if (client == null) return;
 
@@ -393,7 +393,7 @@ class LessonsProvider extends ChangeNotifier {
       debugPrint('🌱 Checking cloud for original content...');
       
       // Seed Lessons - Only if NOT already in cloud
-      for (var lesson in _originalLessons) {
+      for (var lesson in lessonTopics) {
         final existing = await client.from('lessons').select('id').eq('id', lesson.id).maybeSingle();
         if (existing == null) {
           debugPrint('📤 Seeding original lesson: ${lesson.id}');
@@ -409,7 +409,7 @@ class LessonsProvider extends ChangeNotifier {
       }
 
       // Seed Grammar - Only if NOT already in cloud
-      for (var grammar in _originalGrammar) {
+      for (var grammar in grammarTopics) {
         final existing = await client.from('grammar').select('id').eq('id', grammar.id).maybeSingle();
         if (existing == null) {
           debugPrint('📤 Seeding original grammar: ${grammar.id}');
