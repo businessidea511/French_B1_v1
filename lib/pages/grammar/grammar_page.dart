@@ -125,6 +125,84 @@ class _GrammarPageState extends State<GrammarPage> {
     }
   }
 
+  void _checkAdminAccess(VoidCallback onGranted) {
+    final TextEditingController passController = TextEditingController();
+    bool obscure = true;
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDlgState) => AlertDialog(
+          backgroundColor: AppTheme.surface,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Row(
+            children: const [
+              Icon(Icons.lock_outline_rounded, color: AppTheme.primary),
+              SizedBox(width: 10),
+              Text('Admin Access', style: TextStyle(color: Colors.white, fontSize: 18)),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Please enter the admin password to update grammar content.',
+                style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: passController,
+                obscureText: obscure,
+                autofocus: true,
+                style: const TextStyle(color: Colors.white),
+                decoration: InputDecoration(
+                  hintText: 'Admin Password',
+                  prefixIcon: const Icon(Icons.password_rounded, color: AppTheme.primary),
+                  suffixIcon: IconButton(
+                    icon: Icon(obscure ? Icons.visibility_off : Icons.visibility, color: AppTheme.textSecondary),
+                    onPressed: () => setDlgState(() => obscure = !obscure),
+                  ),
+                ),
+                onSubmitted: (_) {
+                   _verifyAndProceed(passController.text, onGranted, ctx);
+                },
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () => _verifyAndProceed(passController.text, onGranted, ctx),
+              child: const Text('Verify'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _verifyAndProceed(String input, VoidCallback onGranted, BuildContext ctx) {
+    const String envPass = String.fromEnvironment('ADMIN_PASSWORD');
+    final String adminPass = envPass.isNotEmpty
+        ? envPass
+        : (dotenv.env['ADMIN_PASSWORD'] ?? 'admin123');
+
+    if (input == adminPass) {
+      Navigator.pop(ctx);
+      onGranted();
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('❌ Incorrect password'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
   void _showUpdateOptions(GrammarTopic topic) {
     showDialog(
       context: context,
@@ -605,7 +683,7 @@ class _GrammarPageState extends State<GrammarPage> {
                     IconButton(
                       icon: const Icon(Icons.sync_rounded, color: AppTheme.primary, size: 22),
                       tooltip: 'Update',
-                      onPressed: () => _showUpdateOptions(topic),
+                      onPressed: () => _checkAdminAccess(() => _showUpdateOptions(topic)),
                     ),
                     if (isCustom)
                       IconButton(
