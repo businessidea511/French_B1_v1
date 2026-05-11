@@ -231,36 +231,41 @@ class LessonsProvider extends ChangeNotifier {
   }
 
   Future<void> updateLesson(String id, Map<String, dynamic> lessonData) async {
+    final dynamic rawContent = lessonData['widgets'] ?? lessonData['content'] ?? lessonData['sections'] ?? [];
+    final updated = LessonTopic(
+      id: id,
+      title: lessonData['title'] ?? 'Untitled',
+      subtitle: lessonData['subtitle'] ?? '',
+      icon: lessonData['icon'] ?? '📖',
+      description: lessonData['subtitle'] ?? lessonData['title'] ?? '',
+      content: rawContent is List ? rawContent : [],
+    );
+
     final index = _customLessons.indexWhere((l) => l.id == id);
     if (index != -1) {
-      final dynamic rawContent = lessonData['widgets'] ?? lessonData['content'] ?? lessonData['sections'] ?? [];
-      final updated = LessonTopic(
-        id: id,
-        title: lessonData['title'] ?? 'Untitled',
-        subtitle: lessonData['subtitle'] ?? '',
-        icon: lessonData['icon'] ?? '📖',
-        description: lessonData['subtitle'] ?? lessonData['title'] ?? '',
-        content: rawContent is List ? rawContent : [],
-      );
       _customLessons[index] = updated;
-      notifyListeners();
-      await _saveLocalData();
+    } else {
+      // Topic exists as hardcoded but not in custom list yet - add it
+      debugPrint('📥 Adding hardcoded lesson "$id" to custom list for update');
+      _customLessons.add(updated);
+    }
+    notifyListeners();
+    await _saveLocalData();
 
-      // Update Cloud
-      final client = _supabase;
-      if (client != null) {
-        try {
-          await client.from('lessons').upsert({
-            'id': id,
-            'title': updated.title,
-            'subtitle': updated.subtitle,
-            'icon': updated.icon,
-            'description': updated.description,
-            'content': updated.content,
-          });
-        } catch (e) {
-          debugPrint('Cloud update error: $e');
-        }
+    // Update Cloud
+    final client = _supabase;
+    if (client != null) {
+      try {
+        await client.from('lessons').upsert({
+          'id': id,
+          'title': updated.title,
+          'subtitle': updated.subtitle,
+          'icon': updated.icon,
+          'description': updated.description,
+          'content': updated.content,
+        });
+      } catch (e) {
+        debugPrint('Cloud update error: $e');
       }
     }
   }
@@ -307,36 +312,41 @@ class LessonsProvider extends ChangeNotifier {
   }
 
   Future<void> updateGrammar(String id, Map<String, dynamic> grammarData) async {
+    final dynamic rawContent = grammarData['widgets'] ?? grammarData['content'] ?? grammarData['sections'] ?? [];
+    final updated = GrammarTopic(
+      id: id,
+      title: grammarData['title'] ?? 'Untitled',
+      subtitle: grammarData['subtitle'] ?? '',
+      icon: grammarData['icon'] ?? '📖',
+      description: grammarData['subtitle'] ?? grammarData['title'] ?? '',
+      content: rawContent is List ? rawContent : [],
+    );
+
     final index = _customGrammar.indexWhere((g) => g.id == id);
     if (index != -1) {
-      final dynamic rawContent = grammarData['widgets'] ?? grammarData['content'] ?? grammarData['sections'] ?? [];
-      final updated = GrammarTopic(
-        id: id,
-        title: grammarData['title'] ?? 'Untitled',
-        subtitle: grammarData['subtitle'] ?? '',
-        icon: grammarData['icon'] ?? '📖',
-        description: grammarData['subtitle'] ?? grammarData['title'] ?? '',
-        content: rawContent is List ? rawContent : [],
-      );
       _customGrammar[index] = updated;
-      notifyListeners();
-      await _saveLocalData();
+    } else {
+      // Topic exists as hardcoded but not in custom list yet - add it
+      debugPrint('📥 Adding hardcoded grammar "$id" to custom list for update');
+      _customGrammar.add(updated);
+    }
+    notifyListeners();
+    await _saveLocalData();
 
-      // Update Cloud
-      final client = _supabase;
-      if (client != null) {
-        try {
-          await client.from('grammar').upsert({
-            'id': id,
-            'title': updated.title,
-            'subtitle': updated.subtitle,
-            'icon': updated.icon,
-            'description': updated.description,
-            'content': updated.content,
-          });
-        } catch (e) {
-          debugPrint('Cloud grammar update error: $e');
-        }
+    // Update Cloud
+    final client = _supabase;
+    if (client != null) {
+      try {
+        await client.from('grammar').upsert({
+          'id': id,
+          'title': updated.title,
+          'subtitle': updated.subtitle,
+          'icon': updated.icon,
+          'description': updated.description,
+          'content': updated.content,
+        });
+      } catch (e) {
+        debugPrint('Cloud grammar update error: $e');
       }
     }
   }
