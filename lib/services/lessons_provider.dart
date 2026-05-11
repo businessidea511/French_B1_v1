@@ -385,44 +385,48 @@ class LessonsProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> seedData() async {
+  Future<void> _seedOriginalContent() async {
     final client = _supabase;
     if (client == null) return;
 
-    debugPrint('🌱 Seeding original content to cloud...');
-    
-    // Seed Lessons
-    for (var lesson in lessonTopics) {
-      try {
-        await client.from('lessons').upsert({
-          'id': lesson.id,
-          'title': lesson.title,
-          'subtitle': lesson.subtitle,
-          'icon': lesson.icon,
-          'description': lesson.description,
-          'content': lesson.content,
-        }, onConflict: 'id'); // Don't overwrite if already changed in cloud
-      } catch (e) {
-        debugPrint('Seed error (lesson ${lesson.id}): $e');
+    try {
+      debugPrint('🌱 Checking cloud for original content...');
+      
+      // Seed Lessons - Only if NOT already in cloud
+      for (var lesson in _originalLessons) {
+        final existing = await client.from('lessons').select('id').eq('id', lesson.id).maybeSingle();
+        if (existing == null) {
+          debugPrint('📤 Seeding original lesson: ${lesson.id}');
+          await client.from('lessons').upsert({
+            'id': lesson.id,
+            'title': lesson.title,
+            'subtitle': lesson.subtitle,
+            'icon': lesson.icon,
+            'description': lesson.description,
+            'content': lesson.content,
+          });
+        }
       }
-    }
 
-    // Seed Grammar
-    for (var grammar in grammarTopics) {
-      try {
-        await client.from('grammar').upsert({
-          'id': grammar.id,
-          'title': grammar.title,
-          'subtitle': grammar.subtitle,
-          'icon': grammar.icon,
-          'description': grammar.description,
-          'content': grammar.content,
-        }, onConflict: 'id');
-      } catch (e) {
-        debugPrint('Seed error (grammar ${grammar.id}): $e');
+      // Seed Grammar - Only if NOT already in cloud
+      for (var grammar in _originalGrammar) {
+        final existing = await client.from('grammar').select('id').eq('id', grammar.id).maybeSingle();
+        if (existing == null) {
+          debugPrint('📤 Seeding original grammar: ${grammar.id}');
+          await client.from('grammar').upsert({
+            'id': grammar.id,
+            'title': grammar.title,
+            'subtitle': grammar.subtitle,
+            'icon': grammar.icon,
+            'description': grammar.description,
+            'content': grammar.content,
+          });
+        }
       }
+      debugPrint('✅ Seeding check complete');
+    } catch (e) {
+      debugPrint('⚠️ Seeding error: $e');
     }
-    debugPrint('✅ Seeding complete');
   }
 
   Future<void> _saveLocalData() async {
