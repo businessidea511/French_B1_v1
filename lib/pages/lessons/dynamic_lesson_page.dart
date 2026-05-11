@@ -1,50 +1,50 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../widgets/lesson_template.dart';
+import '../../widgets/translated_text.dart';
 import '../../models/lesson_topic.dart';
 import '../../theme/app_theme.dart';
 import '../../services/language_provider.dart';
-import '../../services/deepseek_service.dart';
 
-class DynamicLessonPage extends StatefulWidget {
+class DynamicLessonPage extends StatelessWidget {
   final LessonTopic topic;
 
   const DynamicLessonPage({super.key, required this.topic});
 
   @override
-  State<DynamicLessonPage> createState() => _DynamicLessonPageState();
-}
-
-class _DynamicLessonPageState extends State<DynamicLessonPage> {
-  @override
   Widget build(BuildContext context) {
-    final lp = Provider.of<LanguageProvider>(context);
+    // Listen to language changes so the page rebuilds when user switches language
+    Provider.of<LanguageProvider>(context);
     
     return LessonTemplate(
-      title: widget.topic.title,
-      icon: widget.topic.icon,
-      topic: widget.topic.title,
-      children: _buildWidgets(lp),
+      title: topic.title,
+      icon: topic.icon,
+      topic: topic.title,
+      children: _buildWidgets(),
     );
   }
 
-  List<Widget> _buildWidgets(LanguageProvider lp) {
+  List<Widget> _buildWidgets() {
     final List<Widget> result = [];
-    final rawWidgets = widget.topic.content;
+
+    // Support both old format (sections[]) and new format (widgets[])
+    final rawWidgets = topic.content;
     if (rawWidgets == null || rawWidgets.isEmpty) return result;
 
+    // Detect format: new format has "type" key, old format has "title"+"content"
     final isNewFormat = rawWidgets.isNotEmpty &&
         rawWidgets.first is Map &&
         (rawWidgets.first as Map).containsKey('type');
 
     if (isNewFormat) {
-      return _buildFromWidgetFormat(rawWidgets, lp);
+      return _buildFromWidgetFormat(rawWidgets);
     } else {
-      return _buildFromSectionsFormat(rawWidgets, lp);
+      return _buildFromSectionsFormat(rawWidgets);
     }
   }
 
-  List<Widget> _buildFromWidgetFormat(List<dynamic> widgetList, LanguageProvider lp) {
+  // ─── NEW FORMAT: widget-based JSON ───────────────────────────────────────
+  List<Widget> _buildFromWidgetFormat(List<dynamic> widgetList) {
     final List<Widget> result = [];
 
     for (final w in widgetList) {
@@ -52,6 +52,7 @@ class _DynamicLessonPageState extends State<DynamicLessonPage> {
       final type = (w['type'] ?? '').toString();
       final rawContent = (w['content'] ?? '').toString();
 
+      // Skip any preamble the AI might have slipped in
       if (_isPreamble(rawContent) || _isPreamble(w['title']?.toString() ?? '')) {
         continue;
       }
@@ -61,26 +62,35 @@ class _DynamicLessonPageState extends State<DynamicLessonPage> {
           final title = _clean(w['title'] ?? '');
           final emoji = (w['emoji'] ?? '📖').toString();
           if (title.isEmpty) break;
-          result.add(_TranslatedWidget(
-            originalText: title,
-            targetLanguage: lp.currentLanguage.name,
-            builder: (translated) => SectionTitle(translated, emoji: emoji),
+          // SectionTitle uses plain Text, so we wrap with TranslatedText row
+          result.add(Row(
+            children: [
+              Text(emoji, style: const TextStyle(fontSize: 22)),
+              const SizedBox(width: 10),
+              Expanded(
+                child: TranslatedText(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ],
           ));
           break;
 
         case 'text':
           final text = _clean(rawContent);
           if (text.isEmpty) break;
+          // Use TranslatedText so it auto-translates when language changes
           result.add(
             Padding(
               padding: const EdgeInsets.only(bottom: 8),
-              child: _TranslatedWidget(
-                originalText: text,
-                targetLanguage: lp.currentLanguage.name,
-                builder: (translated) => Text(
-                  translated,
-                  style: const TextStyle(fontSize: 16, height: 1.6, color: Colors.white),
-                ),
+              child: TranslatedText(
+                text,
+                style: const TextStyle(fontSize: 16, height: 1.6, color: Colors.white),
               ),
             ),
           );
@@ -90,14 +100,10 @@ class _DynamicLessonPageState extends State<DynamicLessonPage> {
           final french = _clean(w['french'] ?? '');
           final translation = _clean(w['translation'] ?? '');
           if (french.isEmpty) break;
-          
-          result.add(_TranslatedWidget(
-            originalText: translation,
-            targetLanguage: lp.currentLanguage.name,
-            builder: (translated) => ExampleBox(
-              french: french, 
-              english: translated,
-            ),
+          // ExampleBox already uses TranslatedText for 'english' param internally
+          result.add(ExampleBox(
+            french: french, 
+            english: translation,
           ));
           break;
 
@@ -107,42 +113,32 @@ class _DynamicLessonPageState extends State<DynamicLessonPage> {
           final color = _colorFromString(w['color']?.toString() ?? 'blue');
           final icon = _iconFromColor(w['color']?.toString() ?? 'blue');
           if (content.isEmpty) break;
-          
-          result.add(_TranslatedWidget(
-            originalText: content,
-            targetLanguage: lp.currentLanguage.name,
-            builder: (translatedContent) => _TranslatedWidget(
-              originalText: title,
-              targetLanguage: lp.currentLanguage.name,
-              builder: (translatedTitle) => TipBox(
-                title: translatedTitle,
-                content: translatedContent,
-                icon: icon,
-                color: color,
-              ),
-            ),
+          // TipBox already uses TranslatedText for title & content internally
+          result.add(TipBox(
+            title: title,
+            content: content,
+            icon: icon,
+            color: color,
           ));
           break;
 
         default:
+          // Fallback: render as translated text
           final text = _clean(rawContent);
           if (text.isNotEmpty) {
-            result.add(_TranslatedWidget(
-              originalText: text,
-              targetLanguage: lp.currentLanguage.name,
-              builder: (translated) => Text(
-                translated,
-                style: const TextStyle(fontSize: 16, height: 1.6, color: Colors.white),
-              ),
-            ));
+            result.add(TranslatedText(text,
+                style: const TextStyle(fontSize: 16, height: 1.6, color: Colors.white)));
           }
       }
+
       result.add(const SizedBox(height: 8));
     }
+
     return result;
   }
 
-  List<Widget> _buildFromSectionsFormat(List<dynamic> sections, LanguageProvider lp) {
+  // ─── OLD FORMAT: sections-based JSON (backward compatibility) ────────────
+  List<Widget> _buildFromSectionsFormat(List<dynamic> sections) {
     final List<Widget> result = [];
     final colors = [
       AppTheme.primary, AppTheme.secondary, AppTheme.accent,
@@ -161,53 +157,45 @@ class _DynamicLessonPageState extends State<DynamicLessonPage> {
       final color = colors[i % colors.length];
       final emoji = _emojiFor(title);
 
-      result.add(_TranslatedWidget(
-        originalText: title,
-        targetLanguage: lp.currentLanguage.name,
-        builder: (tTitle) => SectionTitle(tTitle, emoji: emoji),
-      ));
-      
+      result.add(SectionTitle(title, emoji: emoji));
       result.add(const SizedBox(height: 8));
 
       if (content.isNotEmpty) {
-        result.add(_TranslatedWidget(
-          originalText: content,
-          targetLanguage: lp.currentLanguage.name,
-          builder: (tContent) => _TranslatedWidget(
-            originalText: title,
-            targetLanguage: lp.currentLanguage.name,
-            builder: (tTitle) => TipBox(
-              title: tTitle,
-              content: tContent,
-              icon: Icons.info_outline_rounded,
-              color: color,
-            ),
-          ),
+        result.add(TipBox(
+          title: title,
+          content: content,
+          icon: Icons.info_outline_rounded,
+          color: color,
         ));
       }
       result.add(const SizedBox(height: 16));
     }
+
     return result;
   }
+
+  // ─── Helpers ──────────────────────────────────────────────────────────────
 
   bool _isPreamble(String text) {
     final t = text.toLowerCase().trim();
     return t.contains('here is') ||
         t.contains('following your') ||
         t.contains('translation of') ||
-        t.contains('in this lesson') ||
-        t.contains('today we will') ||
-        t.contains('explore the topic') ||
         t.contains('ترجمة') ||
         t.contains('محتوى الدرس') ||
         (t.startsWith(':') && t.length < 10);
   }
 
+  /// Strips markdown symbols and ANY preamble line from text
   String _clean(String text) {
     if (text.isEmpty) return '';
+    
+    // Split into lines, filter out preamble lines, rejoin
     final lines = text.split('\n').where((line) {
       final t = line.trim();
       if (t.isEmpty) return false;
+      
+      // Nuclear list of AI "apologies" and "meta-talk"
       final lowerLine = t.toLowerCase();
       final badPhrases = [
         'here is', 'following your', 'translation of', 'as per your', 
@@ -215,22 +203,24 @@ class _DynamicLessonPageState extends State<DynamicLessonPage> {
         'intended to provide', 'appears you may', 'already in arabic',
         'preserve', 'i have kept', 'requested content', 'given text',
         'instruction was to', 'please provide a french', 'into arabic',
-        'in this lesson', 'today we will', 'we will explore',
         'تم الاحتفاظ', 'وفقًا للتعليمات', 'ملاحظة:', 'محتوى الدرس',
         'عذراً', 'لا يمكنني', 'بالفعل باللغة العربية', 'موجود بالفعل',
         'تمت الترجمة', 'أنا آسف', 'يبدو أن', 'يرجى تقديم'
       ];
+
       for (var phrase in badPhrases) {
         if (lowerLine.contains(phrase)) return false;
       }
       return true;
     }).map((line) {
+      // Remove markdown from each line
       return line
           .replaceAll('**', '')
           .replaceAll('__', '')
           .replaceAll(RegExp(r'^#{1,6}\s*'), '')
           .trim();
     }).where((line) => line.isNotEmpty).toList();
+    
     return lines.join('\n').trim();
   }
 
@@ -240,7 +230,7 @@ class _DynamicLessonPageState extends State<DynamicLessonPage> {
       case 'green':  return const Color(0xFF10B981);
       case 'yellow': return const Color(0xFFF59E0B);
       case 'purple': return const Color(0xFF8B5CF6);
-      default:       return const Color(0xFF6366F1);
+      default:       return const Color(0xFF6366F1); // blue
     }
   }
 
@@ -264,38 +254,5 @@ class _DynamicLessonPageState extends State<DynamicLessonPage> {
     if (t.contains('vocab') || t.contains('مفردات')) return '📚';
     if (t.contains('tip') || t.contains('ملاحظة')) return '💡';
     return '📖';
-  }
-}
-
-/// A helper widget that automatically translates text if needed
-class _TranslatedWidget extends StatelessWidget {
-  final String originalText;
-  final String targetLanguage;
-  final Widget Function(String translatedText) builder;
-
-  const _TranslatedWidget({
-    required this.originalText,
-    required this.targetLanguage,
-    required this.builder,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    // If text is short and looks like it's already translated, just show it
-    // Otherwise, force translation via DeepSeek
-    return FutureBuilder<String>(
-      future: DeepSeekService.translateText(originalText, targetLanguage),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return Opacity(
-            opacity: 0.5,
-            child: builder(originalText),
-          );
-        }
-        // If snapshot has data and it's different from original, show it
-        final translated = snapshot.data ?? originalText;
-        return builder(translated);
-      },
-    );
   }
 }

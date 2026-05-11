@@ -863,18 +863,27 @@ class _LessonsPageState extends State<LessonsPage> {
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 4),
-                // Subtitle is the translation in user's language
-                Text(
-                  topic.subtitle,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppTheme.textSecondary,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  textDirection: RegExp(r'[\u0600-\u06FF]').hasMatch(topic.subtitle) 
-                    ? TextDirection.rtl 
-                    : TextDirection.ltr,
-                ),
+                // Subtitle: translate to user's selected language
+                Builder(builder: (context) {
+                  final lp = Provider.of<LanguageProvider>(context);
+                  return FutureBuilder<String>(
+                    future: DeepSeekService.translateText(topic.subtitle, lp.currentLanguage.name),
+                    builder: (context, snapshot) {
+                      final displayText = snapshot.data ?? topic.subtitle;
+                      return Text(
+                        displayText,
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: AppTheme.textSecondary,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        textDirection: RegExp(r'[\u0600-\u06FF]').hasMatch(displayText) 
+                          ? TextDirection.rtl 
+                          : TextDirection.ltr,
+                      );
+                    },
+                  );
+                }),
                 const SizedBox(height: 12),
               ],
             ),
