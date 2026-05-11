@@ -944,11 +944,13 @@ class _LessonsPageState extends State<LessonsPage> {
                 const SizedBox(height: 4),
                 // Subtitle: translate to user's selected language
                 Builder(builder: (context) {
+                  final subtitle = topic.subtitle ?? '';
+                  if (subtitle.isEmpty) return const SizedBox.shrink();
                   final lp = Provider.of<LanguageProvider>(context);
                   return FutureBuilder<String>(
-                    future: DeepSeekService.translateText(topic.subtitle, lp.currentLanguage.name),
+                    future: DeepSeekService.translateText(subtitle, lp.currentLanguage.name),
                     builder: (context, snapshot) {
-                      final displayText = snapshot.data ?? topic.subtitle;
+                      final displayText = snapshot.data ?? subtitle;
                       return Text(
                         displayText,
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(

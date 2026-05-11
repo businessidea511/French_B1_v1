@@ -7,25 +7,25 @@ class GeminiService {
   static List<String> get _keys {
     List<String> keys = [];
     
-    // Check for keys 1 through 5 in both environment variables and .env file
-    for (int i = 1; i <= 5; i++) {
-      String keyName = 'GEMINI_KEY_$i';
-      String envKey = String.fromEnvironment(keyName);
-      if (envKey.isEmpty) {
-        try {
-          envKey = dotenv.env[keyName] ?? '';
-        } catch (_) {}
-      }
-      if (envKey.isNotEmpty && !keys.contains(envKey)) keys.add(envKey);
-    }
-    
-    // Fallback to legacy key name
+    // Each key MUST be a const declaration (Dart requirement)
+    const k1 = String.fromEnvironment('GEMINI_KEY_1');
+    const k2 = String.fromEnvironment('GEMINI_KEY_2');
+    const k3 = String.fromEnvironment('GEMINI_KEY_3');
+    const k4 = String.fromEnvironment('GEMINI_KEY_4');
+    const k5 = String.fromEnvironment('GEMINI_KEY_5');
     const k0 = String.fromEnvironment('GEMINI_KEY');
-    if (k0.isNotEmpty && !keys.contains(k0)) keys.add(k0);
-    try {
-      final dotEnvK0 = dotenv.env['GEMINI_KEY'] ?? '';
-      if (dotEnvK0.isNotEmpty && !keys.contains(dotEnvK0)) keys.add(dotEnvK0);
-    } catch (_) {}
+
+    for (final k in [k1, k2, k3, k4, k5, k0]) {
+      if (k.isNotEmpty && !keys.contains(k)) keys.add(k);
+    }
+
+    // Also check dotenv for local dev
+    for (final name in ['GEMINI_KEY_1', 'GEMINI_KEY_2', 'GEMINI_KEY_3', 'GEMINI_KEY_4', 'GEMINI_KEY_5', 'GEMINI_KEY']) {
+      try {
+        final dk = dotenv.env[name] ?? '';
+        if (dk.isNotEmpty && !keys.contains(dk)) keys.add(dk);
+      } catch (_) {}
+    }
 
     return keys;
   }
