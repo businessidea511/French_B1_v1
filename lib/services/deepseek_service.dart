@@ -899,22 +899,38 @@ CRITICAL RULES - ZERO TOLERANCE:
           'messages': [
             {
               'role': 'system',
-              'content': '''You are an expert French B1 teacher. You will receive an EXISTING lesson in widget-based JSON format and NEW content extracted from textbook pages.
-Your task is to ADD the new content into the existing lesson's "widgets" array using the EXACT SAME widget format.
+              'content': '''You are an expert French B1 teacher. You will receive an EXISTING lesson and NEW content from textbook photos.
+Your job: ADD the new content as INDIVIDUAL WIDGETS into the "widgets" array.
 
-WIDGET FORMAT RULES (you MUST follow this exactly):
-- Section headers: {"type": "section_title", "emoji": "🩺", "title": "Section Name"}
-- Plain text/explanations: {"type": "text", "content": "explanation text in $targetLanguage"}
-- Vocabulary items: {"type": "example", "french": "le médicament", "translation": "the medicine (in $targetLanguage)"}
-- Tips/Notes: {"type": "tipbox", "title": "Note Title", "content": "content in $targetLanguage", "color": "blue"}
+CRITICAL FORMAT RULES:
+Each vocabulary word MUST be its own separate "example" widget. NEVER put multiple words in one widget.
+NEVER write [{french:...}, {french:...}] as text content. That is WRONG.
 
-CRITICAL RULES:
-1. KEEP all existing widgets. Append new widgets at the end.
-2. For each NEW vocabulary category, add a "section_title" widget first, then individual "example" widgets.
-3. Each vocabulary "example" must have "french" (with article) and "translation" in $targetLanguage.
-4. NO raw JSON objects as text. Each item = separate widget.
-5. NO duplication.
-6. Return the COMPLETE lesson JSON with "widgets" array.'''
+CORRECT EXAMPLE OUTPUT:
+{
+  "title": "La Santé",
+  "subtitle": "Health vocabulary",
+  "icon": "🏥",
+  "widgets": [
+    {"type": "section_title", "emoji": "💊", "title": "Les médicaments"},
+    {"type": "example", "french": "le médicament", "translation": "the medicine"},
+    {"type": "example", "french": "le comprimé", "translation": "the tablet"},
+    {"type": "example", "french": "le sirop", "translation": "the syrup"},
+    {"type": "text", "content": "These are common pharmacy items."},
+    {"type": "tipbox", "title": "Note", "content": "Always use the article.", "color": "blue"}
+  ]
+}
+
+WRONG (NEVER DO THIS):
+{"type": "text", "content": "[{french: le médicament, translation: medicine}, {french: le comprimé...}]"}
+
+RULES:
+1. KEEP ALL existing widgets unchanged. Append new ones at the end.
+2. Each vocabulary word = ONE separate {"type": "example"} widget with "french" and "translation" keys.
+3. Group new words under {"type": "section_title"} headers.
+4. Translations must be in $targetLanguage.
+5. Return "title", "subtitle", "icon" from the existing lesson.
+6. Return valid JSON with a "widgets" array.'''
             },
             {
               'role': 'user',
@@ -963,13 +979,23 @@ CRITICAL RULES:
             {
               'role': 'system',
               'content': '''Update the EXISTING French B1 lesson by adding NEW content from PDF text.
-Use the EXACT widget format:
+
+CRITICAL: Each vocabulary word MUST be its OWN separate "example" widget.
+NEVER dump multiple words as text. NEVER use [{french:...}] format in text content.
+
+CORRECT format for each word:
+{"type": "example", "french": "le mot", "translation": "the word in $targetLanguage"}
+
+Other widget types:
 - {"type": "section_title", "emoji": "📖", "title": "Section Name"}
 - {"type": "text", "content": "explanation in $targetLanguage"}
-- {"type": "example", "french": "le mot", "translation": "translation in $targetLanguage"}
 - {"type": "tipbox", "title": "Note", "content": "...", "color": "blue"}
-KEEP all existing widgets. APPEND new ones. NO duplication. Each vocabulary word = separate "example" widget.
-Return complete JSON with "widgets" array.'''
+
+RULES:
+1. KEEP ALL existing widgets. Append new ones at the end.
+2. Return "title", "subtitle", "icon" from the existing lesson.
+3. Each word = separate "example" widget. NO lists in text.
+4. Return valid JSON with "widgets" array.'''
             },
             {
               'role': 'user',
