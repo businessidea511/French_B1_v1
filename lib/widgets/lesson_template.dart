@@ -58,76 +58,77 @@ class _LessonTemplateState extends State<LessonTemplate> {
               physics: const ClampingScrollPhysics(),
             slivers: [
               SliverAppBar(
-              expandedHeight: 120,
-              floating: true,
-              pinned: true,
-              backgroundColor: Colors.transparent,
-              flexibleSpace: FlexibleSpaceBar(
-                title: Text('${widget.icon} ${widget.title}', 
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.white)),
-                centerTitle: true,
-                background: Container(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [AppTheme.primary.withValues(alpha: 0.1), Colors.transparent],
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
+                expandedHeight: 120,
+                floating: true,
+                pinned: true,
+                backgroundColor: Colors.transparent,
+                flexibleSpace: FlexibleSpaceBar(
+                  title: Text('${widget.icon} ${widget.title}', 
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.white)),
+                  centerTitle: true,
+                  background: Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [AppTheme.primary.withValues(alpha: 0.1), Colors.transparent],
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
-            SliverPadding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20),
-              sliver: SliverList(
-                delegate: SliverChildListDelegate([
-                  ...widget.children,
-                  if (widget.topic != null) ...[
-                    const SizedBox(height: 60),
-                    AskAIBox(topic: widget.topic!),
-                    const SizedBox(height: 40),
-                    const SectionTitle('Practice & Memorize', emoji: '🎯'),
-                    const SizedBox(height: 20),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _buildActionButton(
-                            context,
-                            title: 'Exercises',
-                            icon: Icons.edit_note_rounded,
-                            color: AppTheme.secondary,
-                            onTap: () => Navigator.push(
+              SliverPadding(
+                padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20),
+                sliver: SliverList(
+                  delegate: SliverChildListDelegate([
+                    ...widget.children,
+                    if (widget.topic != null) ...[
+                      const SizedBox(height: 60),
+                      AskAIBox(topic: widget.topic!),
+                      const SizedBox(height: 40),
+                      const SectionTitle('Practice & Memorize', emoji: '🎯'),
+                      const SizedBox(height: 20),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildActionButton(
                               context,
-                              MaterialPageRoute(builder: (_) => ExercisesPage(initialTopic: widget.topic)),
+                              title: 'Exercises',
+                              icon: Icons.edit_note_rounded,
+                              color: AppTheme.secondary,
+                              onTap: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (_) => ExercisesPage(initialTopic: widget.topic)),
+                              ),
                             ),
                           ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: _buildActionButton(
-                            context,
-                            title: 'Flashcards',
-                            icon: Icons.style_rounded,
-                            color: AppTheme.success,
-                            onTap: () => Navigator.push(
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: _buildActionButton(
                               context,
-                              MaterialPageRoute(builder: (_) => FlashcardsPage(initialTopic: widget.topic)),
+                              title: 'Flashcards',
+                              icon: Icons.style_rounded,
+                              color: AppTheme.success,
+                              onTap: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (_) => FlashcardsPage(initialTopic: widget.topic)),
+                              ),
                             ),
                           ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 100),
-                  ],
-                ]),
+                        ],
+                      ),
+                      const SizedBox(height: 100),
+                    ],
+                  ]),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     ),
-  );
-}
+    );
+  }
 
   Widget _buildActionButton(BuildContext context,
       {required String title,

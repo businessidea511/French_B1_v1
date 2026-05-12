@@ -107,7 +107,7 @@ class _ExercisesPageState extends State<ExercisesPage> {
           const CircularProgressIndicator(),
           const SizedBox(height: 24),
           Text(
-            'Professeur DeepSeek is preparing your exercises...',
+            'Professeur AI is preparing your exercises...',
             style: Theme.of(context).textTheme.bodyLarge,
           ),
           const SizedBox(height: 8),

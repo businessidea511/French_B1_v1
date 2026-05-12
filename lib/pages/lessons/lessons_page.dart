@@ -1022,7 +1022,7 @@ class _LessonsPageState extends State<LessonsPage> {
                 const SizedBox(height: 4),
                 // Subtitle: translate to user's selected language
                 Builder(builder: (context) {
-                  final subtitle = topic.subtitle ?? '';
+                  final subtitle = topic.subtitle;
                   if (subtitle.isEmpty) return const SizedBox.shrink();
                   final lp = Provider.of<LanguageProvider>(context);
                   return FutureBuilder<String>(

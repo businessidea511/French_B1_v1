@@ -704,7 +704,7 @@ class _GrammarPageState extends State<GrammarPage> {
                 ),
                 const SizedBox(height: 6),
                 Builder(builder: (context) {
-                  final subtitle = topic.subtitle ?? '';
+                  final subtitle = topic.subtitle;
                   if (subtitle.isEmpty) return const SizedBox.shrink();
                   // Always translate unless user's language is English (original subtitle lang)
                   if (lp.currentLanguage == AppLanguage.english) {
