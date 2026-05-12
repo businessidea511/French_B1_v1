@@ -943,8 +943,7 @@ RULES:
             },
             {
               'role': 'user',
-              'content': 'EXISTING LESSON:\n${jsonEncode(limited)}\n\nNEW TEXTBOOK CONTENT:\n$newDescription' + 
-                  (userInstructions != null ? '\n\nUSER INSTRUCTIONS: $userInstructions' : '')
+              'content': 'EXISTING LESSON:\n${jsonEncode(limited)}\n\nNEW TEXTBOOK CONTENT:\n$newDescription${userInstructions != null ? '\n\nUSER INSTRUCTIONS: $userInstructions' : ''}'
             }
           ],
           'response_format': {'type': 'json_object'},
@@ -1009,8 +1008,7 @@ RULES:
             },
             {
               'role': 'user',
-              'content': 'EXISTING LESSON:\n${jsonEncode(limited)}\n\nNEW PDF TEXT:\n$newPdfText' +
-                  (userInstructions != null ? '\n\nUSER INSTRUCTIONS: $userInstructions' : '')
+              'content': 'EXISTING LESSON:\n${jsonEncode(limited)}\n\nNEW PDF TEXT:\n$newPdfText${userInstructions != null ? '\n\nUSER INSTRUCTIONS: $userInstructions' : ''}'
             }
           ],
           'response_format': {'type': 'json_object'},
@@ -1063,8 +1061,7 @@ RULES:
             },
             {
               'role': 'user',
-              'content': 'EXISTING GRAMMAR:\n${jsonEncode(limited)}\n\nNEW CONTENT DESCRIPTION:\n$newDescription' +
-                  (userInstructions != null ? '\n\nUSER INSTRUCTIONS: $userInstructions' : '')
+              'content': 'EXISTING GRAMMAR:\n${jsonEncode(limited)}\n\nNEW CONTENT DESCRIPTION:\n$newDescription${userInstructions != null ? '\n\nUSER INSTRUCTIONS: $userInstructions' : ''}'
             }
           ],
           'response_format': {'type': 'json_object'},
@@ -1105,11 +1102,7 @@ RULES:
           'messages': [
             {
               'role': 'system',
-              'content':
-                  'Update the EXISTING French B1 grammar guide JSON with NEW information from this PDF text. '
-                  'Merge sections, rules, and examples without duplication. '
-                  'Explanations must be in $targetLanguage. Return ONLY the updated JSON.' +
-                  (userInstructions != null ? '\n\nUSER INSTRUCTIONS: $userInstructions' : '')
+              'content': 'Update the EXISTING French B1 grammar guide JSON with NEW information from this PDF text. Merge sections, rules, and examples without duplication. Explanations must be in $targetLanguage. Return ONLY the updated JSON.${userInstructions != null ? '\n\nUSER INSTRUCTIONS: $userInstructions' : ''}'
             },
             {
               'role': 'user',

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:convert';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../../theme/app_theme.dart';
 import '../../models/grammar_topic.dart';
@@ -322,6 +324,7 @@ class _GrammarPageState extends State<GrammarPage> {
     setState(() => _isGenerating = true);
 
     try {
+      if (!mounted) return;
       final lp = Provider.of<LanguageProvider>(context, listen: false);
       final lessonsProvider = Provider.of<LessonsProvider>(context, listen: false);
 
@@ -457,31 +460,6 @@ class _GrammarPageState extends State<GrammarPage> {
     );
   }
 
-  void _showTopicUpdateDialog(GrammarTopic topic) {
-    final TextEditingController controller = TextEditingController(text: topic.title);
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppTheme.surface,
-        title: const Text('Update Topic', style: TextStyle(color: Colors.white)),
-        content: TextField(
-          controller: controller,
-          style: const TextStyle(color: Colors.white),
-          decoration: const InputDecoration(hintText: 'Enter sub-topic to add...'),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              _generateGrammar(topic: controller.text.trim());
-            },
-            child: const Text('Update'),
-          ),
-        ],
-      ),
-    );
-  }
 
   Future<void> _pickAndUpdateWithPdf(GrammarTopic topic) async {
     final result = await FilePicker.platform.pickFiles(type: FileType.custom, allowedExtensions: ['pdf']);
