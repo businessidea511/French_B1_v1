@@ -51,11 +51,13 @@ class _LessonTemplateState extends State<LessonTemplate> {
           thumbVisibility: true,
           trackVisibility: true,
           interactive: true,
-          child: CustomScrollView(
+          child: PrimaryScrollController(
             controller: _scrollController,
-            physics: const ClampingScrollPhysics(),
-          slivers: [
-            SliverAppBar(
+            child: CustomScrollView(
+              controller: _scrollController,
+              physics: const ClampingScrollPhysics(),
+            slivers: [
+              SliverAppBar(
               expandedHeight: 120,
               floating: true,
               pinned: true,

@@ -134,17 +134,23 @@ class _AskAIBoxState extends State<AskAIBox> with AutomaticKeepAliveClientMixin 
         _controller.clear();
       });
       
-      Future.delayed(const Duration(milliseconds: 300), () {
-        if (mounted) {
-          final primaryController = PrimaryScrollController.maybeOf(context);
-          if (primaryController != null && primaryController.hasClients) {
-            primaryController.animateTo(
-              primaryController.position.maxScrollExtent,
-              duration: const Duration(milliseconds: 800),
-              curve: Curves.easeOutQuart,
-            );
+      // Scroll to bottom after layout update
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        Future.delayed(const Duration(milliseconds: 400), () {
+          if (mounted) {
+            final primaryController = PrimaryScrollController.maybeOf(context);
+            if (primaryController != null && primaryController.hasClients) {
+              final target = primaryController.position.maxScrollExtent;
+              if (target > 0) {
+                primaryController.animateTo(
+                  target,
+                  duration: const Duration(milliseconds: 1000),
+                  curve: Curves.easeOutQuart,
+                );
+              }
+            }
           }
-        }
+        });
       });
     } catch (e) {
       setState(() {
