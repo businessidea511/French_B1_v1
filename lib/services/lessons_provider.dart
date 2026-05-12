@@ -273,7 +273,7 @@ class LessonsProvider extends ChangeNotifier {
       title: lessonData['title'] ?? original?.title ?? 'Untitled',
       subtitle: lessonData['subtitle'] ?? original?.subtitle ?? '',
       icon: lessonData['icon'] ?? original?.icon ?? '📖',
-      description: lessonData['subtitle'] ?? original?.description ?? '',
+      description: lessonData['description'] ?? lessonData['subtitle'] ?? original?.description ?? '',
       content: mergedContent,
     );
 
@@ -376,7 +376,7 @@ class LessonsProvider extends ChangeNotifier {
       title: grammarData['title'] ?? original?.title ?? 'Untitled',
       subtitle: grammarData['subtitle'] ?? original?.subtitle ?? '',
       icon: grammarData['icon'] ?? original?.icon ?? '📖',
-      description: grammarData['subtitle'] ?? original?.description ?? '',
+      description: grammarData['description'] ?? grammarData['subtitle'] ?? original?.description ?? '',
       content: mergedContent,
     );
 
