@@ -7,12 +7,16 @@ class TranslatedText extends StatefulWidget {
   final String text;
   final TextStyle? style;
   final TextAlign? textAlign;
+  final int? maxLines;
+  final TextOverflow? overflow;
 
   const TranslatedText(
     this.text, {
     super.key,
     this.style,
     this.textAlign,
+    this.maxLines,
+    this.overflow,
   });
 
   @override
@@ -114,6 +118,8 @@ class _TranslatedTextState extends State<TranslatedText> {
       _translatedText ?? widget.text,
       style: widget.style,
       textAlign: widget.textAlign,
+      maxLines: widget.maxLines,
+      overflow: widget.overflow,
     );
   }
 }

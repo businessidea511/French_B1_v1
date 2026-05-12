@@ -13,9 +13,9 @@ class MetiersPage extends StatelessWidget {
       topic: 'Les Métiers',
       children: [
         const TranslatedText(
-          'Les Métiers = JOBS and PROFESSIONS in French. '
-          'This is one of the most useful vocabulary topics — you\'ll use it every day when meeting people, writing your CV, or chatting in French!',
-          style: TextStyle(fontSize: 16, height: 1.5),
+          'Les Métiers = JOBS and PROFESSIONS. In Belgium, work is central to social life in Bruxelles, Liège, and Namur. '
+          'This topic is essential for meeting people, navigating Actiris or Forem, and integrating into the Belgian professional landscape!',
+          style: TextStyle(fontSize: 16, height: 1.5, color: Colors.white),
         ),
 
         // ── Key rule ──────────────────────────────────────────────────────────
@@ -147,29 +147,28 @@ class MetiersPage extends StatelessWidget {
         ),
 
         // ── Bizarre & Unusual ────────────────────────────────────────────────
-        const SectionTitle('🦄 Bizarre & Unusual Professions'),
+        const SectionTitle('🇧🇪 Professional Life in Belgium'),
         const TranslatedText(
-          'France also has some very "curieux" (curious) jobs that you don\'t see every day:',
-          style: TextStyle(fontSize: 15, height: 1.6),
+          'In Belgium, the administration of work depends on your region. You should know these key organizations:',
+          style: TextStyle(fontSize: 15, height: 1.6, color: Colors.white),
         ),
         const FrenchTipBox(
-          title: 'Weird & Wonderful',
-          frenchText: 'fossoyeur        →  gravedigger\n'
-              'taxidermiste     →  taxidermist\n'
-              'pleureuse        →  professional mourner\n'
-              'réveilleur       →  knocker-upper (historical)\n'
-              'dégustateur de croquettes → pet food taster\n'
-              'testeur de toboggans → water slide tester',
-          icon: Icons.auto_awesome_outlined,
+          title: 'Employment Agencies',
+          frenchText: 'Actiris          →  Brussels agency\n'
+              'Le Forem         →  Walloon agency\n'
+              'VDAB             →  Flemish agency\n'
+              'Le CPAS          →  Social assistance\n'
+              'Un syndicat      →  A union',
+          icon: Icons.account_balance_rounded,
           color: Color(0xFFAB47BC),
         ),
         const ExampleBox(
-          french: 'Le fossoyeur travaille dans le cimetière du village.',
-          english: 'The gravedigger works in the village cemetery.',
+          french: 'Je suis inscrit chez Actiris pour trouver un job à Bruxelles.',
+          english: 'I am registered with Actiris to find a job in Brussels.',
         ),
         const ExampleBox(
-          french: 'Il est taxidermiste : il prépare des animaux pour les musées.',
-          english: 'He is a taxidermist: he prepares animals for museums.',
+          french: 'Il reçoit des allocations via le CPAS.',
+          english: 'He receives allowances via the CPAS.',
         ),
 
         // ── Key phrases ───────────────────────────────────────────────────────
@@ -187,8 +186,8 @@ class MetiersPage extends StatelessWidget {
           english: 'I am a nurse in a hospital.',
         ),
         const ExampleBox(
-          french: 'Il travaille comme ingénieur chez Renault.',
-          english: 'He works as an engineer at Renault.',
+          french: 'Il travaille comme ingénieur chez SWIFT à La Hulpe.',
+          english: 'He works as an engineer at SWIFT in La Hulpe.',
         ),
         const ExampleBox(
           french: 'Elle est à son compte — elle est architecte.',

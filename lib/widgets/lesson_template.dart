@@ -58,28 +58,56 @@ class _LessonTemplateState extends State<LessonTemplate> {
               physics: const ClampingScrollPhysics(),
             slivers: [
               SliverAppBar(
-                expandedHeight: 120,
-                floating: true,
+                expandedHeight: 140,
+                floating: false,
                 pinned: true,
-                backgroundColor: Colors.transparent,
+                elevation: 0,
+                backgroundColor: AppTheme.background,
+                leading: IconButton(
+                  icon: const Icon(Icons.arrow_back, color: Colors.white),
+                  onPressed: () => Navigator.pop(context),
+                ),
                 flexibleSpace: FlexibleSpaceBar(
+                  expandedTitleScale: 1.2,
+                  titlePadding: const EdgeInsets.only(left: 56, bottom: 16, right: 16),
                   title: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text('${widget.icon} '),
-                      TranslatedText(
-                        widget.title,
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.white),
+                      Expanded(
+                        child: TranslatedText(
+                          widget.title,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold, 
+                            fontSize: 18, 
+                            color: Colors.white,
+                            letterSpacing: -0.5,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
                     ],
                   ),
-                  centerTitle: true,
+                  centerTitle: false,
                   background: Container(
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
-                        colors: [AppTheme.primary.withValues(alpha: 0.1), Colors.transparent],
+                        colors: [
+                          AppTheme.primary.withValues(alpha: 0.3),
+                          AppTheme.background,
+                        ],
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
+                      ),
+                    ),
+                    child: Center(
+                      child: Opacity(
+                        opacity: 0.1,
+                        child: Text(
+                          widget.icon,
+                          style: const TextStyle(fontSize: 80),
+                        ),
                       ),
                     ),
                   ),
@@ -177,28 +205,45 @@ class SectionTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 32, bottom: 16),
-      child: emoji != null
-          ? Row(
-              children: [
-                Text('$emoji ', style: const TextStyle(fontSize: 24)),
-                Expanded(
-                    child: TranslatedText(title,
-                        style: Theme.of(context)
-                            .textTheme
-                            .headlineMedium
-                            ?.copyWith(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w700,
-                            ))),
-              ],
-            )
-          : TranslatedText(title,
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w700,
-                  )),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(top: 32, bottom: 8),
+          child: emoji != null
+              ? Row(
+                  children: [
+                    Text('$emoji ', style: const TextStyle(fontSize: 28)),
+                    const SizedBox(width: 8),
+                    Expanded(
+                        child: TranslatedText(title,
+                            style: Theme.of(context)
+                                .textTheme
+                                .headlineMedium
+                                ?.copyWith(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: -0.5,
+                                ))),
+                  ],
+                )
+              : TranslatedText(title,
+                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: -0.5,
+                      )),
+        ),
+        Container(
+          height: 4,
+          width: 60,
+          decoration: BoxDecoration(
+            gradient: AppTheme.primaryGradient,
+            borderRadius: BorderRadius.circular(2),
+          ),
+        ),
+        const SizedBox(height: 16),
+      ],
     );
   }
 }
@@ -218,51 +263,45 @@ class ExampleBox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.symmetric(vertical: 10),
-      padding: const EdgeInsets.all(24),
+      margin: const EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppTheme.surface.withValues(alpha: 0.6),
-        borderRadius: BorderRadius.circular(24),
+        color: AppTheme.surface.withValues(alpha: 0.4),
+        borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: Colors.white.withValues(alpha: 0.15),
-          width: 1.5,
+          color: Colors.white.withValues(alpha: 0.05),
+          width: 1,
         ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            french,
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: Colors.white,
-              fontFamily: 'Inter',
-            ),
-          ),
-          const SizedBox(height: 10),
           Row(
             children: [
-              Text('→ ',
-                  style: TextStyle(color: AppTheme.primary.withValues(alpha: 0.8), fontWeight: FontWeight.bold)),
               Expanded(
-                child: TranslatedText(
-                  english,
+                child: Text(
+                  french,
                   style: const TextStyle(
-                    fontSize: 16,
-                    color: AppTheme.textSecondary,
-                    fontStyle: FontStyle.italic,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                    letterSpacing: 0.2,
                   ),
                 ),
               ),
+              const Icon(Icons.volume_up_rounded, color: AppTheme.primary, size: 20),
             ],
+          ),
+          const SizedBox(height: 8),
+          Container(height: 1, color: Colors.white.withValues(alpha: 0.05)),
+          const SizedBox(height: 8),
+          TranslatedText(
+            english,
+            style: TextStyle(
+              fontSize: 15,
+              color: AppTheme.textSecondary.withValues(alpha: 0.8),
+              fontWeight: FontWeight.w500,
+            ),
           ),
         ],
       ),
@@ -287,48 +326,48 @@ class TipBox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.symmetric(vertical: 20),
-      padding: const EdgeInsets.all(24),
+      margin: const EdgeInsets.symmetric(vertical: 16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.08),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: color.withValues(alpha: 0.3), width: 2),
+        border: Border.all(color: color.withValues(alpha: 0.4), width: 2),
       ),
-      child: Row(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.15),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(icon, color: color, size: 24),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                TranslatedText(
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(icon, color: color, size: 22),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: TranslatedText(
                   title,
                   style: TextStyle(
                     fontSize: 18,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w900,
                     color: color,
-                    fontFamily: 'Outfit',
+                    letterSpacing: -0.5,
                   ),
                 ),
-                const SizedBox(height: 12),
-                TranslatedText(
-                  content,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    color: AppTheme.textPrimary,
-                    height: 1.6,
-                  ),
-                ),
-              ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          TranslatedText(
+            content,
+            style: const TextStyle(
+              fontSize: 16,
+              color: AppTheme.textPrimary,
+              height: 1.5,
+              fontWeight: FontWeight.w500,
             ),
           ),
         ],
