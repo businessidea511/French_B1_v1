@@ -416,14 +416,14 @@ class _LessonsPageState extends State<LessonsPage> {
       allowedExtensions: ['pdf'],
     );
 
-    if (result != null && result.files.single.path != null) {
-      final path = result.files.single.path!;
+    if (result != null && result.files.single.bytes != null) {
+      final bytes = result.files.single.bytes!;
       final name = result.files.single.name;
       
       setState(() => _isGenerating = true);
       
       try {
-        final text = await PdfHelper.extractText(path);
+        final text = await PdfHelper.extractText(bytes);
         if (text.trim().isEmpty) {
           _showError('This PDF seems to have no readable text. It might be a scanned image.');
           return;
@@ -762,15 +762,19 @@ class _LessonsPageState extends State<LessonsPage> {
   Future<void> _pickAndUpdateWithPdf(LessonTopic topic) async {
     final lp = Provider.of<LanguageProvider>(context, listen: false);
     final lessonsProvider = Provider.of<LessonsProvider>(context, listen: false);
-    final result = await FilePicker.platform.pickFiles(type: FileType.custom, allowedExtensions: ['pdf']);
-    if (result == null || result.files.single.path == null) return;
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom, 
+      allowedExtensions: ['pdf'],
+      withData: true,
+    );
+    if (result == null || result.files.single.bytes == null) return;
 
     final instructions = await _getUpdateInstructions('PDF');
     if (instructions == null) return; // User cancelled
 
     setState(() => _isGenerating = true);
     try {
-      final text = await PdfHelper.extractText(result.files.single.path!);
+      final text = await PdfHelper.extractText(result.files.single.bytes!);
 
       final updatedData = await DeepSeekService.updateLessonWithPdf(
         {'title': topic.title, 'subtitle': topic.subtitle, 'icon': topic.icon, 'widgets': topic.content ?? [], 'id': topic.id},

@@ -88,14 +88,14 @@ class _GrammarPageState extends State<GrammarPage> {
       allowedExtensions: ['pdf'],
     );
 
-    if (result != null && result.files.single.path != null) {
-      final path = result.files.single.path!;
+    if (result != null && result.files.single.bytes != null) {
+      final bytes = result.files.single.bytes!;
       final name = result.files.single.name;
       
       setState(() => _isGenerating = true);
       
       try {
-        final text = await PdfHelper.extractText(path);
+        final text = await PdfHelper.extractText(bytes);
         await _generateGrammar(topic: name, pdfText: text);
       } catch (e) {
         _showError('Failed to process PDF: $e');
@@ -462,15 +462,19 @@ class _GrammarPageState extends State<GrammarPage> {
 
 
   Future<void> _pickAndUpdateWithPdf(GrammarTopic topic) async {
-    final result = await FilePicker.platform.pickFiles(type: FileType.custom, allowedExtensions: ['pdf']);
-    if (result == null || result.files.single.path == null) return;
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom, 
+      allowedExtensions: ['pdf'],
+      withData: true,
+    );
+    if (result == null || result.files.single.bytes == null) return;
 
     final instructions = await _getUpdateInstructions('PDF');
     if (instructions == null) return;
 
     setState(() => _isGenerating = true);
     try {
-      final text = await PdfHelper.extractText(result.files.single.path!);
+      final text = await PdfHelper.extractText(result.files.single.bytes!);
 
       if (!mounted) return;
       final lp = Provider.of<LanguageProvider>(context, listen: false);
