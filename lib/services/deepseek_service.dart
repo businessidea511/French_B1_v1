@@ -10,6 +10,16 @@ class DeepSeekService {
   static const String baseUrl = 'https://api.deepseek.com/v1';
   static final Map<String, String> _memoryCache = {};
 
+  static Future<void> clearCache() async {
+    _memoryCache.clear();
+    final prefs = await SharedPreferences.getInstance();
+    final keys = prefs.getKeys().where((k) => k.startsWith('trans_')).toList();
+    for (final k in keys) {
+      await prefs.remove(k);
+    }
+    debugPrint('🧹 Translation cache cleared');
+  }
+
   static String get apiKey {
     const String dKey = String.fromEnvironment('DEEPSEEK_API_KEY');
     if (dKey.isNotEmpty) return dKey;
@@ -450,18 +460,18 @@ class DeepSeekService {
             {
               'role': 'system',
               'content':
-                  'You are a professional translator and French language expert. '
-                      'Translate the given text into $targetLanguage. '
-                      'CRITICAL RULE: This text is from a French grammar lesson. '
-                      'DO NOT translate French words, phrases, conjugations, or examples used for teaching. '
-                      'Keep any text that looks like a French grammar example, a conjugation (e.g., -er, -ir, -re endings), or a specific French phrase EXACTLY as it is. '
-                      'Only translate the surrounding explanations, instructions, and descriptions. '
-                      'Even if the text contains symbols like ❌ or ✅ followed by French, KEEP the French part. '
-                      'Provide ONLY the localized translation, no extra comments.'
+                  'You are a high-speed translation engine. '
+                  'Translate the following text into $targetLanguage. '
+                  'STRICT RULES:\n'
+                  '1. NO META-TALK: Do NOT say "Here is the translation", "Sure", or "I have translated".\n'
+                  '2. NO PREAMBLE: Start immediately with the translated text.\n'
+                  '3. PRESERVE FRENCH: Keep French words, conjugations, and examples EXACTLY in French. Only translate the explanations.\n'
+                  '4. RAW OUTPUT ONLY: Your response will be used directly in a UI. Any extra text will break the app.\n'
+                  '5. Keep symbols (✅, ❌, ♂️, ♀️) exactly as they are.'
             },
             {
               'role': 'user',
-              'content': 'Translate this lesson content to $targetLanguage: $text'
+              'content': 'TEXT TO TRANSLATE:\n$text'
             }
           ],
           'temperature': 0.3,

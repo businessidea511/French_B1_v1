@@ -822,6 +822,21 @@ class _LessonsPageState extends State<LessonsPage> {
                 foregroundColor: AppTheme.primary,
               ),
             ),
+            const SizedBox(height: 12),
+            ElevatedButton.icon(
+              onPressed: () async {
+                await DeepSeekService.clearCache();
+                if (!context.mounted) return;
+                Navigator.pop(context);
+                _showSuccess('Translation cache cleared! Refresh to see changes.');
+              },
+              icon: const Icon(Icons.delete_sweep_rounded),
+              label: const Text('Clear Translation Cache'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.orange.withValues(alpha: 0.1),
+                foregroundColor: Colors.orange,
+              ),
+            ),
           ],
         ),
         actions: [
