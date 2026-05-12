@@ -107,6 +107,19 @@ class DynamicLessonPage extends StatelessWidget {
           ));
           break;
 
+        case 'french_tipbox':
+          final title = _clean(w['title'] ?? 'Vocabulary');
+          final frenchText = _clean(w['frenchText'] ?? '');
+          final color = _colorFromString(w['color']?.toString() ?? 'blue');
+          final icon = _iconFromColor(w['color']?.toString() ?? 'blue');
+          if (frenchText.isEmpty) break;
+          result.add(FrenchTipBox(
+            title: title,
+            frenchText: frenchText,
+            icon: icon,
+            color: color,
+          ));
+          break;
         case 'tipbox':
           final title = _clean(w['title'] ?? 'Note');
           final content = _clean(rawContent);
@@ -120,6 +133,15 @@ class DynamicLessonPage extends StatelessWidget {
             icon: icon,
             color: color,
           ));
+          break;
+
+        case 'table':
+          final headers = List<String>.from(w['headers'] ?? []);
+          final rows = (w['rows'] as List? ?? [])
+              .map((row) => List<String>.from(row as List? ?? []))
+              .toList();
+          if (headers.isEmpty || rows.isEmpty) break;
+          result.add(PremiumTable(headers: headers, rows: rows));
           break;
 
         default:

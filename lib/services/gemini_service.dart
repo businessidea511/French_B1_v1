@@ -58,9 +58,15 @@ class GeminiService {
       {'ver': 'v1beta', 'model': 'gemini-1.5-flash'},
     ];
 
-    // Detailed extraction prompt for French textbook content
     const prompt = '''You are an expert French language teacher analyzing textbook pages.
 TASK: Extract ALL French learning content from these images with extreme precision.
+
+CRITICAL INSTRUCTION FOR HANDWRITTEN NOTES:
+- The images may contain HANDWRITTEN ARABIC NOTES added by the student.
+- You MUST IGNORE these Arabic notes when extracting the core lesson content.
+- Do NOT let handwritten Arabic interfere with the French transcription.
+- Only extract the original PRINTED textbook content (French) and its intended translations/exercises.
+- If there are handwritten French corrections, you may note them as "User Correction" but do NOT confuse them with the main text.
 
 For EACH image, extract:
 1. **Vocabulary Lists**: Every French word/phrase with its category (e.g., "les symptômes", "les médicaments", "les parties du corps", "les accessoires")
@@ -68,7 +74,6 @@ For EACH image, extract:
 3. **Grammar Points**: Any grammar rules, conjugations, or structures shown
 4. **Exercises**: Questions, fill-in-the-blank, comprehension questions
 5. **Mind Maps**: If there's a vocabulary mind map, list ALL categories and their items
-6. **Handwritten Notes**: Transcribe any handwritten text visible
 
 FORMAT your response as a structured extraction:
 ---VOCABULARY---
@@ -81,9 +86,9 @@ Category: [category name]
 ...
 
 ---NOTES---
-- Any additional context, tips, or cultural notes
+- Any additional context, tips, or cultural notes (IGNORE ARABIC NOTES HERE)
 
-Be EXHAUSTIVE. Do NOT skip any text visible in the images. Transcribe French text EXACTLY as written.''';
+Be EXHAUSTIVE for printed content. Transcribe French text EXACTLY as written.''';
 
     for (var modelInfo in models) {
       final version = modelInfo['ver'];

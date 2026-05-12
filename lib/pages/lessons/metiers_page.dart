@@ -15,6 +15,7 @@ class MetiersPage extends StatelessWidget {
           ? 'Les Métiers'
           : 'Jobs & Professions',
       icon: '💼',
+      topic: 'Les Métiers',
       children: [
         const TranslatedText(
           'Les Métiers = JOBS and PROFESSIONS in French. '

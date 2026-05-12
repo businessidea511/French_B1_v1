@@ -150,7 +150,15 @@ class LessonsProvider extends ChangeNotifier {
 
       notifyListeners();
       await _saveLocalData();
-      debugPrint('✅ Cloud Sync Complete: ${_customLessons.length} lessons, ${_customGrammar.length} grammar from cloud');
+      debugPrint('✅ Cloud Sync Complete: ${_customLessons.length} lessons, ${_customGrammar.length} grammar items pulled.');
+      
+      // Verification log for specifically requested topic
+      final metiersCloud = _customLessons.where((l) => l.id == 'metiers').firstOrNull;
+      if (metiersCloud != null) {
+        debugPrint('💼 "Les Métiers" found in cloud sync. Widgets: ${metiersCloud.content?.length ?? 0}');
+      } else {
+        debugPrint('💼 "Les Métiers" NOT found in cloud sync.');
+      }
     } catch (e) {
       _lastError = e.toString();
       debugPrint('⚠️ Cloud sync failed: $e');

@@ -36,7 +36,7 @@ class DeepSeekService {
           'messages': [
             {
               'role': 'system',
-              'content': 'You are an expert Professeur de Français. Generate high-quality French B1 grammar exercises. '
+              'content': 'You are Professeur AI, an expert teacher. Generate high-quality French B1 grammar exercises. '
                   'CRITICAL RULES: \n'
                   '1. QUESTION & OPTIONS: The "question" and all "options" MUST BE IN FRENCH. \n'
                   '2. TRANSLATION: Add a "translation" field for the question in $targetLanguage. \n'
@@ -90,7 +90,7 @@ class DeepSeekService {
             {
               'role': 'system',
               'content':
-                  'You are an expert French B1 novelist and teacher. Create an engaging 5-page French story. '
+                  'You are Professeur AI, an expert French B1 novelist and teacher. Create an engaging 5-page French story. '
                   'The story MUST be in French. '
                   'CRITICAL: Each page MUST have "learning_points" which are pedagogical explanations of the grammar or vocabulary used on that page. '
                   'The "learning_points" MUST be written in $targetLanguage (the user\'s native language). '
@@ -232,7 +232,7 @@ class DeepSeekService {
           'messages': [
             {
               'content':
-                  'You are a French teacher explaining grammar to beginners. Use simple language, clear examples, and helpful metaphors. '
+                  'You are Professeur AI, a French teacher explaining grammar to beginners. Use simple language, clear examples, and helpful metaphors. '
                       'Use Markdown to format your response (Headings, bold keywords, code blocks for conjugations, blockquotes for tips). '
                       'Your entire explanation MUST be in $targetLanguage.'
             },
@@ -383,8 +383,8 @@ class DeepSeekService {
             {
               'role': 'system',
               'content': isDialogue
-                  ? 'You are a French B1 teacher. Generate a listening dialogue in JSON format. Return a JSON object with keys "text" and "questions" (an array of 5 objects). The "text" MUST be a dialogue script between "Client" and "Agence", where every line starts with "Client:" or "Agence:". Example: "Client: Bonjour...". Each question object must have: "question", "options" (4 strings), "answer" (the correct string from options) which tests comprehension.'
-                  : 'You are a French B1 teacher. Generate a listening exercise in JSON format. Return a JSON object with keys "text" (a ~100 word French story/article) and "questions" (an array of 5 objects). Each question object must have: "question", "options" (4 strings), "answer" (the correct string from options). The text should be suitable for B1 level students.'
+                  ? 'You are Professeur AI, a French B1 teacher. Generate a listening dialogue in JSON format. Return a JSON object with keys "text" and "questions" (an array of 5 objects). The "text" MUST be a dialogue script between "Client" and "Agence", where every line starts with "Client:" or "Agence:". Example: "Client: Bonjour...". Each question object must have: "question", "options" (4 strings), "answer" (the correct string from options) which tests comprehension.'
+                  : 'You are Professeur AI, a French B1 teacher. Generate a listening exercise in JSON format. Return a JSON object with keys "text" (a ~100 word French story/article) and "questions" (an array of 5 objects). Each question object must have: "question", "options" (4 strings), "answer" (the correct string from options). The text should be suitable for B1 level students.'
             },
             {'role': 'user', 'content': userPrompt}
           ],
@@ -557,7 +557,7 @@ class DeepSeekService {
             {
               'role': 'system',
               'content': '''
-ROLE: Professional Belgian French Professor for $targetLanguage Speakers.
+ROLE: Professeur AI, a Professional Belgian French Professor for $targetLanguage Speakers.
 GOAL: Create a textbook-quality B1 French lesson in $targetLanguage.
 STYLE: Academic, thorough, and simplified for beginners.
 CONTEXT: This app is designed for people LIVING IN BELGIUM. All cultural notes, practical examples, and real-life references MUST be based on BELGIUM — not France.
@@ -635,27 +635,36 @@ REQUIREMENTS:
             {
               'role': 'system',
               'content': '''
-You are a French Grammar expert. Output ONLY a raw JSON object. No preamble. No explanation. No markdown.
+You are Professeur AI, a French Grammar expert. Output ONLY a raw JSON object. No preamble. No explanation. No markdown.
+
+PREMIUM PEDAGOGICAL STYLE (Imparfait Standard):
+1. SIMPLIFIED EXPLANATIONS: Use metaphors (e.g., "The Movie Metaphor", "Background Music") in the "text" content to make rules intuitive.
+2. FORMULA BOX: Use TipBox (color: "purple", icon: "calculate") for the core grammatical formula.
+3. CONJUGATIONS: Use FrenchTipBox (color: "green", icon: "auto_fix_high") for step-by-step conjugation examples.
+4. MAGIC WORDS: Use TipBox (color: "yellow", icon: "lightbulb") for "Magic Words" or shortcuts.
+5. IRREGULARS: Use FrenchTipBox (color: "red", icon: "warning") for irregulars or common mistakes.
+6. SECTION TITLES: Use SectionTitle with relevant emojis (⚖️, 🎯, 🔧, 📝, ❌).
+
 {
   "title": "French grammar topic (e.g. Le Subjonctif)",
   "subtitle": "Translation in $targetLanguage",
   "icon": "single emoji",
   "widgets": [
-    {"type": "text", "content": "Detailed overview in $targetLanguage (at least 3-4 sentences)."},
-    {"type": "section_title", "emoji": "🔧", "title": "Formation in $targetLanguage"},
-    {"type": "tipbox", "title": "Formula", "content": "Step-by-step rule in $targetLanguage.", "color": "blue"},
-    {"type": "section_title", "emoji": "💬", "title": "Examples in $targetLanguage"},
-    {"type": "example", "french": "Sentence 1", "translation": "Translation in $targetLanguage."},
-    ... (provide at least 10 varied examples) ...
-    {"type": "section_title", "emoji": "⚠️", "title": "Common Mistakes in $targetLanguage"},
-    {"type": "tipbox", "title": "Mistake", "content": "Description in $targetLanguage.", "color": "red"}
+    {"type": "text", "content": "Detailed overview with simplified metaphor in $targetLanguage."},
+    {"type": "section_title", "emoji": "🔧", "title": "Formation"},
+    {"type": "tipbox", "title": "Formula", "content": "...", "color": "purple"},
+    {"type": "french_tipbox", "title": "Step-by-Step", "frenchText": "...", "color": "green"},
+    {"type": "section_title", "emoji": "💬", "title": "Examples"},
+    {"type": "example", "french": "...", "translation": "..."},
+    ... (provide 10+ varied examples) ...
+    {"type": "tipbox", "title": "Magic Word", "content": "...", "color": "yellow"},
+    {"type": "french_tipbox", "title": "Irregulars", "frenchText": "...", "color": "red"}
   ]
 }
-CRITICAL RULES - ZERO TOLERANCE:
-1. LANGUAGE: Every field (except "french") MUST be in $targetLanguage. NEVER repeat French in the "translation" or "content" fields. NEVER write English.
-2. NO META-TALK: Never say "I cannot translate this" or "This is already in Arabic". Start directly with '{'.
-3. DEPTH: Grammar guides must be EXTREMELY DETAILED for level B1. Explain the "why" and "when" clearly.
-4. NO MARKDOWN: No ** or __ or # anywhere.
+CRITICAL RULES:
+1. LANGUAGE: Every field (except "french") MUST be in $targetLanguage.
+2. NO META-TALK: Start directly with '{'.
+3. NO MARKDOWN: No ** or __ anywhere.
 '''            },
             {
               'role': 'user',
@@ -697,7 +706,7 @@ CRITICAL RULES - ZERO TOLERANCE:
             {
               'role': 'system',
               'content':
-                  'You are a professional French novelist and pedagogical expert. Generate a RICH, engaging, and detailed B1-level story in JSON format. '
+                  'You are Professeur AI, a professional French novelist and pedagogical expert. Generate a RICH, engaging, and detailed B1-level story in JSON format. '
                       'The story MUST be long and immersive (at least 300-400 words total), divided into 4-6 pages. '
                       'CRITICAL RULES: \n'
                       '1. STORYTELLING: Write a real story with a beginning, middle, and end. Use descriptive language. \n'
@@ -908,38 +917,26 @@ CRITICAL RULES - ZERO TOLERANCE:
           'messages': [
             {
               'role': 'system',
-              'content': '''You are an expert French B1 teacher. You will receive an EXISTING lesson and NEW content from textbook photos.
-Your job: ADD the new content as INDIVIDUAL WIDGETS into the "widgets" array.
+              'content': '''You are Professeur AI, an expert French B1 teacher. You will receive an EXISTING lesson and NEW content from textbook photos.
+Your job: APPEND the new content at the end of the existing widgets.
 
-CRITICAL FORMAT RULES:
-Each vocabulary word MUST be its own separate "example" widget. NEVER put multiple words in one widget.
-NEVER write [{french:...}, {french:...}] as text content. That is WRONG.
+CRITICAL SAFETY RULES:
+1. STRICT APPEND MODE: NEVER modify, delete, or rephrase existing widgets. ONLY add new widgets at the end of the "widgets" array.
+2. PREMIUM STYLE: Use "Les Métiers" benchmark (section_title, french_tipbox for lists, example, tipbox).
+3. TABLE SUPPORT: If the content is tabular, use: {"type": "table", "headers": ["Col1", "Col2"], "rows": [["val1", "val2"], ["val3", "val4"]]}.
 
-CORRECT EXAMPLE OUTPUT:
-{
-  "title": "La Santé",
-  "subtitle": "Health vocabulary",
-  "icon": "🏥",
-  "widgets": [
-    {"type": "section_title", "emoji": "💊", "title": "Les médicaments"},
-    {"type": "example", "french": "le médicament", "translation": "the medicine"},
-    {"type": "example", "french": "le comprimé", "translation": "the tablet"},
-    {"type": "example", "french": "le sirop", "translation": "the syrup"},
-    {"type": "text", "content": "These are common pharmacy items."},
-    {"type": "tipbox", "title": "Note", "content": "Always use the article.", "color": "blue"}
-  ]
-}
+ARABIC NOTES HANDLING:
+- IGNORE any handwritten Arabic notes or user corrections mentioned. Focus ONLY on printed textbook content.
 
-WRONG (NEVER DO THIS):
-{"type": "text", "content": "[{french: le médicament, translation: medicine}, {french: le comprimé...}]"}
+WIDGET TYPES:
+1. {"type": "section_title", "emoji": "...", "title": "..."}
+2. {"type": "text", "content": "..."}
+3. {"type": "french_tipbox", "title": "...", "frenchText": "word1 → translation1\nword2 → translation2", "color": "...", "icon": "..."}
+4. {"type": "tipbox", "title": "...", "content": "...", "color": "...", "icon": "..."}
+5. {"type": "example", "french": "...", "translation": "..."}
+6. {"type": "table", "headers": [...], "rows": [[...]]}
 
-RULES:
-1. KEEP ALL existing widgets unchanged. Append new ones at the end.
-2. Each vocabulary word = ONE separate {"type": "example"} widget with "french" and "translation" keys.
-3. Group new words under {"type": "section_title"} headers.
-4. Translations must be in $targetLanguage.
-5. Return "title", "subtitle", "icon" from the existing lesson.
-6. Return valid JSON with a "widgets" array.'''
+Return valid JSON with "title", "subtitle", "icon", and the COMPLETE "widgets" array (original + new).'''
             },
             {
               'role': 'user',
@@ -989,22 +986,20 @@ RULES:
               'role': 'system',
               'content': '''Update the EXISTING French B1 lesson by adding NEW content from PDF text.
 
-CRITICAL: Each vocabulary word MUST be its OWN separate "example" widget.
-NEVER dump multiple words as text. NEVER use [{french:...}] format in text content.
+CRITICAL SAFETY RULES:
+1. STRICT APPEND MODE: NEVER DELETE OR MODIFY EXISTING WIDGETS. ONLY append new ones at the end of "widgets".
+2. TABLE SUPPORT: Use {"type": "table", "headers": [...], "rows": [[...]]} for tabular data.
+3. PREMIUM STYLE: Headers -> Intro Text -> Categorized Lists/Tables.
 
-CORRECT format for each word:
-{"type": "example", "french": "le mot", "translation": "the word in $targetLanguage"}
-
-Other widget types:
-- {"type": "section_title", "emoji": "📖", "title": "Section Name"}
+WIDGET TYPES:
+- {"type": "section_title", "emoji": "📖", "title": "..."}
 - {"type": "text", "content": "explanation in $targetLanguage"}
-- {"type": "tipbox", "title": "Note", "content": "...", "color": "blue"}
+- {"type": "french_tipbox", "title": "Vocabulary", "frenchText": "french word → translation", "color": "blue"}
+- {"type": "example", "french": "...", "translation": "..."}
+- {"type": "tipbox", "title": "Note", "content": "...", "color": "yellow"}
+- {"type": "table", "headers": [...], "rows": [[...]]}
 
-RULES:
-1. KEEP ALL existing widgets. Append new ones at the end.
-2. Return "title", "subtitle", "icon" from the existing lesson.
-3. Each word = separate "example" widget. NO lists in text.
-4. Return valid JSON with "widgets" array.'''
+Return the COMPLETE "widgets" array (Original + New).'''
             },
             {
               'role': 'user',
@@ -1055,9 +1050,20 @@ RULES:
           'messages': [
             {
               'role': 'system',
-              'content': 'Update the EXISTING French B1 grammar guide JSON with NEW information from textbook photos. '
-                  'Merge sections and rules without duplication. Explanations must be in $targetLanguage. '
-                  'Return ONLY the updated JSON with "widgets" array.'
+              'content': '''Update the EXISTING French B1 grammar guide JSON with NEW information from textbook photos.
+
+CRITICAL SAFETY RULES:
+1. STRICT APPEND MODE: NEVER modify or delete existing content. Add NEW sections at the end of "widgets".
+2. TABLE SUPPORT: Use {"type": "table", "headers": [...], "rows": [[...]]} for conjugation tables or comparison tables.
+3. PREMIUM PEDAGOGICAL STYLE (Imparfait standard):
+   - Simplified Metaphors (Movie Metaphor).
+   - TipBox (purple) for Formulas.
+   - FrenchTipBox (green) for Conjugations.
+   - TipBox (yellow) for Magic Words.
+   - FrenchTipBox (red) for Irregulars.
+
+IGNORE any handwritten Arabic notes. Focus on printed textbook content.
+Return the COMPLETE updated JSON.'''
             },
             {
               'role': 'user',
@@ -1102,7 +1108,20 @@ RULES:
           'messages': [
             {
               'role': 'system',
-              'content': 'Update the EXISTING French B1 grammar guide JSON with NEW information from this PDF text. Merge sections, rules, and examples without duplication. Explanations must be in $targetLanguage. Return ONLY the updated JSON.${userInstructions != null ? '\n\nUSER INSTRUCTIONS: $userInstructions' : ''}'
+              'content': '''Update the EXISTING French B1 grammar guide JSON with NEW information from this PDF text.
+
+CRITICAL SAFETY RULES:
+1. STRICT APPEND MODE: Do NOT delete or modify existing widgets. Append new ones.
+2. TABLE SUPPORT: Use {"type": "table", "headers": [...], "rows": [[...]]} for grammar tables.
+3. PREMIUM STYLE (Imparfait standard):
+   - Simplified Metaphors.
+   - Formula: TipBox (purple).
+   - Conjugations: FrenchTipBox (green).
+   - Tips: TipBox (yellow).
+   - Irregulars: FrenchTipBox (red).
+
+Explanations must be in $targetLanguage.
+Return the COMPLETE updated JSON.'''
             },
             {
               'role': 'user',
@@ -1149,17 +1168,13 @@ RULES:
             {
               'role': 'system',
               'content': '''Update the EXISTING French B1 lesson based on user instructions.
+
 CRITICAL SAFETY RULES:
-1. NEVER DELETE EXISTING CONTENT: Your response MUST include ALL original widgets from the "EXISTING LESSON" plus any new ones.
-2. APPEND MODE: If asked to add something, append it as new widgets at the end of the array.
-3. STYLE PRESERVATION: Keep the original formatting and tone.
-4. METADATA: Return the original "title", "subtitle", and "icon" unless specified otherwise.
-5. FORMAT:
-   - {"type": "section_title", "emoji": "📖", "title": "..."}
-   - {"type": "text", "content": "..."}
-   - {"type": "example", "french": "...", "translation": "..."}
-   - {"type": "tipbox", "title": "...", "content": "...", "color": "..."}
-Return the COMPLETE updated JSON.'''
+1. STRICT APPEND MODE: NEVER DELETE OR MODIFY EXISTING CONTENT. Only add new widgets at the end.
+2. TABLE SUPPORT: Use {"type": "table", "headers": [...], "rows": [[...]]} for tables.
+3. PREMIUM STYLE: Use section_title, french_tipbox (lists), example, tipbox, and table.
+
+Return the COMPLETE JSON (Original + New widgets).'''
             },
             {
               'role': 'user',
@@ -1205,17 +1220,13 @@ Return the COMPLETE updated JSON.'''
           'messages': [
             {
               'role': 'system',
-              'content': '''Update the EXISTING French B1 grammar guide based on user instructions.
+              'content': '''Update the EXISTING grammar guide based on user instructions.
+
 CRITICAL SAFETY RULES:
-1. NEVER DELETE EXISTING CONTENT: Your response MUST include ALL widgets from the "EXISTING GRAMMAR" plus any new ones. Do not skip or omit any original widgets.
-2. APPEND NEW CONTENT: If the user asks to add something, add it at the end of the "widgets" array.
-3. STYLE PRESERVATION: Maintain the exact tone and formatting of original widgets.
-4. METADATA: Return "title", "subtitle", and "icon" from the existing guide unless explicitly told to change them.
-5. JSON FORMAT:
-   - {"type": "section_title", "emoji": "📖", "title": "..."}
-   - {"type": "text", "content": "..."}
-   - {"type": "example", "french": "...", "translation": "..."}
-   - {"type": "tipbox", "title": "...", "content": "...", "color": "..."}
+1. STRICT APPEND MODE: DO NOT delete or modify existing content. Add new widgets at the end.
+2. TABLE SUPPORT: Use {"type": "table", "headers": [...], "rows": [[...]]} for conjugation/grammar tables.
+3. PREMIUM STYLE (Imparfait standard): Simplified Metaphors, TipBox (purple) for Formulas, FrenchTipBox (green) for Step-by-step.
+
 Return the COMPLETE JSON with all original + new widgets.'''
             },
             {

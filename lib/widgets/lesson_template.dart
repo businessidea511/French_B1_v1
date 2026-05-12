@@ -399,3 +399,54 @@ class FrenchTipBox extends StatelessWidget {
     );
   }
 }
+
+class PremiumTable extends StatelessWidget {
+  final List<String> headers;
+  final List<List<String>> rows;
+
+  const PremiumTable({
+    super.key,
+    required this.headers,
+    required this.rows,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 20),
+      decoration: BoxDecoration(
+        color: AppTheme.surface.withValues(alpha: 0.4),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.1), width: 1.5),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: DataTable(
+          headingRowColor: WidgetStateProperty.all(AppTheme.primary.withValues(alpha: 0.1)),
+          dataRowMinHeight: 48,
+          dataRowMaxHeight: 80,
+          columnSpacing: 30,
+          columns: headers.map((h) => DataColumn(
+            label: TranslatedText(
+              h,
+              style: const TextStyle(
+                color: AppTheme.primary,
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+              ),
+            ),
+          )).toList(),
+          rows: rows.map((row) => DataRow(
+            cells: row.map((cell) => DataCell(
+              TranslatedText(
+                cell,
+                style: const TextStyle(color: Colors.white, fontSize: 14),
+              ),
+            )).toList(),
+          )).toList(),
+        ),
+      ),
+    );
+  }
+}
