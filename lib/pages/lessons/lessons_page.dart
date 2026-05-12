@@ -424,7 +424,11 @@ class _LessonsPageState extends State<LessonsPage> {
       
       try {
         final text = await PdfHelper.extractText(path);
-        await _generateLesson(topic: name, pdfText: text);
+        if (text.trim().isEmpty) {
+          _showError('This PDF seems to have no readable text. It might be a scanned image.');
+          return;
+        }
+        await _generateLesson(topic: name.replaceAll('.pdf', ''), pdfText: text);
       } catch (e) {
         _showError('Failed to process PDF: $e');
       } finally {

@@ -566,18 +566,15 @@ class DeepSeekService {
           'messages': [
             {
               'role': 'system',
-              'content': '''
-ROLE: Professeur AI, a Professional Belgian French Professor for $targetLanguage Speakers.
+              'content': '''ROLE: Professeur AI, a Professional Belgian French Professor for $targetLanguage Speakers.
 GOAL: Create a textbook-quality B1 French lesson in $targetLanguage.
 STYLE: Academic, thorough, and simplified for beginners.
 CONTEXT: This app is designed for people LIVING IN BELGIUM. All cultural notes, practical examples, and real-life references MUST be based on BELGIUM — not France.
 
-BELGIAN CONTEXT RULES:
-- Use Belgian institutions: mutualité (health insurance), CPAS, commune, STIB/TEC/De Lijn, Bpost, etc.
-- Use Belgian vocabulary differences: septante (70), nonante (90), déjeuner=breakfast in Belgium, etc.
-- Reference Belgian cities: Bruxelles, Liège, Namur, Gand, Anvers, Bruges, etc.
-- Use Belgian daily life: friteries, waffle shops, Belgian healthcare system (médecin généraliste + carte SIS), supermarkets like Colruyt/Delhaize.
-- When giving "Cultural Note" tipboxes, ALWAYS say "En Belgique..." not "En France...".
+STRICT RULES:
+1. BELGIAN FOCUS: mutualité, CPAS, commune, STIB/TEC, septante, nonante.
+2. JSON FORMAT: You MUST return ONLY a valid JSON object.
+3. BELGIAN FIRST: Every practical example and cultural note must reference Belgium, not France.
 
 STRICT JSON SCHEMA:
 {
@@ -585,24 +582,15 @@ STRICT JSON SCHEMA:
   "subtitle": "Direct Translation in $targetLanguage",
   "icon": "emoji",
   "widgets": [
-    {"type": "text", "content": "Detailed introduction in $targetLanguage (No English Preamble!)"},
-    {"type": "section_title", "emoji": "⚖️", "title": "Grammar & Structure ($targetLanguage)"},
-    {"type": "tipbox", "title": "Key Rule", "content": "Detailed explanation in $targetLanguage", "color": "blue"},
-    {"type": "section_title", "emoji": "📚", "title": "Vocabulary & Usage ($targetLanguage)"},
-    {"type": "example", "french": "...", "translation": "Translation in $targetLanguage"},
-    ... (provide 20 examples with Belgian context sentences) ...
-    {"type": "tipbox", "title": "🇧🇪 Belgian Cultural Note", "content": "En Belgique... explanation in $targetLanguage", "color": "green"},
-    {"type": "tipbox", "title": "Common Error", "content": "Explanation in $targetLanguage", "color": "red"}
+    {"type": "text", "content": "Detailed introduction in $targetLanguage"},
+    {"type": "section_title", "emoji": "⚖️", "title": "Grammar & Structure"},
+    {"type": "tipbox", "title": "Key Rule", "content": "explanation", "color": "blue"},
+    {"type": "example", "french": "...", "translation": "..."},
+    {"type": "tipbox", "title": "🇧🇪 Belgian Cultural Note", "content": "En Belgique...", "color": "green"}
   ]
 }
 
-REQUIREMENTS:
-1. NO META-TALK: Never include conversational text like "Here is your lesson" or "I have translated this" inside any JSON field. Start directly with '{' and end with '}'.
-2. TABLE RULES: In tables, use separate columns for French and $targetLanguage. NEVER translate the French term into $targetLanguage within the same cell. Keep the French column PURE French.
-3. BELGIAN FIRST: Every practical example and cultural note must reference Belgium, not France. institution names (CPAS, Mutualité) must be in French.
-4. LANGUAGE: Every field except "french" (and French columns in tables) MUST be in $targetLanguage.
-5. NO MARKDOWN: No ** or __ or # anywhere in the JSON values.
-'''            },
+REQUIREMENTS: NO META-TALK. NO MARKDOWN. Explanations in $targetLanguage. French terms stay in French.'''            },
             {
               'role': 'user',
               'content': pdfText != null
@@ -643,39 +631,29 @@ REQUIREMENTS:
           'messages': [
             {
               'role': 'system',
-              'content': '''
-You are Professeur AI, a French Grammar expert. Output ONLY a raw JSON object. No preamble. No explanation. No markdown.
+              'content': '''ROLE: Professeur AI, a Professional Belgian French Professor for $targetLanguage Speakers.
+GOAL: Create a detailed Belgian-centric Grammar Guide in $targetLanguage.
 
-PREMIUM PEDAGOGICAL STYLE (Imparfait Standard):
-1. SIMPLIFIED EXPLANATIONS: Use metaphors (e.g., "The Movie Metaphor", "Background Music") in the "text" content to make rules intuitive.
-2. FORMULA BOX: Use TipBox (color: "purple", icon: "calculate") for the core grammatical formula.
-3. CONJUGATIONS: Use FrenchTipBox (color: "green", icon: "auto_fix_high") for step-by-step conjugation examples.
-4. MAGIC WORDS: Use TipBox (color: "yellow", icon: "lightbulb") for "Magic Words" or shortcuts.
-5. IRREGULARS: Use FrenchTipBox (color: "red", icon: "warning") for irregulars or common mistakes.
-6. SECTION TITLES: Use SectionTitle with relevant emojis (⚖️, 🎯, 🔧, 📝, ❌).
+STRICT RULES:
+1. BELGIAN FOCUS: Use Belgian French (septante, nonante) and Belgian context (Bruxelles, Liège).
+2. JSON FORMAT: You MUST return ONLY a valid JSON object.
+3. PREMIUM STYLE: Use TipBox (purple) for Formulas, FrenchTipBox (green) for Conjugations, TipBox (yellow) for Tips, FrenchTipBox (red) for Irregulars.
 
+STRICT JSON SCHEMA:
 {
-  "title": "French grammar topic (e.g. Le Subjonctif)",
+  "title": "Grammar Topic in French",
   "subtitle": "Translation in $targetLanguage",
-  "icon": "single emoji",
+  "icon": "emoji",
   "widgets": [
-    {"type": "text", "content": "Detailed overview with simplified metaphor in $targetLanguage."},
-    {"type": "section_title", "emoji": "🔧", "title": "Formation"},
-    {"type": "tipbox", "title": "Formula", "content": "...", "color": "purple"},
+    {"type": "text", "content": "Metaphorical introduction in $targetLanguage."},
+    {"type": "tipbox", "title": "La Formule", "content": "...", "color": "purple"},
     {"type": "french_tipbox", "title": "Step-by-Step", "frenchText": "...", "color": "green"},
-    {"type": "section_title", "emoji": "💬", "title": "Examples"},
     {"type": "example", "french": "...", "translation": "..."},
-    ... (provide 10+ varied examples) ...
-    {"type": "tipbox", "title": "Magic Word", "content": "...", "color": "yellow"},
-    {"type": "french_tipbox", "title": "Irregulars", "frenchText": "...", "color": "red"}
+    {"type": "french_tipbox", "title": "Les Irréguliers", "frenchText": "...", "color": "red"}
   ]
 }
-CRITICAL RULES:
-1. LANGUAGE: Every field (except "french" or French columns in tables) MUST be in $targetLanguage.
-2. NO META-TALK: Never include conversational filler like "Here is the grammar guide" or "Translated as requested" inside JSON values. Start directly with '{'.
-3. TABLE RULES: Use separate columns for French terms and $targetLanguage translations. Keep the French column in French.
-4. NO MARKDOWN: No ** or __ anywhere.
-'''            },
+
+REQUIREMENTS: NO META-TALK. NO MARKDOWN. Explanations in $targetLanguage. French terms stay in French.'''            },
             {
               'role': 'user',
               'content': pdfText != null
