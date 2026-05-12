@@ -879,12 +879,12 @@ CRITICAL RULES - ZERO TOLERANCE:
     return limited;
   }
 
-  // ── Update an existing lesson with new photos ────────────────────────────
   static Future<Map<String, dynamic>> updateLessonFromImages(
     Map<String, dynamic> existingLesson,
     List<String> newBase64Images,
     String mimeType,
     String targetLanguage,
+    String? userInstructions,
   ) async {
     try {
       // 1. Get description of NEW images
@@ -943,7 +943,8 @@ RULES:
             },
             {
               'role': 'user',
-              'content': 'EXISTING LESSON:\n${jsonEncode(limited)}\n\nNEW TEXTBOOK CONTENT:\n$newDescription'
+              'content': 'EXISTING LESSON:\n${jsonEncode(limited)}\n\nNEW TEXTBOOK CONTENT:\n$newDescription' + 
+                  (userInstructions != null ? '\n\nUSER INSTRUCTIONS: $userInstructions' : '')
             }
           ],
           'response_format': {'type': 'json_object'},
@@ -968,11 +969,11 @@ RULES:
     }
   }
 
-  // ── Update an existing lesson with PDF text ──────────────────────────────
   static Future<Map<String, dynamic>> updateLessonWithPdf(
     Map<String, dynamic> existingLesson,
     String newPdfText,
     String targetLanguage,
+    String? userInstructions,
   ) async {
     try {
       final limited = _limitContent(existingLesson);
@@ -1008,7 +1009,8 @@ RULES:
             },
             {
               'role': 'user',
-              'content': 'EXISTING LESSON:\n${jsonEncode(limited)}\n\nNEW PDF TEXT:\n$newPdfText'
+              'content': 'EXISTING LESSON:\n${jsonEncode(limited)}\n\nNEW PDF TEXT:\n$newPdfText' +
+                  (userInstructions != null ? '\n\nUSER INSTRUCTIONS: $userInstructions' : '')
             }
           ],
           'response_format': {'type': 'json_object'},
@@ -1031,11 +1033,65 @@ RULES:
     }
   }
 
-  // ── Update an existing grammar guide with PDF text ───────────────────────
+  // ── Update an existing grammar guide with new photos ─────────────────────
+  static Future<Map<String, dynamic>> updateGrammarFromImages(
+    Map<String, dynamic> existingGrammar,
+    List<String> newBase64Images,
+    String mimeType,
+    String targetLanguage,
+    String? userInstructions,
+  ) async {
+    try {
+      final newDescription = await GeminiService.describeImages(newBase64Images, mimeType);
+      if (newDescription.startsWith('ERROR')) throw Exception(newDescription);
+
+      final limited = _limitContent(existingGrammar);
+      final response = await http.post(
+        Uri.parse('$baseUrl/chat/completions'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $apiKey',
+        },
+        body: jsonEncode({
+          'model': 'deepseek-chat',
+          'messages': [
+            {
+              'role': 'system',
+              'content': 'Update the EXISTING French B1 grammar guide JSON with NEW information from textbook photos. '
+                  'Merge sections and rules without duplication. Explanations must be in $targetLanguage. '
+                  'Return ONLY the updated JSON with "widgets" array.'
+            },
+            {
+              'role': 'user',
+              'content': 'EXISTING GRAMMAR:\n${jsonEncode(limited)}\n\nNEW CONTENT DESCRIPTION:\n$newDescription' +
+                  (userInstructions != null ? '\n\nUSER INSTRUCTIONS: $userInstructions' : '')
+            }
+          ],
+          'response_format': {'type': 'json_object'},
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        String content = data['choices'][0]['message']['content'];
+        content = content.replaceAll('```json', '').replaceAll('```', '').trim();
+        final updated = jsonDecode(content);
+        updated['id'] = existingGrammar['id'];
+        return updated;
+      } else {
+        throw Exception('DeepSeek Image update error: ${response.statusCode}');
+      }
+    } catch (e) {
+      debugPrint('Error updating grammar: $e');
+      rethrow;
+    }
+  }
+
   static Future<Map<String, dynamic>> updateGrammarWithPdf(
     Map<String, dynamic> existingGrammar,
     String newPdfText,
     String targetLanguage,
+    String? userInstructions,
   ) async {
     try {
       final response = await http.post(
@@ -1052,7 +1108,8 @@ RULES:
               'content':
                   'Update the EXISTING French B1 grammar guide JSON with NEW information from this PDF text. '
                   'Merge sections, rules, and examples without duplication. '
-                  'Explanations must be in $targetLanguage. Return ONLY the updated JSON.'
+                  'Explanations must be in $targetLanguage. Return ONLY the updated JSON.' +
+                  (userInstructions != null ? '\n\nUSER INSTRUCTIONS: $userInstructions' : '')
             },
             {
               'role': 'user',
@@ -1193,5 +1250,3 @@ Return the COMPLETE JSON with all original + new widgets.'''
     }
   }
 }
-
-

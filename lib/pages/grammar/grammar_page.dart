@@ -214,12 +214,22 @@ class _GrammarPageState extends State<GrammarPage> {
             mainAxisSize: MainAxisSize.min,
             children: [
               _buildAddOption(
-                icon: Icons.edit_note,
-                title: 'Add via Topic Name',
-                subtitle: 'Extend this guide with AI',
+                icon: Icons.camera_alt_rounded,
+                title: 'Add from Camera',
+                subtitle: 'Capture textbook pages',
                 onTap: () {
                   Navigator.pop(context);
-                  _showTopicUpdateDialog(topic);
+                  _pickAndUpdateFromImages(topic, ImageSource.camera);
+                },
+              ),
+              const SizedBox(height: 12),
+              _buildAddOption(
+                icon: Icons.photo_library_rounded,
+                title: 'Add from Gallery',
+                subtitle: 'Pick textbook photos',
+                onTap: () {
+                  Navigator.pop(context);
+                  _pickAndUpdateFromImages(topic, ImageSource.gallery);
                 },
               ),
               const SizedBox(height: 12),
@@ -248,6 +258,97 @@ class _GrammarPageState extends State<GrammarPage> {
         );
       },
     );
+  }
+
+  Future<String?> _getUpdateInstructions(String sourceName) async {
+    final controller = TextEditingController();
+    return showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppTheme.surface,
+        title: Text('Update from $sourceName', style: const TextStyle(color: Colors.white)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Any specific instructions for the AI?', 
+              style: TextStyle(color: AppTheme.textSecondary, fontSize: 14)),
+            const SizedBox(height: 16),
+            TextField(
+              controller: controller,
+              style: const TextStyle(color: Colors.white),
+              autofocus: true,
+              decoration: InputDecoration(
+                hintText: 'e.g. "Only add the conjugation table"',
+                hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.3)),
+                filled: true,
+                fillColor: Colors.white.withValues(alpha: 0.05),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              maxLines: 3,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, ""), 
+            child: const Text('Skip'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, controller.text.trim()),
+            child: const Text('Update Grammar'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _pickAndUpdateFromImages(GrammarTopic topic, ImageSource source) async {
+    final picker = ImagePicker();
+    List<XFile> selectedFiles = [];
+
+    if (source == ImageSource.gallery) {
+      selectedFiles = await picker.pickMultiImage(imageQuality: 40, maxWidth: 800, maxHeight: 800);
+    } else {
+      final XFile? image = await picker.pickImage(source: source, imageQuality: 40, maxWidth: 800, maxHeight: 800);
+      if (image != null) selectedFiles = [image];
+    }
+
+    if (selectedFiles.isEmpty) return;
+
+    final instructions = await _getUpdateInstructions(source == ImageSource.camera ? 'Camera' : 'Gallery');
+    if (instructions == null) return;
+
+    setState(() => _isGenerating = true);
+
+    try {
+      final lp = Provider.of<LanguageProvider>(context, listen: false);
+      final lessonsProvider = Provider.of<LessonsProvider>(context, listen: false);
+
+      final List<String> base64Images = [];
+      String? mimeType;
+      for (var file in selectedFiles) {
+        final bytes = await file.readAsBytes();
+        base64Images.add(base64Encode(bytes));
+        mimeType ??= file.name.toLowerCase().endsWith('.png') ? 'image/png' : 'image/jpeg';
+      }
+
+      final updatedData = await DeepSeekService.updateGrammarFromImages(
+        {'title': topic.title, 'subtitle': topic.subtitle, 'icon': topic.icon, 'widgets': topic.content ?? [], 'id': topic.id},
+        base64Images,
+        mimeType ?? 'image/jpeg',
+        lp.currentLanguage.englishName,
+        instructions.isEmpty ? null : instructions,
+      );
+
+      if (!mounted) return;
+      await lessonsProvider.updateGrammar(topic.id, updatedData);
+      _showSuccess('Grammar guide updated with new pages! 📚');
+    } catch (e) {
+      _showError('Failed to update grammar: $e');
+    } finally {
+      if (mounted) setState(() => _isGenerating = false);
+    }
   }
 
   void _showAIUpdateDialog(GrammarTopic topic) {
@@ -386,6 +487,9 @@ class _GrammarPageState extends State<GrammarPage> {
     final result = await FilePicker.platform.pickFiles(type: FileType.custom, allowedExtensions: ['pdf']);
     if (result == null || result.files.single.path == null) return;
 
+    final instructions = await _getUpdateInstructions('PDF');
+    if (instructions == null) return;
+
     setState(() => _isGenerating = true);
     try {
       final text = await PdfHelper.extractText(result.files.single.path!);
@@ -398,6 +502,7 @@ class _GrammarPageState extends State<GrammarPage> {
         {'title': topic.title, 'subtitle': topic.subtitle, 'icon': topic.icon, 'widgets': topic.content ?? [], 'id': topic.id},
         text,
         lp.currentLanguage.englishName,
+        instructions.isEmpty ? null : instructions,
       );
 
       if (!mounted) return;

@@ -663,6 +663,49 @@ class _LessonsPageState extends State<LessonsPage> {
     }
   }
 
+  Future<String?> _getUpdateInstructions(String sourceName) async {
+    final controller = TextEditingController();
+    return showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppTheme.surface,
+        title: Text('Update from $sourceName', style: const TextStyle(color: Colors.white)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Any specific instructions for the AI?', 
+              style: TextStyle(color: AppTheme.textSecondary, fontSize: 14)),
+            const SizedBox(height: 16),
+            TextField(
+              controller: controller,
+              style: const TextStyle(color: Colors.white),
+              autofocus: true,
+              decoration: InputDecoration(
+                hintText: 'e.g. "Only add the vocabulary list" or "Focus on the dialogue section"',
+                hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.3)),
+                filled: true,
+                fillColor: Colors.white.withValues(alpha: 0.05),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              maxLines: 3,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, ""), // Empty string means skip instructions but proceed
+            child: const Text('Skip'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, controller.text.trim()),
+            child: const Text('Update Lesson'),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _pickAndUpdateFromImages(LessonTopic topic, ImageSource source) async {
     final picker = ImagePicker();
     List<XFile> selectedFiles = [];
@@ -675,6 +718,10 @@ class _LessonsPageState extends State<LessonsPage> {
     }
 
     if (selectedFiles.isEmpty) return;
+
+    final instructions = await _getUpdateInstructions(source == ImageSource.camera ? 'Camera' : 'Gallery');
+    if (instructions == null) return; // User cancelled
+
     setState(() => _isGenerating = true);
 
       if (!mounted) return;
@@ -695,6 +742,7 @@ class _LessonsPageState extends State<LessonsPage> {
         base64Images,
         mimeType ?? 'image/jpeg',
         lp.currentLanguage.englishName,
+        instructions.isEmpty ? null : instructions,
       );
 
       if (!mounted) return;
@@ -713,14 +761,18 @@ class _LessonsPageState extends State<LessonsPage> {
     final result = await FilePicker.platform.pickFiles(type: FileType.custom, allowedExtensions: ['pdf']);
     if (result == null || result.files.single.path == null) return;
 
+    final instructions = await _getUpdateInstructions('PDF');
+    if (instructions == null) return; // User cancelled
+
     setState(() => _isGenerating = true);
     try {
       final text = await PdfHelper.extractText(result.files.single.path!);
 
       final updatedData = await DeepSeekService.updateLessonWithPdf(
-        {'title': topic.title, 'subtitle': topic.subtitle, 'icon': topic.icon, 'sections': topic.content, 'id': topic.id},
+        {'title': topic.title, 'subtitle': topic.subtitle, 'icon': topic.icon, 'widgets': topic.content ?? [], 'id': topic.id},
         text,
         lp.currentLanguage.englishName,
+        instructions.isEmpty ? null : instructions,
       );
 
       if (!mounted) return;
