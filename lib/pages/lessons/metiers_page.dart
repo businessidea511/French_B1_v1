@@ -11,9 +11,7 @@ class MetiersPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final lp = Provider.of<LanguageProvider>(context);
     return LessonTemplate(
-      title: lp.currentLanguage == AppLanguage.french
-          ? 'Les Métiers'
-          : 'Jobs & Professions',
+      title: 'Les Métiers',
       icon: '💼',
       topic: 'Les Métiers',
       children: [

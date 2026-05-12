@@ -63,8 +63,16 @@ class _LessonTemplateState extends State<LessonTemplate> {
                 pinned: true,
                 backgroundColor: Colors.transparent,
                 flexibleSpace: FlexibleSpaceBar(
-                  title: Text('${widget.icon} ${widget.title}', 
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.white)),
+                  title: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text('${widget.icon} '),
+                      TranslatedText(
+                        widget.title,
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.white),
+                      ),
+                    ],
+                  ),
                   centerTitle: true,
                   background: Container(
                     decoration: BoxDecoration(
