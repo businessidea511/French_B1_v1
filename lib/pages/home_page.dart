@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'dart:js' as js;
 import 'dart:ui';
+import '../services/pwa_service.dart';
 import '../theme/app_theme.dart';
 import '../services/language_provider.dart';
 import 'grammar/grammar_page.dart';
@@ -33,29 +33,18 @@ class _HomePageState extends State<HomePage> {
   void _setupInstallListener() {
     final bool isIOS = Theme.of(context).platform == TargetPlatform.iOS;
     
-    // On Android/Desktop, we wait for the event.
-    // On iOS, the event NEVER fires, so we show the banner manually if not standalone.
     if (isIOS) {
-      // Check if already in standalone mode (installed)
-      final bool isStandalone = js.context['navigator'] != null && 
-                               js.context['navigator']['standalone'] == true;
-      if (!isStandalone) {
+      if (!PWAService.isStandalone()) {
         setState(() => _canInstall = true);
       }
       return;
     }
 
-    // Check if already available (incase event fired before app loaded)
-    if (js.context['window']['deferredPrompt'] != null) {
-      setState(() => _canInstall = true);
-    }
-    
-    // Register callback for future events
-    js.context['onAppInstallable'] = () {
+    PWAService.setupInstallListener(() {
       if (mounted) {
         setState(() => _canInstall = true);
       }
-    };
+    });
   }
 
   Future<void> _handleInstall() async {
@@ -66,9 +55,9 @@ class _HomePageState extends State<HomePage> {
       return;
     }
 
-    final result = await js.context.callMethod('installPWA');
-    if (result == true) {
-      if (mounted) setState(() => _canInstall = false);
+    final success = await PWAService.installPWA();
+    if (success && mounted) {
+      setState(() => _canInstall = false);
     }
   }
 

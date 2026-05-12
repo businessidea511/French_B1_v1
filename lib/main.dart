@@ -114,39 +114,41 @@ class FrenchB1App extends StatelessWidget {
                   textDirection: languageProvider.isRTL
                       ? TextDirection.rtl
                       : TextDirection.ltr,
-                  child: CallbackShortcuts(
-                    bindings: <ShortcutActivator, VoidCallback>{
-                      const SingleActivator(LogicalKeyboardKey.arrowUp): () =>
-                          _handleScroll(context, -100),
-                      const SingleActivator(LogicalKeyboardKey.arrowDown): () =>
-                          _handleScroll(context, 100),
-                      const SingleActivator(LogicalKeyboardKey.pageUp): () =>
-                          _handleScroll(context,
-                              -MediaQuery.of(context).size.height * 0.8,
-                              isPage: true),
-                      const SingleActivator(LogicalKeyboardKey.pageDown): () =>
-                          _handleScroll(
-                              context, MediaQuery.of(context).size.height * 0.8,
-                              isPage: true),
-                      const SingleActivator(LogicalKeyboardKey.home): () {
-                        final controller = PrimaryScrollController.maybeOf(context);
-                        if (controller != null && controller.hasClients) {
-                          controller.animateTo(0,
-                              duration: const Duration(milliseconds: 500),
-                              curve: Curves.easeOut);
-                        }
+                  child: Builder(
+                    builder: (innerContext) => CallbackShortcuts(
+                      bindings: <ShortcutActivator, VoidCallback>{
+                        const SingleActivator(LogicalKeyboardKey.arrowUp): () =>
+                            _handleScroll(innerContext, -100),
+                        const SingleActivator(LogicalKeyboardKey.arrowDown): () =>
+                            _handleScroll(innerContext, 100),
+                        const SingleActivator(LogicalKeyboardKey.pageUp): () =>
+                            _handleScroll(innerContext,
+                                -MediaQuery.of(innerContext).size.height * 0.8,
+                                isPage: true),
+                        const SingleActivator(LogicalKeyboardKey.pageDown): () =>
+                            _handleScroll(
+                                innerContext, MediaQuery.of(innerContext).size.height * 0.8,
+                                isPage: true),
+                        const SingleActivator(LogicalKeyboardKey.home): () {
+                          final controller = PrimaryScrollController.maybeOf(innerContext);
+                          if (controller != null && controller.hasClients) {
+                            controller.animateTo(0,
+                                duration: const Duration(milliseconds: 500),
+                                curve: Curves.easeOut);
+                          }
+                        },
+                        const SingleActivator(LogicalKeyboardKey.end): () {
+                          final controller = PrimaryScrollController.maybeOf(innerContext);
+                          if (controller != null && controller.hasClients) {
+                            controller.animateTo(
+                                controller.position.maxScrollExtent,
+                                duration: const Duration(milliseconds: 500),
+                                curve: Curves.easeOut);
+                          }
+                        },
                       },
-                      const SingleActivator(LogicalKeyboardKey.end): () {
-                        final controller = PrimaryScrollController.maybeOf(context);
-                        if (controller != null && controller.hasClients) {
-                          controller.animateTo(
-                              controller.position.maxScrollExtent,
-                              duration: const Duration(milliseconds: 500),
-                              curve: Curves.easeOut);
-                        }
-                      },
-                    },
-                    child: child!,
+                      child: child!,
+                    ),
                   ),
                 );
               },

@@ -878,25 +878,7 @@ CRITICAL RULES:
     }
   }
 
-  /// Limits the size of existing content to avoid DeepSeek 400 errors (token overflow)
-  static Map<String, dynamic> _limitContent(Map<String, dynamic> existing) {
-    final limited = Map<String, dynamic>.from(existing);
-    final widgets = limited['widgets'] ?? limited['sections'] ?? limited['content'];
-    if (widgets is List && widgets.length > 40) {
-      debugPrint('⚠️ Content too large (${widgets.length} widgets). Keeping last 40 to avoid token overflow.');
-      limited['widgets'] = widgets.sublist(widgets.length - 40);
-    }
-    // Also ensure the JSON string isn't massive
-    final jsonStr = jsonEncode(limited);
-    if (jsonStr.length > 20000) {
-      debugPrint('⚠️ JSON too large (${jsonStr.length} chars). Trimming widgets...');
-      final w = limited['widgets'] ?? limited['sections'] ?? limited['content'];
-      if (w is List && w.length > 20) {
-        limited['widgets'] = w.sublist(w.length - 20);
-      }
-    }
-    return limited;
-  }
+  // ── Helper: Build a summary of existing content to give AI context ────────
 
   /// Builds a compact text summary of existing widgets so AI knows context without needing raw JSON
   static String _buildContentSummary(List<dynamic> widgets) {

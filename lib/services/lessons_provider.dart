@@ -236,17 +236,11 @@ class LessonsProvider extends ChangeNotifier {
     }
   }
 
-  /// Backup storage for rollback (in-memory, last update only)
-  Map<String, List<dynamic>>? _lastLessonBackup;
-  Map<String, List<dynamic>>? _lastGrammarBackup;
+
 
   Future<void> updateLesson(String id, Map<String, dynamic> lessonData) async {
     final original = allLessons.where((l) => l.id == id).firstOrNull;
     final List<dynamic> originalWidgets = List<dynamic>.from(original?.content ?? []);
-
-    // ── BACKUP: Save original content before any changes ──
-    _lastLessonBackup = {id: originalWidgets};
-    debugPrint('🛡️ BACKUP: Saved ${originalWidgets.length} widgets for lesson "$id"');
 
     // ── APPEND-ONLY MERGE ──
     // AI now returns ONLY new widgets in "new_widgets" key
@@ -356,10 +350,6 @@ class LessonsProvider extends ChangeNotifier {
   Future<void> updateGrammar(String id, Map<String, dynamic> grammarData) async {
     final original = allGrammar.where((g) => g.id == id).firstOrNull;
     final List<dynamic> originalWidgets = List<dynamic>.from(original?.content ?? []);
-
-    // ── BACKUP ──
-    _lastGrammarBackup = {id: originalWidgets};
-    debugPrint('🛡️ BACKUP: Saved ${originalWidgets.length} widgets for grammar "$id"');
 
     // ── APPEND-ONLY MERGE ──
     final List<dynamic> newWidgets;

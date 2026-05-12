@@ -417,7 +417,7 @@ class FrenchTipBox extends StatelessWidget {
                       ),
                     ),
                   );
-                }).toList(),
+                }),
               ],
             ),
           ),
