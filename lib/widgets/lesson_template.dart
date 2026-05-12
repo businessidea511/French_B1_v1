@@ -389,16 +389,35 @@ class FrenchTipBox extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 12),
-                // Plain Text: French content is NEVER auto-translated
-                Text(
-                  frenchText,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    color: AppTheme.textPrimary,
-                    height: 1.7,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
+                // Handle mixed content: "French -> English" should have English translated
+                ...frenchText.split('\n').map((line) {
+                  if (line.contains('→')) {
+                    final parts = line.split('→');
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 4),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(parts[0].trim(), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 16)),
+                          const Text(' → ', style: TextStyle(color: AppTheme.textSecondary)),
+                          Expanded(child: TranslatedText(parts[1].trim(), style: const TextStyle(color: AppTheme.textSecondary, fontSize: 15))),
+                        ],
+                      ),
+                    );
+                  }
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 4),
+                    child: Text(
+                      line,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        color: AppTheme.textPrimary,
+                        height: 1.7,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  );
+                }).toList(),
               ],
             ),
           ),
@@ -446,12 +465,26 @@ class PremiumTable extends StatelessWidget {
             ),
           )).toList(),
           rows: rows.map((row) => DataRow(
-            cells: row.map((cell) => DataCell(
-              Text(
-                cell,
-                style: const TextStyle(color: Colors.white, fontSize: 14),
-              ),
-            )).toList(),
+            cells: row.asMap().entries.map((entry) {
+              final idx = entry.key;
+              final cell = entry.value;
+              // If it's the first column, assume it's French and don't auto-translate
+              // If it's the second column onwards, it's likely a meaning/translation
+              if (idx == 0) {
+                return DataCell(
+                  Text(
+                    cell,
+                    style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600),
+                  ),
+                );
+              }
+              return DataCell(
+                TranslatedText(
+                  cell,
+                  style: const TextStyle(color: AppTheme.textSecondary, fontSize: 14),
+                ),
+              );
+            }).toList(),
           )).toList(),
         ),
       ),

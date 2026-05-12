@@ -236,24 +236,57 @@ class LessonsProvider extends ChangeNotifier {
     }
   }
 
+  /// Backup storage for rollback (in-memory, last update only)
+  Map<String, List<dynamic>>? _lastLessonBackup;
+  Map<String, List<dynamic>>? _lastGrammarBackup;
+
   Future<void> updateLesson(String id, Map<String, dynamic> lessonData) async {
-    // Find the original topic to preserve metadata if DeepSeek didn't return them
     final original = allLessons.where((l) => l.id == id).firstOrNull;
-    final dynamic rawContent = lessonData['widgets'] ?? lessonData['content'] ?? lessonData['sections'] ?? [];
+    final List<dynamic> originalWidgets = List<dynamic>.from(original?.content ?? []);
+
+    // ── BACKUP: Save original content before any changes ──
+    _lastLessonBackup = {id: originalWidgets};
+    debugPrint('🛡️ BACKUP: Saved ${originalWidgets.length} widgets for lesson "$id"');
+
+    // ── APPEND-ONLY MERGE ──
+    // AI now returns ONLY new widgets in "new_widgets" key
+    final List<dynamic> newWidgets;
+    if (lessonData.containsKey('new_widgets')) {
+      // New append-only format: AI returned only new content
+      final raw = lessonData['new_widgets'];
+      newWidgets = raw is List ? List<dynamic>.from(raw) : [];
+    } else {
+      // Legacy fallback: AI returned full "widgets" array
+      // Safety check: if returned widgets are fewer than original, treat as new-only
+      final raw = lessonData['widgets'] ?? lessonData['content'] ?? lessonData['sections'] ?? [];
+      final List<dynamic> returned = raw is List ? List<dynamic>.from(raw) : [];
+      if (returned.length < originalWidgets.length) {
+        debugPrint('⚠️ SAFETY: AI returned ${returned.length} widgets but original has ${originalWidgets.length}. Treating as NEW widgets only.');
+        newWidgets = returned;
+      } else {
+        // AI returned more widgets than original - extract only the new tail
+        newWidgets = returned.sublist(originalWidgets.length);
+        debugPrint('📊 Extracted ${newWidgets.length} new widgets from ${returned.length} total (original had ${originalWidgets.length})');
+      }
+    }
+
+    // Build final merged content: original + new
+    final List<dynamic> mergedContent = [...originalWidgets, ...newWidgets];
+    debugPrint('✅ MERGE RESULT: ${originalWidgets.length} original + ${newWidgets.length} new = ${mergedContent.length} total widgets');
+
     final updated = LessonTopic(
       id: id,
       title: lessonData['title'] ?? original?.title ?? 'Untitled',
       subtitle: lessonData['subtitle'] ?? original?.subtitle ?? '',
       icon: lessonData['icon'] ?? original?.icon ?? '📖',
       description: lessonData['subtitle'] ?? original?.description ?? '',
-      content: rawContent is List ? rawContent : [],
+      content: mergedContent,
     );
 
     final index = _customLessons.indexWhere((l) => l.id == id);
     if (index != -1) {
       _customLessons[index] = updated;
     } else {
-      // Topic exists as hardcoded but not in custom list yet - add it
       debugPrint('📥 Adding hardcoded lesson "$id" to custom list for update');
       _customLessons.add(updated);
     }
@@ -272,6 +305,7 @@ class LessonsProvider extends ChangeNotifier {
           'description': updated.description,
           'content': updated.content,
         });
+        debugPrint('☁️ Lesson "$id" updated in cloud (${mergedContent.length} widgets)');
       } catch (e) {
         debugPrint('Cloud update error: $e');
       }
@@ -320,23 +354,46 @@ class LessonsProvider extends ChangeNotifier {
   }
 
   Future<void> updateGrammar(String id, Map<String, dynamic> grammarData) async {
-    // Find the original topic to preserve metadata if DeepSeek didn't return them
     final original = allGrammar.where((g) => g.id == id).firstOrNull;
-    final dynamic rawContent = grammarData['widgets'] ?? grammarData['content'] ?? grammarData['sections'] ?? [];
+    final List<dynamic> originalWidgets = List<dynamic>.from(original?.content ?? []);
+
+    // ── BACKUP ──
+    _lastGrammarBackup = {id: originalWidgets};
+    debugPrint('🛡️ BACKUP: Saved ${originalWidgets.length} widgets for grammar "$id"');
+
+    // ── APPEND-ONLY MERGE ──
+    final List<dynamic> newWidgets;
+    if (grammarData.containsKey('new_widgets')) {
+      final raw = grammarData['new_widgets'];
+      newWidgets = raw is List ? List<dynamic>.from(raw) : [];
+    } else {
+      final raw = grammarData['widgets'] ?? grammarData['content'] ?? grammarData['sections'] ?? [];
+      final List<dynamic> returned = raw is List ? List<dynamic>.from(raw) : [];
+      if (returned.length < originalWidgets.length) {
+        debugPrint('⚠️ SAFETY: AI returned ${returned.length} widgets but original has ${originalWidgets.length}. Treating as NEW widgets only.');
+        newWidgets = returned;
+      } else {
+        newWidgets = returned.sublist(originalWidgets.length);
+        debugPrint('📊 Extracted ${newWidgets.length} new widgets from ${returned.length} total');
+      }
+    }
+
+    final List<dynamic> mergedContent = [...originalWidgets, ...newWidgets];
+    debugPrint('✅ MERGE RESULT: ${originalWidgets.length} original + ${newWidgets.length} new = ${mergedContent.length} total widgets');
+
     final updated = GrammarTopic(
       id: id,
       title: grammarData['title'] ?? original?.title ?? 'Untitled',
       subtitle: grammarData['subtitle'] ?? original?.subtitle ?? '',
       icon: grammarData['icon'] ?? original?.icon ?? '📖',
       description: grammarData['subtitle'] ?? original?.description ?? '',
-      content: rawContent is List ? rawContent : [],
+      content: mergedContent,
     );
 
     final index = _customGrammar.indexWhere((g) => g.id == id);
     if (index != -1) {
       _customGrammar[index] = updated;
     } else {
-      // Topic exists as hardcoded but not in custom list yet - add it
       debugPrint('📥 Adding hardcoded grammar "$id" to custom list for update');
       _customGrammar.add(updated);
     }
@@ -355,6 +412,7 @@ class LessonsProvider extends ChangeNotifier {
           'description': updated.description,
           'content': updated.content,
         });
+        debugPrint('☁️ Grammar "$id" updated in cloud (${mergedContent.length} widgets)');
       } catch (e) {
         debugPrint('Cloud grammar update error: $e');
       }

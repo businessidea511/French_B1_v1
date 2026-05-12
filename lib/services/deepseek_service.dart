@@ -898,6 +898,46 @@ CRITICAL RULES:
     return limited;
   }
 
+  /// Builds a compact text summary of existing widgets so AI knows context without needing raw JSON
+  static String _buildContentSummary(List<dynamic> widgets) {
+    if (widgets.isEmpty) return '(Empty lesson - no existing content)';
+    final buffer = StringBuffer();
+    int i = 0;
+    for (final w in widgets) {
+      if (w is! Map) continue;
+      i++;
+      final type = w['type'] ?? 'unknown';
+      switch (type) {
+        case 'section_title':
+          buffer.writeln('- Section: ${w['title'] ?? ''}');
+          break;
+        case 'text':
+          final content = (w['content'] ?? '').toString();
+          buffer.writeln('- Text: ${content.length > 60 ? '${content.substring(0, 60)}...' : content}');
+          break;
+        case 'example':
+          buffer.writeln('- Example: ${w['french'] ?? ''}');
+          break;
+        case 'tipbox':
+          buffer.writeln('- Tip: ${w['title'] ?? ''}');
+          break;
+        case 'french_tipbox':
+          buffer.writeln('- French Tip: ${w['title'] ?? ''}');
+          break;
+        case 'table':
+          buffer.writeln('- Table: ${(w['headers'] as List?)?.join(', ') ?? ''}');
+          break;
+        default:
+          buffer.writeln('- [$type]');
+      }
+      if (i >= 30) {
+        buffer.writeln('... and ${widgets.length - 30} more widgets');
+        break;
+      }
+    }
+    return buffer.toString();
+  }
+
   static Future<Map<String, dynamic>> updateLessonFromImages(
     Map<String, dynamic> existingLesson,
     List<String> newBase64Images,
@@ -906,16 +946,14 @@ CRITICAL RULES:
     String? userInstructions,
   ) async {
     try {
-      // 1. Get description of NEW images
       final newDescription = await GeminiService.describeImages(newBase64Images, mimeType);
-      
       if (newDescription.startsWith('ERROR') || newDescription.startsWith('EXCEPTION')) {
         throw Exception(newDescription);
       }
 
-      // 2. Ask DeepSeek to MERGE new content into existing lesson
-      final limited = _limitContent(existingLesson);
-      debugPrint('📦 Sending ${jsonEncode(limited).length} chars to DeepSeek for merge...');
+      final existingWidgets = existingLesson['widgets'] ?? existingLesson['content'] ?? [];
+      final String existingSummary = _buildContentSummary(existingWidgets is List ? existingWidgets : []);
+
       final response = await http.post(
         Uri.parse('$baseUrl/chat/completions'),
         headers: {
@@ -927,33 +965,18 @@ CRITICAL RULES:
           'messages': [
             {
               'role': 'system',
-              'content': '''You are Professeur AI, an expert French B1 teacher. You will receive an EXISTING lesson and NEW content from textbook photos.
-Your job: APPEND the new content at the end of the existing widgets.
+              'content': '''You are Professeur AI. Generate ONLY NEW widgets from textbook photos to ADD to an existing lesson.
+CRITICAL: Return ONLY new content. Do NOT reproduce existing content.
+The lesson "${existingLesson['title']}" already contains:
+$existingSummary
 
-CRITICAL SAFETY RULES:
-1. STRICT APPEND MODE: NEVER modify, delete, or rephrase existing widgets. ONLY add new widgets at the end of the "widgets" array.
-2. PREMIUM STYLE: Use "Les Métiers" benchmark (section_title, french_tipbox for lists, example, tipbox).
-3. TABLE SUPPORT: If the content is tabular, use: {"type": "table", "headers": ["Col1", "Col2"], "rows": [["val1", "val2"], ["val3", "val4"]]}.
-
-ARABIC NOTES HANDLING:
-- IGNORE any handwritten Arabic notes or user corrections mentioned. Focus ONLY on printed textbook content.
-
-WIDGET TYPES:
-1. {"type": "section_title", "emoji": "...", "title": "..."}
-2. {"type": "text", "content": "..."}
-3. {"type": "french_tipbox", "title": "...", "frenchText": "word1 → translation1", "color": "...", "icon": "..."}
-4. {"type": "tipbox", "title": "...", "content": "...", "color": "...", "icon": "..."}
-5. {"type": "example", "french": "...", "translation": "..."}
-6. {"type": "table", "headers": [...], "rows": [[...]]}
-
-CRITICAL RULES:
-- NO META-TALK: Never put conversational text (e.g., "Here is the update...") inside the JSON fields.
-- TABLE CONTENT: Keep French terms in their own column. Do not translate them into $targetLanguage in the French column.
-- Return valid JSON with the COMPLETE "widgets" array (original + new).'''
+RETURN FORMAT: {"new_widgets": [<only new widgets>]}
+WIDGET TYPES: section_title, text, french_tipbox, tipbox, example, table.
+RULES: IGNORE handwritten Arabic notes. NO META-TALK. Explanations in $targetLanguage.'''
             },
             {
               'role': 'user',
-              'content': 'EXISTING LESSON:\n${jsonEncode(limited)}\n\nNEW TEXTBOOK CONTENT:\n$newDescription${userInstructions != null ? '\n\nUSER INSTRUCTIONS: $userInstructions' : ''}'
+              'content': 'NEW TEXTBOOK CONTENT:\n$newDescription${userInstructions != null ? '\n\nUSER INSTRUCTIONS: $userInstructions' : ''}'
             }
           ],
           'response_format': {'type': 'json_object'},
@@ -965,11 +988,14 @@ CRITICAL RULES:
         final data = jsonDecode(response.body);
         String content = data['choices'][0]['message']['content'];
         content = content.replaceAll('```json', '').replaceAll('```', '').trim();
-        final updatedLesson = jsonDecode(content);
-        updatedLesson['id'] = existingLesson['id']; // Keep the same ID
-        return updatedLesson;
+        final result = jsonDecode(content);
+        result['id'] = existingLesson['id'];
+        result['title'] = existingLesson['title'];
+        result['subtitle'] = existingLesson['subtitle'];
+        result['icon'] = existingLesson['icon'];
+        return result;
       } else {
-        debugPrint('❌ DeepSeek update error ${response.statusCode}: ${response.body.substring(0, response.body.length > 300 ? 300 : response.body.length)}');
+        debugPrint('❌ DeepSeek update error ${response.statusCode}');
         throw Exception('DeepSeek update error: ${response.statusCode}');
       }
     } catch (e) {
@@ -985,7 +1011,9 @@ CRITICAL RULES:
     String? userInstructions,
   ) async {
     try {
-      final limited = _limitContent(existingLesson);
+      final existingWidgets = existingLesson['widgets'] ?? existingLesson['content'] ?? [];
+      final String existingSummary = _buildContentSummary(existingWidgets is List ? existingWidgets : []);
+
       final response = await http.post(
         Uri.parse('$baseUrl/chat/completions'),
         headers: {
@@ -997,26 +1025,18 @@ CRITICAL RULES:
           'messages': [
             {
               'role': 'system',
-              'content': '''Update the EXISTING French B1 lesson by adding NEW content from PDF text.
+              'content': '''You are Professeur AI. Generate ONLY NEW widgets from PDF text to ADD to an existing lesson.
+CRITICAL: Return ONLY new content. Do NOT reproduce existing content.
+The lesson "${existingLesson['title']}" already contains:
+$existingSummary
 
-CRITICAL SAFETY RULES:
-1. STRICT APPEND MODE: NEVER DELETE OR MODIFY EXISTING WIDGETS. ONLY append new ones at the end of "widgets".
-2. TABLE SUPPORT: Use {"type": "table", "headers": [...], "rows": [[...]]} for tabular data.
-3. PREMIUM STYLE: Headers -> Intro Text -> Categorized Lists/Tables.
-
-WIDGET TYPES:
-- {"type": "section_title", "emoji": "📖", "title": "..."}
-- {"type": "text", "content": "explanation in $targetLanguage"}
-- {"type": "french_tipbox", "title": "Vocabulary", "frenchText": "french word → translation", "color": "blue"}
-- {"type": "example", "french": "...", "translation": "..."}
-- {"type": "tipbox", "title": "Note", "content": "...", "color": "yellow"}
-- {"type": "table", "headers": [...], "rows": [[...]]}
-
-Return the COMPLETE "widgets" array (Original + New).'''
+RETURN FORMAT: {"new_widgets": [<only new widgets>]}
+WIDGET TYPES: section_title, text, french_tipbox, example, tipbox, table.
+RULES: NO META-TALK. French stays French. Explanations in $targetLanguage.'''
             },
             {
               'role': 'user',
-              'content': 'EXISTING LESSON:\n${jsonEncode(limited)}\n\nNEW PDF TEXT:\n$newPdfText${userInstructions != null ? '\n\nUSER INSTRUCTIONS: $userInstructions' : ''}'
+              'content': 'NEW PDF TEXT:\n$newPdfText${userInstructions != null ? '\n\nUSER INSTRUCTIONS: $userInstructions' : ''}'
             }
           ],
           'response_format': {'type': 'json_object'},
@@ -1027,9 +1047,12 @@ Return the COMPLETE "widgets" array (Original + New).'''
         final data = jsonDecode(response.body);
         String content = data['choices'][0]['message']['content'];
         content = content.replaceAll('```json', '').replaceAll('```', '').trim();
-        final updatedLesson = jsonDecode(content);
-        updatedLesson['id'] = existingLesson['id'];
-        return updatedLesson;
+        final result = jsonDecode(content);
+        result['id'] = existingLesson['id'];
+        result['title'] = existingLesson['title'];
+        result['subtitle'] = existingLesson['subtitle'];
+        result['icon'] = existingLesson['icon'];
+        return result;
       } else {
         throw Exception('DeepSeek PDF update error: ${response.statusCode}');
       }
@@ -1051,7 +1074,9 @@ Return the COMPLETE "widgets" array (Original + New).'''
       final newDescription = await GeminiService.describeImages(newBase64Images, mimeType);
       if (newDescription.startsWith('ERROR')) throw Exception(newDescription);
 
-      final limited = _limitContent(existingGrammar);
+      final existingWidgets = existingGrammar['widgets'] ?? existingGrammar['content'] ?? [];
+      final String existingSummary = _buildContentSummary(existingWidgets is List ? existingWidgets : []);
+
       final response = await http.post(
         Uri.parse('$baseUrl/chat/completions'),
         headers: {
@@ -1063,24 +1088,18 @@ Return the COMPLETE "widgets" array (Original + New).'''
           'messages': [
             {
               'role': 'system',
-              'content': '''Update the EXISTING French B1 grammar guide JSON with NEW information from textbook photos.
+              'content': '''You are Professeur AI. Generate ONLY NEW widgets from textbook photos to ADD to an existing grammar guide.
+CRITICAL: Return ONLY new content. Do NOT reproduce existing content.
+The grammar guide "${existingGrammar['title']}" already contains:
+$existingSummary
 
-CRITICAL SAFETY RULES:
-1. STRICT APPEND MODE: NEVER modify or delete existing content. Add NEW sections at the end of "widgets".
-2. TABLE SUPPORT: Use {"type": "table", "headers": [...], "rows": [[...]]} for conjugation tables or comparison tables.
-3. PREMIUM PEDAGOGICAL STYLE (Imparfait standard):
-   - Simplified Metaphors (Movie Metaphor).
-   - TipBox (purple) for Formulas.
-   - FrenchTipBox (green) for Conjugations.
-   - TipBox (yellow) for Magic Words.
-   - FrenchTipBox (red) for Irregulars.
-
-IGNORE any handwritten Arabic notes. Focus on printed textbook content.
-Return the COMPLETE updated JSON.'''
+RETURN FORMAT: {"new_widgets": [<only new widgets>]}
+PREMIUM STYLE: TipBox (purple) for Formulas. FrenchTipBox (green) for Conjugations. TipBox (yellow) for Tips. FrenchTipBox (red) for Irregulars.
+RULES: IGNORE handwritten Arabic notes. NO META-TALK. Explanations in $targetLanguage.'''
             },
             {
               'role': 'user',
-              'content': 'EXISTING GRAMMAR:\n${jsonEncode(limited)}\n\nNEW CONTENT DESCRIPTION:\n$newDescription${userInstructions != null ? '\n\nUSER INSTRUCTIONS: $userInstructions' : ''}'
+              'content': 'NEW TEXTBOOK CONTENT:\n$newDescription${userInstructions != null ? '\n\nUSER INSTRUCTIONS: $userInstructions' : ''}'
             }
           ],
           'response_format': {'type': 'json_object'},
@@ -1091,9 +1110,12 @@ Return the COMPLETE updated JSON.'''
         final data = jsonDecode(response.body);
         String content = data['choices'][0]['message']['content'];
         content = content.replaceAll('```json', '').replaceAll('```', '').trim();
-        final updated = jsonDecode(content);
-        updated['id'] = existingGrammar['id'];
-        return updated;
+        final result = jsonDecode(content);
+        result['id'] = existingGrammar['id'];
+        result['title'] = existingGrammar['title'];
+        result['subtitle'] = existingGrammar['subtitle'];
+        result['icon'] = existingGrammar['icon'];
+        return result;
       } else {
         throw Exception('DeepSeek Image update error: ${response.statusCode}');
       }
@@ -1110,6 +1132,9 @@ Return the COMPLETE updated JSON.'''
     String? userInstructions,
   ) async {
     try {
+      final existingWidgets = existingGrammar['widgets'] ?? existingGrammar['content'] ?? [];
+      final String existingSummary = _buildContentSummary(existingWidgets is List ? existingWidgets : []);
+
       final response = await http.post(
         Uri.parse('$baseUrl/chat/completions'),
         headers: {
@@ -1121,24 +1146,24 @@ Return the COMPLETE updated JSON.'''
           'messages': [
             {
               'role': 'system',
-              'content': '''Update the EXISTING French B1 grammar guide JSON with NEW information from this PDF text.
+              'content': '''You are Professeur AI. Generate ONLY NEW widgets from PDF text to ADD to an existing grammar guide.
 
-CRITICAL SAFETY RULES:
-1. STRICT APPEND MODE: Do NOT delete or modify existing widgets. Append new ones.
-2. TABLE SUPPORT: Use {"type": "table", "headers": [...], "rows": [[...]]} for grammar tables.
-3. PREMIUM STYLE (Imparfait standard):
-   - Simplified Metaphors.
-   - Formula: TipBox (purple).
-   - Conjugations: FrenchTipBox (green).
-   - Tips: TipBox (yellow).
-   - Irregulars: FrenchTipBox (red).
+CRITICAL: Return ONLY new content. Do NOT reproduce existing content.
 
-Explanations must be in $targetLanguage.
-Return the COMPLETE updated JSON.'''
+The grammar guide "${existingGrammar['title']}" already contains:
+$existingSummary
+
+RETURN FORMAT: {"new_widgets": [<only new widgets>]}
+
+PREMIUM STYLE (Imparfait standard):
+- Formula: TipBox (purple). Conjugations: FrenchTipBox (green).
+- Tips: TipBox (yellow). Irregulars: FrenchTipBox (red).
+
+Explanations in $targetLanguage. NO META-TALK.'''
             },
             {
               'role': 'user',
-              'content': 'Existing Grammar JSON: \n${jsonEncode(existingGrammar)}\n\nNew PDF Text: \n$newPdfText'
+              'content': 'NEW PDF TEXT:\n$newPdfText${userInstructions != null ? '\n\nUSER INSTRUCTIONS: $userInstructions' : ''}'
             }
           ],
           'response_format': {'type': 'json_object'},
@@ -1149,9 +1174,12 @@ Return the COMPLETE updated JSON.'''
         final data = jsonDecode(response.body);
         String content = data['choices'][0]['message']['content'];
         content = content.replaceAll('```json', '').replaceAll('```', '').trim();
-        final updatedGrammar = jsonDecode(content);
-        updatedGrammar['id'] = existingGrammar['id'];
-        return updatedGrammar;
+        final result = jsonDecode(content);
+        result['id'] = existingGrammar['id'];
+        result['title'] = existingGrammar['title'];
+        result['subtitle'] = existingGrammar['subtitle'];
+        result['icon'] = existingGrammar['icon'];
+        return result;
       } else {
         throw Exception('DeepSeek Grammar update error: ${response.statusCode}');
       }
@@ -1168,7 +1196,10 @@ Return the COMPLETE updated JSON.'''
     String targetLanguage,
   ) async {
     try {
-      final limited = _limitContent(existingLesson);
+      // Send only a SUMMARY of existing content (titles/types) to avoid reproduction
+      final existingWidgets = existingLesson['widgets'] ?? existingLesson['content'] ?? [];
+      final String existingSummary = _buildContentSummary(existingWidgets is List ? existingWidgets : []);
+
       final response = await http.post(
         Uri.parse('$baseUrl/chat/completions'),
         headers: {
@@ -1180,21 +1211,39 @@ Return the COMPLETE updated JSON.'''
           'messages': [
             {
               'role': 'system',
-              'content': '''Update the EXISTING French B1 lesson based on user instructions.
+              'content': '''You are Professeur AI. Generate ONLY NEW widgets to ADD to an existing French B1 lesson.
 
-CRITICAL SAFETY RULES:
-1. STRICT APPEND MODE: NEVER DELETE OR MODIFY EXISTING CONTENT. Only add new widgets at the end.
-2. TABLE SUPPORT: Use {"type": "table", "headers": [...], "rows": [[...]]} for tables.
-3. PREMIUM STYLE: Use section_title, french_tipbox (lists), example, tipbox, and table.
+CRITICAL: You must ONLY return NEW content. Do NOT reproduce any existing content.
 
-Return the COMPLETE JSON (Original + New widgets).'''
+The lesson "${existingLesson['title']}" already contains:
+$existingSummary
+
+RETURN FORMAT:
+{"new_widgets": [<only new widgets here>]}
+
+WIDGET TYPES:
+1. {"type": "section_title", "emoji": "...", "title": "..."}
+2. {"type": "text", "content": "... in $targetLanguage"}
+3. {"type": "french_tipbox", "title": "...", "frenchText": "word → translation", "color": "blue"}
+4. {"type": "tipbox", "title": "...", "content": "...", "color": "blue|green|yellow|red|purple"}
+5. {"type": "example", "french": "...", "translation": "... in $targetLanguage"}
+6. {"type": "table", "headers": [...], "rows": [[...]]}
+
+RULES:
+- NO META-TALK (apologies, intros, or explanations) inside JSON values. 
+- Return ONLY the JSON object.
+- Explanations in $targetLanguage.
+- French terms stay in French.
+- Do NOT repeat any existing content.
+- If you cannot perform the task, return an empty new_widgets list. NEVER return an apology string.'''
             },
             {
               'role': 'user',
-              'content': 'EXISTING LESSON:\n${jsonEncode(limited)}\n\nUSER INSTRUCTIONS:\n$userInstructions'
+              'content': 'ADD the following to the lesson:\n$userInstructions'
             }
           ],
           'response_format': {'type': 'json_object'},
+          'temperature': 0.5,
         }),
       );
 
@@ -1202,9 +1251,13 @@ Return the COMPLETE JSON (Original + New widgets).'''
         final data = jsonDecode(response.body);
         String content = data['choices'][0]['message']['content'];
         content = content.replaceAll('```json', '').replaceAll('```', '').trim();
-        final updatedLesson = jsonDecode(content);
-        updatedLesson['id'] = existingLesson['id'];
-        return updatedLesson;
+        final result = jsonDecode(content);
+        // Preserve metadata
+        result['id'] = existingLesson['id'];
+        result['title'] = existingLesson['title'];
+        result['subtitle'] = existingLesson['subtitle'];
+        result['icon'] = existingLesson['icon'];
+        return result;
       } else {
         throw Exception('DeepSeek AI update error: ${response.statusCode}');
       }
@@ -1221,7 +1274,9 @@ Return the COMPLETE JSON (Original + New widgets).'''
     String targetLanguage,
   ) async {
     try {
-      final limited = _limitContent(existingGrammar);
+      final existingWidgets = existingGrammar['widgets'] ?? existingGrammar['content'] ?? [];
+      final String existingSummary = _buildContentSummary(existingWidgets is List ? existingWidgets : []);
+
       final response = await http.post(
         Uri.parse('$baseUrl/chat/completions'),
         headers: {
@@ -1233,21 +1288,29 @@ Return the COMPLETE JSON (Original + New widgets).'''
           'messages': [
             {
               'role': 'system',
-              'content': '''Update the EXISTING grammar guide based on user instructions.
+              'content': '''You are Professeur AI. Generate ONLY NEW widgets to ADD to an existing grammar guide.
 
-CRITICAL SAFETY RULES:
-1. STRICT APPEND MODE: DO NOT delete or modify existing content. Add new widgets at the end.
-2. TABLE SUPPORT: Use {"type": "table", "headers": [...], "rows": [[...]]} for conjugation/grammar tables.
-3. PREMIUM STYLE (Imparfait standard): Simplified Metaphors, TipBox (purple) for Formulas, FrenchTipBox (green) for Step-by-step.
+CRITICAL: Return ONLY new content. Do NOT reproduce existing content.
 
-Return the COMPLETE JSON with all original + new widgets.'''
+The grammar guide "${existingGrammar['title']}" already contains:
+$existingSummary
+
+RETURN FORMAT: {"new_widgets": [<only new widgets>]}
+
+PREMIUM STYLE (Imparfait standard):
+- TipBox (purple) for Formulas. FrenchTipBox (green) for Step-by-step.
+- TipBox (yellow) for Tips. FrenchTipBox (red) for Irregulars.
+- Use table type for conjugation/grammar tables.
+
+Explanations in $targetLanguage. NO META-TALK.'''
             },
             {
               'role': 'user',
-              'content': 'EXISTING GRAMMAR:\n${jsonEncode(limited)}\n\nUSER INSTRUCTIONS:\n$userInstructions'
+              'content': 'ADD the following to the grammar guide:\n$userInstructions'
             }
           ],
           'response_format': {'type': 'json_object'},
+          'temperature': 0.5,
         }),
       );
 
@@ -1255,9 +1318,12 @@ Return the COMPLETE JSON with all original + new widgets.'''
         final data = jsonDecode(response.body);
         String content = data['choices'][0]['message']['content'];
         content = content.replaceAll('```json', '').replaceAll('```', '').trim();
-        final updatedGrammar = jsonDecode(content);
-        updatedGrammar['id'] = existingGrammar['id'];
-        return updatedGrammar;
+        final result = jsonDecode(content);
+        result['id'] = existingGrammar['id'];
+        result['title'] = existingGrammar['title'];
+        result['subtitle'] = existingGrammar['subtitle'];
+        result['icon'] = existingGrammar['icon'];
+        return result;
       } else {
         throw Exception('DeepSeek Grammar AI update error: ${response.statusCode}');
       }
