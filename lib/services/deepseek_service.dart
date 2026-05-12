@@ -511,7 +511,11 @@ class DeepSeekService {
                       '- Use bullet points for lists. \n'
                       'Use examples in French followed by their translation in $targetLanguage. '
                       'Keep the response concise and pedagogical. '
-                      'The user is currently studying the topic: $topic. '
+                      'THE USER IS CURRENTLY STUDYING THE TOPIC: $topic. \n'
+                      'STRICT TOPIC RESTRICTION: \n'
+                      '1. You MUST ONLY answer questions related to the current topic ($topic). \n'
+                      '2. If the user asks about something completely unrelated (e.g., math, history, or a totally different French grammar point like "Futur Simple" when the topic is "Pronoms Relatifs"), you must politely explain in $targetLanguage that you can only assist with the current lesson topic. \n'
+                      '3. If the user asks for more detail or "depth" about the current topic ($topic) that isn\'t explicitly in the lesson, you SHOULD answer it fully. \n'
                       'The user\'s preferred language for explanations is $targetLanguage.'
             },
             {
@@ -799,6 +803,7 @@ CRITICAL RULES - ZERO TOLERANCE:
     List<String> base64Images,
     String mimeType,
     String targetLanguage,
+    String topic,
   ) async {
     try {
       // 1. Get description of ALL images using Gemini
@@ -823,8 +828,12 @@ CRITICAL RULES - ZERO TOLERANCE:
             {
               'role': 'system',
               'content':
-                  'You are an expert French B1 teacher. The user has provided multiple images (pages) described as: "$description". '
-                  'Answer the user\'s question about this content. '
+                  'You are an expert French B1 teacher. The user has provided multiple images (pages) described as: "$description". \n'
+                  'THE USER IS CURRENTLY STUDYING THE TOPIC: $topic. \n'
+                  'STRICT TOPIC RESTRICTION: \n'
+                  '1. You MUST ONLY answer the user\'s question if it is related to the current topic ($topic) or the content of the provided images. \n'
+                  '2. If the user asks about something completely unrelated to the images or the topic $topic, politely inform them in $targetLanguage that you can only help with this specific lesson. \n'
+                  '3. If the question is about the topic/images but seeks deeper understanding or more examples, please answer thoroughly. \n'
                   'The explanation MUST be in $targetLanguage. Use markdown for formatting.'
             },
             {

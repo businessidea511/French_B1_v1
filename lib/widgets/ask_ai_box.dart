@@ -116,6 +116,7 @@ class _AskAIBoxState extends State<AskAIBox> with AutomaticKeepAliveClientMixin 
           _base64Images,
           _mimeType!,
           targetLang,
+          widget.topic,
         );
       } else {
         answer = await DeepSeekService.askGrammarQuestion(
