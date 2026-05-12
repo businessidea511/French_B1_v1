@@ -57,6 +57,42 @@
   </style>
 
   <script src="flutter_bootstrap.js" async></script>
+
+  <script>
+    // PWA Install Logic
+    window.deferredPrompt = null;
+    window.addEventListener('beforeinstallprompt', (e) => {
+      // Prevent Chrome 67 and earlier from automatically showing the prompt
+      e.preventDefault();
+      // Stash the event so it can be triggered later.
+      window.deferredPrompt = e;
+      console.log('📦 PWA Install Prompt captured');
+      
+      // Notify Flutter that install is available
+      if (window.onAppInstallable) {
+        window.onAppInstallable();
+      }
+    });
+
+    window.installPWA = async () => {
+      if (!window.deferredPrompt) {
+        console.log('❌ No install prompt available');
+        return false;
+      }
+      // Show the prompt
+      window.deferredPrompt.prompt();
+      // Wait for the user to respond to the prompt
+      const { outcome } = await window.deferredPrompt.userChoice;
+      console.log(`👤 User response to install prompt: ${outcome}`);
+      // We've used the prompt, and can't use it again, throw it away
+      window.deferredPrompt = null;
+      return outcome === 'accepted';
+    };
+
+    window.addEventListener('appinstalled', (evt) => {
+      console.log('✅ App installed successfully');
+    });
+  </script>
 </head>
 
 <body>

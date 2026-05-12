@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'dart:js' as js;
 import 'dart:ui';
 import '../theme/app_theme.dart';
 import '../services/language_provider.dart';
@@ -21,6 +22,34 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final ScrollController _scrollController = ScrollController();
+  bool _canInstall = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _setupInstallListener();
+  }
+
+  void _setupInstallListener() {
+    // Check if already available (incase event fired before app loaded)
+    if (js.context['deferredPrompt'] != null) {
+      setState(() => _canInstall = true);
+    }
+    
+    // Register callback for future events
+    js.context['onAppInstallable'] = () {
+      if (mounted) {
+        setState(() => _canInstall = true);
+      }
+    };
+  }
+
+  Future<void> _handleInstall() async {
+    final result = await js.context.callMethod('installPWA');
+    if (result == true) {
+      if (mounted) setState(() => _canInstall = false);
+    }
+  }
 
   @override
   void dispose() {
@@ -161,6 +190,15 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
               
+              // PWA Install Banner
+              if (_canInstall)
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                    child: _buildInstallBanner(),
+                  ),
+                ),
+              
               // Feature Grid
               SliverPadding(
                 padding: const EdgeInsets.all(24),
@@ -243,6 +281,66 @@ class _HomePageState extends State<HomePage> {
               const SliverToBoxAdapter(child: SizedBox(height: 100)),
             ],
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInstallBanner() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [AppTheme.primary, AppTheme.primary.withValues(alpha: 0.8)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: AppTheme.primary.withValues(alpha: 0.3),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: const Icon(Icons.install_mobile_rounded, color: Colors.white, size: 28),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Install App',
+                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18),
+                ),
+                Text(
+                  'Add PolyLearn to your home screen for a better experience!',
+                  style: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontSize: 13),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          ElevatedButton(
+            onPressed: _handleInstall,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.white,
+              foregroundColor: AppTheme.primary,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            ),
+            child: const Text('Download', style: TextStyle(fontWeight: FontWeight.bold)),
           ),
         ],
       ),
