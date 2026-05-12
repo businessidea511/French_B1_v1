@@ -587,12 +587,11 @@ STRICT JSON SCHEMA:
 }
 
 REQUIREMENTS:
-1. SUBTITLE: Must be in $targetLanguage. This is what shows on the lesson card.
-2. NO ENGLISH PREAMBLE: Do NOT start with "In this lesson..." or "Today we will..." in English. Start directly in $targetLanguage.
-3. LANGUAGE: Every field except "french" MUST be in $targetLanguage.
-4. BELGIAN FIRST: Every practical example and cultural note must reference Belgium, not France.
-5. DEPTH: Match the quality of a professional textbook.
-6. NO PREAMBLE: Start with '{'. Never apologize or talk to the user.
+1. NO META-TALK: Never include conversational text like "Here is your lesson" or "I have translated this" inside any JSON field. Start directly with '{' and end with '}'.
+2. TABLE RULES: In tables, use separate columns for French and $targetLanguage. NEVER translate the French term into $targetLanguage within the same cell. Keep the French column PURE French.
+3. BELGIAN FIRST: Every practical example and cultural note must reference Belgium, not France. institution names (CPAS, Mutualité) must be in French.
+4. LANGUAGE: Every field except "french" (and French columns in tables) MUST be in $targetLanguage.
+5. NO MARKDOWN: No ** or __ or # anywhere in the JSON values.
 '''            },
             {
               'role': 'user',
@@ -662,9 +661,10 @@ PREMIUM PEDAGOGICAL STYLE (Imparfait Standard):
   ]
 }
 CRITICAL RULES:
-1. LANGUAGE: Every field (except "french") MUST be in $targetLanguage.
-2. NO META-TALK: Start directly with '{'.
-3. NO MARKDOWN: No ** or __ anywhere.
+1. LANGUAGE: Every field (except "french" or French columns in tables) MUST be in $targetLanguage.
+2. NO META-TALK: Never include conversational filler like "Here is the grammar guide" or "Translated as requested" inside JSON values. Start directly with '{'.
+3. TABLE RULES: Use separate columns for French terms and $targetLanguage translations. Keep the French column in French.
+4. NO MARKDOWN: No ** or __ anywhere.
 '''            },
             {
               'role': 'user',
@@ -931,12 +931,15 @@ ARABIC NOTES HANDLING:
 WIDGET TYPES:
 1. {"type": "section_title", "emoji": "...", "title": "..."}
 2. {"type": "text", "content": "..."}
-3. {"type": "french_tipbox", "title": "...", "frenchText": "word1 → translation1\nword2 → translation2", "color": "...", "icon": "..."}
+3. {"type": "french_tipbox", "title": "...", "frenchText": "word1 → translation1", "color": "...", "icon": "..."}
 4. {"type": "tipbox", "title": "...", "content": "...", "color": "...", "icon": "..."}
 5. {"type": "example", "french": "...", "translation": "..."}
 6. {"type": "table", "headers": [...], "rows": [[...]]}
 
-Return valid JSON with "title", "subtitle", "icon", and the COMPLETE "widgets" array (original + new).'''
+CRITICAL RULES:
+- NO META-TALK: Never put conversational text (e.g., "Here is the update...") inside the JSON fields.
+- TABLE CONTENT: Keep French terms in their own column. Do not translate them into $targetLanguage in the French column.
+- Return valid JSON with the COMPLETE "widgets" array (original + new).'''
             },
             {
               'role': 'user',

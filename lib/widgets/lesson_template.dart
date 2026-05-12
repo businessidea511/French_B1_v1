@@ -439,7 +439,7 @@ class PremiumTable extends StatelessWidget {
           )).toList(),
           rows: rows.map((row) => DataRow(
             cells: row.map((cell) => DataCell(
-              TranslatedText(
+              Text(
                 cell,
                 style: const TextStyle(color: Colors.white, fontSize: 14),
               ),
