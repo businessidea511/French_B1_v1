@@ -31,8 +31,22 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _setupInstallListener() {
+    final bool isIOS = Theme.of(context).platform == TargetPlatform.iOS;
+    
+    // On Android/Desktop, we wait for the event.
+    // On iOS, the event NEVER fires, so we show the banner manually if not standalone.
+    if (isIOS) {
+      // Check if already in standalone mode (installed)
+      final bool isStandalone = js.context['navigator'] != null && 
+                               js.context['navigator']['standalone'] == true;
+      if (!isStandalone) {
+        setState(() => _canInstall = true);
+      }
+      return;
+    }
+
     // Check if already available (incase event fired before app loaded)
-    if (js.context['deferredPrompt'] != null) {
+    if (js.context['window']['deferredPrompt'] != null) {
       setState(() => _canInstall = true);
     }
     
@@ -45,10 +59,66 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _handleInstall() async {
+    final bool isIOS = Theme.of(context).platform == TargetPlatform.iOS;
+    
+    if (isIOS) {
+      _showIOSInstallInstructions();
+      return;
+    }
+
     final result = await js.context.callMethod('installPWA');
     if (result == true) {
       if (mounted) setState(() => _canInstall = false);
     }
+  }
+
+  void _showIOSInstallInstructions() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppTheme.surface,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(32))),
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('Install on iPhone', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white)),
+            const SizedBox(height: 24),
+            _buildStep(1, 'Tap the "Share" button at the bottom of Safari.', Icons.ios_share),
+            const SizedBox(height: 16),
+            _buildStep(2, 'Scroll down and tap "Add to Home Screen".', Icons.add_box_outlined),
+            const SizedBox(height: 16),
+            _buildStep(3, 'Tap "Add" in the top right corner.', Icons.done),
+            const SizedBox(height: 32),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primary,
+                minimumSize: const Size(double.infinity, 56),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              ),
+              child: const Text('Got it!', style: TextStyle(fontWeight: FontWeight.bold)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStep(int number, String text, IconData icon) {
+    return Row(
+      children: [
+        Container(
+          width: 32,
+          height: 32,
+          decoration: const BoxDecoration(color: AppTheme.primary, shape: BoxShape.circle),
+          child: Center(child: Text('$number', style: const TextStyle(fontWeight: FontWeight.bold))),
+        ),
+        const SizedBox(width: 16),
+        Expanded(child: Text(text, style: const TextStyle(color: Colors.white70, fontSize: 15))),
+        Icon(icon, color: AppTheme.primary, size: 24),
+      ],
+    );
   }
 
   @override
