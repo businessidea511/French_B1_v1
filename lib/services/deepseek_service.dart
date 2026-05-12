@@ -947,12 +947,16 @@ CRITICAL RULES:
           'messages': [
             {
               'role': 'system',
-              'content': '''You are Professeur AI. Generate ONLY NEW widgets from textbook photos to ADD to an existing lesson.
-CRITICAL: Return ONLY new content. Do NOT reproduce existing content.
+              'content': '''You are Professeur AI, an expert teacher for BELGIUM. Generate ONLY NEW widgets from photos to ADD to an existing lesson.
+STRICT RULES:
+1. BELGIAN FOCUS: Use Bruxelles, Liège, and Belgian norms (septante, nonante, Actiris).
+2. JSON FORMAT: Return ONLY a valid JSON object.
+3. CRITICAL: Return ONLY new content. Do NOT reproduce existing content.
+
 The lesson "${existingLesson['title']}" already contains:
 $existingSummary
 
-RETURN FORMAT: {"new_widgets": [<only new widgets>]}
+RETURN FORMAT: {"new_widgets": [<only new widgets here>]}
 WIDGET TYPES: section_title, text, french_tipbox, tipbox, example, table.
 RULES: IGNORE handwritten Arabic notes. NO META-TALK. Explanations in $targetLanguage.'''
             },
@@ -1007,12 +1011,16 @@ RULES: IGNORE handwritten Arabic notes. NO META-TALK. Explanations in $targetLan
           'messages': [
             {
               'role': 'system',
-              'content': '''You are Professeur AI. Generate ONLY NEW widgets from PDF text to ADD to an existing lesson.
-CRITICAL: Return ONLY new content. Do NOT reproduce existing content.
+              'content': '''You are Professeur AI, an expert teacher for BELGIUM. Generate ONLY NEW widgets from PDF text to ADD to an existing lesson.
+STRICT RULES:
+1. BELGIAN FOCUS: Bruxelles, Liège, Namur. Use Belgian French.
+2. JSON FORMAT: Return ONLY a valid JSON object.
+3. CRITICAL: Return ONLY new content. Do NOT reproduce existing content.
+
 The lesson "${existingLesson['title']}" already contains:
 $existingSummary
 
-RETURN FORMAT: {"new_widgets": [<only new widgets>]}
+RETURN FORMAT: {"new_widgets": [<only new widgets here>]}
 WIDGET TYPES: section_title, text, french_tipbox, example, tipbox, table.
 RULES: NO META-TALK. French stays French. Explanations in $targetLanguage.'''
             },
@@ -1070,12 +1078,16 @@ RULES: NO META-TALK. French stays French. Explanations in $targetLanguage.'''
           'messages': [
             {
               'role': 'system',
-              'content': '''You are Professeur AI. Generate ONLY NEW widgets from textbook photos to ADD to an existing grammar guide.
-CRITICAL: Return ONLY new content. Do NOT reproduce existing content.
+              'content': '''You are Professeur AI, an expert teacher for BELGIUM. Generate ONLY NEW widgets from photos to ADD to an existing grammar guide.
+STRICT RULES:
+1. BELGIAN FOCUS: Bruxelles, Liège. Use Belgian French (septante, nonante).
+2. JSON FORMAT: Return ONLY a valid JSON object.
+3. CRITICAL: Return ONLY new content. Do NOT reproduce existing content.
+
 The grammar guide "${existingGrammar['title']}" already contains:
 $existingSummary
 
-RETURN FORMAT: {"new_widgets": [<only new widgets>]}
+RETURN FORMAT: {"new_widgets": [<only new widgets here>]}
 PREMIUM STYLE: TipBox (purple) for Formulas. FrenchTipBox (green) for Conjugations. TipBox (yellow) for Tips. FrenchTipBox (red) for Irregulars.
 RULES: IGNORE handwritten Arabic notes. NO META-TALK. Explanations in $targetLanguage.'''
             },
@@ -1128,20 +1140,17 @@ RULES: IGNORE handwritten Arabic notes. NO META-TALK. Explanations in $targetLan
           'messages': [
             {
               'role': 'system',
-              'content': '''You are Professeur AI. Generate ONLY NEW widgets from PDF text to ADD to an existing grammar guide.
-
-CRITICAL: Return ONLY new content. Do NOT reproduce existing content.
+              'content': '''You are Professeur AI, an expert teacher for BELGIUM. Generate ONLY NEW widgets from PDF text to ADD to an existing grammar guide.
+STRICT RULES:
+1. BELGIAN FOCUS: Bruxelles, Liège. Use Belgian French.
+2. JSON FORMAT: Return ONLY a valid JSON object.
+3. CRITICAL: Return ONLY new content. Do NOT reproduce existing content.
 
 The grammar guide "${existingGrammar['title']}" already contains:
 $existingSummary
 
-RETURN FORMAT: {"new_widgets": [<only new widgets>]}
-
-PREMIUM STYLE (Imparfait standard):
-- Formula: TipBox (purple). Conjugations: FrenchTipBox (green).
-- Tips: TipBox (yellow). Irregulars: FrenchTipBox (red).
-
-Explanations in $targetLanguage. NO META-TALK.'''
+RETURN FORMAT: {"new_widgets": [<only new widgets here>]}
+RULES: NO META-TALK. French stays French. Explanations in $targetLanguage.'''
             },
             {
               'role': 'user',
@@ -1284,7 +1293,8 @@ Generate ONLY NEW widgets to ADD to an existing grammar guide for students in BE
 STRICT RULES:
 1. FOCUS: BELGIUM. Use Belgian French (septante, nonante).
 2. CULTURE: Use Belgian cities (Bruxelles, Liège) and norms.
-3. CRITICAL: Return ONLY new content. Do NOT reproduce existing content.
+3. JSON FORMAT: Return ONLY a valid JSON object.
+4. CRITICAL: Return ONLY new content. Do NOT reproduce existing content.
 
 The grammar guide "${existingGrammar['title']}" already contains:
 $existingSummary
