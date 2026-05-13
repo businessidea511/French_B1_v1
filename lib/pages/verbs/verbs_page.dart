@@ -208,6 +208,7 @@ class _VerbsPageState extends State<VerbsPage> {
     'Conditionnel',
     'Futur Proche',
     'Futur Simple',
+    'Subjonctif',
   ];
 
   final Map<String, Map<String, List<String>>> conjugations = {
@@ -268,6 +269,14 @@ class _VerbsPageState extends State<VerbsPage> {
         'vous parleriez',
         'ils/elles parleraient',
       ],
+      'Subjonctif': [
+        'que je parle',
+        'que tu parles',
+        'qu\'il/elle parle',
+        'que nous parlions',
+        'que vous parliez',
+        'qu\'ils/elles parlent',
+      ],
     },
     'finir': {
       'Présent': [
@@ -325,6 +334,14 @@ class _VerbsPageState extends State<VerbsPage> {
         'nous finirions',
         'vous finiriez',
         'ils/elles finiraient',
+      ],
+      'Subjonctif': [
+        'que je finisse',
+        'que tu finisses',
+        'qu\'il/elle finisse',
+        'que nous finissions',
+        'que vous finissiez',
+        'qu\'ils/elles finissent',
       ],
     },
     'être': {
@@ -384,6 +401,14 @@ class _VerbsPageState extends State<VerbsPage> {
         'vous seriez',
         'ils/elles seraient',
       ],
+      'Subjonctif': [
+        'que je sois',
+        'que tu sois',
+        'qu\'il/elle soit',
+        'que nous soyons',
+        'que vous soyez',
+        'qu\'ils/elles soient',
+      ],
     },
     'avoir': {
       'Présent': [
@@ -441,6 +466,14 @@ class _VerbsPageState extends State<VerbsPage> {
         'nous aurions',
         'vous auriez',
         'ils/elles auraient',
+      ],
+      'Subjonctif': [
+        'que j\'aie',
+        'que tu aies',
+        'qu\'il/elle ait',
+        'que nous ayons',
+        'que vous ayez',
+        'qu\'ils/elles aient',
       ],
     },
     'aller': {
@@ -500,6 +533,14 @@ class _VerbsPageState extends State<VerbsPage> {
         'vous iriez',
         'ils/elles iraient',
       ],
+      'Subjonctif': [
+        'que j\'aille',
+        'que tu ailles',
+        'qu\'il/elle aille',
+        'que nous allions',
+        'que vous alliez',
+        'qu\'ils/elles aillent',
+      ],
     },
     'faire': {
       'Présent': [
@@ -558,6 +599,14 @@ class _VerbsPageState extends State<VerbsPage> {
         'vous feriez',
         'ils/elles feraient',
       ],
+      'Subjonctif': [
+        'que je fasse',
+        'que tu fasses',
+        'qu\'il/elle fasse',
+        'que nous fassions',
+        'que vous fassiez',
+        'qu\'ils/elles fassent',
+      ],
     },
   };
 
@@ -568,26 +617,39 @@ class _VerbsPageState extends State<VerbsPage> {
     try {
       final result = await DeepSeekService.conjugateVerb(verb.toLowerCase());
 
-      // Safety Net: Ensure all forms have pronouns
+      // Safety Net: Ensure all forms have pronouns (and "que" for Subjonctif)
       final sanitizedResult = result.map((tense, forms) {
         final pronouns = ['je', 'tu', 'il/elle', 'nous', 'vous', 'ils/elles'];
+        final isSubjonctif = tense.toLowerCase().contains('subjonctif');
+        
         final sanitizedForms = forms.asMap().entries.map((entry) {
           final index = entry.key;
           String form = entry.value.trim();
           final pronoun = pronouns[index];
 
-          // Check if the form already starts with the pronoun
-          // (Handle both standard "je" and elided "j'")
+          // 1. Check for "que" if it's Subjonctif
+          if (isSubjonctif) {
+            bool hasQue = form.startsWith('que ') || form.startsWith("qu'");
+            if (!hasQue) {
+              if (pronoun.startsWith('il') || pronoun.startsWith('ils') || (index == 0 && RegExp(r'^[aeiouhéèàâîôû]').hasMatch(form.toLowerCase()))) {
+                form = "qu'$form";
+              } else {
+                form = "que $form";
+              }
+            }
+          }
+
+          // 2. Check for pronoun
           bool hasPronoun = false;
           if (index == 0) {
-            hasPronoun = form.startsWith('je ') || form.startsWith("j'");
+            hasPronoun = form.contains('je ') || form.contains("j'");
           } else {
-            hasPronoun = form.startsWith('$pronoun ');
+            hasPronoun = form.contains('$pronoun ');
           }
 
           if (!hasPronoun) {
             // Apply elision for 'je' if verb starts with vowel or silent h
-            if (index == 0 &&
+            if (index == 0 && !isSubjonctif &&
                 RegExp(r'^[aeiouhéèàâîôû]').hasMatch(form.toLowerCase())) {
               return "j'$form";
             }

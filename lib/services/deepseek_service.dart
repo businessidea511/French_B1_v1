@@ -200,7 +200,7 @@ class DeepSeekService {
             {
               'role': 'user',
               'content':
-                  'Conjugate the French verb "$verb" in the following tenses: Présent, Passé Composé, Imparfait, Plus-que-parfait, Conditionnel, Futur Proche, Futur Simple.'
+                  'Conjugate the French verb "$verb" in the following tenses: Présent, Passé Composé, Imparfait, Plus-que-parfait, Conditionnel, Futur Proche, Futur Simple, Subjonctif.'
             }
           ],
           'response_format': {'type': 'json_object'},
