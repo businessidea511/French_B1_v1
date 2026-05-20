@@ -148,7 +148,7 @@ class _GrammarPageState extends State<GrammarPage> {
             mainAxisSize: MainAxisSize.min,
             children: [
               const Text(
-                'Please enter the admin password to update grammar content.',
+                'Please enter the admin password to manage grammar content.',
                 style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
               ),
               const SizedBox(height: 16),
@@ -669,37 +669,41 @@ class _GrammarPageState extends State<GrammarPage> {
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          showModalBottomSheet(
-            context: context,
-            backgroundColor: AppTheme.surface,
-            shape: const RoundedRectangleBorder(
-              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-            ),
-            builder: (context) => Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                ListTile(
-                  leading: const Icon(Icons.edit, color: AppTheme.primary),
-                  title: const Text('Enter Topic Name', style: TextStyle(color: Colors.white)),
-                  onTap: () {
-                    Navigator.pop(context);
-                    _showTopicNameDialog();
-                  },
-                ),
-                ListTile(
-                  leading: const Icon(Icons.picture_as_pdf, color: AppTheme.secondary),
-                  title: const Text('Upload PDF', style: TextStyle(color: Colors.white)),
-                  onTap: () {
-                    Navigator.pop(context);
-                    _pickAndGenerateFromPdf();
-                  },
-                ),
-                const SizedBox(height: 20),
-              ],
-            ),
-          );
-        },
+        onPressed: _isGenerating
+            ? null
+            : () {
+                _checkAdminAccess(() {
+                  showModalBottomSheet(
+                    context: context,
+                    backgroundColor: AppTheme.surface,
+                    shape: const RoundedRectangleBorder(
+                      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                    ),
+                    builder: (context) => Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        ListTile(
+                          leading: const Icon(Icons.edit, color: AppTheme.primary),
+                          title: const Text('Enter Topic Name', style: TextStyle(color: Colors.white)),
+                          onTap: () {
+                            Navigator.pop(context);
+                            _showTopicNameDialog();
+                          },
+                        ),
+                        ListTile(
+                          leading: const Icon(Icons.picture_as_pdf, color: AppTheme.secondary),
+                          title: const Text('Upload PDF', style: TextStyle(color: Colors.white)),
+                          onTap: () {
+                            Navigator.pop(context);
+                            _pickAndGenerateFromPdf();
+                          },
+                        ),
+                        const SizedBox(height: 20),
+                      ],
+                    ),
+                  );
+                });
+              },
         icon: const Icon(Icons.add),
         label: const Text('Add Grammar Topic'),
         backgroundColor: AppTheme.primary,

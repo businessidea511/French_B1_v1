@@ -172,7 +172,8 @@ class LessonsProvider extends ChangeNotifier {
     final String id = 'custom_lesson_${DateTime.now().millisecondsSinceEpoch}';
     
     // Intelligent content extraction & normalization
-    final List<dynamic> rawWidgets = (lessonData['widgets'] ?? lessonData['sections'] ?? lessonData['content'] ?? []) as List;
+    final dynamic rawContent = lessonData['widgets'] ?? lessonData['sections'] ?? lessonData['content'] ?? [];
+    final List<dynamic> rawWidgets = rawContent is List ? rawContent : [];
     final List<Map<String, dynamic>> normalizedWidgets = rawWidgets.map((w) {
       if (w is! Map) return <String, dynamic>{};
       final Map<String, dynamic> map = Map<String, dynamic>.from(w);
