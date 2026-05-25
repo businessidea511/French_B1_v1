@@ -8,9 +8,13 @@ import '../models/grammar_topic.dart';
 class LessonsProvider extends ChangeNotifier {
   List<LessonTopic> _customLessons = [];
   List<GrammarTopic> _customGrammar = [];
+  List<String> _hiddenLessons = [];
+  List<String> _hiddenGrammar = [];
   
   static const String _prefKeyLessons = 'custom_lessons';
   static const String _prefKeyGrammar = 'custom_grammar';
+  static const String _prefKeyHiddenLessons = 'hidden_lessons';
+  static const String _prefKeyHiddenGrammar = 'hidden_grammar';
 
   SupabaseClient? get _supabase {
     try {
@@ -34,11 +38,15 @@ class LessonsProvider extends ChangeNotifier {
     final Map<String, LessonTopic> merged = {};
     // Add hardcoded first
     for (var l in lessonTopics) {
-      merged[l.id] = l;
+      if (!_hiddenLessons.contains(l.id)) {
+        merged[l.id] = l;
+      }
     }
     // Overwrite with cloud/custom versions if they exist
     for (var l in _customLessons) {
-      merged[l.id] = l;
+      if (!_hiddenLessons.contains(l.id)) {
+        merged[l.id] = l;
+      }
     }
     return merged.values.toList();
   }
@@ -46,10 +54,14 @@ class LessonsProvider extends ChangeNotifier {
   List<GrammarTopic> get allGrammar {
     final Map<String, GrammarTopic> merged = {};
     for (var g in grammarTopics) {
-      merged[g.id] = g;
+      if (!_hiddenGrammar.contains(g.id)) {
+        merged[g.id] = g;
+      }
     }
     for (var g in _customGrammar) {
-      merged[g.id] = g;
+      if (!_hiddenGrammar.contains(g.id)) {
+        merged[g.id] = g;
+      }
     }
     return merged.values.toList();
   }
@@ -58,6 +70,10 @@ class LessonsProvider extends ChangeNotifier {
     try {
       debugPrint("📚 Loading lessons from prefs...");
       final prefs = await SharedPreferences.getInstance();
+      
+      // Load hidden lists
+      _hiddenLessons = prefs.getStringList(_prefKeyHiddenLessons) ?? [];
+      _hiddenGrammar = prefs.getStringList(_prefKeyHiddenGrammar) ?? [];
       
       // 1. Load Local Data first (Instant UI)
       final String? lessonsJson = prefs.getString(_prefKeyLessons);
@@ -442,6 +458,56 @@ class LessonsProvider extends ChangeNotifier {
     }
   }
 
+  /// Reset a core lesson to its default hardcoded state by removing database overrides
+  Future<void> resetLessonToDefault(String id) async {
+    _customLessons.removeWhere((l) => l.id == id);
+    notifyListeners();
+    await _saveLocalData();
+    final client = _supabase;
+    if (client != null) {
+      try {
+        await client.from('lessons').delete().eq('id', id);
+        debugPrint('🗑️ Custom lesson override deleted from cloud: $id');
+      } catch (e) {
+        debugPrint('Cloud reset lesson error: $e');
+      }
+    }
+  }
+
+  /// Hide a lesson from the main list
+  Future<void> hideLesson(String id) async {
+    if (!_hiddenLessons.contains(id)) {
+      _hiddenLessons.add(id);
+      notifyListeners();
+      await _saveLocalData();
+    }
+  }
+
+  /// Reset a core grammar topic to its default hardcoded state by removing database overrides
+  Future<void> resetGrammarToDefault(String id) async {
+    _customGrammar.removeWhere((g) => g.id == id);
+    notifyListeners();
+    await _saveLocalData();
+    final client = _supabase;
+    if (client != null) {
+      try {
+        await client.from('grammar').delete().eq('id', id);
+        debugPrint('🗑️ Custom grammar override deleted from cloud: $id');
+      } catch (e) {
+        debugPrint('Cloud reset grammar error: $e');
+      }
+    }
+  }
+
+  /// Hide a grammar topic from the main list
+  Future<void> hideGrammar(String id) async {
+    if (!_hiddenGrammar.contains(id)) {
+      _hiddenGrammar.add(id);
+      notifyListeners();
+      await _saveLocalData();
+    }
+  }
+
   Future<void> seedData() async {
     final client = _supabase;
     if (client == null) return;
@@ -492,5 +558,7 @@ class LessonsProvider extends ChangeNotifier {
     await prefs.setString(_prefKeyLessons, encodedLessons);
     final String encodedGrammar = jsonEncode(_customGrammar.map((g) => g.toJson()).toList());
     await prefs.setString(_prefKeyGrammar, encodedGrammar);
+    await prefs.setStringList(_prefKeyHiddenLessons, _hiddenLessons);
+    await prefs.setStringList(_prefKeyHiddenGrammar, _hiddenGrammar);
   }
 }

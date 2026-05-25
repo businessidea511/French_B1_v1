@@ -395,69 +395,100 @@ class FrenchTipBox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.symmetric(vertical: 20),
-      padding: const EdgeInsets.all(24),
+      margin: const EdgeInsets.symmetric(vertical: 16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(24),
         border: Border.all(color: color.withValues(alpha: 0.3), width: 2),
       ),
-      child: Row(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.15),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(icon, color: color, size: 24),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                TranslatedText(
+          // ── Header: icon + title in a row ─────────────────────
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(icon, color: color, size: 20),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: TranslatedText(
                   title,
                   style: TextStyle(
-                    fontSize: 18,
+                    fontSize: 17,
                     fontWeight: FontWeight.bold,
                     color: color,
                     fontFamily: 'Outfit',
                   ),
                 ),
-                const SizedBox(height: 12),
-                // Handle mixed content: "French -> English" should have English translated
-                ...frenchText.split('\n').map((line) {
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          // ── Body: French text ─────────────────────────────────
+          // Wrap in horizontal scroll so conjugation tables don't clip
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                minWidth: MediaQuery.of(context).size.width - 100,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: frenchText.split('\n').map((line) {
                   if (line.contains('→')) {
                     final parts = line.split('→');
                     return Padding(
-                      padding: const EdgeInsets.only(bottom: 4),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                      padding: const EdgeInsets.only(bottom: 5),
+                      child: Wrap(
+                        spacing: 4,
+                        runSpacing: 2,
+                        crossAxisAlignment: WrapCrossAlignment.center,
                         children: [
-                          Text(parts[0].trim(), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 16)),
-                          const Text(' → ', style: TextStyle(color: AppTheme.textSecondary)),
-                          Expanded(child: TranslatedText(parts[1].trim(), style: const TextStyle(color: AppTheme.textSecondary, fontSize: 15))),
+                          Text(
+                            parts[0].trim(),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                            ),
+                          ),
+                          const Text(
+                            '→',
+                            style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+                          ),
+                          TranslatedText(
+                            parts[1].trim(),
+                            style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+                          ),
                         ],
                       ),
                     );
                   }
+                  // Plain French text
                   return Padding(
-                    padding: const EdgeInsets.only(bottom: 4),
+                    padding: const EdgeInsets.only(bottom: 2),
                     child: Text(
                       line,
+                      softWrap: true,
+                      overflow: TextOverflow.visible,
                       style: const TextStyle(
-                        fontSize: 16,
+                        fontSize: 14,
                         color: AppTheme.textPrimary,
-                        height: 1.7,
+                        height: 1.6,
                         fontWeight: FontWeight.w500,
+                        letterSpacing: 0,
                       ),
                     ),
                   );
-                }),
-              ],
+                }).toList(),
+              ),
             ),
           ),
         ],

@@ -500,6 +500,7 @@ class _GrammarPageState extends State<GrammarPage> {
   void _showDeleteConfirm(String topicId) {
     final TextEditingController passController = TextEditingController();
     bool obscure = true;
+    final bool isCustom = topicId.startsWith('custom_');
 
     showDialog(
       context: context,
@@ -508,10 +509,16 @@ class _GrammarPageState extends State<GrammarPage> {
           backgroundColor: AppTheme.surface,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           title: Row(
-            children: const [
-              Icon(Icons.admin_panel_settings_rounded, color: AppTheme.error),
-              SizedBox(width: 10),
-              Text('Admin Delete', style: TextStyle(color: Colors.white, fontSize: 18)),
+            children: [
+              Icon(
+                isCustom ? Icons.delete_outline_rounded : Icons.admin_panel_settings_rounded,
+                color: isCustom ? AppTheme.error : AppTheme.primary,
+              ),
+              const SizedBox(width: 10),
+              Text(
+                isCustom ? 'Admin Delete' : 'Admin Reset / Hide',
+                style: const TextStyle(color: Colors.white, fontSize: 18),
+              ),
             ],
           ),
           content: Column(
@@ -520,18 +527,24 @@ class _GrammarPageState extends State<GrammarPage> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: AppTheme.error.withValues(alpha: 0.1),
+                  color: (isCustom ? AppTheme.error : AppTheme.primary).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: AppTheme.error.withValues(alpha: 0.3)),
+                  border: Border.all(color: (isCustom ? AppTheme.error : AppTheme.primary).withValues(alpha: 0.3)),
                 ),
-                child: const Row(
+                child: Row(
                   children: [
-                    Icon(Icons.warning_amber_rounded, color: AppTheme.error, size: 18),
-                    SizedBox(width: 8),
+                    Icon(
+                      isCustom ? Icons.warning_amber_rounded : Icons.info_outline_rounded,
+                      color: isCustom ? AppTheme.error : AppTheme.primary,
+                      size: 18,
+                    ),
+                    const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        'This action cannot be undone. Enter admin password to delete this grammar topic.',
-                        style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+                        isCustom
+                            ? 'This action cannot be undone. Enter admin password to delete this custom topic.'
+                            : 'This is a core lesson. You can either Reset to Default (wipe AI modifications and restore original page) or Hide Topic completely.',
+                        style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13),
                       ),
                     ),
                   ],
@@ -545,7 +558,7 @@ class _GrammarPageState extends State<GrammarPage> {
                 style: const TextStyle(color: Colors.white),
                 decoration: InputDecoration(
                   hintText: 'Admin Password',
-                  prefixIcon: const Icon(Icons.lock_outline, color: AppTheme.error),
+                  prefixIcon: Icon(Icons.lock_outline, color: isCustom ? AppTheme.error : AppTheme.primary),
                   suffixIcon: IconButton(
                     icon: Icon(obscure ? Icons.visibility_off : Icons.visibility, color: AppTheme.textSecondary),
                     onPressed: () => setDlgState(() => obscure = !obscure),
@@ -559,31 +572,84 @@ class _GrammarPageState extends State<GrammarPage> {
               onPressed: () => Navigator.pop(ctx),
               child: const Text('Cancel'),
             ),
-            ElevatedButton.icon(
-              icon: const Icon(Icons.delete_forever_rounded, size: 18),
-              label: const Text('Delete'),
-              style: ElevatedButton.styleFrom(backgroundColor: AppTheme.error),
-              onPressed: () {
-                const String envPass = String.fromEnvironment('ADMIN_PASSWORD');
-                final String adminPass = envPass.isNotEmpty
-                    ? envPass
-                    : (dotenv.env['ADMIN_PASSWORD'] ?? 'admin123');
+            if (isCustom)
+              ElevatedButton.icon(
+                icon: const Icon(Icons.delete_forever_rounded, size: 18),
+                label: const Text('Delete'),
+                style: ElevatedButton.styleFrom(backgroundColor: AppTheme.error),
+                onPressed: () {
+                  const String envPass = String.fromEnvironment('ADMIN_PASSWORD');
+                  final String adminPass = envPass.isNotEmpty
+                      ? envPass
+                      : (dotenv.env['ADMIN_PASSWORD'] ?? 'admin123');
 
-                if (passController.text == adminPass) {
-                  Navigator.pop(ctx);
-                  final lp = Provider.of<LessonsProvider>(context, listen: false);
-                  lp.removeGrammar(topicId);
-                  _showSuccess('Grammar topic deleted successfully.');
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('❌ Incorrect password'),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                }
-              },
-            ),
+                  if (passController.text == adminPass) {
+                    Navigator.pop(ctx);
+                    final lp = Provider.of<LessonsProvider>(context, listen: false);
+                    lp.removeGrammar(topicId);
+                    _showSuccess('Grammar topic deleted successfully.');
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('❌ Incorrect password'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                },
+              )
+            else ...[
+              ElevatedButton.icon(
+                icon: const Icon(Icons.restore_rounded, size: 18),
+                label: const Text('Reset to Default'),
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
+                onPressed: () {
+                  const String envPass = String.fromEnvironment('ADMIN_PASSWORD');
+                  final String adminPass = envPass.isNotEmpty
+                      ? envPass
+                      : (dotenv.env['ADMIN_PASSWORD'] ?? 'admin123');
+
+                  if (passController.text == adminPass) {
+                    Navigator.pop(ctx);
+                    final lp = Provider.of<LessonsProvider>(context, listen: false);
+                    lp.resetGrammarToDefault(topicId);
+                    _showSuccess('Grammar topic reset to default successfully.');
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('❌ Incorrect password'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                },
+              ),
+              ElevatedButton.icon(
+                icon: const Icon(Icons.visibility_off_rounded, size: 18),
+                label: const Text('Hide Topic'),
+                style: ElevatedButton.styleFrom(backgroundColor: AppTheme.error),
+                onPressed: () {
+                  const String envPass = String.fromEnvironment('ADMIN_PASSWORD');
+                  final String adminPass = envPass.isNotEmpty
+                      ? envPass
+                      : (dotenv.env['ADMIN_PASSWORD'] ?? 'admin123');
+
+                  if (passController.text == adminPass) {
+                    Navigator.pop(ctx);
+                    final lp = Provider.of<LessonsProvider>(context, listen: false);
+                    lp.hideGrammar(topicId);
+                    _showSuccess('Grammar topic hidden successfully.');
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('❌ Incorrect password'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                },
+              ),
+            ],
           ],
         ),
       ),
@@ -740,7 +806,7 @@ class _GrammarPageState extends State<GrammarPage> {
               ),
             );
           },
-          onLongPress: isCustom ? () => _showDeleteConfirm(topic.id) : null,
+          onLongPress: () => _showDeleteConfirm(topic.id),
           child: Padding(
             padding: const EdgeInsets.all(24),
             child: Column(
@@ -776,12 +842,11 @@ class _GrammarPageState extends State<GrammarPage> {
                       tooltip: 'Update',
                       onPressed: () => _checkAdminAccess(() => _showUpdateOptions(topic)),
                     ),
-                    if (isCustom)
-                      IconButton(
-                        icon: const Icon(Icons.delete_outline_rounded, color: AppTheme.error, size: 22),
-                        tooltip: 'Delete',
-                        onPressed: () => _showDeleteConfirm(topic.id),
-                      ),
+                    IconButton(
+                      icon: const Icon(Icons.delete_outline_rounded, color: AppTheme.error, size: 22),
+                      tooltip: isCustom ? 'Delete' : 'Reset / Hide',
+                      onPressed: () => _showDeleteConfirm(topic.id),
+                    ),
                     const Icon(Icons.arrow_forward_ios_rounded,
                         color: AppTheme.textTertiary, size: 14),
                   ],
