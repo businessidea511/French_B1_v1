@@ -1,11 +1,11 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import '../../theme/app_theme.dart';
 import '../../services/language_provider.dart';
 import '../../services/deepseek_service.dart';
+import '../../services/admin_qa_service.dart';
 
 class AdminAIChatPage extends StatefulWidget {
   const AdminAIChatPage({super.key});
@@ -14,15 +14,18 @@ class AdminAIChatPage extends StatefulWidget {
   State<AdminAIChatPage> createState() => _AdminAIChatPageState();
 }
 
-class _AdminAIChatPageState extends State<AdminAIChatPage> with SingleTickerProviderStateMixin {
+class _AdminAIChatPageState extends State<AdminAIChatPage>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
   final TextEditingController _questionController = TextEditingController();
-  
+
   bool _isLoading = false;
+  bool _isSaving = false;
+  bool _isLoadingLibrary = true;
   String? _aiResponse;
   String _selectedLang = 'English';
 
-  List<Map<String, dynamic>> _savedQAs = [];
+  List<AdminQA> _savedQAs = [];
 
   final List<String> _supportedLanguages = [
     'English',
@@ -32,20 +35,18 @@ class _AdminAIChatPageState extends State<AdminAIChatPage> with SingleTickerProv
     'Italian',
     'Tigrinya',
     'Turkish',
-    'Indonesian'
+    'Indonesian',
   ];
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
-    
-    // Set default explanation language to the app's current language
+
+    // Set default language to app's current language
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final lp = Provider.of<LanguageProvider>(context, listen: false);
-      setState(() {
-        _selectedLang = lp.currentLanguage.englishName;
-      });
+      setState(() => _selectedLang = lp.currentLanguage.englishName);
     });
 
     _loadSavedQAs();
@@ -58,79 +59,72 @@ class _AdminAIChatPageState extends State<AdminAIChatPage> with SingleTickerProv
     super.dispose();
   }
 
-  // Load saved Q&As from SharedPreferences
+  // ─── Supabase operations ────────────────────────────────────────────────────
+
   Future<void> _loadSavedQAs() async {
+    setState(() => _isLoadingLibrary = true);
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final jsonStr = prefs.getString('saved_admin_qas');
-      if (jsonStr != null) {
-        final List<dynamic> decoded = jsonDecode(jsonStr);
-        setState(() {
-          _savedQAs = decoded.map((e) => Map<String, dynamic>.from(e)).toList();
-        });
-      }
+      final items = await AdminQAService.fetchAll();
+      if (!mounted) return;
+      setState(() {
+        _savedQAs = items;
+        _isLoadingLibrary = false;
+      });
     } catch (e) {
-      debugPrint('Error loading saved QAs: $e');
+      if (!mounted) return;
+      setState(() => _isLoadingLibrary = false);
+      _showSnack('Failed to load saved Q&As: $e', isError: true);
     }
   }
 
-  // Save the current Q&A to SharedPreferences
   Future<void> _saveCurrentQA() async {
     final question = _questionController.text.trim();
     final answer = _aiResponse;
     if (question.isEmpty || answer == null) return;
 
-    // Check if already saved
-    final exists = _savedQAs.any((item) => item['question'] == question && item['answer'] == answer);
+    // Prevent duplicate saves
+    final exists = _savedQAs.any(
+      (item) => item.question == question && item.answer == answer,
+    );
     if (exists) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('This Q&A is already saved!')),
-      );
+      _showSnack('This Q&A is already saved!');
       return;
     }
 
-    final newItem = {
-      'question': question,
-      'answer': answer,
-      'lang': _selectedLang,
-      'timestamp': DateTime.now().toIso8601String(),
-    };
-
-    setState(() {
-      _savedQAs.insert(0, newItem);
-    });
-
+    setState(() => _isSaving = true);
     try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('saved_admin_qas', jsonEncode(_savedQAs));
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Saved to library! 📚'), backgroundColor: Colors.green),
+      final newItem = await AdminQAService.insert(
+        question: question,
+        answer: answer,
+        language: _selectedLang,
       );
+      if (!mounted) return;
+      setState(() {
+        _savedQAs.insert(0, newItem);
+        _isSaving = false;
+      });
+      _showSnack('Saved to library! 📚', isSuccess: true);
     } catch (e) {
-      debugPrint('Error saving QA: $e');
+      if (!mounted) return;
+      setState(() => _isSaving = false);
+      _showSnack('Failed to save: $e', isError: true);
     }
   }
 
-  // Delete a saved Q&A
-  Future<void> _deleteQA(int index) async {
-    setState(() {
-      _savedQAs.removeAt(index);
-    });
-
+  Future<void> _deleteQA(AdminQA item) async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('saved_admin_qas', jsonEncode(_savedQAs));
+      await AdminQAService.delete(item.id);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Removed from library.')),
-      );
+      setState(() => _savedQAs.removeWhere((q) => q.id == item.id));
+      _showSnack('Removed from library.');
     } catch (e) {
-      debugPrint('Error deleting QA: $e');
+      if (!mounted) return;
+      _showSnack('Failed to delete: $e', isError: true);
     }
   }
 
-  // Send question to DeepSeekService
+  // ─── AI question ────────────────────────────────────────────────────────────
+
   Future<void> _askQuestion() async {
     final question = _questionController.text.trim();
     if (question.isEmpty) return;
@@ -141,23 +135,52 @@ class _AdminAIChatPageState extends State<AdminAIChatPage> with SingleTickerProv
     });
 
     try {
-      final response = await DeepSeekService.askGeneralFrenchQuestion(question, _selectedLang);
+      final response =
+          await DeepSeekService.askGeneralFrenchQuestion(question, _selectedLang);
+      if (!mounted) return;
       setState(() {
         _aiResponse = response;
         _isLoading = false;
       });
     } catch (e) {
+      if (!mounted) return;
       setState(() {
-        _aiResponse = 'Failed to get explanation. Please check your internet or retry.';
+        _aiResponse =
+            'Failed to get explanation. Please check your internet connection and retry.';
         _isLoading = false;
       });
     }
   }
 
+  // ─── Copy to clipboard ──────────────────────────────────────────────────────
+
+  Future<void> _copyToClipboard(String text) async {
+    await Clipboard.setData(ClipboardData(text: text));
+    if (!mounted) return;
+    _showSnack('Copied to clipboard! 📋', isSuccess: true);
+  }
+
+  // ─── Helper snackbar ────────────────────────────────────────────────────────
+
+  void _showSnack(String message, {bool isSuccess = false, bool isError = false}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: isSuccess
+            ? Colors.green.shade700
+            : isError
+                ? Colors.red.shade700
+                : null,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+    );
+  }
+
+  // ─── Build ──────────────────────────────────────────────────────────────────
+
   @override
   Widget build(BuildContext context) {
-    final lp = Provider.of<LanguageProvider>(context);
-
     return Scaffold(
       backgroundColor: AppTheme.background,
       appBar: AppBar(
@@ -176,14 +199,16 @@ class _AdminAIChatPageState extends State<AdminAIChatPage> with SingleTickerProv
       body: TabBarView(
         controller: _tabController,
         children: [
-          _buildChatTab(lp),
+          _buildChatTab(),
           _buildSavedTab(),
         ],
       ),
     );
   }
 
-  Widget _buildChatTab(LanguageProvider lp) {
+  // ─── Chat Tab ───────────────────────────────────────────────────────────────
+
+  Widget _buildChatTab() {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24.0),
       child: Column(
@@ -203,8 +228,12 @@ class _AdminAIChatPageState extends State<AdminAIChatPage> with SingleTickerProv
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    'Ask any question regarding our B1 course, French grammar, or general French. You can type and receive explanations in any language.',
-                    style: TextStyle(color: AppTheme.textSecondary.withValues(alpha: 0.9), fontSize: 13),
+                    'Ask any question about our B1 course, French grammar, or general French. '
+                    'Receive explanations in any language. Answers are saved to Supabase.',
+                    style: TextStyle(
+                      color: AppTheme.textSecondary.withValues(alpha: 0.9),
+                      fontSize: 13,
+                    ),
                   ),
                 ),
               ],
@@ -212,7 +241,7 @@ class _AdminAIChatPageState extends State<AdminAIChatPage> with SingleTickerProv
           ),
           const SizedBox(height: 24),
 
-          // Custom Input Box Card
+          // Input Card
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
@@ -230,18 +259,24 @@ class _AdminAIChatPageState extends State<AdminAIChatPage> with SingleTickerProv
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Language Select Dropdown
+                // Language Dropdown
                 Row(
                   children: [
-                    const Icon(Icons.g_translate_rounded, color: AppTheme.accent, size: 20),
+                    const Icon(Icons.g_translate_rounded,
+                        color: AppTheme.accent, size: 20),
                     const SizedBox(width: 8),
                     const Text(
                       'Explanation Language:',
-                      style: TextStyle(color: Colors.white70, fontSize: 14, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        color: Colors.white70,
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     const Spacer(),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 4),
                       decoration: BoxDecoration(
                         color: Colors.black.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(12),
@@ -254,14 +289,14 @@ class _AdminAIChatPageState extends State<AdminAIChatPage> with SingleTickerProv
                           items: _supportedLanguages.map((String value) {
                             return DropdownMenuItem<String>(
                               value: value,
-                              child: Text(value, style: const TextStyle(color: Colors.white, fontSize: 13)),
+                              child: Text(value,
+                                  style: const TextStyle(
+                                      color: Colors.white, fontSize: 13)),
                             );
                           }).toList(),
                           onChanged: (newValue) {
                             if (newValue != null) {
-                              setState(() {
-                                _selectedLang = newValue;
-                              });
+                              setState(() => _selectedLang = newValue);
                             }
                           },
                         ),
@@ -271,13 +306,15 @@ class _AdminAIChatPageState extends State<AdminAIChatPage> with SingleTickerProv
                 ),
                 const SizedBox(height: 16),
 
-                // Question Text Field
+                // Question Field
                 TextField(
                   controller: _questionController,
                   maxLines: 4,
                   decoration: InputDecoration(
-                    hintText: 'e.g. Explain how to use the subjonctif with clear B1 examples...',
-                    hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.3)),
+                    hintText:
+                        'e.g. Explain how to use the subjonctif with clear B1 examples...',
+                    hintStyle:
+                        TextStyle(color: Colors.white.withValues(alpha: 0.3)),
                     filled: true,
                     fillColor: Colors.black.withValues(alpha: 0.2),
                     border: OutlineInputBorder(
@@ -297,20 +334,26 @@ class _AdminAIChatPageState extends State<AdminAIChatPage> with SingleTickerProv
                     onPressed: _isLoading ? null : _askQuestion,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppTheme.primary,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16)),
                     ),
                     child: _isLoading
                         ? const SizedBox(
                             width: 24,
                             height: 24,
-                            child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                            child: CircularProgressIndicator(
+                                color: Colors.white, strokeWidth: 2),
                           )
                         : const Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(Icons.auto_awesome, color: Colors.white, size: 20),
+                              Icon(Icons.auto_awesome,
+                                  color: Colors.white, size: 20),
                               SizedBox(width: 8),
-                              Text('Ask Professeur AI', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                              Text('Ask Professeur AI',
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16)),
                             ],
                           ),
                   ),
@@ -320,109 +363,54 @@ class _AdminAIChatPageState extends State<AdminAIChatPage> with SingleTickerProv
           ),
           const SizedBox(height: 30),
 
-          // Response Display View
+          // AI Response Card
           if (_aiResponse != null) ...[
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
                 color: AppTheme.surface.withValues(alpha: 0.4),
                 borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+                border:
+                    Border.all(color: Colors.white.withValues(alpha: 0.05)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Header row with label + Copy + Save buttons
                   Row(
                     children: [
-                      const Icon(Icons.lightbulb, color: AppTheme.warning, size: 20),
+                      const Icon(Icons.lightbulb,
+                          color: AppTheme.warning, size: 20),
                       const SizedBox(width: 8),
-                      Text(
-                        'AI Explanation ($_selectedLang):',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: AppTheme.warning,
-                          fontSize: 15,
+                      Expanded(
+                        child: Text(
+                          'AI Explanation ($_selectedLang):',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: AppTheme.warning,
+                            fontSize: 15,
+                          ),
                         ),
                       ),
-                      const Spacer(),
-                      ElevatedButton.icon(
-                        onPressed: _saveCurrentQA,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white10,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        ),
-                        icon: const Icon(Icons.bookmark_add_outlined, size: 18),
-                        label: const Text('Save', style: TextStyle(fontSize: 13)),
+                      // Copy button
+                      _ActionIconButton(
+                        icon: Icons.copy_rounded,
+                        label: 'Copy',
+                        color: AppTheme.accent,
+                        onTap: () => _copyToClipboard(_aiResponse!),
+                      ),
+                      const SizedBox(width: 8),
+                      // Save button
+                      _ActionIconButton(
+                        icon: Icons.bookmark_add_outlined,
+                        label: _isSaving ? '...' : 'Save',
+                        color: AppTheme.primary,
+                        onTap: _isSaving ? null : _saveCurrentQA,
                       ),
                     ],
                   ),
                   const SizedBox(height: 16),
-                  MarkdownBody(
-                    data: _aiResponse!,
-                    styleSheet: MarkdownStyleSheet(
-                      p: const TextStyle(
-                        fontSize: 16,
-                        height: 1.7,
-                        color: Color(0xFFE2E8F0),
-                        fontFamily: 'Inter',
-                      ),
-                      strong: const TextStyle(
-                        color: AppTheme.secondary,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      em: const TextStyle(
-                        color: AppTheme.accent,
-                        fontStyle: FontStyle.italic,
-                      ),
-                      h1: const TextStyle(
-                        color: AppTheme.primary,
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      h2: const TextStyle(
-                        color: AppTheme.accent,
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      h3: const TextStyle(
-                        color: AppTheme.secondary,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      listBullet: const TextStyle(
-                        color: AppTheme.primary,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      code: TextStyle(
-                        backgroundColor: Colors.black.withValues(alpha: 0.1),
-                        color: AppTheme.success,
-                        fontFamily: 'monospace',
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                      ),
-                      codeblockDecoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
-                      ),
-                      blockquote: const TextStyle(
-                        color: AppTheme.textTertiary,
-                        fontSize: 15,
-                        fontStyle: FontStyle.italic,
-                      ),
-                      blockquoteDecoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(12),
-                        border: const Border(
-                          left: BorderSide(color: AppTheme.primary, width: 4),
-                        ),
-                      ),
-                      blockquotePadding: const EdgeInsets.all(16),
-                    ),
-                  ),
+                  _buildMarkdown(_aiResponse!),
                 ],
               ),
             ),
@@ -433,7 +421,23 @@ class _AdminAIChatPageState extends State<AdminAIChatPage> with SingleTickerProv
     );
   }
 
+  // ─── Saved Library Tab ──────────────────────────────────────────────────────
+
   Widget _buildSavedTab() {
+    if (_isLoadingLibrary) {
+      return const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(color: AppTheme.primary),
+            SizedBox(height: 16),
+            Text('Loading from Supabase…',
+                style: TextStyle(color: Colors.white54)),
+          ],
+        ),
+      );
+    }
+
     if (_savedQAs.isEmpty) {
       return Center(
         child: Column(
@@ -445,99 +449,243 @@ class _AdminAIChatPageState extends State<AdminAIChatPage> with SingleTickerProv
                 color: AppTheme.surface.withValues(alpha: 0.4),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.bookmark_border_rounded, size: 60, color: Colors.white24),
+              child: const Icon(Icons.bookmark_border_rounded,
+                  size: 60, color: Colors.white24),
             ),
             const SizedBox(height: 16),
             const Text(
               'No Saved Explanations Yet',
-              style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             const Text(
               'Your saved Q&As will appear here.',
               style: TextStyle(color: AppTheme.textTertiary, fontSize: 14),
             ),
+            const SizedBox(height: 24),
+            TextButton.icon(
+              onPressed: _loadSavedQAs,
+              icon: const Icon(Icons.refresh, color: AppTheme.primary),
+              label: const Text('Refresh',
+                  style: TextStyle(color: AppTheme.primary)),
+            ),
           ],
         ),
       );
     }
 
-    return ListView.separated(
-      padding: const EdgeInsets.all(24),
-      itemCount: _savedQAs.length,
-      separatorBuilder: (context, index) => const SizedBox(height: 16),
-      itemBuilder: (context, index) {
-        final item = _savedQAs[index];
-        final String question = item['question'] ?? '';
-        final String answer = item['answer'] ?? '';
-        final String lang = item['lang'] ?? 'English';
-        final String timestamp = item['timestamp'] != null 
-          ? DateTime.parse(item['timestamp']).toString().substring(0, 16)
-          : '';
+    return RefreshIndicator(
+      color: AppTheme.primary,
+      onRefresh: _loadSavedQAs,
+      child: ListView.separated(
+        padding: const EdgeInsets.all(24),
+        itemCount: _savedQAs.length,
+        separatorBuilder: (_, __) => const SizedBox(height: 16),
+        itemBuilder: (context, index) {
+          final item = _savedQAs[index];
+          final timestamp =
+              '${item.createdAt.toLocal()}'.substring(0, 16);
 
-        return Card(
-          color: AppTheme.surface,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-            side: BorderSide(color: Colors.white.withValues(alpha: 0.05)),
-          ),
-          child: ExpansionTile(
-            leading: const Icon(Icons.bookmark, color: AppTheme.primary),
-            title: Text(
-              question,
-              style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 15),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
+          return Card(
+            color: AppTheme.surface,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+              side: BorderSide(color: Colors.white.withValues(alpha: 0.05)),
             ),
-            subtitle: Text(
-              'Language: $lang • Saved: $timestamp',
-              style: const TextStyle(color: AppTheme.textTertiary, fontSize: 11),
-            ),
-            trailing: IconButton(
-              icon: const Icon(Icons.delete_outline_rounded, color: AppTheme.error),
-              onPressed: () => _deleteQA(index),
-            ),
-            childrenPadding: const EdgeInsets.all(20),
-            expandedAlignment: Alignment.topLeft,
-            children: [
-              Container(
-                height: 1,
-                color: Colors.white.withValues(alpha: 0.05),
-                margin: const EdgeInsets.only(bottom: 16),
-              ),
-              MarkdownBody(
-                data: answer,
-                styleSheet: MarkdownStyleSheet(
-                  p: const TextStyle(
-                    fontSize: 15,
-                    height: 1.6,
-                    color: Color(0xFFCBD5E1),
-                    fontFamily: 'Inter',
-                  ),
-                  strong: const TextStyle(
-                    color: AppTheme.secondary,
+            child: ExpansionTile(
+              leading: const Icon(Icons.bookmark, color: AppTheme.primary),
+              title: Text(
+                item.question,
+                style: const TextStyle(
                     fontWeight: FontWeight.bold,
-                  ),
-                  em: const TextStyle(
-                    color: AppTheme.accent,
-                    fontStyle: FontStyle.italic,
-                  ),
-                  h1: const TextStyle(color: AppTheme.primary, fontSize: 22, fontWeight: FontWeight.bold),
-                  h2: const TextStyle(color: AppTheme.accent, fontSize: 18, fontWeight: FontWeight.bold),
-                  h3: const TextStyle(color: AppTheme.secondary, fontSize: 16, fontWeight: FontWeight.bold),
-                  code: TextStyle(
-                    backgroundColor: Colors.black.withValues(alpha: 0.1),
-                    color: AppTheme.success,
-                    fontFamily: 'monospace',
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
+                    color: Colors.white,
+                    fontSize: 15),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
               ),
-            ],
+              subtitle: Text(
+                'Language: ${item.language} • Saved: $timestamp',
+                style: const TextStyle(
+                    color: AppTheme.textTertiary, fontSize: 11),
+              ),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Copy answer button
+                  IconButton(
+                    icon: const Icon(Icons.copy_rounded,
+                        color: AppTheme.accent, size: 20),
+                    tooltip: 'Copy answer',
+                    onPressed: () => _copyToClipboard(item.answer),
+                  ),
+                  // Delete button
+                  IconButton(
+                    icon: const Icon(Icons.delete_outline_rounded,
+                        color: AppTheme.error),
+                    tooltip: 'Delete',
+                    onPressed: () => _confirmDelete(item),
+                  ),
+                ],
+              ),
+              childrenPadding: const EdgeInsets.all(20),
+              expandedAlignment: Alignment.topLeft,
+              children: [
+                Container(
+                  height: 1,
+                  color: Colors.white.withValues(alpha: 0.05),
+                  margin: const EdgeInsets.only(bottom: 16),
+                ),
+                _buildMarkdown(item.answer, smaller: true),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  // ─── Confirm delete dialog ──────────────────────────────────────────────────
+
+  void _confirmDelete(AdminQA item) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: AppTheme.surface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text('Delete Q&A?',
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        content: Text(
+          'Are you sure you want to remove this saved Q&A from Supabase?',
+          style: TextStyle(color: AppTheme.textSecondary.withValues(alpha: 0.9)),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel',
+                style: TextStyle(color: AppTheme.textTertiary)),
           ),
-        );
-      },
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _deleteQA(item);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.error,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
+            ),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ─── Shared Markdown renderer ────────────────────────────────────────────────
+
+  Widget _buildMarkdown(String data, {bool smaller = false}) {
+    final double base = smaller ? 15.0 : 16.0;
+    return MarkdownBody(
+      data: data,
+      styleSheet: MarkdownStyleSheet(
+        p: TextStyle(
+          fontSize: base,
+          height: 1.7,
+          color: const Color(0xFFE2E8F0),
+          fontFamily: 'Inter',
+        ),
+        strong: const TextStyle(
+          color: AppTheme.secondary,
+          fontWeight: FontWeight.bold,
+        ),
+        em: const TextStyle(
+          color: AppTheme.accent,
+          fontStyle: FontStyle.italic,
+        ),
+        h1: TextStyle(
+            color: AppTheme.primary,
+            fontSize: base + 8,
+            fontWeight: FontWeight.bold),
+        h2: TextStyle(
+            color: AppTheme.accent,
+            fontSize: base + 4,
+            fontWeight: FontWeight.bold),
+        h3: TextStyle(
+            color: AppTheme.secondary,
+            fontSize: base + 2,
+            fontWeight: FontWeight.bold),
+        listBullet: TextStyle(
+            color: AppTheme.primary,
+            fontSize: base,
+            fontWeight: FontWeight.bold),
+        code: TextStyle(
+          backgroundColor: Colors.black.withValues(alpha: 0.1),
+          color: AppTheme.success,
+          fontFamily: 'monospace',
+          fontSize: base - 2,
+          fontWeight: FontWeight.w600,
+        ),
+        codeblockDecoration: BoxDecoration(
+          color: Colors.black.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+        ),
+        blockquote: TextStyle(
+          color: AppTheme.textTertiary,
+          fontSize: base - 1,
+          fontStyle: FontStyle.italic,
+        ),
+        blockquoteDecoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(12),
+          border: const Border(
+            left: BorderSide(color: AppTheme.primary, width: 4),
+          ),
+        ),
+        blockquotePadding: const EdgeInsets.all(16),
+      ),
+    );
+  }
+}
+
+// ─── Small reusable action button ───────────────────────────────────────────
+
+class _ActionIconButton extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color color;
+  final VoidCallback? onTap;
+
+  const _ActionIconButton({
+    required this.icon,
+    required this.label,
+    required this.color,
+    this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.15),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: color.withValues(alpha: 0.3)),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, color: color, size: 16),
+            const SizedBox(width: 5),
+            Text(label, style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.bold)),
+          ],
+        ),
+      ),
     );
   }
 }
