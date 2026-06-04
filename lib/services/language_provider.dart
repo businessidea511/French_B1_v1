@@ -101,6 +101,8 @@ class LanguageProvider extends ChangeNotifier {
         'neural_voice': 'Neural Voice',
         'system_voice': 'System Voice',
         'error': 'Error',
+        'admin_ai': 'Admin Assistant 🔒',
+        'admin_ai_desc': 'Private AI Box',
       },
       'fr': {
         'greeting': 'Bonjour!',
@@ -141,6 +143,8 @@ class LanguageProvider extends ChangeNotifier {
         'neural_voice': 'Voix Neurale',
         'system_voice': 'Voix Système',
         'error': 'Erreur',
+        'admin_ai': 'Assistant IA Admin 🔒',
+        'admin_ai_desc': 'Boîte IA privée',
       },
       'ar': {
         'greeting': 'مرحباً!',
@@ -181,6 +185,8 @@ class LanguageProvider extends ChangeNotifier {
         'neural_voice': 'صوت عصبي (ممتاز)',
         'system_voice': 'صوت النظام',
         'error': 'خطأ',
+        'admin_ai': 'مساعد الذكاء الاصطناعي للمشرف 🔒',
+        'admin_ai_desc': 'صندوق ذكاء اصطناعي خاص',
       },
       'uk': {
         'greeting': 'Привіт!',
@@ -218,6 +224,8 @@ class LanguageProvider extends ChangeNotifier {
         'page': 'Page',
         'of': 'of',
         'select_topic_error': 'Please select at least one topic!',
+        'admin_ai': 'Admin Assistant 🔒',
+        'admin_ai_desc': 'Private AI Box',
       },
       'it': {
         'greeting': 'Buongiorno!',
@@ -255,6 +263,8 @@ class LanguageProvider extends ChangeNotifier {
         'page': 'Page',
         'of': 'of',
         'select_topic_error': 'Please select at least one topic!',
+        'admin_ai': 'Admin Assistant 🔒',
+        'admin_ai_desc': 'Private AI Box',
       },
       'ti': {
         'greeting': 'ሰላም!',
@@ -270,6 +280,8 @@ class LanguageProvider extends ChangeNotifier {
         'daily_phrases': 'መዓልታዊ ሓረጋት',
         'listening': 'ምስማዕ',
         'select_language': 'ቋንቋ ምረጽ',
+        'admin_ai': 'Admin Assistant 🔒',
+        'admin_ai_desc': 'Private AI Box',
       },
       'tr': {
         'greeting': 'Merhaba!',
@@ -285,6 +297,8 @@ class LanguageProvider extends ChangeNotifier {
         'daily_phrases': 'Günlük Kalıplar',
         'listening': 'Dinleme',
         'select_language': 'Dil Seçin',
+        'admin_ai': 'Admin Assistant 🔒',
+        'admin_ai_desc': 'Private AI Box',
       },
       'id': {
         'greeting': 'Halo!',
@@ -300,6 +314,8 @@ class LanguageProvider extends ChangeNotifier {
         'daily_phrases': 'Frasa Harian',
         'listening': 'Mendengarkan',
         'select_language': 'Pilih Bahasa',
+        'admin_ai': 'Admin Assistant 🔒',
+        'admin_ai_desc': 'Private AI Box',
       },
     };
 

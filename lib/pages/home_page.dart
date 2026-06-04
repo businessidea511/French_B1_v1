@@ -12,6 +12,8 @@ import 'daily_phrases/daily_phrases_page.dart';
 import 'listening/listening_page.dart';
 import 'lessons/lessons_page.dart';
 import 'ai_book/ai_book_page.dart';
+import 'admin/admin_ai_chat_page.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -168,6 +170,84 @@ class _HomePageState extends State<HomePage> {
         );
       },
     );
+  }
+
+  void _checkAdminAccess(BuildContext context, VoidCallback onGranted) {
+    final TextEditingController passController = TextEditingController();
+    bool obscure = true;
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDlgState) => AlertDialog(
+          backgroundColor: AppTheme.surface,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: const Row(
+            children: [
+              Icon(Icons.lock_outline_rounded, color: AppTheme.primary),
+              SizedBox(width: 10),
+              Text('Admin Access', style: TextStyle(color: Colors.white, fontSize: 18)),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Please enter the admin password to access the private AI Assistant.',
+                style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: passController,
+                obscureText: obscure,
+                autofocus: true,
+                style: const TextStyle(color: Colors.white),
+                decoration: InputDecoration(
+                  hintText: 'Admin Password',
+                  prefixIcon: const Icon(Icons.password_rounded, color: AppTheme.primary),
+                  suffixIcon: IconButton(
+                    icon: Icon(obscure ? Icons.visibility_off : Icons.visibility, color: AppTheme.textSecondary),
+                    onPressed: () => setDlgState(() => obscure = !obscure),
+                  ),
+                ),
+                onSubmitted: (_) {
+                   _verifyAndProceed(passController.text, onGranted, ctx);
+                },
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () => _verifyAndProceed(passController.text, onGranted, ctx),
+              child: const Text('Verify'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _verifyAndProceed(String input, VoidCallback onGranted, BuildContext ctx) {
+    const String envPass = String.fromEnvironment('ADMIN_PASSWORD');
+    final String adminPass = envPass.isNotEmpty
+        ? envPass
+        : (dotenv.env['ADMIN_PASSWORD'] ?? 'admin123');
+
+    if (input == adminPass) {
+      Navigator.pop(ctx);
+      onGranted();
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('❌ Incorrect password'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   @override
@@ -332,6 +412,16 @@ class _HomePageState extends State<HomePage> {
                       icon: '🎧',
                       color: Colors.teal,
                       onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ListeningPage())),
+                    ),
+                    _buildFeatureCard(
+                      context,
+                      title: lp.translate('admin_ai'),
+                      subtitle: lp.translate('admin_ai_desc'),
+                      icon: '🔒',
+                      color: Colors.redAccent,
+                      onTap: () => _checkAdminAccess(context, () {
+                        Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminAIChatPage()));
+                      }),
                     ),
                   ]),
                 ),

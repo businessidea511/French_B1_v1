@@ -392,6 +392,148 @@ class FrenchTipBox extends StatelessWidget {
     this.color = const Color(0xFFF59E0B),
   });
 
+  List<Widget> _parseLineToWidgets(String line) {
+    final List<Widget> widgets = [];
+    final trimmed = line.trimRight();
+
+    if (trimmed.isEmpty) {
+      return [const SizedBox(height: 2)];
+    }
+
+    // 1. Check for '=' separator (e.g. 'me / m\'  =  me')
+    if (trimmed.contains('=')) {
+      final parts = trimmed.split('=');
+      if (parts.length == 2) {
+        widgets.add(Text(
+          parts[0],
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w600,
+            fontSize: 14,
+          ),
+        ));
+        widgets.add(const Text(
+          ' = ',
+          style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+        ));
+        widgets.add(TranslatedText(
+          parts[1].trim(),
+          style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+        ));
+        return widgets;
+      }
+    }
+
+    // 2. Check for parenthesized translation at the end of the line
+    // e.g., 'être   →  été    (been)' or 'Je le vois.  (I see him)'
+    if (trimmed.endsWith(')')) {
+      final lastOpenBracket = trimmed.lastIndexOf('(');
+      // Ensure bracket is not at index 0 (so there's text before it)
+      if (lastOpenBracket > 0) {
+        final leftPart = trimmed.substring(0, lastOpenBracket);
+        final parenthesized = trimmed.substring(lastOpenBracket);
+
+        if (leftPart.contains('→')) {
+          final leftParts = leftPart.split('→');
+          for (int i = 0; i < leftParts.length; i++) {
+            widgets.add(Text(
+              leftParts[i],
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
+              ),
+            ));
+            if (i < leftParts.length - 1) {
+              widgets.add(const Text(
+                ' → ',
+                style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+              ));
+            }
+          }
+        } else {
+          widgets.add(Text(
+            leftPart,
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w600,
+              fontSize: 14,
+            ),
+          ));
+        }
+
+        widgets.add(TranslatedText(
+          parenthesized,
+          style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+        ));
+        return widgets;
+      }
+    }
+
+    // 3. Check for '→' separator
+    if (trimmed.contains('→')) {
+      final parts = trimmed.split('→');
+      if (parts.length == 2) {
+        final rightSide = parts[1].toLowerCase();
+        final hasEnglishExplanations = rightSide.contains('the') ||
+            rightSide.contains('before') ||
+            rightSide.contains('after') ||
+            rightSide.contains('verb') ||
+            rightSide.contains('auxiliary') ||
+            rightSide.contains('infinitive') ||
+            rightSide.contains('subject') ||
+            rightSide.contains('agrees') ||
+            rightSide.contains('agreement') ||
+            rightSide.contains('participle');
+
+        widgets.add(Text(
+          parts[0],
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w600,
+            fontSize: 14,
+          ),
+        ));
+        widgets.add(const Text(
+          ' → ',
+          style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+        ));
+
+        if (hasEnglishExplanations) {
+          widgets.add(TranslatedText(
+            parts[1].trim(),
+            style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+          ));
+        } else {
+          widgets.add(Text(
+            parts[1],
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w600,
+              fontSize: 14,
+            ),
+          ));
+        }
+        return widgets;
+      }
+    }
+
+    // Fallback: render the entire line as plain Text
+    widgets.add(Text(
+      trimmed,
+      softWrap: true,
+      overflow: TextOverflow.visible,
+      style: const TextStyle(
+        fontSize: 14,
+        color: AppTheme.textPrimary,
+        height: 1.6,
+        fontWeight: FontWeight.w500,
+        letterSpacing: 0,
+      ),
+    ));
+    return widgets;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -442,49 +584,13 @@ class FrenchTipBox extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: frenchText.split('\n').map((line) {
-                  if (line.contains('→')) {
-                    final parts = line.split('→');
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 5),
-                      child: Wrap(
-                        spacing: 4,
-                        runSpacing: 2,
-                        crossAxisAlignment: WrapCrossAlignment.center,
-                        children: [
-                          Text(
-                            parts[0].trim(),
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 14,
-                            ),
-                          ),
-                          const Text(
-                            '→',
-                            style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
-                          ),
-                          TranslatedText(
-                            parts[1].trim(),
-                            style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13),
-                          ),
-                        ],
-                      ),
-                    );
-                  }
-                  // Plain French text
                   return Padding(
-                    padding: const EdgeInsets.only(bottom: 2),
-                    child: Text(
-                      line,
-                      softWrap: true,
-                      overflow: TextOverflow.visible,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        color: AppTheme.textPrimary,
-                        height: 1.6,
-                        fontWeight: FontWeight.w500,
-                        letterSpacing: 0,
-                      ),
+                    padding: const EdgeInsets.only(bottom: 4),
+                    child: Wrap(
+                      spacing: 4,
+                      runSpacing: 2,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: _parseLineToWidgets(line),
                     ),
                   );
                 }).toList(),
@@ -506,6 +612,18 @@ class PremiumTable extends StatelessWidget {
     required this.headers,
     required this.rows,
   });
+
+  bool _shouldTranslateColumn(String header) {
+    final h = header.toLowerCase();
+    return h.contains('meaning') ||
+        h.contains('translation') ||
+        h.contains('english') ||
+        h.contains('definition') ||
+        h.contains('explanation') ||
+        h.contains('traduction') ||
+        h.contains('signification') ||
+        h.contains('sens');
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -538,20 +656,20 @@ class PremiumTable extends StatelessWidget {
             cells: row.asMap().entries.map((entry) {
               final idx = entry.key;
               final cell = entry.value;
-              // If it's the first column, assume it's French and don't auto-translate
-              // If it's the second column onwards, it's likely a meaning/translation
-              if (idx == 0) {
+              final header = idx < headers.length ? headers[idx] : '';
+
+              if (_shouldTranslateColumn(header)) {
                 return DataCell(
-                  Text(
+                  TranslatedText(
                     cell,
-                    style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600),
+                    style: const TextStyle(color: AppTheme.textSecondary, fontSize: 14),
                   ),
                 );
               }
               return DataCell(
-                TranslatedText(
+                Text(
                   cell,
-                  style: const TextStyle(color: AppTheme.textSecondary, fontSize: 14),
+                  style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600),
                 ),
               );
             }).toList(),

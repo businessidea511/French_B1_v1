@@ -550,6 +550,53 @@ class DeepSeekService {
     }
   }
 
+  // Ask a general French language question focusing on B1 grammar/lessons
+  static Future<String> askGeneralFrenchQuestion(
+      String question, String targetLanguage) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/chat/completions'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $apiKey',
+        },
+        body: jsonEncode({
+          'model': 'deepseek-chat',
+          'messages': [
+            {
+              'role': 'system',
+              'content':
+                  'You are Professeur AI, a helpful French linguistics and pedagogy expert. '
+                      'The user is studying French (typically B1 level). '
+                      'Answer their question accurately and professionally. '
+                      'Focus on explaining French grammar, vocabulary, rules, and conjugations. '
+                      'Your entire explanation/answer MUST be written in the requested language: $targetLanguage. '
+                      'Use Markdown to format your response (bold keywords, lists, headers, etc.). '
+                      'Always include helpful examples in French, along with their translation in $targetLanguage. '
+                      'Keep the tone supportive, clear, and pedagogical.'
+            },
+            {
+              'role': 'user',
+              'content': question
+            }
+          ],
+          'temperature': 0.7,
+          'max_tokens': 1500,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return data['choices'][0]['message']['content'];
+      } else {
+        throw Exception('Failed to get AI response: ${response.statusCode}');
+      }
+    } catch (e) {
+      debugPrint('Error in askGeneralFrenchQuestion: $e');
+      rethrow;
+    }
+  }
+
   // Generate a full lesson from a topic or PDF text
   static Future<Map<String, dynamic>> generateFullLesson(
       String topic, String targetLanguage,
