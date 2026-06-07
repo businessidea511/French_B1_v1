@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:audioplayers/audioplayers.dart';
+import 'package:flutter_tts/flutter_tts.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 import '../../theme/app_theme.dart';
 import '../../services/language_provider.dart';
 import '../../services/deepseek_service.dart';
 import '../../services/admin_qa_service.dart';
+import '../../services/hugging_face_tts_service.dart';
 
 class AdminAIChatPage extends StatefulWidget {
   const AdminAIChatPage({super.key});
@@ -25,6 +30,14 @@ class _AdminAIChatPageState extends State<AdminAIChatPage>
   String? _aiResponse;
   String _selectedLang = 'English';
 
+  // Audio State
+  final AudioPlayer _audioPlayer = AudioPlayer();
+  final FlutterTts _flutterTts = FlutterTts();
+  bool _isPlaying = false;
+  bool _isLoadingAudio = false;
+  String _ttsEngine = ''; // 'neural' or 'system'
+  String? _currentlyPlayingText; // tracks which text is playing
+
   List<AdminQA> _savedQAs = [];
 
   final List<String> _supportedLanguages = [
@@ -42,6 +55,8 @@ class _AdminAIChatPageState extends State<AdminAIChatPage>
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    _initAudio();
+    _initFlutterTts();
 
     // Set default language to app's current language
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -52,11 +67,108 @@ class _AdminAIChatPageState extends State<AdminAIChatPage>
     _loadSavedQAs();
   }
 
+  void _initAudio() {
+    _audioPlayer.onPlayerStateChanged.listen((state) {
+      if (mounted) {
+        setState(() {
+          _isPlaying = state == PlayerState.playing;
+        });
+      }
+    });
+    _audioPlayer.onPlayerComplete.listen((_) {
+      if (mounted) setState(() => _isPlaying = false);
+    });
+  }
+
+  Future<void> _initFlutterTts() async {
+    await _flutterTts.setLanguage('fr-FR');
+    await _flutterTts.setSpeechRate(0.85);
+    await _flutterTts.setVolume(1.0);
+    await _flutterTts.setPitch(1.05);
+    _flutterTts.setCompletionHandler(() {
+      if (mounted) setState(() => _isPlaying = false);
+    });
+  }
+
   @override
   void dispose() {
     _tabController.dispose();
     _questionController.dispose();
+    _audioPlayer.dispose();
+    _flutterTts.stop();
     super.dispose();
+  }
+
+  // ─── TTS Speak ──────────────────────────────────────────────────────────────
+
+  Future<void> _speak(String text) async {
+    // Stop if already playing the same text
+    if (_isPlaying && _currentlyPlayingText == text) {
+      await _audioPlayer.stop();
+      await _flutterTts.stop();
+      setState(() {
+        _isPlaying = false;
+        _currentlyPlayingText = null;
+      });
+      return;
+    }
+
+    // Stop any current playback before starting new one
+    if (_isPlaying) {
+      await _audioPlayer.stop();
+      await _flutterTts.stop();
+    }
+
+    setState(() {
+      _isLoadingAudio = true;
+      _ttsEngine = '';
+      _currentlyPlayingText = text;
+    });
+
+    // Clean markdown formatting from text
+    final cleanText = text
+        .replaceAll('**', '')
+        .replaceAll('*', '')
+        .replaceAll('###', '')
+        .replaceAll('##', '')
+        .replaceAll('#', '')
+        .replaceAll('_', '');
+
+    try {
+      // ── TIER 1: Hugging Face Neural Voice (Premium) ──
+      debugPrint('🎙️ Trying Hugging Face Neural voice...');
+      final audioPath = await HuggingFaceTtsService.synthesizeAndSave(cleanText)
+          .timeout(const Duration(seconds: 20));
+
+      if (audioPath != null && mounted) {
+        setState(() {
+          _ttsEngine = 'neural';
+          _isLoadingAudio = false;
+          _isPlaying = true;
+        });
+        if (kIsWeb) {
+          await _audioPlayer.play(UrlSource(audioPath));
+        } else {
+          await _audioPlayer.play(DeviceFileSource(audioPath));
+        }
+        return;
+      }
+    } catch (e) {
+      debugPrint('⚠️ HF TTS failed: $e — falling back to system voice...');
+    }
+
+    // ── TIER 2: flutter_tts Fallback (Always Available) ──
+    if (mounted) {
+      setState(() {
+        _ttsEngine = 'system';
+        _isLoadingAudio = false;
+        _isPlaying = true;
+      });
+      debugPrint('🔄 Using system TTS fallback.');
+      await _flutterTts.speak(cleanText);
+    }
+
+    if (mounted) setState(() => _isLoadingAudio = false);
   }
 
   // ─── Supabase operations ────────────────────────────────────────────────────
@@ -376,7 +488,7 @@ class _AdminAIChatPageState extends State<AdminAIChatPage>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Header row with label + Copy + Save buttons
+                  // Header row with label + Copy + Save + Audio buttons
                   Row(
                     children: [
                       const Icon(Icons.lightbulb,
@@ -392,6 +504,54 @@ class _AdminAIChatPageState extends State<AdminAIChatPage>
                           ),
                         ),
                       ),
+                      // TTS engine badge
+                      if (_ttsEngine.isNotEmpty && _currentlyPlayingText == _aiResponse)
+                        Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: _ttsEngine == 'neural'
+                                  ? AppTheme.primary.withValues(alpha: 0.15)
+                                  : Colors.orange.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(
+                                color: _ttsEngine == 'neural' ? AppTheme.primary : Colors.orange,
+                                width: 1,
+                              ),
+                            ),
+                            child: Text(
+                              _ttsEngine == 'neural' ? '🧠 Neural' : '🔊 System',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                color: _ttsEngine == 'neural' ? AppTheme.primary : Colors.orange,
+                              ),
+                            ),
+                          ),
+                        ),
+                      // Audio button
+                      if (_isLoadingAudio && _currentlyPlayingText == _aiResponse)
+                        const Padding(
+                          padding: EdgeInsets.only(right: 8),
+                          child: SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: SpinKitPulse(color: AppTheme.primary, size: 20),
+                          ),
+                        )
+                      else
+                        _ActionIconButton(
+                          icon: (_isPlaying && _currentlyPlayingText == _aiResponse)
+                              ? Icons.stop_circle
+                              : Icons.play_circle_filled,
+                          label: (_isPlaying && _currentlyPlayingText == _aiResponse)
+                              ? 'Stop'
+                              : 'Listen',
+                          color: AppTheme.secondary,
+                          onTap: () => _speak(_aiResponse!),
+                        ),
+                      const SizedBox(width: 8),
                       // Copy button
                       _ActionIconButton(
                         icon: Icons.copy_rounded,
@@ -514,6 +674,30 @@ class _AdminAIChatPageState extends State<AdminAIChatPage>
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
+                  // Listen button
+                  if (_isLoadingAudio && _currentlyPlayingText == item.answer)
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 8),
+                      child: SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: SpinKitPulse(color: AppTheme.secondary, size: 20),
+                      ),
+                    )
+                  else
+                    IconButton(
+                      icon: Icon(
+                        (_isPlaying && _currentlyPlayingText == item.answer)
+                            ? Icons.stop_circle
+                            : Icons.play_circle_filled,
+                        color: AppTheme.secondary,
+                        size: 22,
+                      ),
+                      tooltip: (_isPlaying && _currentlyPlayingText == item.answer)
+                          ? 'Stop'
+                          : 'Listen in French',
+                      onPressed: () => _speak(item.answer),
+                    ),
                   // Copy answer button
                   IconButton(
                     icon: const Icon(Icons.copy_rounded,
