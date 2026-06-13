@@ -1130,13 +1130,6 @@ class _ExamenOnePageState extends State<ExamenOnePage> {
       _iBullet('Compréhension écrite : 3 QCM sur un texte'),
       _iBullet('Expression écrite : 1 sujet corrigé par l\'IA'),
       const SizedBox(height: 32),
-      _iTitle('QUAND ?'),
-      const SizedBox(height: 14),
-      _iDate('Mercredi 07/01 & vendredi 09/01', 'révisions en classe'),
-      _iDate('Mercredi 21/01', 'EXAMEN oral (compréhension orale, expression orale)', highlight: true),
-      _iDate('Vendredi 23/01', 'EXAMEN écrit (compréhension écrite, expression écrite)', highlight: true),
-      _iDate('Vendredi 30/01', 'remise des points'),
-      const SizedBox(height: 32),
       _iTitle('QUE FAIRE ?'),
       const SizedBox(height: 14),
       _iSub('Vocabulaire :', 'La santé et le travail.'),
@@ -1165,14 +1158,7 @@ class _ExamenOnePageState extends State<ExamenOnePage> {
       const Text('• ', style: TextStyle(color: AppTheme.primary, fontWeight: FontWeight.bold, fontSize: 16)),
       Expanded(child: Text(t, style: const TextStyle(fontSize: 14, color: Colors.white70, height: 1.4))),
     ]));
-  Widget _iDate(String date, String act, {bool highlight = false}) => Padding(padding: const EdgeInsets.only(bottom: 8),
-    child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      const Text('• ', style: TextStyle(color: AppTheme.primary, fontWeight: FontWeight.bold, fontSize: 16)),
-      Expanded(child: RichText(text: TextSpan(style: const TextStyle(fontSize: 14, color: Colors.white70, fontFamily: 'Outfit', height: 1.4), children: [
-        TextSpan(text: '$date : ', style: TextStyle(fontWeight: FontWeight.bold, color: highlight ? AppTheme.secondary : Colors.white, decoration: highlight ? TextDecoration.underline : null)),
-        TextSpan(text: act),
-      ]))),
-    ]));
+
   Widget _iSub(String t, String c) => Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
     Text('→ $t', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppTheme.accent)),
     Padding(padding: const EdgeInsets.only(left: 14, top: 4), child: Text(c, style: const TextStyle(fontSize: 14, color: Colors.white70, height: 1.4))),
