@@ -13,6 +13,7 @@ import 'listening/listening_page.dart';
 import 'lessons/lessons_page.dart';
 import 'ai_book/ai_book_page.dart';
 import 'admin/admin_ai_chat_page.dart';
+import 'examen/examen_one_page.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class HomePage extends StatefulWidget {
@@ -412,6 +413,14 @@ class _HomePageState extends State<HomePage> {
                       icon: '🎧',
                       color: Colors.teal,
                       onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ListeningPage())),
+                    ),
+                    _buildFeatureCard(
+                      context,
+                      title: lp.translate('examen'),
+                      subtitle: lp.translate('examen_desc'),
+                      icon: '📝',
+                      color: AppTheme.accent,
+                      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ExamenOnePage())),
                     ),
                     _buildFeatureCard(
                       context,

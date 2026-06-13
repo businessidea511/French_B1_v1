@@ -256,4 +256,38 @@ final List<GrammarTopic> grammarTopics = [
     icon: '🔗',
     description: 'Learn logical connectors: mais, donc, parce que, cependant, malgré',
   ),
+  const GrammarTopic(
+    id: 'imperatif',
+    title: "L'Impératif",
+    subtitle: "Command & Advice Mood",
+    icon: '📣',
+    description: "Give orders, offer advice, and express instructions or prohibitions",
+    content: [
+      {"type": "section_title", "emoji": "📣", "title": "C'est quoi l'Impératif ?"},
+      {"type": "text", "content": "L'impératif (the imperative mood) is used to give orders, advice, instructions, or to express prohibitions. It only exists for three forms: tu, nous, and vous. The most unique feature? There are no subject pronouns (tu, nous, vous) used in the sentence!"},
+      {"type": "example", "french": "Mange tes légumes !", "translation": "Eat your vegetables! (singular/informal)"},
+      {"type": "example", "french": "Parlons français !", "translation": "Let's speak French!"},
+      {"type": "example", "french": "Prenez soin de vous !", "translation": "Take care of yourself! (plural/formal)"},
+
+      {"type": "section_title", "emoji": "📝", "title": "La Règle de Formation"},
+      {"type": "tipbox", "title": "Règle cruciale pour le groupe en -ER !", "content": "For regular -er verbs (like parler, manger, etc.) and the verb 'aller', you MUST drop the 's' at the end of the 'tu' form.\n• Tu parles ➜ Parle ! (No 's')\n• Tu vas ➜ Va ! (No 's')\nFor other groups (-ir and -re), keep the 's':\n• Tu finis ➜ Finis !\n• Tu prends ➜ Prends !", "color": "yellow"},
+      {"type": "table", "headers": ["Infinitif", "Tu form", "Nous form", "Vous form"], "rows": [
+        ["Parler (to speak)", "Parle", "Parlons", "Parlez"],
+        ["Finir (to finish)", "Finis", "Finissons", "Finissez"],
+        ["Prendre (to take)", "Prends", "Prenons", "Prenez"],
+        ["Aller (to go)", "Va", "Allons", "Allez"]
+      ]},
+
+      {"type": "section_title", "emoji": "⚠️", "title": "Les Formes Irrégulières"},
+      {"type": "tipbox", "title": "À mémoriser !", "content": "Four extremely common verbs have completely irregular forms in the imperative. They are derived from their subjunctive stems.", "color": "red"},
+      {"type": "table", "headers": ["Verbe", "Tu", "Nous", "Vous"], "rows": [
+        ["Être", "Sois", "Soyons", "Soyez"],
+        ["Avoir", "Aie", "Ayons", "Ayez"],
+        ["Savoir", "Sache", "Sachons", "Sachez"],
+        ["Vouloir", "Veuille", "Veuillons", "Veuillez"]
+      ]},
+      {"type": "example", "french": "Sois courageux !", "translation": "Be brave !"},
+      {"type": "example", "french": "Ayez de la patience !", "translation": "Have patience !"}
+    ],
+  ),
 ];

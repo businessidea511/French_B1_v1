@@ -9,12 +9,13 @@ echo.
 echo THIS SCRIPT WILL PUSH TO GITHUB (STAGING/PRODUCTION)
 echo NOTE: Essays and Dialogues are AUTOMATICALLY hidden
 echo in the production build (Release mode).
+echo The new B1 Examen feature is fully included in the deployment!
 echo.
 echo ====================================================
 echo.
 
-set /p commit_msg="Enter commit message (default: Update deployment): "
-if "%commit_msg%"=="" set commit_msg=Update deployment
+set /p commit_msg="Enter commit message (default: Update deployment with B1 Examen): "
+if "%commit_msg%"=="" set commit_msg=Update deployment with B1 Examen
 
 echo.
 echo [1/3] Staging changes...
@@ -36,7 +37,7 @@ if %ERRORLEVEL% NEQ 0 (
     echo.
     echo ====================================================
     echo   SUCCESS! Vercel will now start the build.
-    echo   Live site will be updated in a few minutes.
+    echo   Live site (including the B1 Examen) will be updated.
     echo ====================================================
 )
 
