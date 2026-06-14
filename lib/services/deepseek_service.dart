@@ -152,11 +152,19 @@ D. Distractors: other negative words that are grammatically possible but semanti
 
     // ── Comparatif / Superlatif ───────────────────────────────────────────────
     if (t.contains('comparatif') || t.contains('superlatif')) {
-      return '''FOR COMPARATIF / SUPERLATIF:
-A. The sentence MUST clearly provide two items being compared OR the superlative context.
-   Example: "Paris est ___ grande que Lyon." or "C'est ___ beau monument de Bruxelles."
-B. Options must test: plus / moins / aussi for comparatif; le plus / le moins / le meilleur for superlatif.
-C. Distractors: confuse plus/moins/aussi, wrong article agreement (le/la/les), or confuse bon→meilleur / bien→mieux.''';
+      return '''FOR COMPARATIF / SUPERLATIF — CRITICAL RULES:
+A. The sentence MUST include a clear comparison sign clue in parentheses at the end of the sentence to guide the student:
+   - Use "(+)" for comparison of superiority (e.g., plus, le plus, meilleur)
+   - Use "(-)" for comparison of inferiority (e.g., moins, le moins)
+   - Use "(=)" for comparison of equality (e.g., aussi, autant)
+   Examples: 
+   "Paris est ___ grand que Lyon. (+)" (correct: plus)
+   "Le train est ___ rapide que l'avion. (-)" (correct: moins)
+   "Marie travaille ___ que son frère. (=)" (correct: autant)
+   "Elle est ___ grande que sa mère. (=)" (correct: aussi)
+B. The English translation of the sentence MUST also clearly reflect this comparison direction (e.g., "more", "less", "as... as").
+C. Options must test: plus / moins / aussi / autant for comparatif; le plus / le moins / le meilleur for superlatif.
+D. Distractors: confuse plus/moins/aussi/autant, wrong article agreement (le/la/les), or confuse bon→meilleur / bien→mieux.''';
     }
 
     // ── Adverbes en -ment ─────────────────────────────────────────────────────
@@ -1829,18 +1837,24 @@ EXERCISE C (Association Dialogues → Situations):
 
 
 2. GRAMMAR SECTION (Grammaire):
-   - Create exactly 8 multiple-choice questions testing the following:
+   - Create exactly 10 multiple-choice questions testing the following:
      - 2 questions on Conditionnel (Conditionnel présent)
      - 2 questions on La voix passive (Passive voice transformations/agreement)
      - 2 questions on COD / COI (Direct/Indirect object pronouns: le, la, les, lui, leur, etc.)
      - 2 questions on L'Impératif (Imperative mood: orders, advice, prohibition — tu/nous/vous forms, irregular imperatives: être→sois, avoir→aie, aller→va, savoir→sache)
+     - 2 questions on Comparatif & Superlatif (Comparison of superiority, inferiority, equality, and superlatives)
    - COD/COI pronoun questions MUST identify the object noun's gender and number in the preceding sentence context before asking for the pronoun.
      ✅ GOOD: "Marie parle à son professeur. Elle ___ téléphone souvent." (COI -> lui)
      ❌ BAD: "Elle ___ téléphone." (unclear reference)
-   - Impératif questions MUST provide a clear context (order, advice, instruction) and test plausible confusions:
-     ✅ GOOD: "Tu veux donner un conseil. ___ attention à ta santé !" — options: "Fais / Fait / Faire / Faites"
-     - Test tu/nous/vous forms and irregular imperatives (va, sois, aie, sache).
-     - Distractors: wrong person (tu vs vous form), présent indicatif form confused with impératif, infinitif.
+   - Impératif questions MUST provide a clear context (order, advice, instruction) and test plausible confusions (e.g. tu/nous/vous forms and irregulars).
+   - Comparatif & Superlatif questions MUST include a clear comparison sign clue in parentheses at the end of the sentence to guide the student:
+     - Use "(+)" for comparison of superiority (e.g., plus, le plus, meilleur)
+     - Use "(-)" for comparison of inferiority (e.g., moins, le moins)
+     - Use "(=)" for comparison of equality (e.g., aussi, autant)
+     ✅ GOOD: "Paris est ___ grand que Lyon. (+)" (correct option: plus)
+     ✅ GOOD: "Marie est ___ grande que sa mère. (=)" (correct option: aussi)
+     ✅ GOOD: "Le train est ___ rapide que l'avion. (-)" (correct option: moins)
+     - Options must test: plus / moins / aussi / autant / meilleur / mieux.
    - Questions and options must be in French. Explication in $targetLanguage.
 
 3. READING SECTION (Compréhension Écrite):
