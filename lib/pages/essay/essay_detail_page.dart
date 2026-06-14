@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_theme.dart';
 import '../../services/tts_service.dart';
+import '../../services/global_scroll_manager.dart';
 
 class EssayDetailPage extends StatefulWidget {
   final String title;
@@ -22,12 +23,14 @@ class EssayDetailPage extends StatefulWidget {
 
 class _EssayDetailPageState extends State<EssayDetailPage> {
   final TtsService _ttsService = TtsService();
+  final ScrollController _scrollController = ScrollController();
   bool _isPlaying = false;
   bool _showTranslation = false;
 
   @override
   void initState() {
     super.initState();
+    GlobalScrollManager.register(_scrollController);
     _ttsService.flutterTts.setCompletionHandler(() {
       if (mounted) {
         setState(() {
@@ -40,6 +43,8 @@ class _EssayDetailPageState extends State<EssayDetailPage> {
   @override
   void dispose() {
     _ttsService.stop();
+    GlobalScrollManager.unregister(_scrollController);
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -91,6 +96,7 @@ class _EssayDetailPageState extends State<EssayDetailPage> {
         label: Text(_isPlaying ? 'Arrêter' : 'Écouter'),
       ),
       body: SingleChildScrollView(
+        controller: _scrollController,
         padding: const EdgeInsets.fromLTRB(24, 24, 24, 80),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

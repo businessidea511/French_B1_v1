@@ -4,6 +4,7 @@ import '../../services/language_provider.dart';
 import '../../theme/app_theme.dart';
 import '../../services/tts_service.dart';
 import '../../services/deepseek_service.dart';
+import '../../services/global_scroll_manager.dart';
 
 class DailyPhrasesPage extends StatefulWidget {
   const DailyPhrasesPage({super.key});
@@ -14,6 +15,7 @@ class DailyPhrasesPage extends StatefulWidget {
 
 class _DailyPhrasesPageState extends State<DailyPhrasesPage> {
   final TtsService _ttsService = TtsService();
+  final ScrollController _scrollController = ScrollController();
   String? _currentlyPlayingId;
   final Set<String> _visibleTranslations = {};
   final Map<String, String> _dynamicTranslations = {};
@@ -673,6 +675,7 @@ class _DailyPhrasesPageState extends State<DailyPhrasesPage> {
   @override
   void initState() {
     super.initState();
+    GlobalScrollManager.register(_scrollController);
     _ttsService.flutterTts.setCompletionHandler(() {
       if (mounted) {
         setState(() {
@@ -685,6 +688,8 @@ class _DailyPhrasesPageState extends State<DailyPhrasesPage> {
   @override
   void dispose() {
     _ttsService.stop();
+    GlobalScrollManager.unregister(_scrollController);
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -785,6 +790,7 @@ class _DailyPhrasesPageState extends State<DailyPhrasesPage> {
             ),
           Expanded(
             child: ListView.builder(
+              controller: _scrollController,
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
               itemCount: _sections.length,
               itemBuilder: (context, index) {

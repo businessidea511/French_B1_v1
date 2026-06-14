@@ -1,9 +1,30 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_theme.dart';
 import 'essay_detail_page.dart';
+import '../../services/global_scroll_manager.dart';
 
-class EssayPage extends StatelessWidget {
+class EssayPage extends StatefulWidget {
   const EssayPage({super.key});
+
+  @override
+  State<EssayPage> createState() => _EssayPageState();
+}
+
+class _EssayPageState extends State<EssayPage> {
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    GlobalScrollManager.register(_scrollController);
+  }
+
+  @override
+  void dispose() {
+    GlobalScrollManager.unregister(_scrollController);
+    _scrollController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -15,6 +36,7 @@ class EssayPage extends StatelessWidget {
         foregroundColor: Colors.white,
       ),
       body: ListView(
+        controller: _scrollController,
         padding: const EdgeInsets.all(24.0),
         children: [
           _buildEssayCard(

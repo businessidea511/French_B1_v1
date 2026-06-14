@@ -11,6 +11,7 @@ import '../../services/language_provider.dart';
 import '../../services/deepseek_service.dart';
 import '../../services/admin_qa_service.dart';
 import '../../services/hugging_face_tts_service.dart';
+import '../../services/global_scroll_manager.dart';
 
 class AdminAIChatPage extends StatefulWidget {
   const AdminAIChatPage({super.key});
@@ -23,6 +24,7 @@ class _AdminAIChatPageState extends State<AdminAIChatPage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   final TextEditingController _questionController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
 
   bool _isLoading = false;
   bool _isSaving = false;
@@ -57,6 +59,7 @@ class _AdminAIChatPageState extends State<AdminAIChatPage>
     _tabController = TabController(length: 2, vsync: this);
     _initAudio();
     _initFlutterTts();
+    GlobalScrollManager.register(_scrollController);
 
     // Set default language to app's current language
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -96,6 +99,8 @@ class _AdminAIChatPageState extends State<AdminAIChatPage>
     _questionController.dispose();
     _audioPlayer.dispose();
     _flutterTts.stop();
+    GlobalScrollManager.unregister(_scrollController);
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -322,6 +327,7 @@ class _AdminAIChatPageState extends State<AdminAIChatPage>
 
   Widget _buildChatTab() {
     return SingleChildScrollView(
+      controller: _scrollController,
       padding: const EdgeInsets.all(24.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

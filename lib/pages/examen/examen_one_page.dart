@@ -7,6 +7,7 @@ import '../../theme/app_theme.dart';
 import '../../services/language_provider.dart';
 import '../../services/deepseek_service.dart';
 import '../../services/hugging_face_tts_service.dart';
+import '../../services/global_scroll_manager.dart';
 
 class ExamenOnePage extends StatefulWidget {
   const ExamenOnePage({super.key});
@@ -39,6 +40,7 @@ class _ExamenOnePageState extends State<ExamenOnePage> {
   bool _isLoadingAudio = false;
   String _ttsEngine    = '';
   int _playingDialIdx  = -1; // -1 = main audio, 0-3 = dialogue index
+  final ScrollController _scrollController = ScrollController();
 
   // ═════════════════════════════════════════════════════════════════════════
   // Lifecycle
@@ -47,6 +49,7 @@ class _ExamenOnePageState extends State<ExamenOnePage> {
   @override
   void initState() {
     super.initState();
+    GlobalScrollManager.register(_scrollController);
     _audioPlayer.onPlayerStateChanged.listen((s) {
       if (mounted) setState(() => _isPlaying = s == PlayerState.playing);
     });
@@ -67,6 +70,8 @@ class _ExamenOnePageState extends State<ExamenOnePage> {
     _audioPlayer.dispose();
     _flutterTts.stop();
     _essayController.dispose();
+    GlobalScrollManager.unregister(_scrollController);
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -283,6 +288,7 @@ class _ExamenOnePageState extends State<ExamenOnePage> {
     final allDone    = _ex1Answers.length == statements.length;
 
     return SingleChildScrollView(
+      controller: _scrollController,
       padding: const EdgeInsets.all(20),
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         _exHeader('A. Exercice 1', 'Écoutez et répondez par "vrai", "faux" ou "on ne sait pas".',
@@ -379,6 +385,7 @@ class _ExamenOnePageState extends State<ExamenOnePage> {
     final allDone  = _ex2Answers.length == ex2Qs.length;
 
     return SingleChildScrollView(
+      controller: _scrollController,
       padding: const EdgeInsets.all(20),
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         _exHeader('B. Exercice 2', 'Écoutez et entourez la bonne réponse.',
@@ -434,6 +441,7 @@ class _ExamenOnePageState extends State<ExamenOnePage> {
     final allDone  = _ex3Answers.length == dialogues.length;
 
     return SingleChildScrollView(
+      controller: _scrollController,
       padding: const EdgeInsets.all(20),
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         _exHeader(
@@ -548,6 +556,7 @@ class _ExamenOnePageState extends State<ExamenOnePage> {
     final list = _examData!['grammar'] as List;
     final q    = list[_currentQuestionIndex];
     return SingleChildScrollView(
+      controller: _scrollController,
       padding: const EdgeInsets.all(20),
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         _questionCard(
@@ -589,6 +598,7 @@ class _ExamenOnePageState extends State<ExamenOnePage> {
     final q    = qs[_currentQuestionIndex];
 
     return SingleChildScrollView(
+      controller: _scrollController,
       padding: const EdgeInsets.all(20),
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         Card(
@@ -640,6 +650,7 @@ class _ExamenOnePageState extends State<ExamenOnePage> {
     final readingQLen = (_examData!['reading']['questions'] as List).length;
 
     return SingleChildScrollView(
+      controller: _scrollController,
       padding: const EdgeInsets.all(20),
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         Card(child: Padding(padding: const EdgeInsets.all(20), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -738,6 +749,7 @@ class _ExamenOnePageState extends State<ExamenOnePage> {
     final overallPct    = ((mcqPct + essayScore) / 2).round();
 
     return SingleChildScrollView(
+      controller: _scrollController,
       padding: const EdgeInsets.all(20),
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
 

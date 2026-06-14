@@ -4,6 +4,7 @@ import 'dart:ui';
 import '../services/pwa_service.dart';
 import '../theme/app_theme.dart';
 import '../services/language_provider.dart';
+import '../services/global_scroll_manager.dart';
 import 'grammar/grammar_page.dart';
 import 'exercises/exercises_page.dart';
 import 'flashcards/flashcards_page.dart';
@@ -30,6 +31,7 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
+    GlobalScrollManager.register(_scrollController);
     _setupInstallListener();
   }
 
@@ -115,6 +117,7 @@ class _HomePageState extends State<HomePage> {
 
   @override
   void dispose() {
+    GlobalScrollManager.unregister(_scrollController);
     _scrollController.dispose();
     super.dispose();
   }

@@ -4,6 +4,7 @@ import 'ask_ai_box.dart';
 import '../pages/exercises/exercises_page.dart';
 import '../pages/flashcards/flashcards_page.dart';
 import '../theme/app_theme.dart';
+import '../services/global_scroll_manager.dart';
 
 class LessonTemplate extends StatefulWidget {
   final String title;
@@ -27,7 +28,14 @@ class _LessonTemplateState extends State<LessonTemplate> {
   final ScrollController _scrollController = ScrollController();
 
   @override
+  void initState() {
+    super.initState();
+    GlobalScrollManager.register(_scrollController);
+  }
+
+  @override
   void dispose() {
+    GlobalScrollManager.unregister(_scrollController);
     _scrollController.dispose();
     super.dispose();
   }

@@ -11,6 +11,7 @@ import '../../services/language_provider.dart';
 import '../../services/lessons_provider.dart';
 import '../../services/deepseek_service.dart';
 import '../../services/pdf_helper.dart';
+import '../../services/global_scroll_manager.dart';
 import 'metiers_page.dart';
 import 'dynamic_lesson_page.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -27,7 +28,14 @@ class _LessonsPageState extends State<LessonsPage> {
   final ScrollController _scrollController = ScrollController();
 
   @override
+  void initState() {
+    super.initState();
+    GlobalScrollManager.register(_scrollController);
+  }
+
+  @override
   void dispose() {
+    GlobalScrollManager.unregister(_scrollController);
     _scrollController.dispose();
     super.dispose();
   }

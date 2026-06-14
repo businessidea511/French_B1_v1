@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../theme/app_theme.dart';
 import '../../services/deepseek_service.dart';
 import '../../services/lessons_provider.dart';
+import '../../services/global_scroll_manager.dart';
 
 class FlashcardsPage extends StatefulWidget {
   final String? initialTopic;
@@ -18,15 +19,24 @@ class _FlashcardsPageState extends State<FlashcardsPage> {
   bool showAnswer = false;
   bool _isLoading = false;
   List<Map<String, String>> cards = [];
+  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
+    GlobalScrollManager.register(_scrollController);
     if (widget.initialTopic != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _startAIFlashcards(widget.initialTopic!);
       });
     }
+  }
+
+  @override
+  void dispose() {
+    GlobalScrollManager.unregister(_scrollController);
+    _scrollController.dispose();
+    super.dispose();
   }
 
   Future<void> _startAIFlashcards(String topic) async {
@@ -96,6 +106,7 @@ class _FlashcardsPageState extends State<FlashcardsPage> {
     final lessonItems = lessonsProvider.allLessons;
 
     return ListView(
+      controller: _scrollController,
       padding: const EdgeInsets.all(24),
       children: [
         const SectionHeader('GRAMMAR FLASHCARDS'),

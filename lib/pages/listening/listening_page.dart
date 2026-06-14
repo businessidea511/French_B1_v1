@@ -6,6 +6,7 @@ import '../../theme/app_theme.dart';
 import '../../services/deepseek_service.dart';
 import '../../services/tts_service.dart';
 import '../../services/hugging_face_tts_service.dart';
+import '../../services/global_scroll_manager.dart';
 
 class ListeningPage extends StatefulWidget {
   const ListeningPage({super.key});
@@ -16,6 +17,7 @@ class ListeningPage extends StatefulWidget {
 
 class _ListeningPageState extends State<ListeningPage> {
   final TtsService _ttsService = TtsService();
+  final ScrollController _scrollController = ScrollController();
   bool _isLoading = false;
   bool _isPlaying = false;
   bool _showTranscript = false;
@@ -57,6 +59,7 @@ class _ListeningPageState extends State<ListeningPage> {
   @override
   void initState() {
     super.initState();
+    GlobalScrollManager.register(_scrollController);
     _initVoices();
     // System TTS completion → auto-advance to next sentence
     _ttsService.flutterTts.setCompletionHandler(() {
@@ -130,6 +133,8 @@ class _ListeningPageState extends State<ListeningPage> {
   void dispose() {
     _ttsService.stop();
     _audioPlayer.dispose();
+    GlobalScrollManager.unregister(_scrollController);
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -337,6 +342,7 @@ class _ListeningPageState extends State<ListeningPage> {
         foregroundColor: Colors.white,
       ),
       body: SingleChildScrollView(
+        controller: _scrollController,
         padding: const EdgeInsets.all(24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,

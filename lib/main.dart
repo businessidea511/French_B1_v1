@@ -8,6 +8,7 @@ import 'theme/app_theme.dart';
 import 'pages/home_page.dart';
 import 'services/language_provider.dart';
 import 'services/lessons_provider.dart';
+import 'services/global_scroll_manager.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -69,10 +70,20 @@ class FrenchB1App extends StatelessWidget {
 
   void _handleScroll(BuildContext context, double offset,
       {bool isPage = false}) {
+    final active = GlobalScrollManager.activeController;
+    if (active != null && active.hasClients) {
+      final target = active.offset + offset;
+      active.animateTo(
+        target.clamp(0.0, active.position.maxScrollExtent),
+        duration: Duration(milliseconds: isPage ? 300 : 100),
+        curve: Curves.easeOut,
+      );
+      return;
+    }
+
     final controller = PrimaryScrollController.maybeOf(context);
     if (controller != null && controller.hasClients) {
       final target = controller.offset + offset;
-
       controller.animateTo(
         target.clamp(0.0, controller.position.maxScrollExtent),
         duration: Duration(milliseconds: isPage ? 300 : 100),
@@ -130,7 +141,8 @@ class FrenchB1App extends StatelessWidget {
                                 innerContext, MediaQuery.of(innerContext).size.height * 0.8,
                                 isPage: true),
                         const SingleActivator(LogicalKeyboardKey.home): () {
-                          final controller = PrimaryScrollController.maybeOf(innerContext);
+                          final active = GlobalScrollManager.activeController;
+                          final controller = active ?? PrimaryScrollController.maybeOf(innerContext);
                           if (controller != null && controller.hasClients) {
                             controller.animateTo(0,
                                 duration: const Duration(milliseconds: 500),
@@ -138,7 +150,8 @@ class FrenchB1App extends StatelessWidget {
                           }
                         },
                         const SingleActivator(LogicalKeyboardKey.end): () {
-                          final controller = PrimaryScrollController.maybeOf(innerContext);
+                          final active = GlobalScrollManager.activeController;
+                          final controller = active ?? PrimaryScrollController.maybeOf(innerContext);
                           if (controller != null && controller.hasClients) {
                             controller.animateTo(
                                 controller.position.maxScrollExtent,

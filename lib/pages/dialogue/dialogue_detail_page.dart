@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_theme.dart';
 import '../../services/tts_service.dart';
+import '../../services/global_scroll_manager.dart';
 
 class DialogueDetailPage extends StatefulWidget {
   final String title;
@@ -20,10 +21,19 @@ class DialogueDetailPage extends StatefulWidget {
 
 class _DialogueDetailPageState extends State<DialogueDetailPage> {
   final TtsService _ttsService = TtsService();
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    GlobalScrollManager.register(_scrollController);
+  }
 
   @override
   void dispose() {
     _ttsService.stop();
+    GlobalScrollManager.unregister(_scrollController);
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -53,6 +63,7 @@ class _DialogueDetailPageState extends State<DialogueDetailPage> {
           ),
           Expanded(
             child: ListView.builder(
+              controller: _scrollController,
               padding: const EdgeInsets.all(16),
               itemCount: widget.dialogueLines.length,
               itemBuilder: (context, index) {

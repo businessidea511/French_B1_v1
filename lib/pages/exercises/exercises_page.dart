@@ -4,6 +4,7 @@ import '../../theme/app_theme.dart';
 import '../../services/deepseek_service.dart';
 import '../../services/language_provider.dart';
 import '../../services/lessons_provider.dart';
+import '../../services/global_scroll_manager.dart';
 
 class ExercisesPage extends StatefulWidget {
   final String? initialTopic;
@@ -19,15 +20,24 @@ class _ExercisesPageState extends State<ExercisesPage> {
   int score = 0;
   bool _isLoading = false;
   List<Map<String, dynamic>> questions = [];
+  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
+    GlobalScrollManager.register(_scrollController);
     if (widget.initialTopic != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _startAIExercises(widget.initialTopic!);
       });
     }
+  }
+
+  @override
+  void dispose() {
+    GlobalScrollManager.unregister(_scrollController);
+    _scrollController.dispose();
+    super.dispose();
   }
 
   Future<void> _startAIExercises(String topic) async {
@@ -123,6 +133,7 @@ class _ExercisesPageState extends State<ExercisesPage> {
     final lessonItems = lessonsProvider.allLessons;
 
     return ListView(
+      controller: _scrollController,
       padding: const EdgeInsets.all(24),
       children: [
         // Special Mixed Review Card
@@ -281,6 +292,7 @@ class _ExercisesPageState extends State<ExercisesPage> {
     final question = questions[currentQuestion];
 
     return SingleChildScrollView(
+      controller: _scrollController,
       padding: const EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,

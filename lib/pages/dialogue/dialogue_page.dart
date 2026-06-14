@@ -1,9 +1,30 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_theme.dart';
 import 'dialogue_detail_page.dart';
+import '../../services/global_scroll_manager.dart';
 
-class DialoguePage extends StatelessWidget {
+class DialoguePage extends StatefulWidget {
   const DialoguePage({super.key});
+
+  @override
+  State<DialoguePage> createState() => _DialoguePageState();
+}
+
+class _DialoguePageState extends State<DialoguePage> {
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    GlobalScrollManager.register(_scrollController);
+  }
+
+  @override
+  void dispose() {
+    GlobalScrollManager.unregister(_scrollController);
+    _scrollController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -15,6 +36,7 @@ class DialoguePage extends StatelessWidget {
         foregroundColor: Colors.white,
       ),
       body: ListView(
+        controller: _scrollController,
         padding: const EdgeInsets.all(24.0),
         children: [
           _buildDialogueCard(

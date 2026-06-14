@@ -11,6 +11,7 @@ import '../../services/language_provider.dart';
 import '../../services/lessons_provider.dart';
 import '../../services/deepseek_service.dart';
 import '../../services/pdf_helper.dart';
+import '../../services/global_scroll_manager.dart';
 import '../lessons/dynamic_lesson_page.dart';
 import '../../models/lesson_topic.dart';
 import 'lessons/present_page.dart';
@@ -42,7 +43,14 @@ class _GrammarPageState extends State<GrammarPage> {
   final ScrollController _scrollController = ScrollController();
 
   @override
+  void initState() {
+    super.initState();
+    GlobalScrollManager.register(_scrollController);
+  }
+
+  @override
   void dispose() {
+    GlobalScrollManager.unregister(_scrollController);
     _scrollController.dispose();
     super.dispose();
   }

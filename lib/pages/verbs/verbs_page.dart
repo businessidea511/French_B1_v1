@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_theme.dart';
 import '../../services/deepseek_service.dart';
+import '../../services/global_scroll_manager.dart';
 
 class VerbsPage extends StatefulWidget {
   const VerbsPage({super.key});
@@ -11,6 +12,7 @@ class VerbsPage extends StatefulWidget {
 
 class _VerbsPageState extends State<VerbsPage> {
   final TextEditingController _searchController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
   bool _isLoading = false;
   String selectedVerb = 'parler';
   String selectedTense = 'Présent';
@@ -684,12 +686,27 @@ class _VerbsPageState extends State<VerbsPage> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    GlobalScrollManager.register(_scrollController);
+  }
+
+  @override
+  void dispose() {
+    GlobalScrollManager.unregister(_scrollController);
+    _scrollController.dispose();
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Verb Conjugator'),
       ),
       body: SingleChildScrollView(
+        controller: _scrollController,
         padding: const EdgeInsets.all(24),
         child: Center(
           child: ConstrainedBox(

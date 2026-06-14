@@ -9,6 +9,7 @@ import '../../services/language_provider.dart';
 import '../../services/lessons_provider.dart';
 import '../../services/deepseek_service.dart';
 import '../../services/hugging_face_tts_service.dart';
+import '../../services/global_scroll_manager.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 
 class AIBookPage extends StatefulWidget {
@@ -41,6 +42,8 @@ class _AIBookPageState extends State<AIBookPage> {
     super.initState();
     _initAudio();
     _initFlutterTts();
+    GlobalScrollManager.register(_selectionScrollController);
+    GlobalScrollManager.register(_viewerScrollController);
   }
 
   void _initAudio() {
@@ -70,6 +73,8 @@ class _AIBookPageState extends State<AIBookPage> {
   void dispose() {
     _audioPlayer.dispose();
     _flutterTts.stop();
+    GlobalScrollManager.unregister(_selectionScrollController);
+    GlobalScrollManager.unregister(_viewerScrollController);
     _selectionScrollController.dispose();
     _viewerScrollController.dispose();
     super.dispose();
