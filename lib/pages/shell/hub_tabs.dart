@@ -24,6 +24,7 @@ import '../roleplay/roleplay_page.dart';
 import '../verbs/verbs_page.dart';
 import '../words/photo_words_page.dart';
 import '../words/word_section_page.dart';
+import '../../services/ui_strings.dart';
 
 void openPage(BuildContext context, Widget page) =>
     Navigator.push(context, MaterialPageRoute(builder: (_) => page));
@@ -33,7 +34,7 @@ void openReviews(BuildContext context) {
   final due = context.read<ProgressService>().dueCards;
   if (due.isEmpty) {
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('✅ Rien à réviser aujourd\'hui. Étudie de nouvelles cartes !')),
+      SnackBar(content: Text('✅ ${tr(context, 'Nothing to review today. Study new cards!')}')),
     );
     openPage(context, const FlashcardsPage());
     return;

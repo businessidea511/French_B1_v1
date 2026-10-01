@@ -1,9 +1,12 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
 import 'dart:math';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'api_client.dart';
+import 'language_provider.dart';
+import 'translation_store.dart';
 
 class DeepSeekService {
   /// Language of the explanations stored in lessons and grammar topics. French
@@ -11,16 +14,57 @@ class DeepSeekService {
   /// learner's chosen language on screen, so stored content must use this one.
   static const String contentLanguage = 'English';
 
-  static final Map<String, String> _memoryCache = {};
+  /// Loads translations saved on this device and starts downloading the shared
+  /// translations of [language], so screens show them at once.
+  static Future<void> warmCache([String? language]) async {
+    await TranslationStore.warmUp();
+    if (language != null) unawaited(TranslationStore.loadLanguage(language));
+  }
+
+  /// Texts waiting to be translated, per language. Every TranslatedText on a
+  /// screen asks within the same moment; they are sent together in a few
+  /// requests instead of one request each.
+  static final Map<String, Map<String, Completer<String>>> _queue = {};
+  static Timer? _queueTimer;
+
+  static Future<String> _queueTranslation(String text, String targetLanguage) {
+    final waiting = _queue.putIfAbsent(targetLanguage, () => {});
+    final existing = waiting[text];
+    if (existing != null) return existing.future;
+    final completer = Completer<String>();
+    waiting[text] = completer;
+    _queueTimer ??= Timer(const Duration(milliseconds: 80), _flushQueue);
+    return completer.future;
+  }
+
+  static Future<void> _flushQueue() async {
+    _queueTimer = null;
+    final jobs = Map.of(_queue);
+    _queue.clear();
+    await Future.wait([
+      for (final MapEntry(key: language, value: waiting) in jobs.entries)
+        () async {
+          final texts = waiting.keys.toList();
+          List<String> translated;
+          try {
+            translated = await translateBatch(texts, language);
+          } catch (_) {
+            translated = texts;
+          }
+          for (var i = 0; i < texts.length; i++) {
+            waiting[texts[i]]!.complete(translated[i]);
+          }
+        }(),
+    ]);
+  }
 
   static Future<void> clearCache() async {
-    _memoryCache.clear();
     final prefs = await SharedPreferences.getInstance();
-    final keys = prefs.getKeys().where((k) => k.startsWith('trans_')).toList();
+    final keys = prefs.getKeys().where((k) => k.startsWith('trans_') || k.startsWith('tr2_')).toList();
     for (final k in keys) {
       await prefs.remove(k);
     }
-    debugPrint('🧹 Translation cache cleared');
+    debugPrint('🧹 Translation cache cleared on this device');
   }
 
   /// Sends a chat completion request through the server proxy (/api/ai), which
@@ -660,135 +704,105 @@ JSON: {"flashcards": [{"front": "...", "back": "...", "example": "...", "tip": "
     }
   }
 
-  // Translate text to a target language
-  // Synchronous check for memory cache
-  static String? getCachedTranslation(String text, String targetLanguage) {
-    final String cacheKey = 'trans_${targetLanguage}_${text.hashCode}';
-    return _memoryCache[cacheKey];
-  }
+  /// The translation if it is already known (no waiting).
+  static String? getCachedTranslation(String text, String targetLanguage) =>
+      TranslationStore.cached(text, targetLanguage);
 
-  // Translate text to a target language with Dual-Layer Cache (Memory + Disk)
+  /// Translates [text] (English) into [targetLanguage]; the original if it fails.
   static Future<String> translateText(String text, String targetLanguage) async {
-    if (text.trim().isEmpty) return text;
-    
-    final String cacheKey = 'trans_${targetLanguage}_${text.hashCode}';
-
-    // 1. Check Memory Cache (Instant)
-    if (_memoryCache.containsKey(cacheKey)) {
-      return _memoryCache[cacheKey]!;
-    }
-    
+    if (text.trim().isEmpty || TranslationStore.codeFor(targetLanguage) == null) return text;
+    final cached = TranslationStore.cached(text, targetLanguage);
+    if (cached != null) return cached;
     try {
-      final prefs = await SharedPreferences.getInstance();
-      
-      // 2. Check Disk Cache (Async)
-      final String? cachedTranslation = prefs.getString(cacheKey);
-      if (cachedTranslation != null) {
-        _memoryCache[cacheKey] = cachedTranslation; // Hydrate memory cache
-        return cachedTranslation;
-      }
-
-      // 3. Call API
-      final response = await _chat({
-          'messages': [
-            {
-              'role': 'system',
-              'content':
-                  'You are a high-speed translation engine. '
-                  'Translate the following text into $targetLanguage. '
-                  'STRICT RULES:\n'
-                  '1. NO META-TALK: Do NOT say "Here is the translation", "Sure", or "I have translated".\n'
-                  '2. NO PREAMBLE: Start immediately with the translated text.\n'
-                  '3. PRESERVE FRENCH: Keep French words, conjugations, and examples EXACTLY in French. Only translate the explanations.\n'
-                  '4. RAW OUTPUT ONLY: Your response will be used directly in a UI. Any extra text will break the app.\n'
-                  '5. Keep symbols (✅, ❌, ♂️, ♀️) exactly as they are.'
-            },
-            {
-              'role': 'user',
-              'content': 'TEXT TO TRANSLATE:\n$text'
-            }
-          ],
-          'temperature': 0.3,
-      });
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        final String translated = (data['choices']?[0]?['message']?['content'] ?? text).toString().trim();
-        
-        // 4. Save to both caches
-        _memoryCache[cacheKey] = translated;
-        await prefs.setString(cacheKey, translated);
-        
-        return translated;
-      }
-      return text;
+      return await _queueTranslation(text, targetLanguage);
     } catch (e) {
       debugPrint('Translation error: $e');
       return text;
     }
   }
 
-  /// Translates many short texts in a few requests, using (and filling) the
-  /// same cache as [translateText]. A text that cannot be translated is kept
-  /// as it is.
+  /// Translates many texts in a few requests: first the shared translations,
+  /// then the server (which saves new ones for everybody), and on the device
+  /// only if the server store is not available. A text that cannot be
+  /// translated is kept as it is.
   static Future<List<String>> translateBatch(List<String> texts, String targetLanguage) async {
-    final out = List<String>.from(texts);
-    SharedPreferences? prefs;
+    final code = TranslationStore.codeFor(targetLanguage);
+    if (code == null) return List.of(texts);
     try {
-      prefs = await SharedPreferences.getInstance();
+      await TranslationStore.loadLanguage(code).timeout(const Duration(seconds: 12));
     } catch (_) {}
-    final missing = <int>[];
-    for (var i = 0; i < texts.length; i++) {
-      if (texts[i].trim().isEmpty) continue;
-      final key = 'trans_${targetLanguage}_${texts[i].hashCode}';
-      final cached = _memoryCache[key] ?? prefs?.getString(key);
-      if (cached != null) {
-        _memoryCache[key] = cached;
-        out[i] = cached;
-      } else if (!missing.any((j) => texts[j] == texts[i])) {
-        missing.add(i);
-      }
-    }
 
-    Future<void> translateChunk(List<int> ids) async {
+    final missing = <String>{
+      for (final t in texts)
+        if (t.trim().isNotEmpty && TranslationStore.cached(t, code) == null) t,
+    }.toList();
+
+    final leftover = <String>[];
+    if (missing.isNotEmpty && TranslationStore.serverAvailable) {
+      await Future.wait([
+        for (final chunk in TranslationStore.chunks(missing))
+          () async {
+            try {
+              final result = await TranslationStore.translateOnServer(chunk, code);
+              for (var i = 0; i < chunk.length; i++) {
+                if (result[i] != null) {
+                  TranslationStore.remember(code, chunk[i], result[i]!, persist: true);
+                } else {
+                  leftover.add(chunk[i]);
+                }
+              }
+            } catch (e) {
+              debugPrint('Shared translation failed: $e');
+              leftover.addAll(chunk);
+            }
+          }(),
+      ]);
+    } else {
+      leftover.addAll(missing);
+    }
+    if (leftover.isNotEmpty) await _translateOnDevice(leftover, code, targetLanguage);
+    return [for (final t in texts) TranslationStore.cached(t, code) ?? t];
+  }
+
+  /// The old way: the app asks the AI directly (used when the shared store is not available).
+  static Future<void> _translateOnDevice(List<String> texts, String code, String targetLanguage) async {
+    final languageName = AppLanguage.values.firstWhere((l) => l.code == code).englishName;
+    Future<void> translateChunk(List<String> chunk, {bool retry = true}) async {
       try {
         final result = await chatJson([
           {
             'role': 'system',
-            'content': 'You translate short glosses and notes for French learners into $targetLanguage. '
-                'Translate every item of "items". Keep every French word, phrase or quotation (often between « ») '
-                'exactly as it is. Keep it short and natural. Keep the same number and order of items. '
-                'Return JSON: {"items": ["...", "..."]}',
+            'content': 'You translate the interface and explanations of a French course for learners into $languageName. '
+                'Translate every item of "items" (labels, glosses, notes, grammar explanations). '
+                'Keep every French word, example, conjugation or quotation (often between « » or in quotes) exactly as it is. '
+                'Keep line breaks, numbering, markdown (**bold**) and symbols (✅ ❌ → ♂ ♀ emoji) as they are. '
+                'Natural and clear. Keep the same number and order of items. Return JSON: {"items": ["...", "..."]}',
           },
           {
             'role': 'user',
-            'content': jsonEncode({'items': [for (final i in ids) texts[i]]}),
+            'content': jsonEncode({'items': chunk}),
           },
         ], temperature: 0.2, maxTokens: 8000);
         final items = result['items'];
-        if (items is! List || items.length != ids.length) return;
-        for (var j = 0; j < ids.length; j++) {
+        if (items is! List || items.length != chunk.length) throw Exception('wrong number of items');
+        for (var j = 0; j < chunk.length; j++) {
           final translated = items[j].toString().trim();
-          if (translated.isEmpty) continue;
-          final key = 'trans_${targetLanguage}_${texts[ids[j]].hashCode}';
-          _memoryCache[key] = translated;
-          await prefs?.setString(key, translated);
+          if (translated.isNotEmpty) TranslationStore.remember(code, chunk[j], translated, persist: true);
         }
       } catch (e) {
         debugPrint('Batch translation error: $e');
+        // Try once more in two halves (a long or odd item can spoil a whole chunk).
+        if (retry && chunk.length > 1) {
+          final half = chunk.length ~/ 2;
+          await Future.wait([
+            translateChunk(chunk.sublist(0, half), retry: false),
+            translateChunk(chunk.sublist(half), retry: false),
+          ]);
+        }
       }
     }
 
-    const chunkSize = 40;
-    await Future.wait([
-      for (var start = 0; start < missing.length; start += chunkSize)
-        translateChunk(missing.sublist(start, min(start + chunkSize, missing.length))),
-    ]);
-    // Fill every position (duplicates included) from the cache.
-    for (var i = 0; i < texts.length; i++) {
-      out[i] = _memoryCache['trans_${targetLanguage}_${texts[i].hashCode}'] ?? out[i];
-    }
-    return out;
+    await Future.wait([for (final c in TranslationStore.chunks(texts)) translateChunk(c)]);
   }
 
   // Ask a specific grammar question

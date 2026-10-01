@@ -8,6 +8,8 @@ import '../../data/vocabulary_data.dart';
 import '../../services/api_client.dart';
 import '../../services/practice_logic.dart';
 import '../../services/progress_service.dart';
+import '../../services/ui_strings.dart';
+import '../../services/web_share.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/motion.dart';
 import '../../widgets/translated_text.dart';
@@ -46,7 +48,16 @@ List<DuelQuestion> duelQuestions(String code) {
 
 /// Friendly duel: same 10 questions for both players, scores shared by code.
 class DuelPage extends StatefulWidget {
-  const DuelPage({super.key});
+  /// Code from an invitation link (…/?duel=ABC123): the lobby opens with it filled in.
+  final String? initialCode;
+
+  const DuelPage({super.key, this.initialCode});
+
+  /// The 6-character code in this page's address, if the app was opened from an invitation link.
+  static String? codeFromLink() {
+    final code = (Uri.base.queryParameters['duel'] ?? '').trim().toUpperCase();
+    return RegExp(r'^[A-Z0-9]{6}$').hasMatch(code) ? code : null;
+  }
 
   @visibleForTesting
   static Future<List<Map<String, dynamic>>> Function(Map<String, dynamic> body) api = _callApi;
@@ -61,7 +72,7 @@ class DuelPage extends StatefulWidget {
   State<DuelPage> createState() => _DuelPageState();
 }
 
-enum _Stage { lobby, play, result }
+enum _Stage { lobby, ready, play, result }
 
 class _DuelPageState extends State<DuelPage> {
   final _name = TextEditingController();
@@ -74,6 +85,7 @@ class _DuelPageState extends State<DuelPage> {
   int? _picked;
   final Stopwatch _clock = Stopwatch();
   Timer? _ticker;
+  Timer? _boardTimer; // keeps the class ranking fresh on the results screen
   List<Map<String, dynamic>>? _board;
   String? _error;
   bool _sending = false;
@@ -81,6 +93,7 @@ class _DuelPageState extends State<DuelPage> {
   @override
   void initState() {
     super.initState();
+    if (widget.initialCode != null) _join.text = widget.initialCode!;
     SharedPreferences.getInstance().then((p) {
       if (mounted) _name.text = p.getString('duel_name') ?? '';
     });
@@ -89,6 +102,7 @@ class _DuelPageState extends State<DuelPage> {
   @override
   void dispose() {
     _ticker?.cancel();
+    _boardTimer?.cancel();
     _name.dispose();
     _join.dispose();
     super.dispose();
@@ -100,17 +114,33 @@ class _DuelPageState extends State<DuelPage> {
     return List.generate(6, (_) => chars[r.nextInt(chars.length)]).join();
   }
 
-  Future<void> _start(String code) async {
+  Future<bool> _checkName() async {
     final name = _name.text.trim();
     if (name.isEmpty) {
-      setState(() => _error = 'Écris ton prénom d\'abord.');
-      return;
-    }
-    if (!RegExp(r'^[A-Z0-9]{6}$').hasMatch(code)) {
-      setState(() => _error = 'Le code a 6 lettres ou chiffres.');
-      return;
+      setState(() => _error = tr(context, 'Write your first name first.'));
+      return false;
     }
     (await SharedPreferences.getInstance()).setString('duel_name', name);
+    return true;
+  }
+
+  /// Creator: make a code and show it, so it can be sent before playing.
+  Future<void> _create() async {
+    if (!await _checkName()) return;
+    setState(() {
+      _error = null;
+      _code = _newCode();
+      _stage = _Stage.ready;
+    });
+  }
+
+  Future<void> _start(String code) async {
+    if (!await _checkName()) return;
+    if (!mounted) return;
+    if (!RegExp(r'^[A-Z0-9]{6}$').hasMatch(code)) {
+      setState(() => _error = tr(context, 'The code has 6 letters or numbers.'));
+      return;
+    }
     setState(() {
       _error = null;
       _code = code;
@@ -179,8 +209,12 @@ class _DuelPageState extends State<DuelPage> {
         'seconds': _seconds,
       });
       if (mounted) setState(() => _board = board);
+      _boardTimer?.cancel();
+      _boardTimer = Timer.periodic(const Duration(seconds: 15), (_) {
+        if (mounted && _stage == _Stage.result && !_sending) _refresh();
+      });
     } catch (e) {
-      if (mounted) setState(() => _error = 'Le serveur des duels n\'est pas prêt. Ton score : $_score.');
+      if (mounted) setState(() => _error = tr(context, 'The duel server is not ready. Your score: {n}.', {'n': _score}));
     } finally {
       if (mounted) setState(() => _sending = false);
     }
@@ -197,19 +231,54 @@ class _DuelPageState extends State<DuelPage> {
     }
   }
 
+  String get _inviteLink => '${Uri.base.origin}/?duel=$_code';
+
+  String get _invite => 'Je te défie en français ! ⚔️ Duel PolyLearn, code $_code\n$_inviteLink';
+
   void _copyInvite() {
-    Clipboard.setData(ClipboardData(text: 'Je te défie en français ! ⚔️ Ouvre PolyLearn → Pratiquer → Duel, et entre le code $_code'));
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Invitation copiée ✓')));
+    Clipboard.setData(ClipboardData(text: _invite));
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr(context, 'Invitation copied ✓'))));
   }
+
+  Future<void> _shareInvite() async {
+    if (!await WebShare.share(_invite)) _copyInvite();
+  }
+
+  /// The big code with Share / Copy buttons.
+  Widget _codeCard() => GlassCard(
+        glow: AppTheme.primary,
+        child: Column(
+          children: [
+            TranslatedText('Send this code to your friend:', style: TextStyle(color: AppTheme.textSecondary)),
+            const SizedBox(height: 6),
+            SelectableText(_code,
+                style: TextStyle(fontSize: 38, letterSpacing: 8, fontWeight: FontWeight.w900, color: AppTheme.textPrimary)),
+            const SizedBox(height: 8),
+            Wrap(
+              alignment: WrapAlignment.center,
+              spacing: 8,
+              runSpacing: 4,
+              children: [
+                if (WebShare.supported)
+                  FilledButton.icon(
+                      onPressed: _shareInvite, icon: const Icon(Icons.ios_share_rounded), label: Text(tr(context, 'Share'))),
+                OutlinedButton.icon(
+                    onPressed: _copyInvite, icon: const Icon(Icons.copy_rounded), label: Text(tr(context, 'Copy the invitation'))),
+              ],
+            ),
+          ],
+        ),
+      );
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('⚔️ Duel entre amis')),
+      appBar: AppBar(title: Text('⚔️ ${tr(context, 'Duel with friends')}')),
       body: AnimatedSwitcher(
         duration: const Duration(milliseconds: 400),
         child: switch (_stage) {
           _Stage.lobby => _buildLobby(),
+          _Stage.ready => _buildReady(),
           _Stage.play => _buildPlay(),
           _Stage.result => _buildResult(),
         },
@@ -224,7 +293,7 @@ class _DuelPageState extends State<DuelPage> {
         const Center(child: Floating(child: Text('⚔️', style: TextStyle(fontSize: 70)))),
         const SizedBox(height: 10),
         TranslatedText(
-          'Challenge your classmate! You both answer the same 10 questions. Create a duel and send the code, or enter the code you received.',
+          'Challenge a friend or your whole class! Everyone with the code answers the same 10 questions. Create a duel and send the code, or enter the code you received.',
           textAlign: TextAlign.center,
           style: TextStyle(color: AppTheme.textSecondary, fontSize: 15, height: 1.4),
         ),
@@ -232,17 +301,17 @@ class _DuelPageState extends State<DuelPage> {
         TextField(
           controller: _name,
           maxLength: 24,
-          decoration: const InputDecoration(hintText: 'Ton prénom', prefixIcon: Icon(Icons.person_rounded)),
+          decoration: InputDecoration(hintText: tr(context, 'Your first name'), prefixIcon: const Icon(Icons.person_rounded)),
         ),
         if (_error != null) Text(_error!, style: TextStyle(color: AppTheme.error)),
         const SizedBox(height: 10),
         GlowButton(
-          label: 'Créer un duel',
+          label: tr(context, 'Create a duel'),
           icon: Icons.add_circle_rounded,
           colors: [AppTheme.secondary, Color(0xFFF97316)],
-          onPressed: () => _start(_newCode()),
+          onPressed: _create,
         ),
-        const SectionTitle('J\'ai reçu un code'),
+        SectionTitle(tr(context, 'I received a code')),
         Row(
           children: [
             Expanded(
@@ -257,10 +326,31 @@ class _DuelPageState extends State<DuelPage> {
             const SizedBox(width: 12),
             SizedBox(
               width: 140,
-              child: GlowButton(label: 'Rejoindre', onPressed: () => _start(_join.text.trim().toUpperCase())),
+              child: GlowButton(label: tr(context, 'Join'), onPressed: () => _start(_join.text.trim().toUpperCase())),
             ),
           ],
         ),
+      ],
+    );
+  }
+
+  Widget _buildReady() {
+    return PageBody(
+      key: const ValueKey('ready'),
+      children: [
+        const Center(child: Floating(child: Text('📨', style: TextStyle(fontSize: 64)))),
+        const SizedBox(height: 10),
+        _codeCard(),
+        const SizedBox(height: 14),
+        TranslatedText(
+          'Send it to one friend or to your class group. Everyone opens the link (or Practice → Duel and types the code) and plays the same 10 questions, whenever they want. The ranking shows who wins.',
+          textAlign: TextAlign.center,
+          style: TextStyle(color: AppTheme.textSecondary, fontSize: 14, height: 1.4),
+        ),
+        const SizedBox(height: 20),
+        GlowButton(label: tr(context, 'Play!'), icon: Icons.play_arrow_rounded, onPressed: () => _start(_code)),
+        const SizedBox(height: 6),
+        TextButton(onPressed: () => setState(() => _stage = _Stage.lobby), child: Text(tr(context, 'Back'))),
       ],
     );
   }
@@ -339,6 +429,8 @@ class _DuelPageState extends State<DuelPage> {
 
   Widget _buildResult() {
     final me = _name.text.trim();
+    final board = _board ?? const <Map<String, dynamic>>[];
+    final myRank = board.indexWhere((r) => '${r['name']}'.trim().toLowerCase() == me.toLowerCase());
     return PageBody(
       key: const ValueKey('result'),
       children: [
@@ -349,20 +441,17 @@ class _DuelPageState extends State<DuelPage> {
         ),
         Center(child: Text('$_correct / 10 · ${_seconds}s', style: TextStyle(color: AppTheme.textSecondary))),
         const SizedBox(height: 16),
-        GlassCard(
-          glow: AppTheme.primary,
-          child: Column(
-            children: [
-              TranslatedText('Send this code to your friend:', style: TextStyle(color: AppTheme.textSecondary)),
-              const SizedBox(height: 6),
-              SelectableText(_code,
-                  style: TextStyle(fontSize: 34, letterSpacing: 8, fontWeight: FontWeight.w900, color: AppTheme.textPrimary)),
-              TextButton.icon(onPressed: _copyInvite, icon: const Icon(Icons.copy_rounded), label: const Text('Copier l\'invitation')),
-            ],
+        if (myRank >= 0) ...[
+          const SizedBox(height: 4),
+          Center(
+            child: Text(tr(context, 'You are #{rank} of {total}', {'rank': myRank + 1, 'total': board.length}),
+                style: TextStyle(color: AppTheme.textPrimary, fontSize: 18, fontWeight: FontWeight.w800)),
           ),
-        ),
+        ],
+        const SizedBox(height: 12),
+        _codeCard(),
         SectionTitle(
-          'Classement',
+          '${tr(context, 'Ranking')} · ${board.length} 👥',
           trailing: IconButton(
             onPressed: _sending ? null : _refresh,
             icon: _sending
@@ -370,14 +459,14 @@ class _DuelPageState extends State<DuelPage> {
                 : const Icon(Icons.refresh_rounded),
           ),
         ),
-        if (_error != null) TranslatedText(_error!, style: TextStyle(color: AppTheme.error)),
-        for (final (i, row) in (_board ?? const <Map<String, dynamic>>[]).indexed)
+        if (_error != null) Text(_error!, style: TextStyle(color: AppTheme.error)),
+        for (final (i, row) in board.indexed)
           Padding(
             padding: const EdgeInsets.only(bottom: 8),
             child: Entrance(
               index: i,
               child: GlassCard(
-                glow: row['name'] == me ? AppTheme.warning : null,
+                glow: i == myRank ? AppTheme.warning : null,
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 child: Row(
                   children: [
@@ -393,7 +482,12 @@ class _DuelPageState extends State<DuelPage> {
             ),
           ),
         const SizedBox(height: 16),
-        TextButton(onPressed: () => setState(() => _stage = _Stage.lobby), child: const Text('Nouveau duel')),
+        TextButton(
+            onPressed: () {
+              _boardTimer?.cancel();
+              setState(() => _stage = _Stage.lobby);
+            },
+            child: Text(tr(context, 'New duel'))),
       ],
     );
   }

@@ -10,6 +10,7 @@ import '../../widgets/translated_text.dart';
 import '../../services/conjugator.dart';
 import '../flashcards/flashcards_page.dart';
 import '../verbs/verbs_page.dart';
+import '../../services/ui_strings.dart';
 
 /// One list of words or expressions, with audio, meanings in the learner's
 /// language and a flashcards button.
@@ -217,7 +218,7 @@ class WordTile extends StatelessWidget {
                 Text(gender == 'm' ? '♂' : '♀', style: TextStyle(color: genderColor, fontSize: 18, fontWeight: FontWeight.bold)),
               if (onConjugate != null)
                 IconButton(
-                  tooltip: 'Conjugaison',
+                  tooltip: tr(context, 'Conjugation'),
                   visualDensity: VisualDensity.compact,
                   icon: Icon(Icons.sync_alt_rounded, color: AppTheme.warning, size: 22),
                   onPressed: onConjugate,

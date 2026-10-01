@@ -106,20 +106,18 @@ class _TranslatedTextState extends State<TranslatedText> {
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) {
-      return const SizedBox(
-        height: 20,
-        width: 20,
-        child: CircularProgressIndicator(strokeWidth: 2),
-      );
-    }
-
-    return Text(
-      _translatedText ?? widget.text,
-      style: widget.style,
-      textAlign: widget.textAlign,
-      maxLines: widget.maxLines,
-      overflow: widget.overflow,
+    // While the translation arrives, the original text shows faded (no
+    // spinner on every line, and the page does not jump).
+    return AnimatedOpacity(
+      opacity: _isLoading ? 0.45 : 1,
+      duration: const Duration(milliseconds: 250),
+      child: Text(
+        _isLoading ? widget.text : (_translatedText ?? widget.text),
+        style: widget.style,
+        textAlign: widget.textAlign,
+        maxLines: widget.maxLines,
+        overflow: widget.overflow,
+      ),
     );
   }
 }

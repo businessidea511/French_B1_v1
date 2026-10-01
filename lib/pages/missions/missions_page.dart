@@ -7,6 +7,7 @@ import '../../theme/app_theme.dart';
 import '../../widgets/motion.dart';
 import '../../widgets/translated_text.dart';
 import '../../widgets/ui_kit.dart';
+import '../../services/ui_strings.dart';
 
 /// The three real-life missions of the week.
 class MissionsPage extends StatelessWidget {
@@ -17,7 +18,7 @@ class MissionsPage extends StatelessWidget {
     context.watch<ProgressService>();
     final missions = missionsOfWeek(DateTime.parse(ProgressService.weekKey()));
     return Scaffold(
-      appBar: AppBar(title: const Text('🗺️ Missions de la semaine')),
+      appBar: AppBar(title: Text('🗺️ ${tr(context, 'Missions of the week')}')),
       body: PageBody(
         children: [
           TranslatedText(

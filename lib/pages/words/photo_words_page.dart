@@ -14,6 +14,7 @@ import '../../widgets/translated_text.dart';
 import '../../widgets/ui_kit.dart';
 import '../flashcards/flashcards_page.dart';
 import 'word_category_page.dart';
+import '../../services/ui_strings.dart';
 
 /// Take a photo of anything (kitchen, street, menu…) and get its French words.
 class PhotoWordsPage extends StatefulWidget {
@@ -110,14 +111,14 @@ class _PhotoWordsPageState extends State<PhotoWordsPage> {
     context.read<ProgressService>().saveWords(_cards);
     Confetti.burst(context);
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('${_selected.length} mots ajoutés à « Mes mots » et à tes révisions ✓')),
+      SnackBar(content: Text(tr(context, 'SAVED_WORDS', {'n': _selected.length}))),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('📸 Photo → mots')),
+      appBar: AppBar(title: Text('📸 ${tr(context, 'Photo → words')}')),
       body: PageBody(
         children: [
           TranslatedText(
@@ -129,12 +130,12 @@ class _PhotoWordsPageState extends State<PhotoWordsPage> {
             children: [
               Expanded(
                 child: GlowButton(
-                    label: 'Caméra', icon: Icons.photo_camera_rounded, onPressed: _loading ? null : () => _pick(ImageSource.camera)),
+                    label: tr(context, 'Camera'), icon: Icons.photo_camera_rounded, onPressed: _loading ? null : () => _pick(ImageSource.camera)),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: GlowButton(
-                  label: 'Galerie',
+                  label: tr(context, 'Gallery'),
                   icon: Icons.photo_library_rounded,
                   colors: [AppTheme.secondary, AppTheme.accent],
                   onPressed: _loading ? null : () => _pick(ImageSource.gallery),
@@ -168,7 +169,7 @@ class _PhotoWordsPageState extends State<PhotoWordsPage> {
               child: TranslatedText(_error!, style: TextStyle(color: AppTheme.error)),
             ),
           if (_words.isNotEmpty) ...[
-            SectionTitle(_scene.isEmpty ? 'Mots trouvés' : _scene),
+            SectionTitle(_scene.isEmpty ? tr(context, 'Words found') : _scene),
             for (final (i, w) in _words.indexed)
               Entrance(
                 index: i,
@@ -185,7 +186,7 @@ class _PhotoWordsPageState extends State<PhotoWordsPage> {
               ),
             const SizedBox(height: 10),
             GlowButton(
-              label: 'Enregistrer ${_selected.length} mots',
+              label: tr(context, 'Save {n} words', {'n': _selected.length}),
               icon: Icons.bookmark_add_rounded,
               onPressed: _selected.isEmpty ? null : _save,
               colors: [AppTheme.success, Color(0xFF14B8A6)],
@@ -216,7 +217,7 @@ class MyWordsPage extends StatelessWidget {
     final progress = context.watch<ProgressService>();
     final words = progress.savedWords;
     return Scaffold(
-      appBar: AppBar(title: const Text('⭐ Mes mots')),
+      appBar: AppBar(title: Text('⭐ ${tr(context, 'My words')}')),
       body: PageBody(
         children: [
           if (words.isEmpty) ...[
@@ -227,7 +228,7 @@ class MyWordsPage extends StatelessWidget {
                 textAlign: TextAlign.center, style: TextStyle(color: AppTheme.textSecondary)),
             const SizedBox(height: 20),
             GlowButton(
-              label: 'Photo → mots',
+              label: tr(context, 'Photo → words'),
               icon: Icons.photo_camera_rounded,
               onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const PhotoWordsPage())),
             ),
@@ -237,7 +238,7 @@ class MyWordsPage extends StatelessWidget {
               icon: Icons.style_rounded,
               colors: [AppTheme.success, Color(0xFF14B8A6)],
               onPressed: () => Navigator.push(
-                  context, MaterialPageRoute(builder: (_) => FlashcardsPage(deck: words, deckTitle: 'Mes mots'))),
+                  context, MaterialPageRoute(builder: (_) => FlashcardsPage(deck: words, deckTitle: tr(context, 'My words')))),
             ),
             const SizedBox(height: 16),
             for (final w in words)
@@ -252,7 +253,7 @@ class MyWordsPage extends StatelessWidget {
                     ),
                   ),
                   IconButton(
-                    tooltip: 'Supprimer',
+                    tooltip: tr(context, 'Delete'),
                     icon: Icon(Icons.delete_outline_rounded, color: AppTheme.textTertiary),
                     onPressed: () => context.read<ProgressService>().removeSavedWord(w['front'] ?? ''),
                   ),

@@ -47,11 +47,11 @@ void main() {
 
   testWidgets('first start shows the welcome, then the tabs', (tester) async {
     await _pump(tester, const HomePage());
-    await tester.tap(find.text('Commencer'));
+    await tester.tap(find.text('Start'));
     await _settle(tester);
     await tester.tap(find.text('English'));
     await _settle(tester);
-    await tester.tap(find.text('Régulier'));
+    await tester.tap(find.text('Regular'));
     await _settle(tester, 2500);
 
     expect(ProgressService.instance.onboarded, isTrue);
@@ -66,15 +66,15 @@ void main() {
     expect(find.text('Street French'), findsOneWidget);
     await tester.tap(find.text('Me'));
     await _settle(tester);
-    expect(find.text('Niveau 1'), findsOneWidget);
+    expect(find.text('Level 1'), findsOneWidget);
   });
 
   testWidgets('a wrong conjugation goes to the mistakes notebook', (tester) async {
     await _pump(tester, const ConjugationGamePage());
-    await tester.tap(find.text('Jouer !'));
+    await tester.tap(find.text('Play!'));
     await _settle(tester, 800);
     await tester.enterText(find.byType(TextField), 'zzz');
-    await tester.tap(find.text('Valider'));
+    await tester.tap(find.text('Check'));
     await _settle(tester);
     expect(find.text('❌'), findsOneWidget);
     expect(ProgressService.instance.mistakes.single['source'], 'Conjugaison');
@@ -107,7 +107,7 @@ void main() {
     );
     await _pump(tester, const MistakesPage());
     expect(find.text('Je ___ au marché.'), findsOneWidget);
-    await tester.tap(find.textContaining('Corriger mes erreurs'));
+    await tester.tap(find.textContaining('Fix my mistakes'));
     await _settle(tester);
     expect(find.byType(ExerciseBlock), findsOneWidget);
   });
@@ -135,7 +135,7 @@ void main() {
     await _pump(tester, const DuelPage());
     await tester.enterText(find.byType(TextField).first, 'Sara');
     await tester.enterText(find.byType(TextField).last, 'ABC234');
-    await tester.tap(find.text('Rejoindre'));
+    await tester.tap(find.text('Join'));
     await _settle(tester);
     for (var i = 0; i < 10; i++) {
       final q = duelQuestions('ABC234')[i];

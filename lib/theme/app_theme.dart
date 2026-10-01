@@ -76,6 +76,10 @@ class AppTheme {
   static Color get error => _p.error;
   static Color get sun => _p.sun;
 
+  /// Noun genders: blue for masculine, pink for feminine (deeper in light mode for contrast).
+  static Color get masculine => isDark ? const Color(0xFF7DB4F5) : const Color(0xFF2F6FCF);
+  static Color get feminine => isDark ? const Color(0xFFF290BE) : const Color(0xFFC63F7C);
+
   /// Base colour for faint overlays and borders (light text in dark mode, ink in light mode).
   static Color get fg => _p.textPrimary;
 

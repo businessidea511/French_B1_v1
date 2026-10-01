@@ -10,8 +10,11 @@ import 'services/language_provider.dart';
 import 'services/lessons_provider.dart';
 import 'services/global_scroll_manager.dart';
 import 'services/admin_auth.dart';
+import 'services/deepseek_service.dart';
 import 'services/progress_service.dart';
+import 'services/translation_store.dart';
 import 'widgets/motion.dart';
+import 'widgets/translation_banner.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -51,7 +54,7 @@ void main() async {
 
   // Reload an admin session saved by an earlier login (expires after 12h)
   await AdminAuth.restore();
-  await ProgressService.instance.load();
+  await Future.wait([ProgressService.instance.load(), DeepSeekService.warmCache()]);
   final themeController = ThemeController();
   await themeController.load();
   AppTheme.isDark = themeController.resolveDark(
@@ -175,7 +178,7 @@ class FrenchB1App extends StatelessWidget {
                           }
                         },
                       },
-                      child: ThemeSync(child: AuroraBackground(child: child!)),
+                      child: ThemeSync(child: AuroraBackground(child: TranslationBanner(child: child!))),
                     ),
                   ),
                 );
@@ -200,10 +203,19 @@ class ThemeSync extends StatefulWidget {
 }
 
 class _ThemeSyncState extends State<ThemeSync> {
+  AppLanguage? _language;
+
   @override
   Widget build(BuildContext context) {
     final dark = Theme.of(context).brightness == Brightness.dark;
-    if (dark != AppTheme.isDark) {
+    // Interface text (tr) and colours are read without listening, so a new
+    // theme or language rebuilds every screen once.
+    final language = context.watch<LanguageProvider>().currentLanguage;
+    final languageChanged = _language != null && _language != language;
+    _language = language;
+    // Shared translations of this language: one download, then instant everywhere.
+    TranslationStore.loadLanguage(language.code);
+    if (dark != AppTheme.isDark || languageChanged) {
       AppTheme.isDark = dark;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;

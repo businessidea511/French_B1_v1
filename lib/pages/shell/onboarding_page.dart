@@ -5,6 +5,7 @@ import '../../services/progress_service.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/motion.dart';
 import '../../widgets/ui_kit.dart';
+import '../../services/ui_strings.dart';
 
 /// First start: welcome, language of the explanations, daily goal.
 class OnboardingPage extends StatefulWidget {
@@ -96,7 +97,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
               textAlign: TextAlign.center, style: TextStyle(color: AppTheme.textSecondary, fontSize: 16, height: 1.5)),
         ),
         const SizedBox(height: 40),
-        Entrance(index: 4, child: GlowButton(label: 'Commencer', icon: Icons.arrow_forward_rounded, onPressed: () => _go(1))),
+        Entrance(index: 4, child: GlowButton(label: tr(context, 'Start'), icon: Icons.arrow_forward_rounded, onPressed: () => _go(1))),
       ]);
 
   Widget _language() {
@@ -146,11 +147,11 @@ class _OnboardingPageState extends State<OnboardingPage> {
   }
 
   Widget _goal() {
-    const goals = [(10, '🌱', 'Détente', '5 min'), (30, '🔥', 'Régulier', '15 min'), (60, '🚀', 'Intensif', '30 min')];
+    final goals = [(10, '🌱', tr(context, 'Relaxed'), '5 min'), (30, '🔥', tr(context, 'Regular'), '15 min'), (60, '🚀', tr(context, 'Intensive'), '30 min')];
     return _centered([
       const Text('🎯', textAlign: TextAlign.center, style: TextStyle(fontSize: 56)),
       const SizedBox(height: 12),
-      Text('Ton objectif chaque jour ?',
+      Text(tr(context, 'Your daily goal?'),
           textAlign: TextAlign.center, style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: AppTheme.textPrimary)),
       const SizedBox(height: 20),
       for (final (i, (xp, emoji, label, time)) in goals.indexed)

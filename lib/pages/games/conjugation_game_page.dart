@@ -9,6 +9,7 @@ import '../../theme/app_theme.dart';
 import '../../widgets/motion.dart';
 import '../../widgets/translated_text.dart';
 import '../../widgets/ui_kit.dart';
+import '../../services/ui_strings.dart';
 
 /// Timed conjugation game: 10 verbs, 20 seconds each, combos and records.
 class ConjugationGamePage extends StatefulWidget {
@@ -128,7 +129,7 @@ class _ConjugationGamePageState extends State<ConjugationGamePage> with SingleTi
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('🎯 Jeu de conjugaison')),
+      appBar: AppBar(title: Text('🎯 ${tr(context, 'Conjugation game')}')),
       body: AnimatedSwitcher(
         duration: const Duration(milliseconds: 400),
         child: switch (_phase) {
@@ -152,7 +153,7 @@ class _ConjugationGamePageState extends State<ConjugationGamePage> with SingleTi
           textAlign: TextAlign.center,
           style: TextStyle(color: AppTheme.textSecondary, fontSize: 15, height: 1.4),
         ),
-        const SectionTitle('Niveau'),
+        SectionTitle(tr(context, 'Level')),
         for (final level in ConjugationQuiz.levels.keys)
           Padding(
             padding: const EdgeInsets.only(bottom: 10),
@@ -170,7 +171,7 @@ class _ConjugationGamePageState extends State<ConjugationGamePage> with SingleTi
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(level, style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
+                          Text(UiStrings.level(context, level), style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
                           Text(ConjugationQuiz.levels[level]!.map((t) => t.$1 == 'Indicatif' ? t.$2 : '${t.$1} ${t.$2.toLowerCase()}').join(' · '),
                               style: TextStyle(color: AppTheme.textTertiary, fontSize: 12.5)),
                         ],
@@ -184,7 +185,7 @@ class _ConjugationGamePageState extends State<ConjugationGamePage> with SingleTi
             ),
           ),
         const SizedBox(height: 16),
-        GlowButton(label: 'Jouer !', icon: Icons.play_arrow_rounded, onPressed: _start,
+        GlowButton(label: tr(context, 'Play!'), icon: Icons.play_arrow_rounded, onPressed: _start,
             colors: [AppTheme.warning, Color(0xFFF97316)]),
       ],
     );
@@ -236,9 +237,9 @@ class _ConjugationGamePageState extends State<ConjugationGamePage> with SingleTi
         if (!feedback) ...[
           AccentBar(controller: _input, focusNode: _focus),
           const SizedBox(height: 16),
-          GlowButton(label: 'Valider', icon: Icons.check_rounded, onPressed: () => _submit()),
+          GlowButton(label: tr(context, 'Check'), icon: Icons.check_rounded, onPressed: () => _submit()),
         ] else if (_result != AnswerResult.correct)
-          GlowButton(label: _round >= _rounds ? 'Résultats' : 'Suivant', icon: Icons.arrow_forward_rounded, onPressed: _next),
+          GlowButton(label: tr(context, _round >= _rounds ? 'Results' : 'Next'), icon: Icons.arrow_forward_rounded, onPressed: _next),
       ],
     );
   }
@@ -298,7 +299,7 @@ class _ConjugationGamePageState extends State<ConjugationGamePage> with SingleTi
                 style: const TextStyle(fontSize: 48)),
             const SizedBox(height: 8),
             if (r == AnswerResult.accents)
-              Text('Presque ! Attention aux accents.', style: TextStyle(color: AppTheme.warning, fontWeight: FontWeight.bold)),
+              Text(tr(context, 'Almost! Watch the accents.'), style: TextStyle(color: AppTheme.warning, fontWeight: FontWeight.bold)),
             if (r == AnswerResult.wrong && _input.text.trim().isNotEmpty)
               Text('${_q.prefix} ${_input.text.trim()}',
                   style: TextStyle(color: AppTheme.error, decoration: TextDecoration.lineThrough, fontSize: 18)),
@@ -328,11 +329,11 @@ class _ConjugationGamePageState extends State<ConjugationGamePage> with SingleTi
               style: TextStyle(fontSize: 40, fontWeight: FontWeight.w900, color: AppTheme.warning)),
         ),
         Center(
-          child: Text('$_correct / $_rounds · ${_newRecord ? 'Nouveau record !' : 'Record : ${ProgressService.instance.recordOf(_recordKey)}'}',
+          child: Text('$_correct / $_rounds · ${_newRecord ? tr(context, 'New record!') : tr(context, 'Record: {n}', {'n': ProgressService.instance.recordOf(_recordKey)})}',
               style: TextStyle(color: AppTheme.textSecondary, fontSize: 16)),
         ),
         if (_misses.isNotEmpty) ...[
-          const SectionTitle('À revoir'),
+          SectionTitle(tr(context, 'To review')),
           for (final (q, typed) in _misses)
             Padding(
               padding: const EdgeInsets.only(bottom: 8),
@@ -365,10 +366,10 @@ class _ConjugationGamePageState extends State<ConjugationGamePage> with SingleTi
             ),
         ],
         const SizedBox(height: 20),
-        GlowButton(label: 'Rejouer', icon: Icons.replay_rounded, onPressed: _start,
+        GlowButton(label: tr(context, 'Play again'), icon: Icons.replay_rounded, onPressed: _start,
             colors: [AppTheme.warning, Color(0xFFF97316)]),
         const SizedBox(height: 10),
-        TextButton(onPressed: () => setState(() => _phase = _Phase.setup), child: const Text('Changer de niveau')),
+        TextButton(onPressed: () => setState(() => _phase = _Phase.setup), child: Text(tr(context, 'Change level'))),
       ],
     );
   }

@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'dart:math';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 
@@ -11,13 +13,25 @@ class AuroraBackground extends StatefulWidget {
   State<AuroraBackground> createState() => _AuroraBackgroundState();
 }
 
-class _AuroraBackgroundState extends State<AuroraBackground> with SingleTickerProviderStateMixin {
-  late final AnimationController _controller =
-      AnimationController(vsync: this, duration: const Duration(seconds: 40))..repeat();
+class _AuroraBackgroundState extends State<AuroraBackground> {
+  // The motion is very slow (one loop in 40 s), so 20 frames a second look the
+  // same as 60 and cost a third: lighter on phones and their batteries.
+  final _progress = ValueNotifier<double>(0);
+  final _clock = Stopwatch()..start();
+  late final Timer _timer = Timer.periodic(const Duration(milliseconds: 50), (_) {
+    _progress.value = (_clock.elapsedMilliseconds % 40000) / 40000;
+  });
+
+  @override
+  void initState() {
+    super.initState();
+    _timer;
+  }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _timer.cancel();
+    _progress.dispose();
     super.dispose();
   }
 
@@ -28,7 +42,7 @@ class _AuroraBackgroundState extends State<AuroraBackground> with SingleTickerPr
       children: [
         Positioned.fill(
           child: RepaintBoundary(
-            child: CustomPaint(painter: _AuroraPainter(reduceMotion ? const AlwaysStoppedAnimation(0.2) : _controller)),
+            child: CustomPaint(painter: _AuroraPainter(reduceMotion ? const AlwaysStoppedAnimation(0.2) : _progress)),
           ),
         ),
         widget.child,
@@ -38,7 +52,7 @@ class _AuroraBackgroundState extends State<AuroraBackground> with SingleTickerPr
 }
 
 class _AuroraPainter extends CustomPainter {
-  final Animation<double> t;
+  final ValueListenable<double> t;
   _AuroraPainter(this.t) : super(repaint: t);
 
   // A getter, so the colours follow the light/dark mode.

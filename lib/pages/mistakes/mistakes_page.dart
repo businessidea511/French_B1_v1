@@ -10,6 +10,7 @@ import '../../widgets/motion.dart';
 import '../../widgets/translated_text.dart';
 import '../../widgets/ui_kit.dart';
 import '../exercises/exercises_page.dart';
+import '../../services/ui_strings.dart';
 
 /// Notebook of every mistake made in the app, with a quiz to fix them and AI
 /// exercises on the learner's weak points.
@@ -30,7 +31,7 @@ class MistakesPage extends StatelessWidget {
     final mistakes = progress.mistakes;
     final quizzable = mistakes.where((m) => m['source'] != 'Dictée').toList();
     return Scaffold(
-      appBar: AppBar(title: const Text('📒 Mes erreurs')),
+      appBar: AppBar(title: Text('📒 ${tr(context, 'My mistakes')}')),
       body: PageBody(
         children: [
           TranslatedText(
@@ -45,7 +46,7 @@ class MistakesPage extends StatelessWidget {
                 children: [
                   Floating(child: Text('🌈', style: TextStyle(fontSize: 70))),
                   SizedBox(height: 12),
-                  Text('Aucune erreur pour le moment !',
+                  Text(tr(context, 'No mistakes yet!'),
                       style: TextStyle(color: AppTheme.textPrimary, fontSize: 18, fontWeight: FontWeight.bold)),
                 ],
               ),
@@ -53,14 +54,14 @@ class MistakesPage extends StatelessWidget {
           else ...[
             if (quizzable.isNotEmpty)
               GlowButton(
-                label: 'Corriger mes erreurs (${quizzable.length > 15 ? 15 : quizzable.length})',
+                label: tr(context, 'Fix my mistakes ({n})', {'n': quizzable.length > 15 ? 15 : quizzable.length}),
                 icon: Icons.fact_check_rounded,
                 onPressed: () => Navigator.push(context,
                     MaterialPageRoute(builder: (_) => _MistakeQuizPage(mistakes: quizzable.take(15).toList()))),
               ),
             const SizedBox(height: 10),
             GlowButton(
-              label: 'Nouveaux exercices sur mes points faibles',
+              label: tr(context, 'New exercises on my weak points'),
               icon: Icons.auto_awesome,
               colors: [AppTheme.secondary, AppTheme.accent],
               onPressed: () => Navigator.push(
@@ -124,12 +125,12 @@ class _MistakeCard extends StatelessWidget {
           Column(
             children: [
               IconButton(
-                tooltip: 'Écouter',
+                tooltip: tr(context, 'Listen'),
                 icon: Icon(Icons.volume_up_rounded, color: AppTheme.primary, size: 20),
                 onPressed: () => TtsService.instance.speak('${mistake['right']}'),
               ),
               IconButton(
-                tooltip: 'Je le sais maintenant',
+                tooltip: tr(context, 'I know it now'),
                 icon: Icon(Icons.check_circle_outline_rounded, color: AppTheme.success, size: 22),
                 onPressed: () => context.read<ProgressService>().removeMistake('${mistake['id']}'),
               ),
@@ -162,7 +163,7 @@ class _MistakeQuizPage extends StatelessWidget {
     ];
     final block = ExerciseBlock.fromJson({'title': 'Mes erreurs', 'instruction': '', 'items': items});
     return Scaffold(
-      appBar: AppBar(title: const Text('📒 Corriger mes erreurs')),
+      appBar: AppBar(title: Text('📒 ${tr(context, 'Fix my mistakes')}')),
       body: PageBody(children: [if (block != null) block]),
     );
   }
@@ -210,7 +211,7 @@ class _WeakPointsPageState extends State<_WeakPointsPage> {
   Widget build(BuildContext context) {
     final block = _items == null ? null : ExerciseBlock.fromJson({'title': 'Mes points faibles', 'instruction': '', 'items': _items});
     return Scaffold(
-      appBar: AppBar(title: const Text('✨ Mes points faibles')),
+      appBar: AppBar(title: Text('✨ ${tr(context, 'My weak points')}')),
       body: PageBody(
         children: [
           if (_error != null)

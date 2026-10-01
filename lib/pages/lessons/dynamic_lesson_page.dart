@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../widgets/lesson_template.dart';
+import 'lesson_parts.dart';
 import '../../widgets/exercise_block.dart';
 import '../../widgets/grammar_cards.dart';
 import '../../widgets/translated_text.dart';
@@ -17,7 +18,21 @@ class DynamicLessonPage extends StatelessWidget {
   Widget build(BuildContext context) {
     // Listen to language changes so the page rebuilds when user switches language
     Provider.of<LanguageProvider>(context);
-    
+
+    // Long lessons: an overview with parts, each part on its own page.
+    final split = LessonParts.split(topic.content, clean);
+    if (split != null) {
+      return LessonTemplate(
+        title: topic.title,
+        icon: topic.icon,
+        topic: topic.title,
+        children: [
+          ..._buildFromWidgetFormat(split.intro),
+          LessonPartsList(topic: topic, parts: split.parts, buildPart: _buildFromWidgetFormat),
+        ],
+      );
+    }
+
     return LessonTemplate(
       title: topic.title,
       icon: topic.icon,
@@ -55,13 +70,13 @@ class DynamicLessonPage extends StatelessWidget {
       final rawContent = (w['content'] ?? '').toString();
 
       // Skip any preamble the AI might have slipped in
-      if (_isPreamble(rawContent) || _isPreamble(w['title']?.toString() ?? '')) {
+      if (isPreamble(rawContent) || isPreamble(w['title']?.toString() ?? '')) {
         continue;
       }
 
       switch (type) {
         case 'section_title':
-          final title = _clean(w['title'] ?? '');
+          final title = clean(w['title'] ?? '');
           final emoji = (w['emoji'] ?? '📖').toString();
           if (title.isEmpty) break;
           // SectionTitle uses plain Text, so we wrap with TranslatedText row
@@ -84,7 +99,7 @@ class DynamicLessonPage extends StatelessWidget {
           break;
 
         case 'text':
-          final text = _clean(rawContent);
+          final text = clean(rawContent);
           if (text.isEmpty) break;
           // Use TranslatedText so it auto-translates when language changes
           result.add(
@@ -99,8 +114,8 @@ class DynamicLessonPage extends StatelessWidget {
           break;
 
         case 'example':
-          final french = _clean(w['french'] ?? '');
-          final translation = _clean(w['translation'] ?? '');
+          final french = clean(w['french'] ?? '');
+          final translation = clean(w['translation'] ?? '');
           if (french.isEmpty) break;
           // ExampleBox already uses TranslatedText for 'english' param internally
           result.add(ExampleBox(
@@ -110,8 +125,8 @@ class DynamicLessonPage extends StatelessWidget {
           break;
 
         case 'french_tipbox':
-          final title = _clean(w['title'] ?? 'Vocabulary');
-          final frenchText = _clean(w['frenchText'] ?? '');
+          final title = clean(w['title'] ?? 'Vocabulary');
+          final frenchText = clean(w['frenchText'] ?? '');
           final color = _colorFromString(w['color']?.toString() ?? 'blue');
           final icon = _iconFromColor(w['color']?.toString() ?? 'blue');
           if (frenchText.isEmpty) break;
@@ -123,8 +138,8 @@ class DynamicLessonPage extends StatelessWidget {
           ));
           break;
         case 'tipbox':
-          final title = _clean(w['title'] ?? 'Note');
-          final content = _clean(rawContent);
+          final title = clean(w['title'] ?? 'Note');
+          final content = clean(rawContent);
           final color = _colorFromString(w['color']?.toString() ?? 'blue');
           final icon = _iconFromColor(w['color']?.toString() ?? 'blue');
           if (content.isEmpty) break;
@@ -163,7 +178,7 @@ class DynamicLessonPage extends StatelessWidget {
 
         default:
           // Fallback: render as translated text
-          final text = _clean(rawContent);
+          final text = clean(rawContent);
           if (text.isNotEmpty) {
             result.add(TranslatedText(text,
                 style: TextStyle(fontSize: 16, height: 1.6, color: AppTheme.textPrimary)));
@@ -185,14 +200,14 @@ class DynamicLessonPage extends StatelessWidget {
     ];
 
     final valid = sections.where((s) {
-      final t = _clean((s['title'] ?? '').toString());
+      final t = clean((s['title'] ?? '').toString());
       final c = (s['content'] ?? '').toString();
-      return !_isPreamble(t) && !_isPreamble(c.split('\n').take(2).join(' '));
+      return !isPreamble(t) && !isPreamble(c.split('\n').take(2).join(' '));
     }).toList();
 
     for (int i = 0; i < valid.length; i++) {
-      final title = _clean(valid[i]['title'] ?? 'Section ${i + 1}');
-      final content = _clean(valid[i]['content'] ?? '');
+      final title = clean(valid[i]['title'] ?? 'Section ${i + 1}');
+      final content = clean(valid[i]['content'] ?? '');
       final color = colors[i % colors.length];
       final emoji = _emojiFor(title);
 
@@ -215,7 +230,7 @@ class DynamicLessonPage extends StatelessWidget {
 
   // ─── Helpers ──────────────────────────────────────────────────────────────
 
-  bool _isPreamble(String text) {
+  static bool isPreamble(String text) {
     final t = text.toLowerCase().trim();
     return t.contains('here is') ||
         t.contains('following your') ||
@@ -226,7 +241,7 @@ class DynamicLessonPage extends StatelessWidget {
   }
 
   /// Strips markdown symbols and ANY preamble line from text
-  String _clean(String text) {
+  static String clean(String text) {
     if (text.isEmpty) return '';
     
     // Split into lines, filter out preamble lines, rejoin

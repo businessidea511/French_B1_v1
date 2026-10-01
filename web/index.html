@@ -78,6 +78,13 @@
   <script src="flutter_bootstrap.js" async></script>
 
   <script>
+    // Offline support: keeps a copy of the app so it opens without internet.
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js').catch((e) => console.warn('Offline mode unavailable', e));
+    }
+  </script>
+
+  <script>
     // PWA Install Logic
     window.deferredPrompt = null;
     window.addEventListener('beforeinstallprompt', (e) => {

@@ -63,7 +63,7 @@ void main() {
 
     await tester.tap(find.text('Show answer'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Je savais'));
+    await tester.tap(find.text('I knew it'));
     await tester.pumpAndSettle();
     expect(find.text('2 / 20'), findsOneWidget);
   });
@@ -71,7 +71,7 @@ void main() {
   testWidgets('a verb in the vocabulary opens its conjugation', (tester) async {
     final verbs = vocabularySection.categories.firstWhere((c) => c.id == 'verbes');
     await _pump(tester, WordCategoryPage(category: verbs));
-    await tester.tap(find.byTooltip('Conjugaison').first);
+    await tester.tap(find.byTooltip('Conjugation').first);
     await tester.pumpAndSettle();
     expect(find.byType(VerbsPage), findsOneWidget);
     expect(find.text('je suis'), findsOneWidget);

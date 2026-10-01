@@ -9,6 +9,7 @@ import '../../services/word_decks.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/translated_text.dart';
 import 'word_category_page.dart';
+import '../../services/ui_strings.dart';
 
 /// Home of a word section (Vocabulary, Expressions, Street French): its
 /// categories grouped by theme, and a search over every word.
@@ -122,7 +123,7 @@ class _WordSectionPageState extends State<WordSectionPage> {
                   TranslatedText(section.intro,
                       style: TextStyle(color: AppTheme.textSecondary, fontSize: 15, height: 1.45)),
                   const SizedBox(height: 6),
-                  Text('${section.categories.length} thèmes · ${section.wordCount} mots et expressions',
+                  Text(tr(context, '{c} themes · {w} words and expressions', {'c': section.categories.length, 'w': section.wordCount}),
                       style: TextStyle(color: AppTheme.textTertiary, fontSize: 13)),
                   const SizedBox(height: 16),
                   TextField(
@@ -132,7 +133,7 @@ class _WordSectionPageState extends State<WordSectionPage> {
                       _onSearch(v);
                     },
                     decoration: InputDecoration(
-                      hintText: 'Search in French or English…',
+                      hintText: tr(context, 'Search in French or English…'),
                       prefixIcon: const Icon(Icons.search),
                       suffixIcon: searching
                           ? IconButton(
@@ -173,7 +174,7 @@ class _WordSectionPageState extends State<WordSectionPage> {
       return [
         Padding(
           padding: EdgeInsets.all(24),
-          child: Text('No word found.', textAlign: TextAlign.center, style: TextStyle(color: AppTheme.textTertiary)),
+          child: Text(tr(context, 'No word found.'), textAlign: TextAlign.center, style: TextStyle(color: AppTheme.textTertiary)),
         ),
       ];
     }

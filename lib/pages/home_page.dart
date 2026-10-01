@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../services/language_provider.dart';
 import '../services/progress_service.dart';
 import '../theme/app_theme.dart';
+import 'games/duel_page.dart';
 import 'shell/hub_tabs.dart';
 import 'shell/me_tab.dart';
 import 'shell/onboarding_page.dart';
@@ -38,10 +39,24 @@ class _HomePageState extends State<HomePage> {
         _ => const MeTab(),
       };
 
+  static bool _duelLinkOpened = false;
+
+  /// Invitation links (…/?duel=ABC123) open the duel with the code filled in.
+  void _openDuelLink() {
+    if (_duelLinkOpened) return;
+    _duelLinkOpened = true;
+    final code = DuelPage.codeFromLink();
+    if (code == null) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) Navigator.push(context, MaterialPageRoute(builder: (_) => DuelPage(initialCode: code)));
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final progress = context.watch<ProgressService>();
     if (!progress.onboarded) return const OnboardingPage();
+    _openDuelLink();
     final lp = context.watch<LanguageProvider>();
     final badge = progress.dueCount;
 

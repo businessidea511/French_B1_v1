@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import '../services/tts_service.dart';
 import '../theme/app_theme.dart';
+import 'gender_text.dart';
 import 'translated_text.dart';
+import '../services/ui_strings.dart';
 
 /// Small speaker button that reads French text aloud.
 class SpeakButton extends StatelessWidget {
@@ -13,7 +15,7 @@ class SpeakButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return IconButton(
-      tooltip: 'Écouter',
+      tooltip: tr(context, 'Listen'),
       visualDensity: VisualDensity.compact,
       icon: Icon(Icons.volume_up_rounded, color: color ?? AppTheme.primary, size: 22),
       onPressed: () => TtsService.instance.speak(french),
@@ -76,7 +78,7 @@ class ExpressionCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('$_flags  $_where · ${register == 'familier' ? 'familier (street language)' : 'courant'}',
+          Text('$_flags  $_where · ${tr(context, register == 'familier' ? 'informal (street language)' : 'standard')}',
               style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.w600)),
           const SizedBox(height: 6),
           Directionality(
@@ -96,7 +98,7 @@ class ExpressionCard extends StatelessWidget {
             const SizedBox(height: 8),
             Directionality(
               textDirection: TextDirection.ltr,
-              child: Text('💬 $example',
+              child: GenderText('💬 $example',
                   style: TextStyle(color: AppTheme.textPrimary, fontStyle: FontStyle.italic, height: 1.5)),
             ),
           ],

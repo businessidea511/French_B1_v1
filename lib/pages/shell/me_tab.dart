@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../services/admin_auth.dart';
+import '../../services/lessons_provider.dart';
+import '../../services/translation_store.dart';
+import '../../services/word_decks.dart';
 import '../../services/global_scroll_manager.dart';
 import '../../services/language_provider.dart';
 import '../../services/progress_service.dart';
@@ -12,6 +15,7 @@ import '../../widgets/ui_kit.dart';
 import '../admin/admin_ai_chat_page.dart';
 import '../mistakes/mistakes_page.dart';
 import 'hub_tabs.dart';
+import '../../services/ui_strings.dart';
 
 /// Bottom sheet to choose the language of the explanations.
 void showLanguageSheet(BuildContext context) {
@@ -85,14 +89,42 @@ class _MeTabState extends State<MeTab> {
       showDialog(
         context: context,
         builder: (ctx) => AlertDialog(
-          title: const Text('Install on iPhone'),
-          content: const Text('1. Tap the "Share" button in Safari.\n2. Choose "Add to Home Screen".\n3. Tap "Add".'),
+          title: Text(tr(context, 'Install on iPhone')),
+          content: Text(tr(context, 'IPHONE_STEPS')),
           actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('OK'))],
         ),
       );
       return;
     }
     if (await PWAService.installPWA() && mounted) setState(() => _canInstall = false);
+  }
+
+  /// Admin: translates all lessons, grammar and word lists into every language
+  /// in the background (texts already translated are skipped).
+  Future<void> _translateEverything() async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('🌍 Translate everything'),
+        content: const Text(
+            'Every lesson, grammar topic and word list will be translated into the 7 languages and saved for all users. '
+            'Texts already translated are skipped. It runs in the background (a banner shows the progress) and can take a while the first time — keep the app open.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(tr(context, 'Back'))),
+          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: Text(tr(context, 'Start'))),
+        ],
+      ),
+    );
+    if (ok != true || !mounted) return;
+    final lessons = context.read<LessonsProvider>();
+    final texts = <String>[
+      for (final l in lessons.allLessons) ...TranslationStore.lessonTexts(l.title, l.content),
+      for (final g in lessons.allGrammar) ...TranslationStore.lessonTexts(g.title, g.content),
+      for (final section in WordDecks.sections)
+        for (final category in section.categories)
+          for (final w in category.items) ...[w.en, if (w.note.isNotEmpty) w.note],
+    ];
+    TranslationStore.pretranslateInBackground('PolyLearn', texts, adminToken: AdminAuth.token);
   }
 
   void _openAdmin() {
@@ -184,7 +216,7 @@ class _MeTabState extends State<MeTab> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Niveau $level', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: AppTheme.textPrimary)),
+                        Text(tr(context, 'Level {n}', {'n': level}), style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: AppTheme.textPrimary)),
                         const SizedBox(height: 8),
                         ClipRRect(
                           borderRadius: BorderRadius.circular(8),
@@ -293,7 +325,7 @@ class _MeTabState extends State<MeTab> {
             spacing: 10,
             runSpacing: 10,
             children: [
-              for (final (xp, label) in [(10, '🌱 Détente'), (30, '🔥 Régulier'), (60, '🚀 Intensif')])
+              for (final (xp, label) in [(10, '🌱 ${tr(context, 'Relaxed')}'), (30, '🔥 ${tr(context, 'Regular')}'), (60, '🚀 ${tr(context, 'Intensive')}')])
                 ChoiceChip(
                   label: Text('$label · $xp XP'),
                   selected: p.dailyGoal == xp,
@@ -312,10 +344,10 @@ class _MeTabState extends State<MeTab> {
                 const Expanded(child: TranslatedText('Appearance')),
                 SegmentedButton<ThemeMode>(
                   showSelectedIcon: false,
-                  segments: const [
-                    ButtonSegment(value: ThemeMode.system, label: Text('Auto'), icon: Icon(Icons.brightness_auto_rounded)),
-                    ButtonSegment(value: ThemeMode.light, label: Text('☀️'), tooltip: 'Clair'),
-                    ButtonSegment(value: ThemeMode.dark, label: Text('🌙'), tooltip: 'Sombre'),
+                  segments: [
+                    const ButtonSegment(value: ThemeMode.system, label: Text('Auto'), icon: Icon(Icons.brightness_auto_rounded)),
+                    ButtonSegment(value: ThemeMode.light, label: Text('☀️'), tooltip: tr(context, 'Light')),
+                    ButtonSegment(value: ThemeMode.dark, label: Text('🌙'), tooltip: tr(context, 'Dark')),
                   ],
                   selected: {context.watch<ThemeController>().mode},
                   onSelectionChanged: (s) => context.read<ThemeController>().setMode(s.first),
@@ -351,6 +383,13 @@ class _MeTabState extends State<MeTab> {
                   title: Text(lp.translate('admin_ai')),
                   onTap: _openAdmin,
                 ),
+                if (AdminAuth.isLoggedIn)
+                  ListTile(
+                    leading: Icon(Icons.translate_rounded, color: AppTheme.accent),
+                    title: const Text('🌍 Translate everything now'),
+                    subtitle: const Text('All lessons, grammar and word lists → 7 languages, saved for every user'),
+                    onTap: _translateEverything,
+                  ),
               ],
             ),
           ),

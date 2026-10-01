@@ -21,6 +21,7 @@ import '../missions/missions_page.dart';
 import '../mistakes/mistakes_page.dart';
 import '../roleplay/roleplay_page.dart';
 import 'hub_tabs.dart';
+import '../../services/ui_strings.dart';
 
 /// The home tab: daily goal, streak, reviews, word of the day, mission and
 /// quick games.
@@ -166,7 +167,7 @@ class _TodayTabState extends State<TodayTab> {
                           children: [
                             Text(_story!.title,
                                 style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
-                            Text('Chapitre ${_story!.chapters.length + 1} · « ${_story!.teaser} »',
+                            Text('${tr(context, 'Chapter {n}', {'n': _story!.chapters.length + 1})} · « ${_story!.teaser} »',
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
                                 style: TextStyle(color: AppTheme.textSecondary, fontStyle: FontStyle.italic)),
@@ -188,7 +189,7 @@ class _TodayTabState extends State<TodayTab> {
                 color: AppTheme.secondary, onTap: () => openPage(context, const RoleplayPage())),
             FeatureTile(emoji: '🎧', title: lp.translate('dictee'), subtitle: 'Listen and write',
                 color: AppTheme.primary, onTap: () => openPage(context, const DicteePage())),
-            FeatureTile(emoji: '⚔️', title: lp.translate('duel'), subtitle: 'Challenge your classmate',
+            FeatureTile(emoji: '⚔️', title: lp.translate('duel'), subtitle: 'Challenge your friends or your class',
                 color: const Color(0xFFF97316), onTap: () => openPage(context, const DuelPage())),
           ]),
         ],
@@ -323,7 +324,7 @@ class _WordOfDayCardState extends State<_WordOfDayCard> {
                     icon: Icon(Icons.volume_up_rounded, color: AppTheme.onColor),
                     onPressed: () => TtsService.instance.speak(w.fr),
                   ),
-                  Text('Touche pour retourner', style: TextStyle(color: AppTheme.onColor.withValues(alpha: 0.6))),
+                  Text(tr(context, 'Tap to flip'), style: TextStyle(color: AppTheme.onColor.withValues(alpha: 0.6))),
                 ],
               ),
             ],

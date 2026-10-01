@@ -7,6 +7,7 @@ import '../../theme/app_theme.dart';
 import '../../widgets/motion.dart';
 import '../../widgets/translated_text.dart';
 import '../../widgets/ui_kit.dart';
+import '../../services/ui_strings.dart';
 
 /// Dictée: listen to a French sentence and write it; every word is checked.
 class DicteePage extends StatefulWidget {
@@ -87,7 +88,7 @@ class _DicteePageState extends State<DicteePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('🎧 Dictée')),
+      appBar: AppBar(title: Text('🎧 ${tr(context, 'Dictation')}')),
       body: AnimatedSwitcher(
         duration: const Duration(milliseconds: 400),
         child: _level == null
@@ -111,7 +112,7 @@ class _DicteePageState extends State<DicteePage> {
           textAlign: TextAlign.center,
           style: TextStyle(color: AppTheme.textSecondary, fontSize: 15, height: 1.4),
         ),
-        const SectionTitle('Niveau'),
+        SectionTitle(tr(context, 'Level')),
         for (final (i, level) in Dictee.levels.indexed)
           Padding(
             padding: const EdgeInsets.only(bottom: 10),
@@ -131,8 +132,8 @@ class _DicteePageState extends State<DicteePage> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(level, style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
-                            Text(['≤ 5 mots', '6 – 9 mots', '10 mots et +'][i],
+                            Text(UiStrings.level(context, level), style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
+                            Text(tr(context, ['up to 5 words', '6 – 9 words', '10+ words'][i]),
                                 style: TextStyle(color: AppTheme.textTertiary, fontSize: 13)),
                           ],
                         ),
@@ -157,16 +158,16 @@ class _DicteePageState extends State<DicteePage> {
             Text('${_index + 1} / ${_sentences.length}',
                 style: TextStyle(color: AppTheme.textTertiary, fontWeight: FontWeight.bold)),
             const Spacer(),
-            if (_scores.isNotEmpty) Text('Moyenne : $_average %', style: TextStyle(color: AppTheme.warning)),
+            if (_scores.isNotEmpty) Text(tr(context, 'Average: {n} %', {'n': _average}), style: TextStyle(color: AppTheme.warning)),
           ],
         ),
         const SizedBox(height: 18),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            _soundButton('🔊', 'Écouter', () => _play()),
+            _soundButton('🔊', tr(context, 'Listen'), () => _play()),
             const SizedBox(width: 18),
-            _soundButton('🐢', 'Lentement', () => _play(slow: true)),
+            _soundButton('🐢', tr(context, 'Slowly'), () => _play(slow: true)),
           ],
         ),
         const SizedBox(height: 22),
@@ -180,19 +181,19 @@ class _DicteePageState extends State<DicteePage> {
           enableSuggestions: false,
           textDirection: TextDirection.ltr,
           style: TextStyle(fontSize: 19, color: AppTheme.textPrimary),
-          decoration: const InputDecoration(hintText: 'Écris la phrase ici…'),
+          decoration: InputDecoration(hintText: tr(context, 'Write the sentence here…')),
           onSubmitted: (_) => _check(),
         ),
         const SizedBox(height: 12),
         if (!_checked) ...[
           AccentBar(controller: _input, focusNode: _focus),
           const SizedBox(height: 16),
-          GlowButton(label: 'Corriger', icon: Icons.spellcheck_rounded, onPressed: _check),
+          GlowButton(label: tr(context, 'Correct it'), icon: Icons.spellcheck_rounded, onPressed: _check),
         ] else ...[
           _buildCorrection(),
           const SizedBox(height: 16),
           GlowButton(
-            label: _index + 1 >= _sentences.length ? 'Résultats' : 'Phrase suivante',
+            label: tr(context, _index + 1 >= _sentences.length ? 'Results' : 'Next sentence'),
             icon: Icons.arrow_forward_rounded,
             onPressed: _next,
           ),
@@ -268,7 +269,7 @@ class _DicteePageState extends State<DicteePage> {
               ),
             ),
             const SizedBox(height: 10),
-            Text('🟢 juste   🟡 accent   🔴 faux ou oublié',
+            Text(tr(context, 'DICTEE_KEY'),
                 style: TextStyle(color: AppTheme.textTertiary, fontSize: 12)),
           ],
         ),
@@ -285,11 +286,11 @@ class _DicteePageState extends State<DicteePage> {
         Center(
           child: Text('$_average %', style: TextStyle(fontSize: 46, fontWeight: FontWeight.w900, color: AppTheme.warning)),
         ),
-        Center(child: Text('de réussite', style: TextStyle(color: AppTheme.textSecondary))),
+        Center(child: Text(tr(context, 'success'), style: TextStyle(color: AppTheme.textSecondary))),
         const SizedBox(height: 24),
-        GlowButton(label: 'Encore une dictée', icon: Icons.replay_rounded, onPressed: () => _start(_level!)),
+        GlowButton(label: tr(context, 'Another dictation'), icon: Icons.replay_rounded, onPressed: () => _start(_level!)),
         const SizedBox(height: 10),
-        TextButton(onPressed: () => setState(() => _level = null), child: const Text('Changer de niveau')),
+        TextButton(onPressed: () => setState(() => _level = null), child: Text(tr(context, 'Change level'))),
       ],
     );
   }

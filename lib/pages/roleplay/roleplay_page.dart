@@ -4,11 +4,13 @@ import '../../data/roleplay_scenarios.dart';
 import '../../services/deepseek_service.dart';
 import '../../services/language_provider.dart';
 import '../../services/progress_service.dart';
+import '../../services/speech_input.dart';
 import '../../services/tts_service.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/motion.dart';
 import '../../widgets/translated_text.dart';
 import '../../widgets/ui_kit.dart';
+import '../../services/ui_strings.dart';
 
 /// Choose a real Belgian situation to act out with the AI.
 class RoleplayPage extends StatelessWidget {
@@ -17,7 +19,7 @@ class RoleplayPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('🎭 Jeu de rôle')),
+      appBar: AppBar(title: Text('🎭 ${tr(context, 'Role-play')}')),
       body: PageBody(
         children: [
           TranslatedText(
@@ -75,6 +77,9 @@ class _RoleplayChatPageState extends State<RoleplayChatPage> {
   bool _waiting = false;
   bool _done = false;
   String? _hint;
+  final _speech = SpeechInput();
+  bool _listening = false;
+  String _beforeVoice = '';
 
   @override
   void initState() {
@@ -84,6 +89,7 @@ class _RoleplayChatPageState extends State<RoleplayChatPage> {
 
   @override
   void dispose() {
+    _speech.stop();
     _input.dispose();
     _focus.dispose();
     _scroll.dispose();
@@ -100,6 +106,7 @@ RULES
 - 1 to 3 short sentences per reply, and usually end with a question so the conversation continues.
 - React to exactly what the learner says. Make it a little challenging (ask for details, a small problem), but friendly.
 - Never speak another language than French in "reply", even if the learner does.
+- The learner may answer by voice (speech-to-text), so ignore missing punctuation and capitals.
 - When the learner's goal is clearly reached, close the conversation naturally and set "done": true.
 CORRECTION of the learner's LAST message only:
 - If it has French mistakes (grammar, wrong word, missing accent that changes meaning), give the corrected sentence with minimal changes in "correction" and a very short explanation in $_language in "explanation".
@@ -111,7 +118,37 @@ Return JSON: {"reply": "...", "correction": "", "explanation": "", "done": false
         for (final m in _messages) {'role': m.fromAi ? 'assistant' : 'user', 'content': m.text},
       ];
 
+  void _toggleMic() {
+    if (_listening) {
+      _speech.stop();
+      return;
+    }
+    TtsService.instance.stop();
+    _beforeVoice = _input.text.trim();
+    final ok = _speech.start(
+      onText: (text, _) {
+        if (!mounted) return;
+        final full = _beforeVoice.isEmpty ? text : '$_beforeVoice $text';
+        _input.value = TextEditingValue(text: full, selection: TextSelection.collapsed(offset: full.length));
+      },
+      onEnd: () {
+        if (mounted) setState(() => _listening = false);
+      },
+      onError: (error) {
+        if (!mounted) return;
+        final msg = error == 'not-allowed' || error == 'service-not-allowed'
+            ? 'Allow the microphone in your browser to speak.'
+            : error == 'no-speech'
+                ? 'I did not hear anything. Tap the microphone and speak.'
+                : 'The microphone did not work. Try again or type.';
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr(context, msg))));
+      },
+    );
+    setState(() => _listening = ok);
+  }
+
   Future<void> _send() async {
+    if (_listening) _speech.stop();
     final text = _input.text.trim();
     if (text.isEmpty || _waiting || _done) return;
     final mine = _Message(false, text);
@@ -154,7 +191,7 @@ Return JSON: {"reply": "...", "correction": "", "explanation": "", "done": false
         _input.text = text;
         _waiting = false;
       });
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Connexion perdue. Réessaie.')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr(context, 'Connection lost. Try again.'))));
     }
   }
 
@@ -204,7 +241,7 @@ Return JSON: {"reply": "...", "correction": "", "explanation": "", "done": false
     return Scaffold(
       appBar: AppBar(
         title: Text('${s.emoji} ${s.title}'),
-        actions: [TextButton(onPressed: _finish, child: const Text('Terminer'))],
+        actions: [TextButton(onPressed: _finish, child: Text(tr(context, 'Finish')))],
       ),
       body: Column(
         children: [
@@ -232,7 +269,7 @@ Return JSON: {"reply": "...", "correction": "", "explanation": "", "done": false
                 if (_waiting && i == _messages.length) return const _Typing();
                 return Padding(
                   padding: const EdgeInsets.only(top: 12),
-                  child: GlowButton(label: 'Voir mon évaluation', icon: Icons.emoji_events_rounded, onPressed: _finish),
+                  child: GlowButton(label: tr(context, 'See my evaluation'), icon: Icons.emoji_events_rounded, onPressed: _finish),
                 );
               },
             ),
@@ -255,7 +292,7 @@ Return JSON: {"reply": "...", "correction": "", "explanation": "", "done": false
                         _input.text = _hint!;
                         _hint = null;
                       }),
-                      child: const Text('Utiliser'),
+                      child: Text(tr(context, 'Use')),
                     ),
                 ],
               ),
@@ -267,7 +304,7 @@ Return JSON: {"reply": "...", "correction": "", "explanation": "", "done": false
               child: Row(
                 children: [
                   IconButton(
-                    tooltip: 'Une idée ?',
+                    tooltip: tr(context, 'An idea?'),
                     onPressed: _waiting || _done ? null : _askHint,
                     icon: const Text('💡', style: TextStyle(fontSize: 22)),
                   ),
@@ -280,11 +317,30 @@ Return JSON: {"reply": "...", "correction": "", "explanation": "", "done": false
                       minLines: 1,
                       maxLines: 4,
                       textInputAction: TextInputAction.send,
-                      decoration: const InputDecoration(hintText: 'Réponds en français…'),
+                      decoration: InputDecoration(hintText: tr(context, _listening ? "I'm listening… speak French" : 'Answer in French…')),
                       onSubmitted: (_) => _send(),
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  if (SpeechInput.supported) ...[
+                    const SizedBox(width: 6),
+                    _listening
+                        ? Floating(
+                            distance: 3,
+                            period: const Duration(milliseconds: 900),
+                            child: IconButton.filled(
+                              tooltip: tr(context, 'Stop'),
+                              style: IconButton.styleFrom(backgroundColor: AppTheme.error, foregroundColor: AppTheme.onColor),
+                              onPressed: _toggleMic,
+                              icon: const Icon(Icons.mic_rounded),
+                            ),
+                          )
+                        : IconButton.filledTonal(
+                            tooltip: tr(context, 'Speak'),
+                            onPressed: _waiting || _done ? null : _toggleMic,
+                            icon: const Icon(Icons.mic_none_rounded),
+                          ),
+                  ],
+                  const SizedBox(width: 6),
                   IconButton.filled(
                     onPressed: _waiting || _done ? null : _send,
                     icon: const Icon(Icons.send_rounded),
@@ -456,7 +512,7 @@ class _EvaluationState extends State<_Evaluation> {
         padding: const EdgeInsets.all(24),
         children: [
           if (_failed)
-            Text('Évaluation impossible pour le moment.', style: TextStyle(color: AppTheme.error))
+            Text(tr(context, 'Evaluation not possible right now.'), style: TextStyle(color: AppTheme.error))
           else if (r == null)
             const Center(child: Padding(padding: EdgeInsets.all(40), child: CircularProgressIndicator()))
           else ...[

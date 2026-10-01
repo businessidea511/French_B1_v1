@@ -28,6 +28,9 @@ Future<void> _pump(WidgetTester tester) async {
   await tester.pumpAndSettle();
 }
 
+/// The check button, in English or French (the saved language loads a moment after start).
+final _check = find.byWidgetPredicate((w) => w is Text && (w.data == 'Check' || w.data == 'Vérifier'));
+
 void main() {
   test('fromJson keeps valid items and drops malformed ones', () {
     final block = ExerciseBlock.fromJson(_json)!;
@@ -48,12 +51,12 @@ void main() {
     final field = find.byType(TextField);
 
     await tester.enterText(field, 'sommes alles');
-    await tester.tap(find.text('Vérifier'));
+    await tester.tap(_check);
     await tester.pumpAndSettle();
     expect(find.text('🟡 Presque ! Vérifiez les accents.'), findsOneWidget);
 
     await tester.enterText(field, '  Sommes  allées. ');
-    await tester.tap(find.text('Vérifier'));
+    await tester.tap(_check);
     await tester.pumpAndSettle();
     expect(find.text('✅ Correct !'), findsOneWidget);
     expect(find.text('1 / 2'), findsOneWidget);
@@ -61,7 +64,7 @@ void main() {
 
   testWidgets('open question reveals the model answer', (tester) async {
     await _pump(tester);
-    await tester.tap(find.text('Voir un modèle de réponse'));
+    await tester.tap(find.byWidgetPredicate((w) => w is Text && (w.data == 'See a model answer' || w.data == 'Voir un modèle de réponse')));
     await tester.pumpAndSettle();
     expect(find.text("J'habite à Liège."), findsOneWidget);
   });

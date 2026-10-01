@@ -3,6 +3,7 @@ import '../data/expressions_data.dart';
 import '../data/street_french_data.dart';
 import '../data/vocabulary_data.dart';
 import '../data/word_bank.dart';
+import '../theme/app_theme.dart';
 import 'deepseek_service.dart';
 import 'language_provider.dart';
 
@@ -45,8 +46,8 @@ class WordDecks {
     ];
   }
 
-  static const Color masculine = Color(0xFF60A5FA);
-  static const Color feminine = Color(0xFFF472B6);
+  static Color get masculine => AppTheme.masculine;
+  static Color get feminine => AppTheme.feminine;
 
   /// 'm', 'f' or null, from the article: le/un/(m) → masculine, la/une/(f) → feminine.
   /// Pairs like « le / la collègue » or « le père / la mère » have no single gender.

@@ -10,6 +10,7 @@ import '../theme/app_theme.dart';
 import 'translated_text.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'dart:ui';
+import '../services/ui_strings.dart';
 
 class AskAIBox extends StatefulWidget {
   final String topic;
@@ -34,7 +35,7 @@ class _AskAIBoxState extends State<AskAIBox> with AutomaticKeepAliveClientMixin 
   Future<void> _pickImage() async {
     if (_selectedImages.length >= 10) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Maximum 10 images allowed per lesson.')),
+        SnackBar(content: Text(tr(context, 'Maximum 10 images allowed per lesson.'))),
       );
       return;
     }
@@ -51,7 +52,7 @@ class _AskAIBoxState extends State<AskAIBox> with AutomaticKeepAliveClientMixin 
         children: [
           ListTile(
             leading: Icon(Icons.camera_alt, color: AppTheme.primary),
-            title: Text('Take a Photo', style: TextStyle(color: AppTheme.textPrimary)),
+            title: Text(tr(context, 'Take a photo'), style: TextStyle(color: AppTheme.textPrimary)),
             onTap: () async {
               Navigator.pop(context);
               final image = await picker.pickImage(
@@ -65,7 +66,7 @@ class _AskAIBoxState extends State<AskAIBox> with AutomaticKeepAliveClientMixin 
           ),
           ListTile(
             leading: Icon(Icons.photo_library, color: AppTheme.secondary),
-            title: Text('Choose from Gallery', style: TextStyle(color: AppTheme.textPrimary)),
+            title: Text(tr(context, 'Choose from gallery'), style: TextStyle(color: AppTheme.textPrimary)),
             onTap: () async {
               Navigator.pop(context);
               // For gallery, we can pick multiple at once
@@ -414,7 +415,7 @@ class _AskAIBoxState extends State<AskAIBox> with AutomaticKeepAliveClientMixin 
                       child: TextField(
                         controller: _controller,
                         decoration: InputDecoration(
-                          hintText: 'Ask me anything...',
+                          hintText: tr(context, 'Ask me anything…'),
                           hintStyle: TextStyle(color: AppTheme.fg.withValues(alpha: 0.1)),
                           filled: true,
                           fillColor: Colors.black.withValues(alpha: 0.1),

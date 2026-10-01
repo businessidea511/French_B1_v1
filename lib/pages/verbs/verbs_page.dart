@@ -5,6 +5,7 @@ import '../../services/global_scroll_manager.dart';
 import '../../services/tts_service.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/translated_text.dart';
+import '../../services/ui_strings.dart';
 
 /// What each tense is for, in simple English (translated on screen).
 const Map<String, String> tenseExplanations = {
@@ -73,7 +74,7 @@ class _VerbsPageState extends State<VerbsPage> {
     final table = Conjugator.conjugate(verb);
     if (table == null) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('« ${verb.trim()} » is not a French verb I know. Type the infinitive, e.g. « prendre » or « se lever ».'),
+        content: Text(tr(context, 'NOT_A_VERB', {'verb': verb.trim()})),
       ));
       return;
     }
@@ -96,7 +97,7 @@ class _VerbsPageState extends State<VerbsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Conjugaison')),
+      appBar: AppBar(title: Text(tr(context, 'Conjugation'))),
       body: SingleChildScrollView(
         controller: _scrollController,
         padding: const EdgeInsets.all(20),
@@ -134,8 +135,8 @@ class _VerbsPageState extends State<VerbsPage> {
         controller: controller,
         focusNode: focusNode,
         textInputAction: TextInputAction.search,
-        decoration: const InputDecoration(
-          hintText: 'Any French verb: prendre, se lever, envoyer…',
+        decoration: InputDecoration(
+          hintText: tr(context, 'Any French verb: prendre, se lever, envoyer…'),
           prefixIcon: Icon(Icons.search),
         ),
         onSubmitted: (v) {
@@ -189,7 +190,7 @@ class _VerbsPageState extends State<VerbsPage> {
                     style: TextStyle(fontSize: 32, fontWeight: FontWeight.w900, color: AppTheme.textPrimary)),
               ),
               IconButton(
-                tooltip: 'Écouter',
+                tooltip: tr(context, 'Listen'),
                 icon: Icon(Icons.volume_up_rounded, color: AppTheme.warning),
                 onPressed: () => TtsService.instance.speak(_table.infinitive),
               ),
@@ -347,7 +348,7 @@ class _VerbsPageState extends State<VerbsPage> {
             ),
           ),
           IconButton(
-            tooltip: 'Écouter',
+            tooltip: tr(context, 'Listen'),
             visualDensity: VisualDensity.compact,
             icon: Icon(Icons.volume_up_rounded, color: AppTheme.primary, size: 20),
             onPressed: () => TtsService.instance.speak(Conjugator.speakable(form)),

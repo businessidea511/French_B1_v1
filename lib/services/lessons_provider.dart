@@ -6,6 +6,7 @@ import '../models/lesson_topic.dart';
 import '../models/grammar_topic.dart';
 import 'admin_auth.dart';
 import 'api_client.dart';
+import 'translation_store.dart';
 
 class LessonsProvider extends ChangeNotifier {
   List<LessonTopic> _customLessons = [];
@@ -523,7 +524,7 @@ class LessonsProvider extends ChangeNotifier {
       final missingLessons = lessonTopics.where((l) => !lessonIds.contains(l.id)).toList();
       if (missingLessons.isNotEmpty) {
         debugPrint('📤 Seeding ${missingLessons.length} original lesson(s)');
-        await _cloudUpsert('lessons', missingLessons.map((l) => l.toJson()).toList());
+        await _cloudUpsert('lessons', missingLessons.map((l) => l.toJson()).toList(), translate: false);
       }
 
       final grammarIds = (await client.from('grammar').select('id') as List)
@@ -532,7 +533,7 @@ class LessonsProvider extends ChangeNotifier {
       final missingGrammar = grammarTopics.where((g) => !grammarIds.contains(g.id)).toList();
       if (missingGrammar.isNotEmpty) {
         debugPrint('📤 Seeding ${missingGrammar.length} original grammar topic(s)');
-        await _cloudUpsert('grammar', missingGrammar.map((g) => g.toJson()).toList());
+        await _cloudUpsert('grammar', missingGrammar.map((g) => g.toJson()).toList(), translate: false);
       }
       debugPrint('✅ Seeding check complete');
     } catch (e) {
@@ -542,7 +543,7 @@ class LessonsProvider extends ChangeNotifier {
 
   /// Cloud writes go through /api/content, which requires an admin session.
   /// Visitors can only read the tables directly.
-  Future<void> _cloudUpsert(String table, List<Map<String, dynamic>> rows) async {
+  Future<void> _cloudUpsert(String table, List<Map<String, dynamic>> rows, {bool translate = true}) async {
     final token = AdminAuth.token;
     if (token == null) throw Exception('Admin session expired. Please enter the admin password again.');
     final response = await ApiClient.post(
@@ -552,6 +553,17 @@ class LessonsProvider extends ChangeNotifier {
     );
     if (response.statusCode != 200) {
       throw Exception('Cloud save failed: ${ApiClient.errorMessage(response)}');
+    }    // New or rebuilt content: translate it into every language now, for everyone.
+    if (translate && (table == 'lessons' || table == 'grammar')) {
+      for (final row in rows) {
+        final title = '${row['title'] ?? ''}';
+        final content = row['content'];
+        TranslationStore.pretranslateInBackground(
+          title,
+          TranslationStore.lessonTexts(title, content is List ? content : null),
+          adminToken: token,
+        );
+      }
     }
   }
 

@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../theme/app_theme.dart';
+import '../services/ui_strings.dart';
 
 enum PhotoImportMode { fullLesson, exercisesOnly }
 
@@ -178,7 +179,7 @@ class _PhotoPagesSheetState extends State<_PhotoPagesSheet> {
                   border: Border.all(color: AppTheme.fg.withValues(alpha: 0.24)),
                   borderRadius: BorderRadius.circular(16),
                 ),
-                child: Text('No pages yet', style: TextStyle(color: AppTheme.textTertiary)),
+                child: Text(tr(context, 'No pages yet'), style: TextStyle(color: AppTheme.textTertiary)),
               ),
             const SizedBox(height: 8),
             Text(
@@ -187,7 +188,7 @@ class _PhotoPagesSheetState extends State<_PhotoPagesSheet> {
               style: TextStyle(color: _tooBig ? AppTheme.error : AppTheme.textTertiary, fontSize: 12),
             ),
             if (_tooBig)
-              Text('Too large to send at once. Remove a page or split it into two imports.',
+              Text(tr(context, 'Too large to send at once. Remove a page or split it into two imports.'),
                   style: TextStyle(color: AppTheme.error, fontSize: 12)),
             const SizedBox(height: 12),
 
@@ -197,7 +198,7 @@ class _PhotoPagesSheetState extends State<_PhotoPagesSheet> {
                   child: OutlinedButton.icon(
                     onPressed: _picking || _pages.length >= _maxPages ? null : () => _add(ImageSource.camera),
                     icon: const Icon(Icons.camera_alt_rounded),
-                    label: const Text('Camera'),
+                    label: Text(tr(context, 'Camera')),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -205,7 +206,7 @@ class _PhotoPagesSheetState extends State<_PhotoPagesSheet> {
                   child: OutlinedButton.icon(
                     onPressed: _picking || _pages.length >= _maxPages ? null : () => _add(ImageSource.gallery),
                     icon: const Icon(Icons.photo_library_rounded),
-                    label: const Text('Gallery'),
+                    label: Text(tr(context, 'Gallery')),
                   ),
                 ),
               ],
@@ -217,8 +218,8 @@ class _PhotoPagesSheetState extends State<_PhotoPagesSheet> {
                 controller: _instructions,
                 maxLines: 2,
                 style: TextStyle(color: AppTheme.textPrimary),
-                decoration: const InputDecoration(
-                  hintText: 'Optional instructions (e.g. "only exercise 3 and 4")',
+                decoration: InputDecoration(
+                  hintText: tr(context, 'Optional instructions (e.g. "only exercise 3 and 4")'),
                 ),
               ),
             ],

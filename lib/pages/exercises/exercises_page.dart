@@ -8,6 +8,7 @@ import '../../services/language_provider.dart';
 import '../../services/lessons_provider.dart';
 import '../../services/global_scroll_manager.dart';
 import '../../services/progress_service.dart';
+import '../../services/ui_strings.dart';
 
 class ExercisesPage extends StatefulWidget {
   final String? initialTopic;
@@ -134,7 +135,7 @@ class _ExercisesPageState extends State<ExercisesPage> {
           questions = []; // No static fallback for now to keep it fresh
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to generate AI exercises. Check your API key.')),
+          SnackBar(content: Text(tr(context, 'Could not create exercises. Please try again.'))),
         );
         setState(() => selectedTopic = null);
       }
@@ -145,7 +146,7 @@ class _ExercisesPageState extends State<ExercisesPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Exercises'),
+        title: Text(tr(context, 'Exercises')),
       ),
       body: _isLoading
           ? _buildLoadingState()
@@ -167,7 +168,7 @@ class _ExercisesPageState extends State<ExercisesPage> {
             style: Theme.of(context).textTheme.bodyLarge,
           ),
           const SizedBox(height: 8),
-          const Text('This may take a few seconds'),
+          Text(tr(context, 'This may take a few seconds')),
         ],
       ),
     );
@@ -332,7 +333,7 @@ class _ExercisesPageState extends State<ExercisesPage> {
 
   Widget _buildQuiz() {
     if (questions.isEmpty) {
-      return const Center(child: Text('No exercises found for this topic.'));
+      return Center(child: Text(tr(context, 'No exercises found for this topic.')));
     }
 
     if (currentQuestion >= questions.length) {
@@ -565,14 +566,14 @@ class _ExercisesPageState extends State<ExercisesPage> {
                 Expanded(
                   child: OutlinedButton(
                     onPressed: () => setState(() => selectedTopic = null),
-                    child: const Text('Back to Topics'),
+                    child: Text(tr(context, 'Back to topics')),
                   ),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
                   child: ElevatedButton(
                     onPressed: () => _startAIExercises(selectedTopic!),
-                    child: const Text('New Questions'),
+                    child: Text(tr(context, 'New questions')),
                   ),
                 ),
               ],
@@ -581,7 +582,7 @@ class _ExercisesPageState extends State<ExercisesPage> {
               const SizedBox(height: 40),
               Align(
                 alignment: AlignmentDirectional.centerStart,
-                child: Text('Review your mistakes (${mistakes.length})',
+                child: Text(tr(context, 'Review your mistakes ({n})', {'n': mistakes.length}),
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
               ),
               const SizedBox(height: 12),

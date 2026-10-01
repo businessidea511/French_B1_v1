@@ -5,7 +5,8 @@
     "installCommand": "if [ ! -d \"flutter\" ]; then git clone https://github.com/flutter/flutter.git -b stable --depth 1; fi && ./flutter/bin/flutter doctor && ./flutter/bin/flutter precache --web && ./flutter/bin/flutter pub get",
     "functions": {
         "api/ai.js": { "maxDuration": 120 },
-        "api/tts.js": { "maxDuration": 60 }
+        "api/tts.js": { "maxDuration": 60 },
+        "api/translate.js": { "maxDuration": 120 }
     },
     "rewrites": [
         {

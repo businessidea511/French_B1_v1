@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 import 'translated_text.dart';
+import '../services/ui_strings.dart';
 
 /// Interactive exercise widget for lesson content (`"type": "exercise"`).
 ///
@@ -171,7 +172,7 @@ class _ExerciseBlockState extends State<ExerciseBlock> {
             child: TextButton.icon(
               onPressed: _reset,
               icon: const Icon(Icons.refresh_rounded, size: 18),
-              label: const Text('Recommencer'),
+              label: Text(tr(context, 'Start again')),
             ),
           ),
         ],
@@ -266,14 +267,14 @@ class _ExerciseBlockState extends State<ExerciseBlock> {
                   controller: _controllers[index],
                   enabled: !locked,
                   style: TextStyle(color: AppTheme.textPrimary),
-                  decoration: const InputDecoration(hintText: 'Votre réponse', isDense: true),
+                  decoration: InputDecoration(hintText: tr(context, 'Your answer'), isDense: true),
                   onSubmitted: (_) => _submitTyped(index, item),
                 ),
               ),
               const SizedBox(width: 8),
               ElevatedButton(
                 onPressed: locked ? null : () => _submitTyped(index, item),
-                child: const Text('Vérifier'),
+                child: Text(tr(context, 'Check')),
               ),
             ],
           ),
@@ -312,7 +313,7 @@ class _ExerciseBlockState extends State<ExerciseBlock> {
       return OutlinedButton.icon(
         onPressed: () => setState(() => _revealed.add(index)),
         icon: const Icon(Icons.visibility_outlined, size: 18),
-        label: const Text('Voir un modèle de réponse'),
+        label: Text(tr(context, 'See a model answer')),
       );
     }
     return Container(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'gender_text.dart';
 import 'translated_text.dart';
 import 'ask_ai_box.dart';
 import '../pages/exercises/exercises_page.dart';
@@ -125,6 +126,8 @@ class _LessonTemplateState extends State<LessonTemplate> {
                 padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20),
                 sliver: SliverList(
                   delegate: SliverChildListDelegate([
+                    const GenderLegend(),
+                    const SizedBox(height: 12),
                     ...widget.children,
                     if (widget.topic != null) ...[
                       const SizedBox(height: 60),
@@ -287,7 +290,7 @@ class ExampleBox extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: Text(
+                child: GenderText(
                   french,
                   style: TextStyle(
                     fontSize: 18,
@@ -413,7 +416,7 @@ class FrenchTipBox extends StatelessWidget {
     if (trimmed.contains('=')) {
       final parts = trimmed.split('=');
       if (parts.length == 2) {
-        widgets.add(Text(
+        widgets.add(GenderText(
           parts[0],
           style: TextStyle(
             color: AppTheme.textPrimary,
@@ -445,7 +448,7 @@ class FrenchTipBox extends StatelessWidget {
         if (leftPart.contains('→')) {
           final leftParts = leftPart.split('→');
           for (int i = 0; i < leftParts.length; i++) {
-            widgets.add(Text(
+            widgets.add(GenderText(
               leftParts[i],
               style: TextStyle(
                 color: AppTheme.textPrimary,
@@ -461,7 +464,7 @@ class FrenchTipBox extends StatelessWidget {
             }
           }
         } else {
-          widgets.add(Text(
+          widgets.add(GenderText(
             leftPart,
             style: TextStyle(
               color: AppTheme.textPrimary,
@@ -483,19 +486,9 @@ class FrenchTipBox extends StatelessWidget {
     if (trimmed.contains('→')) {
       final parts = trimmed.split('→');
       if (parts.length == 2) {
-        final rightSide = parts[1].toLowerCase();
-        final hasEnglishExplanations = rightSide.contains('the') ||
-            rightSide.contains('before') ||
-            rightSide.contains('after') ||
-            rightSide.contains('verb') ||
-            rightSide.contains('auxiliary') ||
-            rightSide.contains('infinitive') ||
-            rightSide.contains('subject') ||
-            rightSide.contains('agrees') ||
-            rightSide.contains('agreement') ||
-            rightSide.contains('participle');
+        final hasEnglishExplanations = _hasEnglishExplanation(parts[1]);
 
-        widgets.add(Text(
+        widgets.add(GenderText(
           parts[0],
           style: TextStyle(
             color: AppTheme.textPrimary,
@@ -514,7 +507,7 @@ class FrenchTipBox extends StatelessWidget {
             style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
           ));
         } else {
-          widgets.add(Text(
+          widgets.add(GenderText(
             parts[1],
             style: TextStyle(
               color: AppTheme.textPrimary,
@@ -528,10 +521,8 @@ class FrenchTipBox extends StatelessWidget {
     }
 
     // Fallback: render the entire line as plain Text
-    widgets.add(Text(
+    widgets.add(GenderText(
       trimmed,
-      softWrap: true,
-      overflow: TextOverflow.visible,
       style: TextStyle(
         fontSize: 14,
         color: AppTheme.textPrimary,
@@ -541,6 +532,33 @@ class FrenchTipBox extends StatelessWidget {
       ),
     ));
     return widgets;
+  }
+
+  static bool _hasEnglishExplanation(String rightSide) {
+    final r = rightSide.toLowerCase();
+    return const ['the', 'before', 'after', 'verb', 'auxiliary', 'infinitive', 'subject', 'agrees', 'agreement', 'participle']
+        .any(r.contains);
+  }
+
+  /// The pieces of [frenchText] this box shows translated (same rules as the
+  /// lines above), so a lesson can be translated in advance.
+  static List<String> translatedParts(String frenchText) {
+    final out = <String>[];
+    for (final line in frenchText.split('\n')) {
+      final trimmed = line.trimRight();
+      if (trimmed.isEmpty) continue;
+      if (trimmed.contains('=') && trimmed.split('=').length == 2) {
+        out.add(trimmed.split('=')[1].trim());
+        continue;
+      }
+      if (trimmed.endsWith(')') && trimmed.lastIndexOf('(') > 0) {
+        out.add(trimmed.substring(trimmed.lastIndexOf('(')));
+        continue;
+      }
+      final arrow = trimmed.split('→');
+      if (arrow.length == 2 && _hasEnglishExplanation(arrow[1])) out.add(arrow[1].trim());
+    }
+    return out;
   }
 
   @override
@@ -622,7 +640,7 @@ class PremiumTable extends StatelessWidget {
     required this.rows,
   });
 
-  bool _shouldTranslateColumn(String header) {
+  static bool shouldTranslateColumn(String header) {
     final h = header.toLowerCase();
     return h.contains('meaning') ||
         h.contains('translation') ||
@@ -667,7 +685,7 @@ class PremiumTable extends StatelessWidget {
               final cell = entry.value;
               final header = idx < headers.length ? headers[idx] : '';
 
-              if (_shouldTranslateColumn(header)) {
+              if (shouldTranslateColumn(header)) {
                 return DataCell(
                   TranslatedText(
                     cell,
@@ -676,7 +694,7 @@ class PremiumTable extends StatelessWidget {
                 );
               }
               return DataCell(
-                Text(
+                GenderText(
                   cell,
                   style: TextStyle(color: AppTheme.textPrimary, fontSize: 14, fontWeight: FontWeight.w600),
                 ),

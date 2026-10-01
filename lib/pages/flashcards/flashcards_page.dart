@@ -11,6 +11,7 @@ import '../../services/word_decks.dart';
 import '../../services/progress_service.dart';
 import '../../data/word_bank.dart';
 import '../../widgets/grammar_cards.dart';
+import '../../services/ui_strings.dart';
 
 class FlashcardsPage extends StatefulWidget {
   final String? initialTopic;
@@ -133,7 +134,7 @@ class _FlashcardsPageState extends State<FlashcardsPage> {
           selectedTopic = null;
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Could not create flashcards. Please try again.')),
+          SnackBar(content: Text(tr(context, 'Could not create flashcards. Please try again.'))),
         );
       }
     }
@@ -204,7 +205,7 @@ class _FlashcardsPageState extends State<FlashcardsPage> {
               leading: Text(section.icon, style: const TextStyle(fontSize: 26)),
               title: Text(section.title,
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: AppTheme.textPrimary)),
-              subtitle: Text('${section.categories.length} decks · ${section.wordCount} cards',
+              subtitle: Text(tr(context, '{decks} decks · {cards} cards', {'decks': section.categories.length, 'cards': section.wordCount}),
                   style: TextStyle(color: AppTheme.fg.withValues(alpha: 0.4), fontSize: 13)),
               children: [
                 for (final c in section.categories)
@@ -261,7 +262,7 @@ class _FlashcardsPageState extends State<FlashcardsPage> {
                       Text(title,
                           style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: AppTheme.textPrimary)),
                       const SizedBox(height: 2),
-                      Text('12 cards from this lesson',
+                      Text(tr(context, '{n} cards from this lesson', {'n': 12}),
                           style: TextStyle(color: AppTheme.fg.withValues(alpha: 0.4), fontSize: 13)),
                     ],
                   ),
@@ -286,7 +287,7 @@ class _FlashcardsPageState extends State<FlashcardsPage> {
           child: Row(
             children: [
               IconButton(
-                tooltip: 'Back to topics',
+                tooltip: tr(context, 'Back to topics'),
                 icon: const Icon(Icons.close),
                 onPressed: _backToTopics,
               ),
@@ -310,7 +311,7 @@ class _FlashcardsPageState extends State<FlashcardsPage> {
                 ),
               ),
               IconButton(
-                tooltip: 'Shuffle',
+                tooltip: tr(context, 'Shuffle'),
                 icon: const Icon(Icons.shuffle),
                 onPressed: () => setState(() {
                   final rest = _round.sublist(_index)..shuffle();
@@ -364,7 +365,7 @@ class _FlashcardsPageState extends State<FlashcardsPage> {
                       child: OutlinedButton.icon(
                         onPressed: () => _answer(false),
                         icon: Icon(Icons.replay_rounded, color: AppTheme.error),
-                        label: const Text('À revoir'),
+                        label: Text(tr(context, 'To review')),
                         style: OutlinedButton.styleFrom(
                           minimumSize: const Size.fromHeight(52),
                           side: BorderSide(color: AppTheme.error),
@@ -376,7 +377,7 @@ class _FlashcardsPageState extends State<FlashcardsPage> {
                       child: ElevatedButton.icon(
                         onPressed: () => _answer(true),
                         icon: const Icon(Icons.check_rounded),
-                        label: const Text('Je savais'),
+                        label: Text(tr(context, 'I knew it')),
                         style: ElevatedButton.styleFrom(
                           minimumSize: const Size.fromHeight(52),
                           backgroundColor: AppTheme.success,
@@ -389,7 +390,7 @@ class _FlashcardsPageState extends State<FlashcardsPage> {
               : ElevatedButton.icon(
                   onPressed: () => setState(() => _flipped = true),
                   icon: const Icon(Icons.flip_rounded),
-                  label: const Text('Show answer'),
+                  label: Text(tr(context, 'Show answer')),
                   style: ElevatedButton.styleFrom(minimumSize: const Size.fromHeight(52)),
                 ),
         ),
@@ -432,7 +433,7 @@ class _FlashcardsPageState extends State<FlashcardsPage> {
         const SizedBox(height: 12),
         SpeakButton(card['front']!, color: AppTheme.onColor),
         const SizedBox(height: 16),
-        Text('Tap to flip', style: TextStyle(color: AppTheme.onColor.withValues(alpha: 0.5), fontSize: 13)),
+        Text(tr(context, 'Tap to flip'), style: TextStyle(color: AppTheme.onColor.withValues(alpha: 0.5), fontSize: 13)),
       ],
     );
   }
@@ -500,7 +501,7 @@ class _FlashcardsPageState extends State<FlashcardsPage> {
           Text(allKnown ? 'Bravo ! You know all of them.' : 'Round complete',
               textAlign: TextAlign.center, style: Theme.of(context).textTheme.headlineMedium),
           const SizedBox(height: 12),
-          Text('✓ $_known of $total known   ·   ✗ ${_missed.length} to review',
+          Text('✓ ${tr(context, '{known} of {total} known', {'known': _known, 'total': total})}   ·   ✗ ${tr(context, '{n} to review', {'n': _missed.length})}',
               style: TextStyle(color: AppTheme.textSecondary, fontSize: 16)),
           if (!allKnown) ...[
             const SizedBox(height: 24),
@@ -522,7 +523,7 @@ class _FlashcardsPageState extends State<FlashcardsPage> {
                 _startRound(List.of(_missed)..shuffle());
               }),
               icon: const Icon(Icons.replay_rounded),
-              label: Text('Review the ${_missed.length} card(s) I missed'),
+              label: Text(tr(context, 'Review the {n} cards I missed', {'n': _missed.length})),
               style: ElevatedButton.styleFrom(minimumSize: const Size.fromHeight(52)),
             ),
           const SizedBox(height: 12),
@@ -530,7 +531,7 @@ class _FlashcardsPageState extends State<FlashcardsPage> {
             OutlinedButton.icon(
               onPressed: () => _startAIFlashcards(selectedTopic!),
               icon: const Icon(Icons.auto_awesome),
-              label: const Text('New cards for this topic'),
+              label: Text(tr(context, 'New cards for this topic')),
               style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(52)),
             )
           else if (_queue.isNotEmpty)
@@ -540,14 +541,14 @@ class _FlashcardsPageState extends State<FlashcardsPage> {
                 _nextBatch();
               }),
               icon: const Icon(Icons.arrow_forward_rounded),
-              label: Text('Next ${min(_roundSize, _queue.length)} cards (${_queue.length} left)'),
+              label: Text(tr(context, 'Next {n} cards ({left} left)', {'n': min(_roundSize, _queue.length), 'left': _queue.length})),
               style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(52)),
             )
           else
             OutlinedButton.icon(
               onPressed: () => setState(() => _startStatic(_staticDeck!)),
               icon: const Icon(Icons.shuffle_rounded),
-              label: Text('Start again with all ${_staticDeck!.length} cards'),
+              label: Text(tr(context, 'Start again with all {n} cards', {'n': _staticDeck!.length})),
               style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(52)),
             ),
           const SizedBox(height: 12),
