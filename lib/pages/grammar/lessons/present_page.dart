@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../theme/app_theme.dart';
 import 'package:provider/provider.dart';
 import '../../../widgets/lesson_template.dart';
 import '../../../widgets/translated_text.dart';
@@ -74,7 +75,7 @@ class PresentPage extends StatelessWidget {
           'These 4 are the most used verbs in French. You MUST memorize them!',
           style: TextStyle(fontSize: 15, height: 1.5),
         ),
-        const FrenchTipBox(
+        FrenchTipBox(
           title: 'Être (To be)',
           frenchText: 'je suis\n'
               'tu es\n'
@@ -83,9 +84,9 @@ class PresentPage extends StatelessWidget {
               'vous êtes\n'
               'ils / elles sont',
           icon: Icons.person,
-          color: Color(0xFF6366F1),
+          color: AppTheme.primary,
         ),
-        const FrenchTipBox(
+        FrenchTipBox(
           title: 'Avoir (To have)',
           frenchText: 'j\'ai\n'
               'tu as\n'
@@ -94,9 +95,9 @@ class PresentPage extends StatelessWidget {
               'vous avez\n'
               'ils / elles ont',
           icon: Icons.inventory_2,
-          color: Color(0xFFEC4899),
+          color: AppTheme.secondary,
         ),
-        const FrenchTipBox(
+        FrenchTipBox(
           title: 'Aller (To go)',
           frenchText: 'je vais\n'
               'tu vas\n'
@@ -105,9 +106,9 @@ class PresentPage extends StatelessWidget {
               'vous allez\n'
               'ils / elles vont',
           icon: Icons.directions_run,
-          color: Color(0xFF10B981),
+          color: AppTheme.success,
         ),
-        const FrenchTipBox(
+        FrenchTipBox(
           title: 'Faire (To do / make)',
           frenchText: 'je fais\n'
               'tu fais\n'
@@ -116,15 +117,15 @@ class PresentPage extends StatelessWidget {
               'vous faites\n'
               'ils / elles font',
           icon: Icons.build,
-          color: Color(0xFFF59E0B),
+          color: AppTheme.warning,
         ),
         const SectionTitle('❌ Common Mistakes'),
-        const TipBox(
+        TipBox(
           title: 'Pronunciation Trap!',
           content: 'The "-ent" ending for "Ils/Elles" is SILENT! 🤫\n'
               '❌ Ils parl-ENT ➜ ✅ Ils parl (sounds like "parle")',
           icon: Icons.volume_off,
-          color: Color(0xFFEF4444),
+          color: AppTheme.error,
         ),
       ],
     );

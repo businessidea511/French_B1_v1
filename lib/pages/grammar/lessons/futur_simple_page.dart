@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../theme/app_theme.dart';
 import 'package:provider/provider.dart';
 import '../../../widgets/lesson_template.dart';
 import '../../../widgets/translated_text.dart';
@@ -28,13 +29,13 @@ class FuturSimplePage extends StatelessWidget {
           style: TextStyle(fontSize: 15, height: 1.8),
         ),
         const SectionTitle('🔧 How to Build It'),
-        const TipBox(
+        TipBox(
           title: 'Two Ways to Build',
           content: 'Regular verbs (-ER/-IR): INFINITIVE + endings\n'
               'Regular -RE verbs: Remove E, then add endings\n\n'
               'Endings: -ai, -as, -a, -ons, -ez, -ont',
           icon: Icons.calculate,
-          color: Color(0xFF6366F1),
+          color: AppTheme.primary,
         ),
         const SectionTitle('📝 Regular Examples'),
         const ExampleBox(
@@ -63,7 +64,7 @@ class FuturSimplePage extends StatelessWidget {
           english: 'What time will you finish?',
         ),
         // Irregular stems — must stay in French
-        const FrenchTipBox(
+        FrenchTipBox(
           title: '⚠️ Common Irregular Stems — Memorize These!',
           frenchText: 'être    →  ser-    →  je serai\n'
               'avoir   →  aur-    →  j\'aurai\n'
@@ -74,14 +75,14 @@ class FuturSimplePage extends StatelessWidget {
               'pouvoir →  pourr-  →  je pourrai\n'
               'venir   →  viendr- →  je viendrai',
           icon: Icons.warning,
-          color: Color(0xFFEF4444),
+          color: AppTheme.error,
         ),
-        const TipBox(
+        TipBox(
           title: '💡 Easy Trick',
           content:
               'These irregular stems are THE SAME as Conditionnel! Learn them once, use them twice!',
           icon: Icons.lightbulb,
-          color: Color(0xFF10B981),
+          color: AppTheme.success,
         ),
         const SectionTitle('🎯 Signal Words'),
         const TranslatedText(

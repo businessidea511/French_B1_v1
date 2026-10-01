@@ -134,7 +134,7 @@ class _ExerciseBlockState extends State<ExerciseBlock> {
 
   @override
   Widget build(BuildContext context) {
-    const color = AppTheme.success;
+    final color = AppTheme.success;
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 16),
       padding: const EdgeInsets.all(20),
@@ -148,21 +148,21 @@ class _ExerciseBlockState extends State<ExerciseBlock> {
         children: [
           Row(
             children: [
-              const Icon(Icons.edit_note_rounded, color: color, size: 26),
+              Icon(Icons.edit_note_rounded, color: color, size: 26),
               const SizedBox(width: 10),
               Expanded(
                 child: Text(widget.title,
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
               ),
               if (_gradable > 0)
                 Text('$_score / $_gradable',
-                    style: const TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 15)),
+                    style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 15)),
             ],
           ),
           if (widget.instruction.isNotEmpty) ...[
             const SizedBox(height: 8),
             TranslatedText(widget.instruction,
-                style: const TextStyle(color: AppTheme.textSecondary, fontSize: 14, height: 1.5)),
+                style: TextStyle(color: AppTheme.textSecondary, fontSize: 14, height: 1.5)),
           ],
           const SizedBox(height: 12),
           for (int i = 0; i < widget.items.length; i++) _buildItem(i),
@@ -198,7 +198,7 @@ class _ExerciseBlockState extends State<ExerciseBlock> {
           Directionality(
             textDirection: TextDirection.ltr,
             child: Text('${index + 1}. ${item['question']}',
-                style: const TextStyle(fontSize: 16, color: Colors.white, height: 1.5)),
+                style: TextStyle(fontSize: 16, color: AppTheme.textPrimary, height: 1.5)),
           ),
           const SizedBox(height: 10),
           if (options != null)
@@ -210,7 +210,7 @@ class _ExerciseBlockState extends State<ExerciseBlock> {
           if (_feedbackVisible(index, isOpen) && (item['explanation'] ?? '').toString().isNotEmpty) ...[
             const SizedBox(height: 8),
             TranslatedText(item['explanation'].toString(),
-                style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13, height: 1.5)),
+                style: TextStyle(color: AppTheme.textSecondary, fontSize: 13, height: 1.5)),
           ],
         ],
       ),
@@ -237,7 +237,7 @@ class _ExerciseBlockState extends State<ExerciseBlock> {
               side: BorderSide(
                 color: chosen != null && o == correct
                     ? AppTheme.success
-                    : Colors.white.withValues(alpha: 0.15),
+                    : AppTheme.fg.withValues(alpha: 0.15),
               ),
               onSelected: chosen != null
                   ? null
@@ -265,7 +265,7 @@ class _ExerciseBlockState extends State<ExerciseBlock> {
                 child: TextField(
                   controller: _controllers[index],
                   enabled: !locked,
-                  style: const TextStyle(color: Colors.white),
+                  style: TextStyle(color: AppTheme.textPrimary),
                   decoration: const InputDecoration(hintText: 'Votre réponse', isDense: true),
                   onSubmitted: (_) => _submitTyped(index, item),
                 ),
@@ -325,7 +325,7 @@ class _ExerciseBlockState extends State<ExerciseBlock> {
       child: Directionality(
         textDirection: TextDirection.ltr,
         child: Text(item['model_answer'].toString(),
-            style: const TextStyle(color: Colors.white, height: 1.5)),
+            style: TextStyle(color: AppTheme.textPrimary, height: 1.5)),
       ),
     );
   }

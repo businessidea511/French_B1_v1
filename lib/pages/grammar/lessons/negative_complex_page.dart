@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../theme/app_theme.dart';
 import 'package:provider/provider.dart';
 import '../../../widgets/lesson_template.dart';
 import '../../../widgets/translated_text.dart';
@@ -68,7 +69,7 @@ class NegativeComplexPage extends StatelessWidget {
           english: 'There is no problem',
         ),
         // Position rule — includes French examples that must stay French
-        const FrenchTipBox(
+        FrenchTipBox(
           title: '🎯 Position in Passé Composé',
           frenchText:
               'ne + helper verb + jamais/rien/plus + past participle\n\n'
@@ -76,25 +77,25 @@ class NegativeComplexPage extends StatelessWidget {
               '⚠️ PERSONNE comes AFTER the participle:\n'
               '✅ Je n\'ai vu personne.',
           icon: Icons.info,
-          color: Color(0xFF6366F1),
+          color: AppTheme.primary,
         ),
         // Double negatives — French examples must stay French
-        const FrenchTipBox(
+        FrenchTipBox(
           title: '⚠️ Double Negatives are OK in French!',
           frenchText: '✅ Je ne dis jamais rien.\n'
               '   (I never say anything)\n\n'
               '✅ Il n\'y a plus personne.\n'
               '   (There\'s nobody left)',
           icon: Icons.warning,
-          color: Color(0xFFF59E0B),
+          color: AppTheme.warning,
         ),
         const SectionTitle('❌ Common Mistakes'),
-        const FrenchTipBox(
+        FrenchTipBox(
           title: 'Don\'t forget the NE!',
           frenchText: '❌ Je ne jamais mange    →  ✅ Je ne mange jamais\n'
               '❌ Je rien comprends     →  ✅ Je ne comprends rien',
           icon: Icons.error_outline,
-          color: Color(0xFFEF4444),
+          color: AppTheme.error,
         ),
       ],
     );

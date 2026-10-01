@@ -65,12 +65,12 @@ class _GrammarPageState extends State<GrammarPage> {
       builder: (context) {
         return AlertDialog(
           backgroundColor: AppTheme.surface,
-          title: const Text('Enter Grammar Topic', style: TextStyle(color: Colors.white)),
+          title: Text('Enter Grammar Topic', style: TextStyle(color: AppTheme.textPrimary)),
           content: TextField(
             controller: controller,
             autofocus: true,
             decoration: const InputDecoration(hintText: 'e.g. Subjonctif, Relative Pronouns...'),
-            style: const TextStyle(color: Colors.white),
+            style: TextStyle(color: AppTheme.textPrimary),
           ),
           actions: [
             TextButton(
@@ -217,12 +217,12 @@ class _GrammarPageState extends State<GrammarPage> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppTheme.surface,
-        title: const Text('Topic already exists', style: TextStyle(color: Colors.white)),
+        title: Text('Topic already exists', style: TextStyle(color: AppTheme.textPrimary)),
         content: Text(
           '"${existing.title}" already covers "$topic".\n\n'
           'Rebuild it to make one complete topic (its current content is kept and completed), '
           'or add a separate topic anyway.',
-          style: const TextStyle(color: AppTheme.textSecondary),
+          style: TextStyle(color: AppTheme.textSecondary),
         ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
@@ -246,7 +246,7 @@ class _GrammarPageState extends State<GrammarPage> {
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDlg) => AlertDialog(
           backgroundColor: AppTheme.surface,
-          title: const Text('Grammar found on these pages', style: TextStyle(color: Colors.white)),
+          title: Text('Grammar found on these pages', style: TextStyle(color: AppTheme.textPrimary)),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -254,10 +254,10 @@ class _GrammarPageState extends State<GrammarPage> {
                 CheckboxListTile(
                   value: selected[i],
                   onChanged: (v) => setDlg(() => selected[i] = v ?? false),
-                  title: Text(topics[i]['title'].toString(), style: const TextStyle(color: Colors.white)),
+                  title: Text(topics[i]['title'].toString(), style: TextStyle(color: AppTheme.textPrimary)),
                   subtitle: Text(
                     '${topics[i]['subtitle'] ?? ''}\n${topics[i]['why'] ?? ''}'.trim(),
-                    style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12),
+                    style: TextStyle(color: AppTheme.textSecondary, fontSize: 12),
                   ),
                 ),
             ],
@@ -282,8 +282,8 @@ class _GrammarPageState extends State<GrammarPage> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppTheme.surface,
-        title: Text('Rebuild "${topic.title}"?', style: const TextStyle(color: Colors.white)),
-        content: const Text(
+        title: Text('Rebuild "${topic.title}"?', style: TextStyle(color: AppTheme.textPrimary)),
+        content: Text(
           'The AI checks every rule of this topic, keeps the useful content already here, '
           'adds what is missing, and rewrites it as one complete, simple topic with street '
           'expressions, a summary and a quiz.\n\nThe current version is replaced.',
@@ -327,16 +327,16 @@ class _GrammarPageState extends State<GrammarPage> {
           backgroundColor: AppTheme.surface,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           title: Row(
-            children: const [
+            children: [
               Icon(Icons.lock_outline_rounded, color: AppTheme.primary),
               SizedBox(width: 10),
-              Text('Admin Access', style: TextStyle(color: Colors.white, fontSize: 18)),
+              Text('Admin Access', style: TextStyle(color: AppTheme.textPrimary, fontSize: 18)),
             ],
           ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text(
+              Text(
                 'Please enter the admin password to manage grammar content.',
                 style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
               ),
@@ -345,10 +345,10 @@ class _GrammarPageState extends State<GrammarPage> {
                 controller: passController,
                 obscureText: obscure,
                 autofocus: true,
-                style: const TextStyle(color: Colors.white),
+                style: TextStyle(color: AppTheme.textPrimary),
                 decoration: InputDecoration(
                   hintText: 'Admin Password',
-                  prefixIcon: const Icon(Icons.password_rounded, color: AppTheme.primary),
+                  prefixIcon: Icon(Icons.password_rounded, color: AppTheme.primary),
                   suffixIcon: IconButton(
                     icon: Icon(obscure ? Icons.visibility_off : Icons.visibility, color: AppTheme.textSecondary),
                     onPressed: () => setDlgState(() => obscure = !obscure),
@@ -398,7 +398,7 @@ class _GrammarPageState extends State<GrammarPage> {
       builder: (context) {
         return AlertDialog(
           backgroundColor: AppTheme.surface,
-          title: Text('Update "${topic.title}"', style: const TextStyle(color: Colors.white)),
+          title: Text('Update "${topic.title}"', style: TextStyle(color: AppTheme.textPrimary)),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -468,23 +468,23 @@ class _GrammarPageState extends State<GrammarPage> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: AppTheme.surface,
-        title: Text('Update from $sourceName', style: const TextStyle(color: Colors.white)),
+        title: Text('Update from $sourceName', style: TextStyle(color: AppTheme.textPrimary)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Any specific instructions for the AI?', 
+            Text('Any specific instructions for the AI?', 
               style: TextStyle(color: AppTheme.textSecondary, fontSize: 14)),
             const SizedBox(height: 16),
             TextField(
               controller: controller,
-              style: const TextStyle(color: Colors.white),
+              style: TextStyle(color: AppTheme.textPrimary),
               autofocus: true,
               decoration: InputDecoration(
                 hintText: 'e.g. "Only add the conjugation table"',
-                hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.3)),
+                hintStyle: TextStyle(color: AppTheme.fg.withValues(alpha: 0.3)),
                 filled: true,
-                fillColor: Colors.white.withValues(alpha: 0.05),
+                fillColor: AppTheme.fg.withValues(alpha: 0.05),
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
               ),
               maxLines: 3,
@@ -549,16 +549,16 @@ class _GrammarPageState extends State<GrammarPage> {
       builder: (context) {
         return AlertDialog(
           backgroundColor: AppTheme.surface,
-          title: Text('Update Grammar with AI: ${topic.title}', style: const TextStyle(color: Colors.white)),
+          title: Text('Update Grammar with AI: ${topic.title}', style: TextStyle(color: AppTheme.textPrimary)),
           content: TextField(
             controller: controller,
             autofocus: true,
             maxLines: 3,
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               hintText: 'e.g. Add more examples of irregular verbs to this guide...',
-              hintStyle: TextStyle(color: Colors.white54),
+              hintStyle: TextStyle(color: AppTheme.textTertiary),
             ),
-            style: const TextStyle(color: Colors.white),
+            style: TextStyle(color: AppTheme.textPrimary),
           ),
           actions: [
             TextButton(
@@ -635,8 +635,8 @@ class _GrammarPageState extends State<GrammarPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                  Text(subtitle, style: TextStyle(color: Colors.white.withValues(alpha: 0.6), fontSize: 12)),
+                  Text(title, style: TextStyle(color: AppTheme.textPrimary, fontWeight: FontWeight.bold)),
+                  Text(subtitle, style: TextStyle(color: AppTheme.fg.withValues(alpha: 0.6), fontSize: 12)),
                 ],
               ),
             ),
@@ -703,7 +703,7 @@ class _GrammarPageState extends State<GrammarPage> {
               const SizedBox(width: 10),
               Text(
                 isCustom ? 'Admin Delete' : 'Admin Reset / Hide',
-                style: const TextStyle(color: Colors.white, fontSize: 18),
+                style: TextStyle(color: AppTheme.textPrimary, fontSize: 18),
               ),
             ],
           ),
@@ -730,7 +730,7 @@ class _GrammarPageState extends State<GrammarPage> {
                         isCustom
                             ? 'This action cannot be undone. Enter admin password to delete this custom topic.'
                             : 'This is a core lesson. You can either Reset to Default (wipe AI modifications and restore original page) or Hide Topic completely.',
-                        style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+                        style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
                       ),
                     ),
                   ],
@@ -741,7 +741,7 @@ class _GrammarPageState extends State<GrammarPage> {
                 controller: passController,
                 obscureText: obscure,
                 autofocus: true,
-                style: const TextStyle(color: Colors.white),
+                style: TextStyle(color: AppTheme.textPrimary),
                 decoration: InputDecoration(
                   hintText: 'Admin Password',
                   prefixIcon: Icon(Icons.lock_outline, color: isCustom ? AppTheme.error : AppTheme.primary),
@@ -879,7 +879,7 @@ class _GrammarPageState extends State<GrammarPage> {
                             : 1,
                     mainAxisSpacing: 20,
                     crossAxisSpacing: 20,
-                    childAspectRatio: 1.6,
+                    mainAxisExtent: 200,
                   ),
                   itemCount: grammarItems.length,
                   itemBuilder: (context, index) {
@@ -897,20 +897,20 @@ class _GrammarPageState extends State<GrammarPage> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const SpinKitDoubleBounce(color: AppTheme.primary, size: 80),
+                    SpinKitDoubleBounce(color: AppTheme.primary, size: 80),
                     const SizedBox(height: 20),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 24),
                       child: Text(
                         _progress ?? 'AI is generating your grammar guide...',
                         textAlign: TextAlign.center,
-                        style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                        style: TextStyle(color: AppTheme.textPrimary, fontSize: 18, fontWeight: FontWeight.bold),
                       ),
                     ),
                     const SizedBox(height: 10),
                     Text(
                       'A complete topic takes about a minute',
-                      style: TextStyle(color: Colors.white.withValues(alpha: 0.7)),
+                      style: TextStyle(color: AppTheme.fg.withValues(alpha: 0.7)),
                     ),
                   ],
                 ),
@@ -933,17 +933,17 @@ class _GrammarPageState extends State<GrammarPage> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         ListTile(
-                          leading: const Icon(Icons.edit, color: AppTheme.primary),
-                          title: const Text('Enter Topic Name', style: TextStyle(color: Colors.white)),
+                          leading: Icon(Icons.edit, color: AppTheme.primary),
+                          title: Text('Enter Topic Name', style: TextStyle(color: AppTheme.textPrimary)),
                           onTap: () {
                             Navigator.pop(context);
                             _showTopicNameDialog();
                           },
                         ),
                         ListTile(
-                          leading: const Icon(Icons.photo_camera_rounded, color: AppTheme.success),
-                          title: const Text('By Photo', style: TextStyle(color: Colors.white)),
-                          subtitle: const Text('Photograph the grammar pages of your book',
+                          leading: Icon(Icons.photo_camera_rounded, color: AppTheme.success),
+                          title: Text('By Photo', style: TextStyle(color: AppTheme.textPrimary)),
+                          subtitle: Text('Photograph the grammar pages of your book',
                               style: TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
                           onTap: () {
                             Navigator.pop(context);
@@ -951,8 +951,8 @@ class _GrammarPageState extends State<GrammarPage> {
                           },
                         ),
                         ListTile(
-                          leading: const Icon(Icons.picture_as_pdf, color: AppTheme.secondary),
-                          title: const Text('Upload PDF', style: TextStyle(color: Colors.white)),
+                          leading: Icon(Icons.picture_as_pdf, color: AppTheme.secondary),
+                          title: Text('Upload PDF', style: TextStyle(color: AppTheme.textPrimary)),
                           onTap: () {
                             Navigator.pop(context);
                             _pickAndGenerateFromPdf();
@@ -979,7 +979,7 @@ class _GrammarPageState extends State<GrammarPage> {
       decoration: BoxDecoration(
         color: AppTheme.surface,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.1), width: 1.5),
+        border: Border.all(color: AppTheme.fg.withValues(alpha: 0.1), width: 1.5),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.2),
@@ -1032,16 +1032,16 @@ class _GrammarPageState extends State<GrammarPage> {
                     ),
                     const Spacer(),
                     IconButton(
-                      icon: const Icon(Icons.sync_rounded, color: AppTheme.primary, size: 22),
+                      icon: Icon(Icons.sync_rounded, color: AppTheme.primary, size: 22),
                       tooltip: 'Update',
                       onPressed: () => _checkAdminAccess(() => _showUpdateOptions(topic)),
                     ),
                     IconButton(
-                      icon: const Icon(Icons.delete_outline_rounded, color: AppTheme.error, size: 22),
+                      icon: Icon(Icons.delete_outline_rounded, color: AppTheme.error, size: 22),
                       tooltip: isCustom ? 'Delete' : 'Reset / Hide',
                       onPressed: () => _showDeleteConfirm(topic.id),
                     ),
-                    const Icon(Icons.arrow_forward_ios_rounded,
+                    Icon(Icons.arrow_forward_ios_rounded,
                         color: AppTheme.textTertiary, size: 14),
                   ],
                 ),

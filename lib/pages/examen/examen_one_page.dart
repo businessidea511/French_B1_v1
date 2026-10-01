@@ -7,6 +7,7 @@ import '../../theme/app_theme.dart';
 import '../../services/language_provider.dart';
 import '../../services/deepseek_service.dart';
 import '../../services/hugging_face_tts_service.dart';
+import '../../services/tts_service.dart';
 import '../../services/global_scroll_manager.dart';
 
 class ExamenOnePage extends StatefulWidget {
@@ -111,6 +112,7 @@ class _ExamenOnePageState extends State<ExamenOnePage> {
     }
     if (mounted) {
       setState(() { _ttsEngine = 'system'; _isLoadingAudio = false; _isPlaying = true; });
+      await TtsService.useFrenchVoice(_flutterTts);
       await _flutterTts.speak(clean);
     }
   }
@@ -205,7 +207,7 @@ class _ExamenOnePageState extends State<ExamenOnePage> {
                   TextButton(onPressed: () => Navigator.pop(context), child: const Text('Annuler')),
                   TextButton(
                     onPressed: () { Navigator.pop(context); _navStop(); setState(() => _examPhase = 'intro'); },
-                    child: const Text('Quitter', style: TextStyle(color: AppTheme.error)),
+                    child: Text('Quitter', style: TextStyle(color: AppTheme.error)),
                   ),
                 ],
               ));
@@ -240,8 +242,8 @@ class _ExamenOnePageState extends State<ExamenOnePage> {
                 shape: BoxShape.circle,
               ),
               child: Center(child: completed
-                  ? const Icon(Icons.check, size: 13, color: Colors.white)
-                  : Text('${i + 1}', style: TextStyle(color: active ? Colors.white : AppTheme.textSecondary, fontWeight: FontWeight.bold, fontSize: 12))),
+                  ? Icon(Icons.check, size: 13, color: AppTheme.textPrimary)
+                  : Text('${i + 1}', style: TextStyle(color: active ? AppTheme.textPrimary : AppTheme.textSecondary, fontWeight: FontWeight.bold, fontSize: 12))),
             ),
             const SizedBox(height: 4),
             Text(
@@ -258,13 +260,13 @@ class _ExamenOnePageState extends State<ExamenOnePage> {
   Widget _loadingState(String title, String subtitle, {bool secondary = false}) =>
     Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
       secondary
-          ? const SpinKitDoubleBounce(color: AppTheme.secondary, size: 80)
-          : const SpinKitWanderingCubes(color: AppTheme.primary, size: 80),
+          ? SpinKitDoubleBounce(color: AppTheme.secondary, size: 80)
+          : SpinKitWanderingCubes(color: AppTheme.primary, size: 80),
       const SizedBox(height: 32),
-      Text(title, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white)),
+      Text(title, style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
       const SizedBox(height: 8),
       Padding(padding: const EdgeInsets.symmetric(horizontal: 40),
-        child: Text(subtitle, style: TextStyle(color: Colors.white.withValues(alpha: 0.6)), textAlign: TextAlign.center)),
+        child: Text(subtitle, style: TextStyle(color: AppTheme.fg.withValues(alpha: 0.6)), textAlign: TextAlign.center)),
     ]));
 
   // ═════════════════════════════════════════════════════════════════════════
@@ -304,7 +306,7 @@ class _ExamenOnePageState extends State<ExamenOnePage> {
             decoration: BoxDecoration(
               color: AppTheme.surface,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.07)),
+              border: Border.all(color: AppTheme.fg.withValues(alpha: 0.07)),
             ),
             child: Column(
               children: [
@@ -313,7 +315,7 @@ class _ExamenOnePageState extends State<ExamenOnePage> {
                   color: AppTheme.surfaceLight,
                   padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
                   child: Row(children: [
-                    const Expanded(child: Text('Affirmation', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppTheme.textSecondary))),
+                    Expanded(child: Text('Affirmation', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppTheme.textSecondary))),
                     _thCell('Vrai',     AppTheme.success),
                     _thCell('Faux',     AppTheme.error),
                     _thCell('On ne\nsait pas', AppTheme.warning),
@@ -347,12 +349,12 @@ class _ExamenOnePageState extends State<ExamenOnePage> {
     final colors = [AppTheme.success, AppTheme.error, AppTheme.warning];
 
     return Container(
-      decoration: BoxDecoration(border: Border(bottom: BorderSide(color: Colors.white.withValues(alpha: 0.05)))),
+      decoration: BoxDecoration(border: Border(bottom: BorderSide(color: AppTheme.fg.withValues(alpha: 0.05)))),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
         Expanded(
           child: Text('${idx + 1}. $statement',
-              style: const TextStyle(fontSize: 14, color: AppTheme.textPrimary, height: 1.4)),
+              style: TextStyle(fontSize: 14, color: AppTheme.textPrimary, height: 1.4)),
         ),
         ...List.generate(3, (i) {
           final isSel = selected == opts[i];
@@ -365,7 +367,7 @@ class _ExamenOnePageState extends State<ExamenOnePage> {
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: isSel ? colors[i].withValues(alpha: 0.25) : Colors.transparent,
-                    border: Border.all(color: isSel ? colors[i] : Colors.white.withValues(alpha: 0.25), width: 2),
+                    border: Border.all(color: isSel ? colors[i] : AppTheme.fg.withValues(alpha: 0.25), width: 2),
                   ),
                   child: isSel ? Icon(Icons.check, size: 14, color: colors[i]) : null,
                 ),
@@ -394,11 +396,11 @@ class _ExamenOnePageState extends State<ExamenOnePage> {
         // Replay info + button
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-          decoration: BoxDecoration(color: AppTheme.surface, borderRadius: BorderRadius.circular(14), border: Border.all(color: Colors.white.withValues(alpha: 0.05))),
+          decoration: BoxDecoration(color: AppTheme.surface, borderRadius: BorderRadius.circular(14), border: Border.all(color: AppTheme.fg.withValues(alpha: 0.05))),
           child: Row(children: [
-            const Icon(Icons.replay, color: AppTheme.textTertiary, size: 18),
+            Icon(Icons.replay, color: AppTheme.textTertiary, size: 18),
             const SizedBox(width: 10),
-            const Expanded(child: Text('Même enregistrement que l\'Exercice A — vous pouvez le réécouter.', style: TextStyle(fontSize: 13, color: AppTheme.textSecondary))),
+            Expanded(child: Text('Même enregistrement que l\'Exercice A — vous pouvez le réécouter.', style: TextStyle(fontSize: 13, color: AppTheme.textSecondary))),
             const SizedBox(width: 10),
             _playBtn(audioTxt, dialIdx: -1, compact: true),
           ]),
@@ -413,7 +415,7 @@ class _ExamenOnePageState extends State<ExamenOnePage> {
               padding: const EdgeInsets.all(18),
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Text('${i + 1}) ${q['question']}',
-                    style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white)),
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
                 const SizedBox(height: 14),
                 ...List.generate(opts.length, (j) {
                   final sel = _ex2Answers[i] == j;
@@ -463,10 +465,10 @@ class _ExamenOnePageState extends State<ExamenOnePage> {
                 Container(
                   width: 28, height: 28,
                   decoration: BoxDecoration(color: AppTheme.secondary, shape: BoxShape.circle),
-                  child: Center(child: Text('${i + 1}', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13))),
+                  child: Center(child: Text('${i + 1}', style: TextStyle(color: AppTheme.textPrimary, fontWeight: FontWeight.bold, fontSize: 13))),
                 ),
                 const SizedBox(width: 14),
-                Expanded(child: Text('Dialogue ${i + 1}', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white))),
+                Expanded(child: Text('Dialogue ${i + 1}', style: TextStyle(fontWeight: FontWeight.bold, color: AppTheme.textPrimary))),
                 _playBtn(script, dialIdx: i),
               ]),
             ),
@@ -476,9 +478,9 @@ class _ExamenOnePageState extends State<ExamenOnePage> {
         const SizedBox(height: 20),
         Container(
           padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(color: AppTheme.surface, borderRadius: BorderRadius.circular(14), border: Border.all(color: Colors.white.withValues(alpha: 0.05))),
+          decoration: BoxDecoration(color: AppTheme.surface, borderRadius: BorderRadius.circular(14), border: Border.all(color: AppTheme.fg.withValues(alpha: 0.05))),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            const Text('Associez chaque dialogue à une situation :',
+            Text('Associez chaque dialogue à une situation :',
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppTheme.textSecondary)),
             const SizedBox(height: 14),
             SingleChildScrollView(
@@ -508,7 +510,7 @@ class _ExamenOnePageState extends State<ExamenOnePage> {
         ...situations.map((s) => SizedBox(width: cellW,
           child: Padding(padding: const EdgeInsets.symmetric(horizontal: 4),
             child: Text(s, textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppTheme.textSecondary)),
+              style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppTheme.textSecondary)),
           ))),
       ]),
       const SizedBox(height: 8),
@@ -523,7 +525,7 @@ class _ExamenOnePageState extends State<ExamenOnePage> {
           child: Row(children: [
             SizedBox(width: labelW,
               child: Padding(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 14),
-                child: Text('Dialogue ${dIdx + 1}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppTheme.textPrimary), textAlign: TextAlign.center))),
+                child: Text('Dialogue ${dIdx + 1}', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppTheme.textPrimary), textAlign: TextAlign.center))),
             ...List.generate(situations.length, (sIdx) {
               final isSel = _ex3Answers[dIdx] == sIdx;
               return GestureDetector(
@@ -536,9 +538,9 @@ class _ExamenOnePageState extends State<ExamenOnePage> {
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       color: isSel ? AppTheme.secondary.withValues(alpha: 0.25) : Colors.transparent,
-                      border: Border.all(color: isSel ? AppTheme.secondary : Colors.white.withValues(alpha: 0.25), width: 2),
+                      border: Border.all(color: isSel ? AppTheme.secondary : AppTheme.fg.withValues(alpha: 0.25), width: 2),
                     ),
-                    child: isSel ? const Icon(Icons.check, size: 14, color: AppTheme.secondary) : null,
+                    child: isSel ? Icon(Icons.check, size: 14, color: AppTheme.secondary) : null,
                   ))),
               );
             }),
@@ -603,11 +605,11 @@ class _ExamenOnePageState extends State<ExamenOnePage> {
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         Card(
           child: Padding(padding: const EdgeInsets.all(20), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            const Text('Texte de Compréhension Écrite',
+            Text('Texte de Compréhension Écrite',
                 style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppTheme.accent)),
             const SizedBox(height: 12),
             Text(data['text'] as String,
-                style: const TextStyle(fontSize: 15, height: 1.65, color: AppTheme.textPrimary)),
+                style: TextStyle(fontSize: 15, height: 1.65, color: AppTheme.textPrimary)),
           ])),
         ),
         const SizedBox(height: 20),
@@ -655,13 +657,13 @@ class _ExamenOnePageState extends State<ExamenOnePage> {
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         Card(child: Padding(padding: const EdgeInsets.all(20), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Row(children: [
-            const Icon(Icons.edit_note_rounded, color: AppTheme.secondary, size: 26),
+            Icon(Icons.edit_note_rounded, color: AppTheme.secondary, size: 26),
             const SizedBox(width: 8),
             Expanded(child: Text(w['topic_title'] as String,
                 style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold))),
           ]),
           const SizedBox(height: 10),
-          const Text('Sujet :', style: TextStyle(fontSize: 12, color: AppTheme.textSecondary, fontWeight: FontWeight.bold)),
+          Text('Sujet :', style: TextStyle(fontSize: 12, color: AppTheme.textSecondary, fontWeight: FontWeight.bold)),
           const SizedBox(height: 6),
           Text(w['prompt'] as String, style: const TextStyle(fontSize: 15, height: 1.5)),
         ]))),
@@ -669,17 +671,17 @@ class _ExamenOnePageState extends State<ExamenOnePage> {
         TextField(
           controller: _essayController,
           maxLines: 12, minLines: 8,
-          style: const TextStyle(fontSize: 15, color: Colors.white),
+          style: TextStyle(fontSize: 15, color: AppTheme.textPrimary),
           decoration: InputDecoration(
             hintText: 'Commencez à écrire ici...',
-            hintStyle: const TextStyle(color: AppTheme.textTertiary),
+            hintStyle: TextStyle(color: AppTheme.textTertiary),
             fillColor: AppTheme.surface, filled: true,
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(16),
-                borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1))),
+                borderSide: BorderSide(color: AppTheme.fg.withValues(alpha: 0.1))),
             enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16),
-                borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1))),
+                borderSide: BorderSide(color: AppTheme.fg.withValues(alpha: 0.1))),
             focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16),
-                borderSide: const BorderSide(color: AppTheme.secondary, width: 2)),
+                borderSide: BorderSide(color: AppTheme.secondary, width: 2)),
           ),
         ),
         const SizedBox(height: 8),
@@ -755,7 +757,7 @@ class _ExamenOnePageState extends State<ExamenOnePage> {
 
         // ── Global score card ──────────────────────────────────────────────
         Card(child: Padding(padding: const EdgeInsets.all(24), child: Column(children: [
-          const Text('SCORE GLOBAL', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1.4, color: AppTheme.textTertiary)),
+          Text('SCORE GLOBAL', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1.4, color: AppTheme.textTertiary)),
           const SizedBox(height: 20),
           Stack(alignment: Alignment.center, children: [
             SizedBox(width: 130, height: 130,
@@ -779,9 +781,9 @@ class _ExamenOnePageState extends State<ExamenOnePage> {
         ]))),
 
         const SizedBox(height: 28),
-        const Center(child: Text('CORRECTIONS DÉTAILLÉES',
+        Center(child: Text('CORRECTIONS DÉTAILLÉES',
             style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, letterSpacing: 1.2, color: AppTheme.accent))),
-        const Divider(color: Colors.white12, height: 24),
+        Divider(color: AppTheme.fg.withValues(alpha: 0.12), height: 24),
 
         // ── Listening review ───────────────────────────────────────────────
         _sectionTitle('1. Compréhension Orale'),
@@ -830,24 +832,24 @@ class _ExamenOnePageState extends State<ExamenOnePage> {
   }
 
   Widget _scoreTile(String label, String score, Color c) => Column(children: [
-    Text(label, style: const TextStyle(fontSize: 11, color: AppTheme.textTertiary)),
+    Text(label, style: TextStyle(fontSize: 11, color: AppTheme.textTertiary)),
     const SizedBox(height: 3),
     Text(score, style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: c)),
   ]);
 
   Widget _sectionTitle(String t) => Padding(
     padding: const EdgeInsets.only(bottom: 12),
-    child: Text(t, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white)),
+    child: Text(t, style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
   );
 
-  Widget _transcriptCard(String text, {String label = 'Transcription de l\'enregistrement :', Color color = AppTheme.primary}) =>
+  Widget _transcriptCard(String text, {String label = 'Transcription de l\'enregistrement :', Color? color}) =>
     Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(color: AppTheme.surfaceLight.withValues(alpha: 0.5), borderRadius: BorderRadius.circular(12)),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(label, style: TextStyle(fontWeight: FontWeight.bold, color: color, fontSize: 13)),
+        Text(label, style: TextStyle(fontWeight: FontWeight.bold, color: color ?? AppTheme.primary, fontSize: 13)),
         const SizedBox(height: 8),
-        Text(text, style: const TextStyle(fontSize: 14, height: 1.55, color: AppTheme.textPrimary)),
+        Text(text, style: TextStyle(fontSize: 14, height: 1.55, color: AppTheme.textPrimary)),
       ]),
     );
 
@@ -855,9 +857,9 @@ class _ExamenOnePageState extends State<ExamenOnePage> {
   Widget _exAReview(List statements) {
     return Card(
       color: AppTheme.surface,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16), side: BorderSide(color: Colors.white.withValues(alpha: 0.05))),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16), side: BorderSide(color: AppTheme.fg.withValues(alpha: 0.05))),
       child: Padding(padding: const EdgeInsets.all(16), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        const Text('A. Vrai / Faux / On ne sait pas',
+        Text('A. Vrai / Faux / On ne sait pas',
             style: TextStyle(fontWeight: FontWeight.bold, color: AppTheme.primary, fontSize: 14)),
         const SizedBox(height: 12),
         ...List.generate(statements.length, (i) {
@@ -877,16 +879,16 @@ class _ExamenOnePageState extends State<ExamenOnePage> {
               const SizedBox(width: 10),
               Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Text('${i + 1}. ${statements[i]['statement']}',
-                    style: const TextStyle(fontSize: 13, color: Colors.white, fontWeight: FontWeight.w500)),
+                    style: TextStyle(fontSize: 13, color: AppTheme.textPrimary, fontWeight: FontWeight.w500)),
                 const SizedBox(height: 4),
                 Row(children: [
-                  Text('Votre réponse : ', style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.6))),
+                  Text('Votre réponse : ', style: TextStyle(fontSize: 12, color: AppTheme.fg.withValues(alpha: 0.6))),
                   Text(userAnswer ?? '—', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold,
                       color: ok ? AppTheme.success : AppTheme.error)),
                 ]),
                 if (!ok) Row(children: [
-                  Text('Réponse correcte : ', style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.6))),
-                  Text(correct, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppTheme.success)),
+                  Text('Réponse correcte : ', style: TextStyle(fontSize: 12, color: AppTheme.fg.withValues(alpha: 0.6))),
+                  Text(correct, style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppTheme.success)),
                 ]),
               ])),
             ]),
@@ -900,9 +902,9 @@ class _ExamenOnePageState extends State<ExamenOnePage> {
   Widget _exBReview(List questions) {
     return Card(
       color: AppTheme.surface,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16), side: BorderSide(color: Colors.white.withValues(alpha: 0.05))),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16), side: BorderSide(color: AppTheme.fg.withValues(alpha: 0.05))),
       child: Padding(padding: const EdgeInsets.all(16), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        const Text('B. Choix Multiple (a / b / c)',
+        Text('B. Choix Multiple (a / b / c)',
             style: TextStyle(fontWeight: FontWeight.bold, color: AppTheme.accent, fontSize: 14)),
         const SizedBox(height: 12),
         ...List.generate(questions.length, (i) {
@@ -914,7 +916,7 @@ class _ExamenOnePageState extends State<ExamenOnePage> {
           return ExpansionTile(
             leading: Icon(ok ? Icons.check_circle : Icons.cancel, color: ok ? AppTheme.success : AppTheme.error),
             title: Text('${i + 1}) ${q['question']}',
-                style: const TextStyle(fontSize: 13, color: Colors.white, fontWeight: FontWeight.bold)),
+                style: TextStyle(fontSize: 13, color: AppTheme.textPrimary, fontWeight: FontWeight.bold)),
             subtitle: Text(ok ? 'Correct ✓' : 'Incorrect ✗',
                 style: TextStyle(fontSize: 11, color: ok ? AppTheme.success : AppTheme.error)),
             children: [
@@ -922,7 +924,7 @@ class _ExamenOnePageState extends State<ExamenOnePage> {
                 ...List.generate(opts.length, (j) {
                   final isC = j == correct; final isU = j == userSel;
                   final bg = isC ? AppTheme.success.withValues(alpha: 0.12) : (isU && !isC ? AppTheme.error.withValues(alpha: 0.12) : null);
-                  final bd = isC ? AppTheme.success : (isU ? AppTheme.error : Colors.white.withValues(alpha: 0.05));
+                  final bd = isC ? AppTheme.success : (isU ? AppTheme.error : AppTheme.fg.withValues(alpha: 0.05));
                   return Container(
                     margin: const EdgeInsets.only(bottom: 6),
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -932,7 +934,7 @@ class _ExamenOnePageState extends State<ExamenOnePage> {
                           color: isC ? AppTheme.success : (isU ? AppTheme.error : AppTheme.textTertiary)),
                       const SizedBox(width: 10),
                       Expanded(child: Text(opts[j], style: TextStyle(fontSize: 13, fontWeight: (isC || isU) ? FontWeight.bold : FontWeight.normal,
-                          color: (isC || isU) ? Colors.white : AppTheme.textSecondary))),
+                          color: (isC || isU) ? AppTheme.textPrimary : AppTheme.textSecondary))),
                     ]),
                   );
                 }),
@@ -940,9 +942,9 @@ class _ExamenOnePageState extends State<ExamenOnePage> {
                   const SizedBox(height: 8),
                   Container(padding: const EdgeInsets.all(12), decoration: BoxDecoration(color: AppTheme.surfaceLight, borderRadius: BorderRadius.circular(8)),
                     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      const Text('Explication :', style: TextStyle(fontWeight: FontWeight.bold, color: AppTheme.accent, fontSize: 12)),
+                      Text('Explication :', style: TextStyle(fontWeight: FontWeight.bold, color: AppTheme.accent, fontSize: 12)),
                       const SizedBox(height: 4),
-                      Text(q['explanation'] as String, style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary, height: 1.4)),
+                      Text(q['explanation'] as String, style: TextStyle(fontSize: 12, color: AppTheme.textSecondary, height: 1.4)),
                     ])),
                 ],
               ])),
@@ -961,9 +963,9 @@ class _ExamenOnePageState extends State<ExamenOnePage> {
 
     return Card(
       color: AppTheme.surface,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16), side: BorderSide(color: Colors.white.withValues(alpha: 0.05))),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16), side: BorderSide(color: AppTheme.fg.withValues(alpha: 0.05))),
       child: Padding(padding: const EdgeInsets.all(16), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        const Text('C. Association Dialogues ↔ Situations',
+        Text('C. Association Dialogues ↔ Situations',
             style: TextStyle(fontWeight: FontWeight.bold, color: AppTheme.secondary, fontSize: 14)),
         const SizedBox(height: 12),
         ...List.generate(dialogues.length, (i) {
@@ -982,24 +984,24 @@ class _ExamenOnePageState extends State<ExamenOnePage> {
               Row(children: [
                 Icon(ok ? Icons.check_circle : Icons.cancel, size: 18, color: ok ? AppTheme.success : AppTheme.error),
                 const SizedBox(width: 8),
-                Text('Dialogue ${i + 1}', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+                Text('Dialogue ${i + 1}', style: TextStyle(fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
               ]),
               const SizedBox(height: 8),
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(color: AppTheme.background.withValues(alpha: 0.6), borderRadius: BorderRadius.circular(8)),
                 child: Text(dialogues[i]['script'] as String,
-                    style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary, height: 1.4, fontStyle: FontStyle.italic)),
+                    style: TextStyle(fontSize: 13, color: AppTheme.textSecondary, height: 1.4, fontStyle: FontStyle.italic)),
               ),
               const SizedBox(height: 8),
               Row(children: [
-                Text('Votre réponse : ', style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.6))),
+                Text('Votre réponse : ', style: TextStyle(fontSize: 12, color: AppTheme.fg.withValues(alpha: 0.6))),
                 Text(userSel != null ? situations[userSel] : '—',
                     style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: ok ? AppTheme.success : AppTheme.error)),
               ]),
               if (!ok) Row(children: [
-                Text('Réponse correcte : ', style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.6))),
-                Text(situations[correct], style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppTheme.success)),
+                Text('Réponse correcte : ', style: TextStyle(fontSize: 12, color: AppTheme.fg.withValues(alpha: 0.6))),
+                Text(situations[correct], style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppTheme.success)),
               ]),
             ]),
           );
@@ -1023,13 +1025,13 @@ class _ExamenOnePageState extends State<ExamenOnePage> {
             side: BorderSide(color: ok ? AppTheme.success.withValues(alpha: 0.25) : AppTheme.error.withValues(alpha: 0.25), width: 1.5)),
         child: ExpansionTile(
           leading: Icon(ok ? Icons.check_circle : Icons.cancel, color: ok ? AppTheme.success : AppTheme.error),
-          title: Text(q['question'] as String, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.white)),
+          title: Text(q['question'] as String, style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
           subtitle: Text(ok ? 'Correct ✓' : 'Incorrect ✗', style: TextStyle(fontSize: 11, color: ok ? AppTheme.success : AppTheme.error)),
           children: [Padding(padding: const EdgeInsets.all(14), child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
             ...List.generate(opts.length, (j) {
               final isC = j == correct; final isU = j == userSel;
               final bg = isC ? AppTheme.success.withValues(alpha: 0.12) : (isU && !isC ? AppTheme.error.withValues(alpha: 0.12) : null);
-              final bd = isC ? AppTheme.success : (isU ? AppTheme.error : Colors.white.withValues(alpha: 0.05));
+              final bd = isC ? AppTheme.success : (isU ? AppTheme.error : AppTheme.fg.withValues(alpha: 0.05));
               return Container(
                 margin: const EdgeInsets.only(bottom: 6),
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -1039,7 +1041,7 @@ class _ExamenOnePageState extends State<ExamenOnePage> {
                       color: isC ? AppTheme.success : (isU ? AppTheme.error : AppTheme.textTertiary)),
                   const SizedBox(width: 10),
                   Expanded(child: Text(opts[j], style: TextStyle(fontSize: 13, fontWeight: (isC || isU) ? FontWeight.bold : FontWeight.normal,
-                      color: (isC || isU) ? Colors.white : AppTheme.textSecondary))),
+                      color: (isC || isU) ? AppTheme.textPrimary : AppTheme.textSecondary))),
                 ]),
               );
             }),
@@ -1047,9 +1049,9 @@ class _ExamenOnePageState extends State<ExamenOnePage> {
               const SizedBox(height: 8),
               Container(padding: const EdgeInsets.all(12), decoration: BoxDecoration(color: AppTheme.surfaceLight, borderRadius: BorderRadius.circular(8)),
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  const Text('Explication :', style: TextStyle(fontWeight: FontWeight.bold, color: AppTheme.accent, fontSize: 12)),
+                  Text('Explication :', style: TextStyle(fontWeight: FontWeight.bold, color: AppTheme.accent, fontSize: 12)),
                   const SizedBox(height: 4),
-                  Text(q['explanation'] as String, style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary, height: 1.4)),
+                  Text(q['explanation'] as String, style: TextStyle(fontSize: 12, color: AppTheme.textSecondary, height: 1.4)),
                 ])),
             ],
           ]))],
@@ -1066,31 +1068,31 @@ class _ExamenOnePageState extends State<ExamenOnePage> {
 
     return Card(
       color: AppTheme.surface,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16), side: BorderSide(color: Colors.white.withValues(alpha: 0.05))),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16), side: BorderSide(color: AppTheme.fg.withValues(alpha: 0.05))),
       child: Padding(padding: const EdgeInsets.all(20), child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-        Text(w['topic_title'] as String, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppTheme.secondary)),
+        Text(w['topic_title'] as String, style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppTheme.secondary)),
         const SizedBox(height: 6),
-        Text(w['prompt'] as String, style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary, height: 1.4)),
-        const Divider(height: 28, color: Colors.white12),
+        Text(w['prompt'] as String, style: TextStyle(fontSize: 13, color: AppTheme.textSecondary, height: 1.4)),
+        Divider(height: 28, color: AppTheme.fg.withValues(alpha: 0.12)),
         const Text('Votre Rédaction :', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
         const SizedBox(height: 8),
-        Container(padding: const EdgeInsets.all(14), decoration: BoxDecoration(color: AppTheme.background, borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.white10)),
-          child: Text(_essayController.text, style: const TextStyle(fontSize: 14, color: AppTheme.textSecondary, height: 1.5, fontStyle: FontStyle.italic))),
+        Container(padding: const EdgeInsets.all(14), decoration: BoxDecoration(color: AppTheme.background, borderRadius: BorderRadius.circular(12), border: Border.all(color: AppTheme.fg.withValues(alpha: 0.10))),
+          child: Text(_essayController.text, style: TextStyle(fontSize: 14, color: AppTheme.textSecondary, height: 1.5, fontStyle: FontStyle.italic))),
         const SizedBox(height: 16),
-        const Text('Évaluation du Professeur AI :', style: TextStyle(fontWeight: FontWeight.bold, color: AppTheme.accent, fontSize: 14)),
+        Text('Évaluation du Professeur AI :', style: TextStyle(fontWeight: FontWeight.bold, color: AppTheme.accent, fontSize: 14)),
         const SizedBox(height: 6),
-        Text(feedback, style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary, height: 1.5)),
+        Text(feedback, style: TextStyle(fontSize: 13, color: AppTheme.textSecondary, height: 1.5)),
         const SizedBox(height: 18),
-        const Text('Erreurs et corrections :', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 14)),
+        Text('Erreurs et corrections :', style: TextStyle(fontWeight: FontWeight.bold, color: AppTheme.textPrimary, fontSize: 14)),
         const SizedBox(height: 10),
         if (corrections.isEmpty)
           Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(color: AppTheme.success.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12), border: Border.all(color: AppTheme.success.withValues(alpha: 0.2))),
-            child: const Row(children: [
+            child: Row(children: [
               Icon(Icons.check_circle_outline, color: AppTheme.success),
               SizedBox(width: 12),
-              Expanded(child: Text('Aucune faute détectée — Excellent travail !', style: TextStyle(color: Colors.white, fontSize: 13))),
+              Expanded(child: Text('Aucune faute détectée — Excellent travail !', style: TextStyle(color: AppTheme.textPrimary, fontSize: 13))),
             ]),
           )
         else
@@ -1100,16 +1102,16 @@ class _ExamenOnePageState extends State<ExamenOnePage> {
             decoration: BoxDecoration(color: AppTheme.surfaceLight, borderRadius: BorderRadius.circular(12)),
             child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
               Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                const Text('Original : ', style: TextStyle(fontWeight: FontWeight.bold, color: AppTheme.error, fontSize: 13)),
-                Expanded(child: Text(c['original'] ?? '', style: const TextStyle(decoration: TextDecoration.lineThrough, color: AppTheme.textSecondary, fontSize: 13))),
+                Text('Original : ', style: TextStyle(fontWeight: FontWeight.bold, color: AppTheme.error, fontSize: 13)),
+                Expanded(child: Text(c['original'] ?? '', style: TextStyle(decoration: TextDecoration.lineThrough, color: AppTheme.textSecondary, fontSize: 13))),
               ]),
               const SizedBox(height: 5),
               Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                const Text('Corrigé : ', style: TextStyle(fontWeight: FontWeight.bold, color: AppTheme.success, fontSize: 13)),
-                Expanded(child: Text(c['corrected'] ?? '', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 13))),
+                Text('Corrigé : ', style: TextStyle(fontWeight: FontWeight.bold, color: AppTheme.success, fontSize: 13)),
+                Expanded(child: Text(c['corrected'] ?? '', style: TextStyle(fontWeight: FontWeight.bold, color: AppTheme.textPrimary, fontSize: 13))),
               ]),
               const SizedBox(height: 6),
-              Text(c['explanation'] ?? '', style: const TextStyle(fontSize: 12, color: AppTheme.textTertiary, height: 1.4)),
+              Text(c['explanation'] ?? '', style: TextStyle(fontSize: 12, color: AppTheme.textTertiary, height: 1.4)),
             ]),
           )),
       ])),
@@ -1126,14 +1128,14 @@ class _ExamenOnePageState extends State<ExamenOnePage> {
         padding: const EdgeInsets.all(20), width: double.infinity,
         decoration: BoxDecoration(color: AppTheme.surface, borderRadius: BorderRadius.circular(16),
             border: Border.all(color: AppTheme.primary.withValues(alpha: 0.3), width: 1.5)),
-        child: const Text('Groupe de FLE Caramel : évaluations de janvier 2025',
-            textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.white)),
+        child: Text('Groupe de FLE Caramel : évaluations de janvier 2025',
+            textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: AppTheme.textPrimary)),
       ),
       const SizedBox(height: 32),
       _iTitle('QUOI ?'),
       const SizedBox(height: 14),
-      const Text('Les compétences évaluées pour le niveau B1 :',
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Colors.white)),
+      Text('Les compétences évaluées pour le niveau B1 :',
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: AppTheme.textPrimary)),
       const SizedBox(height: 10),
       _iBullet('Écoute A : Vrai / Faux / On ne sait pas (6 affirmations)'),
       _iBullet('Écoute B : Choix multiple a/b/c (5 questions)'),
@@ -1155,7 +1157,7 @@ class _ExamenOnePageState extends State<ExamenOnePage> {
         icon: const Icon(Icons.play_arrow_rounded),
         label: const Text('COMMENCER L\'EXAMEN (Généré par IA)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppTheme.primary, foregroundColor: Colors.white,
+          backgroundColor: AppTheme.primary, foregroundColor: AppTheme.textPrimary,
           padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 18),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         ),
@@ -1164,16 +1166,16 @@ class _ExamenOnePageState extends State<ExamenOnePage> {
     ]));
   }
 
-  Widget _iTitle(String t) => Text(t, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, decoration: TextDecoration.underline, color: AppTheme.secondary));
+  Widget _iTitle(String t) => Text(t, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, decoration: TextDecoration.underline, color: AppTheme.secondary));
   Widget _iBullet(String t) => Padding(padding: const EdgeInsets.only(bottom: 7),
     child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      const Text('• ', style: TextStyle(color: AppTheme.primary, fontWeight: FontWeight.bold, fontSize: 16)),
-      Expanded(child: Text(t, style: const TextStyle(fontSize: 14, color: Colors.white70, height: 1.4))),
+      Text('• ', style: TextStyle(color: AppTheme.primary, fontWeight: FontWeight.bold, fontSize: 16)),
+      Expanded(child: Text(t, style: TextStyle(fontSize: 14, color: AppTheme.textSecondary, height: 1.4))),
     ]));
 
   Widget _iSub(String t, String c) => Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-    Text('→ $t', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppTheme.accent)),
-    Padding(padding: const EdgeInsets.only(left: 14, top: 4), child: Text(c, style: const TextStyle(fontSize: 14, color: Colors.white70, height: 1.4))),
+    Text('→ $t', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppTheme.accent)),
+    Padding(padding: const EdgeInsets.only(left: 14, top: 4), child: Text(c, style: TextStyle(fontSize: 14, color: AppTheme.textSecondary, height: 1.4))),
   ]);
 
   // ═════════════════════════════════════════════════════════════════════════
@@ -1191,20 +1193,20 @@ class _ExamenOnePageState extends State<ExamenOnePage> {
           Text(title, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: color)),
         ]),
         const SizedBox(height: 8),
-        Text(instruction, style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary, height: 1.4)),
+        Text(instruction, style: TextStyle(fontSize: 13, color: AppTheme.textSecondary, height: 1.4)),
       ]),
     );
 
   Widget _audioCard(String text, {int dialIdx = -1}) =>
     Container(
       padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(color: AppTheme.surface, borderRadius: BorderRadius.circular(16), border: Border.all(color: Colors.white.withValues(alpha: 0.05))),
+      decoration: BoxDecoration(color: AppTheme.surface, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppTheme.fg.withValues(alpha: 0.05))),
       child: Column(crossAxisAlignment: CrossAxisAlignment.center, children: [
-        const Icon(Icons.headphones_rounded, size: 38, color: AppTheme.primary),
+        Icon(Icons.headphones_rounded, size: 38, color: AppTheme.primary),
         const SizedBox(height: 8),
         const Text('Enregistrement Audio', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
         const SizedBox(height: 4),
-        const Text('Appuyez pour écouter le scénario.', textAlign: TextAlign.center, style: TextStyle(fontSize: 13, color: AppTheme.textSecondary)),
+        Text('Appuyez pour écouter le scénario.', textAlign: TextAlign.center, style: TextStyle(fontSize: 13, color: AppTheme.textSecondary)),
         const SizedBox(height: 14),
         _playBtn(text, dialIdx: dialIdx),
         if (_ttsEngine.isNotEmpty) Padding(
@@ -1218,7 +1220,7 @@ class _ExamenOnePageState extends State<ExamenOnePage> {
   Widget _playBtn(String text, {int dialIdx = -1, bool compact = false}) {
     final loading = _isLoadingAudio && _playingDialIdx == dialIdx;
     final playing = _isPlaying && _playingDialIdx == dialIdx;
-    if (loading) return const SpinKitPulse(color: AppTheme.primary, size: 36);
+    if (loading) return SpinKitPulse(color: AppTheme.primary, size: 36);
     return ElevatedButton.icon(
       onPressed: () => _speak(text, dialIdx: dialIdx),
       style: ElevatedButton.styleFrom(
@@ -1228,9 +1230,9 @@ class _ExamenOnePageState extends State<ExamenOnePage> {
             : const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
-      icon: Icon(playing ? Icons.stop_rounded : Icons.play_arrow_rounded, color: Colors.white, size: compact ? 18 : 22),
+      icon: Icon(playing ? Icons.stop_rounded : Icons.play_arrow_rounded, color: AppTheme.textPrimary, size: compact ? 18 : 22),
       label: Text(playing ? 'Stop' : (compact ? 'Replay' : 'Écouter'),
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: compact ? 13 : 14, color: Colors.white)),
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: compact ? 13 : 14, color: AppTheme.textPrimary)),
     );
   }
 
@@ -1241,10 +1243,10 @@ class _ExamenOnePageState extends State<ExamenOnePage> {
   }) =>
     Card(child: Padding(padding: const EdgeInsets.all(22), child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
       Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-        Text('$label : ${current + 1}/$total', style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.textSecondary, fontSize: 13)),
+        Text('$label : ${current + 1}/$total', style: TextStyle(fontWeight: FontWeight.bold, color: AppTheme.textSecondary, fontSize: 13)),
         Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
           decoration: BoxDecoration(color: AppTheme.primary.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
-          child: const Text('FLE B1', style: TextStyle(color: AppTheme.primary, fontSize: 11, fontWeight: FontWeight.bold))),
+          child: Text('FLE B1', style: TextStyle(color: AppTheme.primary, fontSize: 11, fontWeight: FontWeight.bold))),
       ]),
       const SizedBox(height: 16),
       Text(question, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold, height: 1.4)),
@@ -1262,7 +1264,7 @@ class _ExamenOnePageState extends State<ExamenOnePage> {
         onPressed: onTap,
         style: OutlinedButton.styleFrom(
           backgroundColor: selected ? AppTheme.primary.withValues(alpha: 0.15) : Colors.transparent,
-          side: BorderSide(color: selected ? AppTheme.primary : Colors.white.withValues(alpha: 0.1), width: selected ? 2 : 1),
+          side: BorderSide(color: selected ? AppTheme.primary : AppTheme.fg.withValues(alpha: 0.1), width: selected ? 2 : 1),
           alignment: Alignment.centerLeft,
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -1272,9 +1274,9 @@ class _ExamenOnePageState extends State<ExamenOnePage> {
             decoration: BoxDecoration(shape: BoxShape.circle,
               border: Border.all(color: selected ? AppTheme.primary : AppTheme.textTertiary, width: 2),
               color: selected ? AppTheme.primary : Colors.transparent),
-            child: selected ? const Icon(Icons.check, size: 12, color: Colors.white) : null),
+            child: selected ? Icon(Icons.check, size: 12, color: AppTheme.textPrimary) : null),
           const SizedBox(width: 14),
-          Expanded(child: Text(text, style: TextStyle(fontSize: 14, color: selected ? Colors.white : AppTheme.textPrimary, fontWeight: selected ? FontWeight.bold : FontWeight.normal))),
+          Expanded(child: Text(text, style: TextStyle(fontSize: 14, color: selected ? AppTheme.textPrimary : AppTheme.textPrimary, fontWeight: selected ? FontWeight.bold : FontWeight.normal))),
         ]),
       ),
     );
@@ -1287,7 +1289,7 @@ class _ExamenOnePageState extends State<ExamenOnePage> {
               label: const Text('Précédent'),
               style: OutlinedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 13),
-                side: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
+                side: BorderSide(color: AppTheme.fg.withValues(alpha: 0.1)),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))))
           : const SizedBox.shrink(),
       ElevatedButton.icon(

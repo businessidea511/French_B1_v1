@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../theme/app_theme.dart';
 import 'package:provider/provider.dart';
 import '../../../widgets/lesson_template.dart';
 import '../../../widgets/translated_text.dart';
@@ -29,12 +30,12 @@ class ConditionnelPage extends StatelessWidget {
           style: TextStyle(fontSize: 15, height: 1.8),
         ),
         const SectionTitle('🔧 How to Build It'),
-        const TipBox(
+        TipBox(
           title: 'Super Simple Formula!',
           content: 'Take the FUTURE SIMPLE stem and add:\n'
               '-ais, -ais, -ait, -ions, -iez, -aient',
           icon: Icons.calculate,
-          color: Color(0xFF6366F1),
+          color: AppTheme.primary,
         ),
         const SectionTitle('📝 Regular Verbs'),
         const ExampleBox(
@@ -73,7 +74,7 @@ class ConditionnelPage extends StatelessWidget {
           english: 'If I were rich, I would travel a lot',
         ),
         // Irregular stems — must stay in French
-        const FrenchTipBox(
+        FrenchTipBox(
           title: '⚠️ Common Irregular Stems',
           frenchText: 'être    →  ser-    →  je serais\n'
               'avoir   →  aur-    →  j\'aurais\n'
@@ -82,7 +83,7 @@ class ConditionnelPage extends StatelessWidget {
               'vouloir →  voudr-  →  je voudrais\n'
               'pouvoir →  pourr-  →  je pourrais',
           icon: Icons.warning,
-          color: Color(0xFFEF4444),
+          color: AppTheme.error,
         ),
       ],
     );

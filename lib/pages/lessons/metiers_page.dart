@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../theme/app_theme.dart';
 import '../../../widgets/lesson_template.dart';
 import '../../../widgets/translated_text.dart';
 
@@ -12,10 +13,10 @@ class MetiersPage extends StatelessWidget {
       icon: '💼',
       topic: 'Les Métiers',
       children: [
-        const TranslatedText(
+        TranslatedText(
           'Les Métiers = JOBS and PROFESSIONS. In Belgium, work is central to social life in Bruxelles, Liège, and Namur. '
           'This topic is essential for meeting people, navigating Actiris or Forem, and integrating into the Belgian professional landscape!',
-          style: TextStyle(fontSize: 16, height: 1.5, color: Colors.white),
+          style: TextStyle(fontSize: 16, height: 1.5, color: AppTheme.textPrimary),
         ),
 
         // ── Key rule ──────────────────────────────────────────────────────────
@@ -37,7 +38,7 @@ class MetiersPage extends StatelessWidget {
           'The feminine is usually formed by adding -e or changing the ending:',
           style: TextStyle(fontSize: 15, height: 1.6),
         ),
-        const FrenchTipBox(
+        FrenchTipBox(
           title: 'Regular patterns',
           frenchText: 'étudiant   →  étudiante       (student)\n'
               'employé    →  employée        (employee)\n'
@@ -48,9 +49,9 @@ class MetiersPage extends StatelessWidget {
               'chanteur   →  chanteuse       (singer)\n'
               'boulanger  →  boulangère      (baker)',
           icon: Icons.people,
-          color: Color(0xFF6366F1),
+          color: AppTheme.primary,
         ),
-        const TipBox(
+        TipBox(
           title: '💡 Same Form for Both Genders',
           content: 'Some jobs have the SAME word for men and women:\n'
               'médecin → (un/une) médecin\n'
@@ -58,12 +59,12 @@ class MetiersPage extends StatelessWidget {
               'ingénieur → (un/une) ingénieur\n\n'
               '(Though modern French increasingly uses: professeure, ingénieure)',
           icon: Icons.info_outline,
-          color: Color(0xFF10B981),
+          color: AppTheme.success,
         ),
 
         // ── Common jobs ───────────────────────────────────────────────────────
         const SectionTitle('📋 Most Common Professions'),
-        const FrenchTipBox(
+        FrenchTipBox(
           title: 'Health & Education',
           frenchText: 'médecin          →  doctor\n'
               'infirmier/ière   →  nurse\n'
@@ -73,9 +74,9 @@ class MetiersPage extends StatelessWidget {
               'instituteur/rice →  primary school teacher\n'
               'étudiant/e       →  student',
           icon: Icons.local_hospital_outlined,
-          color: Color(0xFFEF4444),
+          color: AppTheme.error,
         ),
-        const FrenchTipBox(
+        FrenchTipBox(
           title: 'Business & Office',
           frenchText: 'directeur/rice   →  manager / director\n'
               'secrétaire       →  secretary\n'
@@ -85,9 +86,9 @@ class MetiersPage extends StatelessWidget {
               'ingénieur/e      →  engineer\n'
               'architecte       →  architect',
           icon: Icons.business_center_outlined,
-          color: Color(0xFF6366F1),
+          color: AppTheme.primary,
         ),
-        const FrenchTipBox(
+        FrenchTipBox(
           title: 'Trades & Services',
           frenchText: 'cuisinier/ère    →  cook / chef\n'
               'serveur/euse     →  waiter / waitress\n'
@@ -97,9 +98,9 @@ class MetiersPage extends StatelessWidget {
               'électricien/ne   →  electrician\n'
               'chauffeur        →  driver',
           icon: Icons.build_outlined,
-          color: Color(0xFFF59E0B),
+          color: AppTheme.warning,
         ),
-        const FrenchTipBox(
+        FrenchTipBox(
           title: 'Arts, Media & Culture',
           frenchText: 'artiste          →  artist\n'
               'musicien/ne      →  musician\n'
@@ -109,7 +110,7 @@ class MetiersPage extends StatelessWidget {
               'photographe      →  photographer\n'
               'écrivain/e       →  writer',
           icon: Icons.palette_outlined,
-          color: Color(0xFF10B981),
+          color: AppTheme.success,
         ),
         
         // ── Rare & Dangerous ──────────────────────────────────────────────────
@@ -118,7 +119,7 @@ class MetiersPage extends StatelessWidget {
           'Some jobs in France are known for being particularly risky or unusual. Here are a few "métiers de l\'extrême":',
           style: TextStyle(fontSize: 15, height: 1.6),
         ),
-        const FrenchTipBox(
+        FrenchTipBox(
           title: 'Extreme Careers',
           frenchText: 'marin-pêcheur     →  deep-sea fisher\n'
               'démineur          →  bomb disposal expert\n'
@@ -131,7 +132,7 @@ class MetiersPage extends StatelessWidget {
               'récupérateur de venin → venom milker\n'
               'convoyeur de fonds → armored car guard',
           icon: Icons.warning_amber_rounded,
-          color: Color(0xFFEF4444),
+          color: AppTheme.error,
         ),
         const ExampleBox(
           french: 'Le métier de marin-pêcheur est l\'un des plus dangereux au monde.',
@@ -148,9 +149,9 @@ class MetiersPage extends StatelessWidget {
 
         // ── Bizarre & Unusual ────────────────────────────────────────────────
         const SectionTitle('🇧🇪 Professional Life in Belgium'),
-        const TranslatedText(
+        TranslatedText(
           'In Belgium, the administration of work depends on your region. You should know these key organizations:',
-          style: TextStyle(fontSize: 15, height: 1.6, color: Colors.white),
+          style: TextStyle(fontSize: 15, height: 1.6, color: AppTheme.textPrimary),
         ),
         const FrenchTipBox(
           title: 'Employment Agencies',
@@ -204,7 +205,7 @@ class MetiersPage extends StatelessWidget {
 
         // ── Useful vocabulary ─────────────────────────────────────────────────
         const SectionTitle('📖 Useful Work Vocabulary'),
-        const FrenchTipBox(
+        FrenchTipBox(
           title: 'Work & Employment Words',
           frenchText: 'un emploi / un poste  →  a job / a position\n'
               'un salaire            →  a salary\n'
@@ -217,11 +218,11 @@ class MetiersPage extends StatelessWidget {
               'démissionner          →  to resign\n'
               'être à la retraite    →  to be retired',
           icon: Icons.work_outline,
-          color: Color(0xFF6366F1),
+          color: AppTheme.primary,
         ),
 
         // ── Common mistake ────────────────────────────────────────────────────
-        const FrenchTipBox(
+        FrenchTipBox(
           title: '⚠️ Common Mistakes to Avoid',
           frenchText:
               '❌  Je suis un avocat.         (don\'t use un/une after être)\n'
@@ -231,7 +232,7 @@ class MetiersPage extends StatelessWidget {
               '❌  Elle est professeur(wrong gender ending in formal French)\n'
               '✅  Elle est professeure.       (modern feminine form)',
           icon: Icons.warning,
-          color: Color(0xFFEF4444),
+          color: AppTheme.error,
         ),
       ],
     );

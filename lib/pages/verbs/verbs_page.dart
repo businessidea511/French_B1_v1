@@ -1,724 +1,119 @@
 import 'package:flutter/material.dart';
-import '../../theme/app_theme.dart';
-import '../../services/deepseek_service.dart';
+import '../../data/verb_list.dart';
+import '../../services/conjugator.dart';
 import '../../services/global_scroll_manager.dart';
+import '../../services/tts_service.dart';
+import '../../theme/app_theme.dart';
+import '../../widgets/translated_text.dart';
+
+/// What each tense is for, in simple English (translated on screen).
+const Map<String, String> tenseExplanations = {
+  'Indicatif|Présent': 'Now, habits and general truths. « Je travaille à Liège. »',
+  'Indicatif|Passé composé':
+      'A finished action in the past: what happened. Formula: avoir or être in the present + participe passé. « Hier, j\'ai mangé une gaufre. »',
+  'Indicatif|Imparfait':
+      'Descriptions, habits and background in the past: how it was, what used to happen. Formula: stem of « nous » in the present + -ais, -ais, -ait, -ions, -iez, -aient.',
+  'Indicatif|Plus-que-parfait':
+      'The past before another past (had done). Formula: avoir or être in the imparfait + participe passé. « Quand je suis arrivé, le train était parti. »',
+  'Indicatif|Futur simple':
+      'The future: plans, predictions and promises (will). Formula: infinitive (or an irregular stem) + -ai, -as, -a, -ons, -ez, -ont.',
+  'Indicatif|Futur proche':
+      'Something that is going to happen soon. Very common when speaking. Formula: aller in the present + infinitive.',
+  'Indicatif|Passé récent': 'Something that has just happened. Formula: venir de + infinitive. « Je viens d\'arriver. »',
+  'Indicatif|Futur antérieur':
+      'A future action that will be finished before another future moment (will have done). « Quand tu rentreras, j\'aurai fini. »',
+  'Indicatif|Passé simple':
+      'The written past of books, stories and news. You will read it but almost never say it: when speaking, use the passé composé.',
+  'Indicatif|Passé antérieur': 'Literary: the past just before a passé simple, after quand, dès que or après que.',
+  'Subjonctif|Présent':
+      'After « que » with wishes, feelings, doubt and necessity: « Il faut que tu viennes », « Je veux qu\'il parte ». Formula: stem of « ils » in the present + -e, -es, -e, -ions, -iez, -ent.',
+  'Subjonctif|Passé':
+      'The same triggers as the subjonctif présent, for an action that is already finished. « Je suis content que tu sois venu. »',
+  'Subjonctif|Imparfait': 'Literary only (old books, very formal writing). Today people use the subjonctif présent instead.',
+  'Subjonctif|Plus-que-parfait': 'Literary only. Today people use the subjonctif passé instead.',
+  'Conditionnel|Présent':
+      'Polite requests, wishes, advice and imagined situations (would). « Je voudrais un café. » « Si j\'avais le temps, je viendrais. » Formula: futur stem + -ais, -ais, -ait, -ions, -iez, -aient.',
+  'Conditionnel|Passé':
+      'Regrets and things that would have happened (would have). « Si j\'avais su, je serais venu. »',
+  'Impératif|Présent': 'Orders, advice and instructions. No subject pronoun, and only three persons: tu, nous, vous.',
+  'Impératif|Passé': 'Rare: an order to have something finished by a certain time. « Aie fini avant midi ! »',
+  'Participe & infinitif|Formes':
+      'Forms without a person. Participe passé: used in all compound tenses. Gérondif (en + -ant): two actions at the same time, « Il chante en cuisinant ». Participe présent: mostly written French.',
+};
 
 class VerbsPage extends StatefulWidget {
-  const VerbsPage({super.key});
+  final String initialVerb;
+  const VerbsPage({super.key, this.initialVerb = 'parler'});
 
   @override
   State<VerbsPage> createState() => _VerbsPageState();
 }
 
 class _VerbsPageState extends State<VerbsPage> {
-  final TextEditingController _searchController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
-  bool _isLoading = false;
-  String selectedVerb = 'parler';
-  String selectedTense = 'Présent';
-
-  final List<String> verbs = {
-    'parler',
-    'finir',
-    'être',
-    'avoir',
-    'aller',
-    'faire',
-    'vouloir',
-    'pouvoir',
-    'devoir',
-    'savoir',
-    'venir',
-    'dire',
-    'prendre',
-    'voir',
-    'croire',
-    'mettre',
-    'tenir',
-    'penser',
-    'donner',
-    'passer',
-    'falloir',
-    'comprendre',
-    'sortir',
-    'partir',
-    'arriver',
-    'apprendre',
-    'attendre',
-    'répondre',
-    'recevoir',
-    'perdre',
-    'vivre',
-    'aimer',
-    'choisir',
-    'rendre',
-    'connaître',
-    'paraître',
-    'sentir',
-    'retenir',
-    'devenir',
-    'remettre',
-    'servir',
-    'prévoir',
-    'écrire',
-    'permettre',
-    'offrir',
-    'appeler',
-    'aider',
-    'chercher',
-    'commencer',
-    'jouer',
-    'travailler',
-    'entendre',
-    'marcher',
-    'manger',
-    'mourir',
-    'naître',
-    'ouvrir',
-    'compter',
-    'descendre',
-    'revenir',
-    'lire',
-    'espérer',
-    'envoyer',
-    'payer',
-    'dormir',
-    'craindre',
-    'battre',
-    'vendre',
-    'conduire',
-    'suivre',
-    'boire',
-    'plaire',
-    'taire',
-    'rire',
-    'cuire',
-    'suffire',
-    'valoir',
-    'fuir',
-    'rompre',
-    'vaincre',
-    'moudre',
-    'clore',
-    'absoudre',
-    'conclure',
-    'coudre',
-    'traire',
-    'réussir',
-    'obtenir',
-    'produire',
-    'acheter',
-    'assurer',
-    'demander',
-    'utiliser',
-    'rester',
-    'occuper',
-    'sembler',
-    'porter',
-    'montrer',
-    'changer',
-    'continuer',
-    'proposer',
-    'considérer',
-    'mener',
-    'expliquer',
-    'préparer',
-    'décider',
-    'rencontrer',
-    'représenter',
-    'terminer',
-    'réaliser',
-    'ajouter',
-    'gagner',
-    'abandonner',
-    'indiquer',
-    'profiter',
-    'tenter',
-    'apprécier',
-    'organiser',
-    'créer',
-    'intéresser',
-    'accepter',
-    'refuser',
-    'prouver',
-    'rapporter',
-    'constituer',
-    'former',
-    'définir',
-    'établir',
-    'reprendre',
-    'agir',
-    'traiter',
-    'réunir',
-    'fixer',
-    'disposer',
-    'installer',
-    'procéder',
-    'publier',
-    'relever',
-    'concerner',
-    'supposer',
-    'protéger',
-    'exprimer',
-    'évoquer',
-    'favoriser',
-    'limiter',
-    'lier',
-    'engager',
-    'rechercher',
-    'analyser',
-    'bénéficier',
-    'interroger',
-    'situer',
-    'rappeler',
-    'orienter',
-    'consulter',
-    'observer',
-    'soutenir',
-    'faciliter',
-    'manquer',
-    'imposer',
-    'maintenir',
-    'respecter',
-    'accompagner',
-    'adopter',
-    'évaluer',
-    'identifier',
-    'découvrir',
-    'transformer',
-    'associer',
-    'participer',
-    'contribuer',
-    'garantir',
-    'partager',
-    's\'appeler',
-    's\'occuper',
-    'se souvenir',
-    'se tromper',
-    'se lever',
-    'se coucher',
-    'se laver',
-    's\'habiller',
-    'se promener',
-    'se sentir'
-  }.toList();
-  final List<String> tenses = [
-    'Présent',
-    'Passé Composé',
-    'Imparfait',
-    'Plus-que-parfait',
-    'Conditionnel',
-    'Futur Proche',
-    'Futur Simple',
-    'Subjonctif',
-  ];
-
-  final Map<String, Map<String, List<String>>> conjugations = {
-    'parler': {
-      'Présent': [
-        'je parle',
-        'tu parles',
-        'il/elle parle',
-        'nous parlons',
-        'vous parliez',
-        'ils/elles parlent',
-      ],
-      'Passé Composé': [
-        'j\'ai parlé',
-        'tu as parlé',
-        'il/elle a parlé',
-        'nous avons parlé',
-        'vous avez parlé',
-        'ils/elles ont parlé',
-      ],
-      'Imparfait': [
-        'je parlais',
-        'tu parlais',
-        'il/elle parlait',
-        'nous parlions',
-        'vous parliez',
-        'ils/elles parlaient',
-      ],
-      'Plus-que-parfait': [
-        'j\'avais parlé',
-        'tu avais parlé',
-        'il/elle avait parlé',
-        'nous avions parlé',
-        'vous aviez parlé',
-        'ils/elles avaient parlé',
-      ],
-      'Futur Proche': [
-        'je vais parler',
-        'tu vas parler',
-        'il/elle va parler',
-        'nous allons parler',
-        'vous allez parler',
-        'ils/elles vont parler',
-      ],
-      'Futur Simple': [
-        'je parlerai',
-        'tu parleras',
-        'il/elle parlera',
-        'nous parlerons',
-        'vous parlerez',
-        'ils/elles parleront',
-      ],
-      'Conditionnel': [
-        'je parlerais',
-        'tu parlerais',
-        'il/elle parlerait',
-        'nous parlerions',
-        'vous parleriez',
-        'ils/elles parleraient',
-      ],
-      'Subjonctif': [
-        'que je parle',
-        'que tu parles',
-        'qu\'il/elle parle',
-        'que nous parlions',
-        'que vous parliez',
-        'qu\'ils/elles parlent',
-      ],
-    },
-    'finir': {
-      'Présent': [
-        'je finis',
-        'tu finis',
-        'il/elle finit',
-        'nous finissons',
-        'vous finissez',
-        'ils/elles finissent',
-      ],
-      'Passé Composé': [
-        'j\'ai fini',
-        'tu as fini',
-        'il/elle a fini',
-        'nous avons fini',
-        'vous avez fini',
-        'ils/elles ont fini',
-      ],
-      'Imparfait': [
-        'je finissais',
-        'tu finissais',
-        'il/elle finissait',
-        'nous finissions',
-        'vous finissiez',
-        'ils/elles finissaient',
-      ],
-      'Plus-que-parfait': [
-        'j\'avais fini',
-        'tu avais fini',
-        'il/elle avait fini',
-        'nous avions fini',
-        'vous aviez fini',
-        'ils/elles avaient fini',
-      ],
-      'Futur Proche': [
-        'je vais finir',
-        'tu vas finir',
-        'il/elle va finir',
-        'nous allons finir',
-        'vous allez finir',
-        'ils/elles vont finir',
-      ],
-      'Futur Simple': [
-        'je finirai',
-        'tu finiras',
-        'il/elle finira',
-        'nous finirons',
-        'vous finirez',
-        'ils/elles finiront',
-      ],
-      'Conditionnel': [
-        'je finirais',
-        'tu finirais',
-        'il/elle finirait',
-        'nous finirions',
-        'vous finiriez',
-        'ils/elles finiraient',
-      ],
-      'Subjonctif': [
-        'que je finisse',
-        'que tu finisses',
-        'qu\'il/elle finisse',
-        'que nous finissions',
-        'que vous finissiez',
-        'qu\'ils/elles finissent',
-      ],
-    },
-    'être': {
-      'Présent': [
-        'je suis',
-        'tu es',
-        'il/elle est',
-        'nous sommes',
-        'vous êtes',
-        'ils/elles sont',
-      ],
-      'Passé Composé': [
-        'j\'ai été',
-        'tu as été',
-        'il/elle a été',
-        'nous avons été',
-        'vous avez été',
-        'ils/elles ont été',
-      ],
-      'Imparfait': [
-        'j\'étais',
-        'tu étais',
-        'il/elle était',
-        'nous étions',
-        'vous étiez',
-        'ils/elles étaient',
-      ],
-      'Plus-que-parfait': [
-        'j\'avais été',
-        'tu avais été',
-        'il/elle avait été',
-        'nous avions été',
-        'vous aviez été',
-        'ils/elles avaient été',
-      ],
-      'Futur Proche': [
-        'je vais être',
-        'tu vas être',
-        'il/elle va être',
-        'nous allons être',
-        'vous allez être',
-        'ils/elles vont être',
-      ],
-      'Futur Simple': [
-        'je serai',
-        'tu seras',
-        'il/elle sera',
-        'nous serons',
-        'vous serez',
-        'ils/elles seront',
-      ],
-      'Conditionnel': [
-        'je serais',
-        'tu serais',
-        'il/elle serait',
-        'nous serions',
-        'vous seriez',
-        'ils/elles seraient',
-      ],
-      'Subjonctif': [
-        'que je sois',
-        'que tu sois',
-        'qu\'il/elle soit',
-        'que nous soyons',
-        'que vous soyez',
-        'qu\'ils/elles soient',
-      ],
-    },
-    'avoir': {
-      'Présent': [
-        'j\'ai',
-        'tu as',
-        'il/elle a',
-        'nous avons',
-        'vous avez',
-        'ils/elles ont',
-      ],
-      'Passé Composé': [
-        'j\'ai eu',
-        'tu as eu',
-        'il/elle a eu',
-        'nous avons eu',
-        'vous avez eu',
-        'ils/elles ont eu',
-      ],
-      'Imparfait': [
-        'j\'avais',
-        'tu avais',
-        'il/elle avait',
-        'nous avions',
-        'vous aviez',
-        'ils/elles avaient',
-      ],
-      'Plus-que-parfait': [
-        'j\'avais eu',
-        'tu avais eu',
-        'il/elle avait eu',
-        'nous avions eu',
-        'vous aviez eu',
-        'ils/elles avaient eu',
-      ],
-      'Futur Proche': [
-        'je vais avoir',
-        'tu vas avoir',
-        'il/elle va avoir',
-        'nous allons avoir',
-        'vous allez avoir',
-        'ils/elles vont avoir',
-      ],
-      'Futur Simple': [
-        'j\'aurai',
-        'tu auras',
-        'il/elle aura',
-        'nous aurons',
-        'vous aurez',
-        'ils/elles auront',
-      ],
-      'Conditionnel': [
-        'j\'aurais',
-        'tu aurais',
-        'il/elle aurait',
-        'nous aurions',
-        'vous auriez',
-        'ils/elles auraient',
-      ],
-      'Subjonctif': [
-        'que j\'aie',
-        'que tu aies',
-        'qu\'il/elle ait',
-        'que nous ayons',
-        'que vous ayez',
-        'qu\'ils/elles aient',
-      ],
-    },
-    'aller': {
-      'Présent': [
-        'je vais',
-        'tu vas',
-        'il/elle va',
-        'nous allons',
-        'vous allez',
-        'ils/elles vont',
-      ],
-      'Passé Composé': [
-        'je suis allé(e)',
-        'tu es allé(e)',
-        'il/elle est allé(e)',
-        'nous sommes allé(e)s',
-        'vous êtes allé(e)s',
-        'ils/elles sont allé(e)s',
-      ],
-      'Imparfait': [
-        'j\'allais',
-        'tu allais',
-        'il/elle allait',
-        'nous allions',
-        'vous alliez',
-        'ils/elles allaient',
-      ],
-      'Plus-que-parfait': [
-        'j\'étais allé(e)',
-        'tu étais allé(e)',
-        'il/elle était allé(e)',
-        'nous étions allé(e)s',
-        'vous étiez allé(e)s',
-        'ils/elles étaient allé(e)s',
-      ],
-      'Futur Proche': [
-        'je vais aller',
-        'tu vas aller',
-        'il/elle va aller',
-        'nous allons aller',
-        'vous allez aller',
-        'ils/elles vont aller',
-      ],
-      'Futur Simple': [
-        'j\'irai',
-        'tu iras',
-        'il/elle ira',
-        'nous irons',
-        'vous irez',
-        'ils/elles iront',
-      ],
-      'Conditionnel': [
-        'j\'irais',
-        'tu irais',
-        'il/elle irait',
-        'nous irions',
-        'vous iriez',
-        'ils/elles iraient',
-      ],
-      'Subjonctif': [
-        'que j\'aille',
-        'que tu ailles',
-        'qu\'il/elle aille',
-        'que nous allions',
-        'que vous alliez',
-        'qu\'ils/elles aillent',
-      ],
-    },
-    'faire': {
-      'Présent': [
-        'je fais',
-        'tu fais',
-        'il/elle fait',
-        'nous faisons',
-        'vous faites',
-        'ils/elles font',
-      ],
-      'Passé Composé': [
-        'j\'ai fait',
-        'tu as fait',
-        'il/elle a fait',
-        'nous avons fait',
-        'vous avez fait',
-        'ils/elles ont fait',
-      ],
-      'Imparfait': [
-        'je faisais',
-        'tu faisais',
-        'il/elle faisait',
-        'nous faisions',
-        'vous faisiez',
-        'ils/elles faisaient',
-      ],
-      'Plus-que-parfait': [
-        'j\'avais fait',
-        'tu avais fait',
-        'il/elle avait fait',
-        'nous avions fait',
-        'vous aviez fait',
-        'ils/elles avaient fait',
-      ],
-      'Futur Proche': [
-        'je vais faire',
-        'tu vas faire',
-        'il/elle va faire',
-        'nous allons faire',
-        'vous allez faire',
-        'ils/elles vont faire',
-      ],
-      'Futur Simple': [
-        'je ferai',
-        'tu feras',
-        'il/elle fera',
-        'nous ferons',
-        'vous ferez',
-        'ils/elles feront',
-      ],
-      'Conditionnel': [
-        'je ferais',
-        'tu ferais',
-        'il/elle ferait',
-        'nous ferions',
-        'vous feriez',
-        'ils/elles feraient',
-      ],
-      'Subjonctif': [
-        'que je fasse',
-        'que tu fasses',
-        'qu\'il/elle fasse',
-        'que nous fassions',
-        'que vous fassiez',
-        'qu\'ils/elles fassent',
-      ],
-    },
-  };
-
-  Future<void> _fetchAIConjugation(String verb) async {
-    if (verb.isEmpty) return;
-
-    setState(() => _isLoading = true);
-    try {
-      final result = await DeepSeekService.conjugateVerb(verb.toLowerCase());
-
-      // Safety Net: Ensure all forms have pronouns (and "que" for Subjonctif)
-      final sanitizedResult = result.map((tense, forms) {
-        final pronouns = ['je', 'tu', 'il/elle', 'nous', 'vous', 'ils/elles'];
-        final isSubjonctif = tense.toLowerCase().contains('subjonctif');
-        
-        final sanitizedForms = forms.asMap().entries.map((entry) {
-          final index = entry.key;
-          String form = entry.value.trim();
-          final pronoun = pronouns[index];
-
-          // 1. Check for "que" if it's Subjonctif
-          if (isSubjonctif) {
-            bool hasQue = form.startsWith('que ') || form.startsWith("qu'");
-            if (!hasQue) {
-              if (pronoun.startsWith('il') || pronoun.startsWith('ils') || (index == 0 && RegExp(r'^[aeiouhéèàâîôû]').hasMatch(form.toLowerCase()))) {
-                form = "qu'$form";
-              } else {
-                form = "que $form";
-              }
-            }
-          }
-
-          // 2. Check for pronoun
-          bool hasPronoun = false;
-          if (index == 0) {
-            hasPronoun = form.contains('je ') || form.contains("j'");
-          } else {
-            hasPronoun = form.contains('$pronoun ');
-          }
-
-          if (!hasPronoun) {
-            // Apply elision for 'je' if verb starts with vowel or silent h
-            if (index == 0 && !isSubjonctif &&
-                RegExp(r'^[aeiouhéèàâîôû]').hasMatch(form.toLowerCase())) {
-              return "j'$form";
-            }
-            return "$pronoun $form";
-          }
-          return form;
-        }).toList();
-        return MapEntry(tense, sanitizedForms);
-      });
-
-      setState(() {
-        conjugations[verb.toLowerCase()] = sanitizedResult;
-        selectedVerb = verb.toLowerCase();
-        if (!verbs.contains(verb.toLowerCase())) {
-          verbs.add(verb.toLowerCase());
-        }
-        _isLoading = false;
-        _searchController.clear();
-      });
-    } catch (e) {
-      setState(() => _isLoading = false);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-                'Could not find conjugations for this verb. Please check your API key.'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
-  }
+  late VerbTable _table;
+  String _mood = 'Indicatif';
+  String _tense = 'Présent';
 
   @override
   void initState() {
     super.initState();
     GlobalScrollManager.register(_scrollController);
+    _table = Conjugator.conjugate(widget.initialVerb) ?? Conjugator.conjugate('parler')!;
   }
 
   @override
   void dispose() {
     GlobalScrollManager.unregister(_scrollController);
     _scrollController.dispose();
-    _searchController.dispose();
     super.dispose();
+  }
+
+  void _select(String verb) {
+    final table = Conjugator.conjugate(verb);
+    if (table == null) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('« ${verb.trim()} » is not a French verb I know. Type the infinitive, e.g. « prendre » or « se lever ».'),
+      ));
+      return;
+    }
+    setState(() {
+      _table = table;
+      // Keep the tense the learner was studying when the new verb has it.
+      if (table.find(_mood, _tense) == null) {
+        _mood = 'Indicatif';
+        _tense = 'Présent';
+      }
+    });
+    FocusScope.of(context).unfocus();
+  }
+
+  String? _meaning(String infinitive) {
+    final m = commonVerbs[infinitive];
+    return m == null || m.isEmpty ? null : m;
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Verb Conjugator'),
-      ),
+      appBar: AppBar(title: const Text('Conjugaison')),
       body: SingleChildScrollView(
         controller: _scrollController,
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(20),
         child: Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 900),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                _buildVerbSearchAndSelect(),
-                const SizedBox(height: 24),
-                _buildTenseSelector(),
-                const SizedBox(height: 24),
-                _buildConjugationResults(),
+                _buildSearch(),
+                const SizedBox(height: 20),
+                _buildVerbHeader(),
+                const SizedBox(height: 20),
+                _buildMoodAndTense(),
+                const SizedBox(height: 16),
+                _buildForms(),
+                const SizedBox(height: 40),
               ],
             ),
           ),
@@ -727,289 +122,238 @@ class _VerbsPageState extends State<VerbsPage> {
     );
   }
 
-  Widget _buildVerbSearchAndSelect() {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.1), width: 1.5),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.15),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-          ),
-        ],
+  Widget _buildSearch() {
+    return Autocomplete<String>(
+      optionsBuilder: (value) {
+        final q = value.text.trim().toLowerCase();
+        if (q.isEmpty) return commonVerbs.keys.take(12);
+        return commonVerbs.keys.where((v) => v.contains(q) || commonVerbs[v]!.toLowerCase().contains(q)).take(20);
+      },
+      onSelected: _select,
+      fieldViewBuilder: (context, controller, focusNode, onSubmitted) => TextField(
+        controller: controller,
+        focusNode: focusNode,
+        textInputAction: TextInputAction.search,
+        decoration: const InputDecoration(
+          hintText: 'Any French verb: prendre, se lever, envoyer…',
+          prefixIcon: Icon(Icons.search),
+        ),
+        onSubmitted: (v) {
+          if (v.trim().isNotEmpty) _select(v);
+        },
       ),
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Search or Select Verb',
-            style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-                fontFamily: 'Outfit'),
-          ),
-          const SizedBox(height: 16),
-          Stack(
-            children: [
-              Autocomplete<String>(
-                optionsBuilder: (TextEditingValue textEditingValue) {
-                  if (textEditingValue.text.isEmpty) {
-                    return verbs.take(10); // Show first 10 by default
-                  }
-                  final filtered = verbs.where((String option) {
-                    return option
-                        .toLowerCase()
-                        .contains(textEditingValue.text.toLowerCase());
-                  }).toList();
-
-                  // If no direct matches, or even if there are, allow user to custom conjugate
-                  if (!filtered
-                          .contains(textEditingValue.text.toLowerCase()) &&
-                      textEditingValue.text.isNotEmpty) {
-                    return [
-                      ...filtered,
-                      'Conjugate "${textEditingValue.text}" with AI...'
-                    ];
-                  }
-                  return filtered;
-                },
-                onSelected: (String selection) {
-                  if (selection.startsWith('Conjugate "')) {
-                    // Extract the verb from the special string
-                    final verb = selection.split('"')[1].toLowerCase();
-                    _fetchAIConjugation(verb);
-                  } else {
-                    setState(() => selectedVerb = selection);
-                    if (!conjugations.containsKey(selection)) {
-                      _fetchAIConjugation(selection);
-                    }
-                  }
-                },
-                fieldViewBuilder:
-                    (context, controller, focusNode, onFieldSubmitted) {
-                  return TextField(
-                    controller: controller,
-                    focusNode: focusNode,
-                    decoration: const InputDecoration(
-                      hintText: 'Type a verb (e.g. vouloir)',
-                      prefixIcon: Icon(Icons.search),
-                    ),
-                    onSubmitted: (value) {
-                      if (value.isNotEmpty) {
-                        _fetchAIConjugation(value);
-                      }
-                    },
-                  );
-                },
-                optionsViewBuilder: (context, onSelected, options) {
-                  return Align(
-                    alignment: Alignment.topLeft,
-                    child: Material(
-                      elevation: 8,
-                      color: AppTheme.surface,
-                      borderRadius: BorderRadius.circular(16),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
-                        ),
-                        child: ConstrainedBox(
-                          constraints: const BoxConstraints(
-                              maxHeight: 300, maxWidth: 400),
-                          child: ListView.builder(
-                            padding: EdgeInsets.zero,
-                            shrinkWrap: true,
-                            itemCount: options.length,
-                            itemBuilder: (BuildContext context, int index) {
-                              final String option = options.elementAt(index);
-                              final isSpecial =
-                                  option.startsWith('Conjugate "');
-                              return ListTile(
-                                leading: Icon(
-                                  isSpecial
-                                      ? Icons.auto_awesome
-                                      : Icons.menu_book,
-                                  color: isSpecial ? AppTheme.primary : null,
-                                  size: 20,
-                                ),
-                                title: Text(
-                                  option,
-                                  style: TextStyle(
-                                    fontWeight: isSpecial
-                                        ? FontWeight.bold
-                                        : FontWeight.normal,
-                                    color: isSpecial ? AppTheme.primary : null,
-                                  ),
-                                ),
-                                onTap: () => onSelected(option),
-                              );
-                            },
-                          ),
-                        ),
-                      ),
-                    ),
-                  );
-                },
-              ),
-              if (_isLoading)
-                Positioned.fill(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: AppTheme.surface.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Center(
-                      child: CircularProgressIndicator(),
-                    ),
+      optionsViewBuilder: (context, onSelected, options) => Align(
+        alignment: AlignmentDirectional.topStart,
+        child: Material(
+          elevation: 8,
+          color: AppTheme.surface,
+          borderRadius: BorderRadius.circular(16),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxHeight: 320, maxWidth: 420),
+            child: ListView(
+              padding: EdgeInsets.zero,
+              shrinkWrap: true,
+              children: [
+                for (final v in options)
+                  ListTile(
+                    dense: true,
+                    title: Text(v, textDirection: TextDirection.ltr, style: const TextStyle(fontWeight: FontWeight.w600)),
+                    subtitle: Text(commonVerbs[v] ?? '', style: TextStyle(color: AppTheme.textSecondary)),
+                    onTap: () => onSelected(v),
                   ),
-                ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTenseSelector() {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.1), width: 1.5),
-      ),
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Tenses',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-              fontFamily: 'Outfit',
+              ],
             ),
           ),
-          const SizedBox(height: 16),
-          Wrap(
-            spacing: 10,
-            runSpacing: 10,
-            children: tenses.map((tense) {
-              final isSelected = tense == selectedTense;
-              return ChoiceChip(
-                label: Text(tense),
-                selected: isSelected,
-                onSelected: (selected) {
-                  if (selected) {
-                    setState(() => selectedTense = tense);
-                  }
-                },
-                selectedColor: AppTheme.primary,
-                labelStyle: TextStyle(
-                  color: isSelected ? Colors.white : Colors.white70,
-                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                ),
-                backgroundColor: Colors.white.withValues(alpha: 0.05),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  side: BorderSide(
-                    color: isSelected ? AppTheme.primary : Colors.white.withValues(alpha: 0.1),
-                  ),
-                ),
-              );
-            }).toList(),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildVerbHeader() {
+    final meaning = _meaning(_table.infinitive);
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(colors: [AppTheme.warning.withValues(alpha: 0.18), AppTheme.surface]),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: AppTheme.warning.withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(_table.infinitive,
+                    textDirection: TextDirection.ltr,
+                    style: TextStyle(fontSize: 32, fontWeight: FontWeight.w900, color: AppTheme.textPrimary)),
+              ),
+              IconButton(
+                tooltip: 'Écouter',
+                icon: Icon(Icons.volume_up_rounded, color: AppTheme.warning),
+                onPressed: () => TtsService.instance.speak(_table.infinitive),
+              ),
+            ],
           ),
+          if (meaning != null)
+            TranslatedText(meaning, style: TextStyle(fontSize: 16, color: AppTheme.textSecondary)),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _chip(_table.group, AppTheme.primary),
+              _chip('Auxiliaire : ${_table.auxiliary}', _table.auxiliary == 'être' ? AppTheme.secondary : AppTheme.success),
+            ],
+          ),
+          for (final note in _table.notes) ...[
+            const SizedBox(height: 10),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('💡 '),
+                Expanded(child: TranslatedText(note, style: TextStyle(color: AppTheme.textPrimary, height: 1.4))),
+              ],
+            ),
+          ],
         ],
       ),
     );
   }
 
-
-  Widget _buildConjugationResults() {
-    final verbData = conjugations[selectedVerb];
-    if (verbData == null) {
-      return const Center(child: Text('Click "Go" or select a common verb.'));
-    }
-
-    final tenseData = verbData[selectedTense];
-    if (tenseData == null) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32),
-          child: Column(
-            children: [
-              const Icon(Icons.info_outline,
-                  size: 48, color: AppTheme.textTertiary),
-              const SizedBox(height: 16),
-              Text('Tense "$selectedTense" not found for "$selectedVerb".'),
-            ],
-          ),
+  Widget _chip(String label, Color color) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.15),
+          borderRadius: BorderRadius.circular(100),
         ),
+        child: Text(label, style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.bold)),
       );
-    }
 
+  Widget _buildMoodAndTense() {
+    final tenses = Conjugator.tensesByMood[_mood]!.where((t) => _table.find(_mood, t) != null).toList();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8),
-          child: Text(
-            '${selectedVerb.toUpperCase()} - $selectedTense',
-            style: Theme.of(context).textTheme.headlineMedium,
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              for (final mood in Conjugator.moods)
+                if (Conjugator.tensesByMood[mood]!.any((t) => _table.find(mood, t) != null))
+                  Padding(
+                    padding: const EdgeInsetsDirectional.only(end: 8),
+                    child: ChoiceChip(
+                      label: Text(mood),
+                      selected: mood == _mood,
+                      selectedColor: AppTheme.primary,
+                      onSelected: (_) => setState(() {
+                        _mood = mood;
+                        _tense = Conjugator.tensesByMood[mood]!.firstWhere((t) => _table.find(mood, t) != null);
+                      }),
+                    ),
+                  ),
+            ],
           ),
         ),
-        const SizedBox(height: 16),
-        GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: MediaQuery.of(context).size.width > 600 ? 2 : 1,
-            mainAxisSpacing: 12,
-            crossAxisSpacing: 12,
-            childAspectRatio: 4,
+        if (tenses.length > 1) ...[
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final t in tenses)
+                ChoiceChip(
+                  label: Text(t),
+                  selected: t == _tense,
+                  selectedColor: AppTheme.warning,
+                  labelStyle: TextStyle(
+                    color: t == _tense ? Colors.black : AppTheme.textSecondary,
+                    fontWeight: t == _tense ? FontWeight.bold : FontWeight.normal,
+                  ),
+                  onSelected: (_) => setState(() => _tense = t),
+                ),
+            ],
           ),
-          itemCount: tenseData.length,
-          itemBuilder: (context, index) {
-            return Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: AppTheme.surface,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppTheme.primary.withValues(alpha: 0.1)),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 4,
-                    height: 20,
-                    decoration: BoxDecoration(
-                      color: AppTheme.primary,
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      tenseData[index],
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                        fontFamily: 'monospace',
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildForms() {
+    final tense = _table.find(_mood, _tense)!;
+    final explanation = tenseExplanations['$_mood|$_tense'];
+    final wide = MediaQuery.of(context).size.width > 700;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (explanation != null)
+          Container(
+            padding: const EdgeInsets.all(14),
+            margin: const EdgeInsets.only(bottom: 14),
+            decoration: BoxDecoration(
+              color: AppTheme.primary.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('${tense.mood} · ${tense.name}',
+                    style: TextStyle(color: AppTheme.primary, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 6),
+                TranslatedText(explanation, style: TextStyle(color: AppTheme.textPrimary, height: 1.45)),
+              ],
+            ),
+          ),
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final width = wide ? (constraints.maxWidth - 12) / 2 : constraints.maxWidth;
+            return Wrap(
+              spacing: 12,
+              runSpacing: 10,
+              children: [
+                for (var i = 0; i < tense.forms.length; i++)
+                  SizedBox(width: width, child: _formTile(tense, i)),
+              ],
             );
           },
         ),
       ],
+    );
+  }
+
+  Widget _formTile(VerbTense tense, int i) {
+    final form = tense.forms[i];
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 10, 6, 10),
+      decoration: BoxDecoration(
+        color: AppTheme.surface,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppTheme.primary.withValues(alpha: 0.12)),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Directionality(
+              textDirection: TextDirection.ltr,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (tense.labels != null)
+                    Text(tense.labels![i], style: TextStyle(color: AppTheme.textTertiary, fontSize: 12)),
+                  Text(form, style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: AppTheme.textPrimary)),
+                ],
+              ),
+            ),
+          ),
+          IconButton(
+            tooltip: 'Écouter',
+            visualDensity: VisualDensity.compact,
+            icon: Icon(Icons.volume_up_rounded, color: AppTheme.primary, size: 20),
+            onPressed: () => TtsService.instance.speak(Conjugator.speakable(form)),
+          ),
+        ],
+      ),
     );
   }
 }

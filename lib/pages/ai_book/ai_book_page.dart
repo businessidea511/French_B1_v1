@@ -10,6 +10,7 @@ import '../../theme/app_theme.dart';
 import '../../services/language_provider.dart';
 import '../../services/lessons_provider.dart';
 import '../../services/hugging_face_tts_service.dart';
+import '../../services/tts_service.dart';
 import '../../services/global_scroll_manager.dart';
 import '../../services/story_service.dart';
 import '../../widgets/exercise_block.dart';
@@ -113,6 +114,7 @@ class _AIBookPageState extends State<AIBookPage> {
       _isLoadingAudio = false;
       _isPlaying = true;
     });
+    await TtsService.useFrenchVoice(_flutterTts);
     await _flutterTts.speak(clean);
   }
 
@@ -188,8 +190,8 @@ class _AIBookPageState extends State<AIBookPage> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppTheme.surface,
-        title: Text('Delete "${s.title}"?', style: const TextStyle(color: Colors.white)),
-        content: const Text('This story will be removed from this device.',
+        title: Text('Delete "${s.title}"?', style: TextStyle(color: AppTheme.textPrimary)),
+        content: Text('This story will be removed from this device.',
             style: TextStyle(color: AppTheme.textSecondary)),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
@@ -222,12 +224,12 @@ class _AIBookPageState extends State<AIBookPage> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const SpinKitWanderingCubes(color: AppTheme.primary, size: 80),
+            SpinKitWanderingCubes(color: AppTheme.primary, size: 80),
             const SizedBox(height: 32),
             Text(_busyMessage,
-                style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white)),
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
             const SizedBox(height: 8),
-            const Text('Professeur AI is writing… about 30 seconds',
+            Text('Professeur AI is writing… about 30 seconds',
                 style: TextStyle(color: AppTheme.textTertiary)),
           ],
         ),
@@ -243,10 +245,10 @@ class _AIBookPageState extends State<AIBookPage> {
         controller: _homeScroll,
         padding: const EdgeInsets.all(20),
         children: [
-          const Text('Stories you can\'t put down',
-              style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: Colors.white)),
+          Text('Stories you can\'t put down',
+              style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
           const SizedBox(height: 6),
-          const Text('Each chapter ends on a cliffhanger. Read in French, learn your grammar without noticing.',
+          Text('Each chapter ends on a cliffhanger. Read in French, learn your grammar without noticing.',
               style: TextStyle(color: AppTheme.textSecondary, fontSize: 15)),
           if (_library.isNotEmpty) ...[
             const SizedBox(height: 28),
@@ -255,7 +257,7 @@ class _AIBookPageState extends State<AIBookPage> {
           ],
           const SizedBox(height: 28),
           _sectionTitle('✨  New story'),
-          const Text('Genre', style: TextStyle(color: AppTheme.textSecondary)),
+          Text('Genre', style: TextStyle(color: AppTheme.textSecondary)),
           const SizedBox(height: 8),
           Wrap(
             spacing: 8,
@@ -280,18 +282,18 @@ class _AIBookPageState extends State<AIBookPage> {
           const SizedBox(height: 16),
           TextField(
             controller: _themeController,
-            style: const TextStyle(color: Colors.white),
+            style: TextStyle(color: AppTheme.textPrimary),
             decoration: const InputDecoration(
               labelText: 'Theme (optional)',
               hintText: 'e.g. a stolen bike in Liège, a job interview that goes wrong…',
             ),
           ),
           const SizedBox(height: 20),
-          const Text('Grammar to practise (optional)', style: TextStyle(color: AppTheme.textSecondary)),
+          Text('Grammar to practise (optional)', style: TextStyle(color: AppTheme.textSecondary)),
           const SizedBox(height: 8),
           _chips(lessonsProvider.allGrammar.map((g) => g.title), _selectedGrammar, AppTheme.primary),
           const SizedBox(height: 20),
-          const Text('Vocabulary topics (optional)', style: TextStyle(color: AppTheme.textSecondary)),
+          Text('Vocabulary topics (optional)', style: TextStyle(color: AppTheme.textSecondary)),
           const SizedBox(height: 8),
           _chips(lessonsProvider.allLessons.map((l) => l.title), _selectedLessons, AppTheme.secondary),
           const SizedBox(height: 28),
@@ -309,7 +311,7 @@ class _AIBookPageState extends State<AIBookPage> {
 
   Widget _sectionTitle(String text) => Padding(
         padding: const EdgeInsets.only(bottom: 12),
-        child: Text(text, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+        child: Text(text, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
       );
 
   Widget _chips(Iterable<String> titles, List<String> selected, Color color) {
@@ -349,9 +351,9 @@ class _AIBookPageState extends State<AIBookPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(s.title, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: Colors.white)),
+                    Text(s.title, style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
                     Text('${genre?.$2 ?? ''} · Chapitre ${s.chapters.length}',
-                        style: const TextStyle(color: AppTheme.textTertiary, fontSize: 12)),
+                        style: TextStyle(color: AppTheme.textTertiary, fontSize: 12)),
                     if (s.teaser.isNotEmpty) ...[
                       const SizedBox(height: 6),
                       Directionality(
@@ -359,7 +361,7 @@ class _AIBookPageState extends State<AIBookPage> {
                         child: Text('« ${s.teaser} »',
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(color: AppTheme.textSecondary, fontStyle: FontStyle.italic)),
+                            style: TextStyle(color: AppTheme.textSecondary, fontStyle: FontStyle.italic)),
                       ),
                     ],
                   ],
@@ -367,7 +369,7 @@ class _AIBookPageState extends State<AIBookPage> {
               ),
               IconButton(
                 tooltip: 'Delete',
-                icon: const Icon(Icons.delete_outline_rounded, color: AppTheme.textTertiary),
+                icon: Icon(Icons.delete_outline_rounded, color: AppTheme.textTertiary),
                 onPressed: () => _confirmDelete(s),
               ),
             ],
@@ -400,7 +402,7 @@ class _AIBookPageState extends State<AIBookPage> {
           children: [
             Text(series.title, style: const TextStyle(fontSize: 17), overflow: TextOverflow.ellipsis),
             Text('Chapitre ${_chapterIndex + 1} · ${chapter['chapter_title'] ?? ''}',
-                style: const TextStyle(fontSize: 12, color: AppTheme.textTertiary), overflow: TextOverflow.ellipsis),
+                style: TextStyle(fontSize: 12, color: AppTheme.textTertiary), overflow: TextOverflow.ellipsis),
           ],
         ),
         actions: [
@@ -411,7 +413,7 @@ class _AIBookPageState extends State<AIBookPage> {
           ),
           if (!onEndPage)
             _isLoadingAudio
-                ? const Padding(
+                ? Padding(
                     padding: EdgeInsets.symmetric(horizontal: 12),
                     child: SpinKitPulse(color: AppTheme.primary, size: 24),
                   )
@@ -465,7 +467,7 @@ class _AIBookPageState extends State<AIBookPage> {
                 child: Text(
                   onEndPage ? 'Fin du chapitre' : 'Page ${_pageIndex + 1} / ${pages.length}',
                   textAlign: TextAlign.center,
-                  style: const TextStyle(color: AppTheme.textTertiary),
+                  style: TextStyle(color: AppTheme.textTertiary),
                 ),
               ),
               IconButton(
@@ -493,10 +495,10 @@ class _AIBookPageState extends State<AIBookPage> {
     return _EndPageScroll(
       children: [
         const SizedBox(height: 8),
-        const Center(child: Text('À suivre…', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white))),
+        Center(child: Text('À suivre…', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: AppTheme.textPrimary))),
         const SizedBox(height: 4),
         Center(
-          child: Text('Fin du chapitre ${_chapterIndex + 1}', style: const TextStyle(color: AppTheme.textTertiary)),
+          child: Text('Fin du chapitre ${_chapterIndex + 1}', style: TextStyle(color: AppTheme.textTertiary)),
         ),
         if (quiz != null) quiz,
         const SizedBox(height: 12),
@@ -504,7 +506,7 @@ class _AIBookPageState extends State<AIBookPage> {
           TextField(
             controller: _ideaController,
             maxLines: 2,
-            style: const TextStyle(color: Colors.white),
+            style: TextStyle(color: AppTheme.textPrimary),
             decoration: const InputDecoration(
               labelText: 'Your idea for what happens next (optional)',
               hintText: 'e.g. the neighbour is lying…',
@@ -574,15 +576,15 @@ class _StoryPageViewState extends State<_StoryPageView> {
             decoration: BoxDecoration(
               color: AppTheme.surface.withValues(alpha: 0.8),
               borderRadius: BorderRadius.circular(28),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+              border: Border.all(color: AppTheme.fg.withValues(alpha: 0.08)),
             ),
             child: Directionality(
               textDirection: TextDirection.ltr,
               child: MarkdownBody(
                 data: widget.page['text'].toString(),
                 styleSheet: MarkdownStyleSheet(
-                  p: const TextStyle(fontSize: 20, height: 1.75, color: Colors.white),
-                  strong: const TextStyle(color: AppTheme.warning, fontWeight: FontWeight.bold),
+                  p: TextStyle(fontSize: 20, height: 1.75, color: AppTheme.textPrimary),
+                  strong: TextStyle(color: AppTheme.warning, fontWeight: FontWeight.bold),
                 ),
               ),
             ),
@@ -595,7 +597,7 @@ class _StoryPageViewState extends State<_StoryPageView> {
                 color: AppTheme.primary.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(20),
               ),
-              child: Text(translation, style: const TextStyle(color: AppTheme.textSecondary, fontSize: 16, height: 1.6)),
+              child: Text(translation, style: TextStyle(color: AppTheme.textSecondary, fontSize: 16, height: 1.6)),
             ),
           ],
           if (annotations.isNotEmpty) ...[
@@ -605,7 +607,7 @@ class _StoryPageViewState extends State<_StoryPageView> {
               child: ExpansionTile(
                 tilePadding: const EdgeInsets.symmetric(horizontal: 8),
                 title: Text('✨ Learning points (${annotations.length})',
-                    style: const TextStyle(color: AppTheme.primary, fontWeight: FontWeight.bold)),
+                    style: TextStyle(color: AppTheme.primary, fontWeight: FontWeight.bold)),
                 children: [
                   for (final a in annotations)
                     ListTile(
@@ -613,10 +615,10 @@ class _StoryPageViewState extends State<_StoryPageView> {
                       title: Directionality(
                         textDirection: TextDirection.ltr,
                         child: Text(a['original']?.toString() ?? '',
-                            style: const TextStyle(color: AppTheme.warning, fontWeight: FontWeight.bold, fontSize: 15)),
+                            style: TextStyle(color: AppTheme.warning, fontWeight: FontWeight.bold, fontSize: 15)),
                       ),
                       subtitle: Text('${a['hint'] ?? ''} — ${a['explanation'] ?? ''}',
-                          style: const TextStyle(color: AppTheme.textSecondary, fontSize: 14)),
+                          style: TextStyle(color: AppTheme.textSecondary, fontSize: 14)),
                     ),
                 ],
               ),

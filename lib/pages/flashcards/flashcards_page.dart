@@ -7,11 +7,19 @@ import '../../services/language_provider.dart';
 import '../../services/lessons_provider.dart';
 import '../../services/global_scroll_manager.dart';
 import '../../services/topic_context.dart';
+import '../../services/word_decks.dart';
+import '../../services/progress_service.dart';
+import '../../data/word_bank.dart';
 import '../../widgets/grammar_cards.dart';
 
 class FlashcardsPage extends StatefulWidget {
   final String? initialTopic;
-  const FlashcardsPage({super.key, this.initialTopic});
+
+  /// A ready-made deck (e.g. a vocabulary list) to study straight away.
+  final List<Map<String, String>>? deck;
+  final String? deckTitle;
+
+  const FlashcardsPage({super.key, this.initialTopic, this.deck, this.deckTitle});
 
   @override
   State<FlashcardsPage> createState() => _FlashcardsPageState();
@@ -29,13 +37,23 @@ class _FlashcardsPageState extends State<FlashcardsPage> {
   bool _flipped = false;
   int _roundNumber = 1;
 
+  /// Set when studying a fixed word list instead of AI cards. Big lists are
+  /// studied [_roundSize] cards at a time; [_queue] holds the cards not seen yet.
+  List<Map<String, String>>? _staticDeck;
+  List<Map<String, String>> _queue = [];
+  static const int _roundSize = 20;
+  String _loadingText = 'Professeur AI is making your cards…';
+
   final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
     GlobalScrollManager.register(_scrollController);
-    if (widget.initialTopic != null) {
+    if (widget.deck != null) {
+      selectedTopic = widget.deckTitle ?? 'Flashcards';
+      _startStatic(widget.deck!);
+    } else if (widget.initialTopic != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _startAIFlashcards(widget.initialTopic!);
       });
@@ -49,10 +67,48 @@ class _FlashcardsPageState extends State<FlashcardsPage> {
     super.dispose();
   }
 
+  void _startStatic(List<Map<String, String>> cards) {
+    _staticDeck = cards;
+    _queue = List.of(cards)..shuffle();
+    _roundNumber = 1;
+    _nextBatch();
+  }
+
+  void _nextBatch() {
+    final batch = _queue.take(_roundSize).toList();
+    _queue = _queue.skip(_roundSize).toList();
+    _startRound(batch);
+  }
+
+  Future<void> _openWordDeck(WordCategory category) async {
+    setState(() {
+      _isLoading = true;
+      _loadingText = 'Preparing your cards…';
+    });
+    final language = Provider.of<LanguageProvider>(context, listen: false).currentLanguage;
+    final glosses = await WordDecks.glosses(category.items, language);
+    if (!mounted) return;
+    setState(() {
+      _isLoading = false;
+      selectedTopic = category.title;
+      _startStatic(WordDecks.cards(category, glosses));
+    });
+  }
+
+  void _backToTopics() {
+    if (widget.deck != null) {
+      Navigator.pop(context);
+    } else {
+      setState(() => selectedTopic = null);
+    }
+  }
+
   Future<void> _startAIFlashcards(String topic) async {
     setState(() {
       selectedTopic = topic;
       _isLoading = true;
+      _staticDeck = null;
+      _loadingText = 'Professeur AI is making your cards…';
     });
 
     try {
@@ -92,6 +148,7 @@ class _FlashcardsPageState extends State<FlashcardsPage> {
   }
 
   void _answer(bool knewIt) {
+    ProgressService.instance.recordCard(_round[_index], knewIt);
     setState(() {
       if (knewIt) {
         _known++;
@@ -124,7 +181,7 @@ class _FlashcardsPageState extends State<FlashcardsPage> {
         children: [
           const CircularProgressIndicator(),
           const SizedBox(height: 24),
-          Text('Professeur AI is making your cards…', style: Theme.of(context).textTheme.bodyLarge),
+          Text(_loadingText, style: Theme.of(context).textTheme.bodyLarge),
         ],
       ),
     );
@@ -138,6 +195,29 @@ class _FlashcardsPageState extends State<FlashcardsPage> {
       controller: _scrollController,
       padding: const EdgeInsets.all(24),
       children: [
+        for (final section in WordDecks.sections)
+          Container(
+            margin: const EdgeInsets.only(bottom: 12),
+            decoration: BoxDecoration(color: AppTheme.surface, borderRadius: BorderRadius.circular(20)),
+            child: ExpansionTile(
+              shape: const Border(),
+              leading: Text(section.icon, style: const TextStyle(fontSize: 26)),
+              title: Text(section.title,
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: AppTheme.textPrimary)),
+              subtitle: Text('${section.categories.length} decks · ${section.wordCount} cards',
+                  style: TextStyle(color: AppTheme.fg.withValues(alpha: 0.4), fontSize: 13)),
+              children: [
+                for (final c in section.categories)
+                  ListTile(
+                    leading: Text(c.icon, style: const TextStyle(fontSize: 22)),
+                    title: Text(c.title, textDirection: TextDirection.ltr, style: TextStyle(color: AppTheme.textPrimary)),
+                    trailing: Text('${c.items.length}', style: TextStyle(color: AppTheme.success, fontWeight: FontWeight.bold)),
+                    onTap: () => _openWordDeck(c),
+                  ),
+              ],
+            ),
+          ),
+        const SizedBox(height: 12),
         const SectionHeader('GRAMMAR FLASHCARDS'),
         ...lessonsProvider.allGrammar.map((t) => _buildTopicTile(t.title, t.icon)),
         const SizedBox(height: 24),
@@ -153,7 +233,7 @@ class _FlashcardsPageState extends State<FlashcardsPage> {
       decoration: BoxDecoration(
         color: AppTheme.surface,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.05), width: 1.5),
+        border: Border.all(color: AppTheme.fg.withValues(alpha: 0.05), width: 1.5),
       ),
       child: Material(
         color: Colors.transparent,
@@ -179,14 +259,14 @@ class _FlashcardsPageState extends State<FlashcardsPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(title,
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.white)),
+                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: AppTheme.textPrimary)),
                       const SizedBox(height: 2),
                       Text('12 cards from this lesson',
-                          style: TextStyle(color: Colors.white.withValues(alpha: 0.4), fontSize: 13)),
+                          style: TextStyle(color: AppTheme.fg.withValues(alpha: 0.4), fontSize: 13)),
                     ],
                   ),
                 ),
-                const Icon(Icons.auto_awesome, color: AppTheme.secondary, size: 20),
+                Icon(Icons.auto_awesome, color: AppTheme.secondary, size: 20),
               ],
             ),
           ),
@@ -208,14 +288,14 @@ class _FlashcardsPageState extends State<FlashcardsPage> {
               IconButton(
                 tooltip: 'Back to topics',
                 icon: const Icon(Icons.close),
-                onPressed: () => setState(() => selectedTopic = null),
+                onPressed: _backToTopics,
               ),
               Expanded(
                 child: Column(
                   children: [
                     Text(
                       '${_roundNumber > 1 ? 'Review · ' : ''}${_index + 1} / ${_round.length}',
-                      style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.textTertiary),
+                      style: TextStyle(fontWeight: FontWeight.bold, color: AppTheme.textTertiary),
                     ),
                     const SizedBox(height: 6),
                     ClipRRect(
@@ -244,7 +324,7 @@ class _FlashcardsPageState extends State<FlashcardsPage> {
         Padding(
           padding: const EdgeInsets.only(top: 8),
           child: Text('✓ $_known   ✗ ${_missed.length}',
-              style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
+              style: TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
         ),
         Expanded(
           child: Padding(
@@ -283,11 +363,11 @@ class _FlashcardsPageState extends State<FlashcardsPage> {
                     Expanded(
                       child: OutlinedButton.icon(
                         onPressed: () => _answer(false),
-                        icon: const Icon(Icons.replay_rounded, color: AppTheme.error),
+                        icon: Icon(Icons.replay_rounded, color: AppTheme.error),
                         label: const Text('À revoir'),
                         style: OutlinedButton.styleFrom(
                           minimumSize: const Size.fromHeight(52),
-                          side: const BorderSide(color: AppTheme.error),
+                          side: BorderSide(color: AppTheme.error),
                         ),
                       ),
                     ),
@@ -343,16 +423,16 @@ class _FlashcardsPageState extends State<FlashcardsPage> {
     return _cardShell(
       gradient: AppTheme.studyFrontGradient,
       children: [
-        Text('FRANÇAIS',
-            style: TextStyle(letterSpacing: 2, fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white.withValues(alpha: 0.6))),
+        Text(switch (WordDecks.gender(card['front']!)) { 'm' => 'FRANÇAIS · ♂ MASCULIN', 'f' => 'FRANÇAIS · ♀ FÉMININ', _ => 'FRANÇAIS' },
+            style: TextStyle(letterSpacing: 2, fontSize: 12, fontWeight: FontWeight.bold, color: AppTheme.onColor.withValues(alpha: 0.6))),
         const SizedBox(height: 24),
         Text(card['front']!,
             textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white)),
+            style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: AppTheme.onColor)),
         const SizedBox(height: 12),
-        SpeakButton(card['front']!, color: Colors.white),
+        SpeakButton(card['front']!, color: AppTheme.onColor),
         const SizedBox(height: 16),
-        Text('Tap to flip', style: TextStyle(color: Colors.white.withValues(alpha: 0.5), fontSize: 13)),
+        Text('Tap to flip', style: TextStyle(color: AppTheme.onColor.withValues(alpha: 0.5), fontSize: 13)),
       ],
     );
   }
@@ -365,11 +445,11 @@ class _FlashcardsPageState extends State<FlashcardsPage> {
       children: [
         Text(card['front']!,
             textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 15, color: Colors.white.withValues(alpha: 0.7))),
+            style: TextStyle(fontSize: 15, color: AppTheme.onColor.withValues(alpha: 0.7))),
         const SizedBox(height: 12),
         Text(card['back']!,
             textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white)),
+            style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: AppTheme.onColor)),
         if (example.isNotEmpty) ...[
           const SizedBox(height: 20),
           Row(
@@ -378,9 +458,9 @@ class _FlashcardsPageState extends State<FlashcardsPage> {
               Flexible(
                 child: Text('« $example »',
                     textAlign: TextAlign.center,
-                    style: const TextStyle(fontSize: 16, fontStyle: FontStyle.italic, color: Colors.white)),
+                    style: TextStyle(fontSize: 16, fontStyle: FontStyle.italic, color: AppTheme.onColor)),
               ),
-              SpeakButton(example, color: Colors.white),
+              SpeakButton(example, color: AppTheme.onColor),
             ],
           ),
         ],
@@ -389,14 +469,14 @@ class _FlashcardsPageState extends State<FlashcardsPage> {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.12),
+              color: AppTheme.onColor.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(14),
             ),
             // The tip is in the learner's language, which may be right-to-left.
             child: Directionality(
               textDirection: Directionality.of(context),
               child: Text('💡 $tip',
-                  textAlign: TextAlign.center, style: const TextStyle(fontSize: 14, color: Colors.white, height: 1.4)),
+                  textAlign: TextAlign.center, style: TextStyle(fontSize: 14, color: AppTheme.onColor, height: 1.4)),
             ),
           ),
         ],
@@ -421,7 +501,7 @@ class _FlashcardsPageState extends State<FlashcardsPage> {
               textAlign: TextAlign.center, style: Theme.of(context).textTheme.headlineMedium),
           const SizedBox(height: 12),
           Text('✓ $_known of $total known   ·   ✗ ${_missed.length} to review',
-              style: const TextStyle(color: AppTheme.textSecondary, fontSize: 16)),
+              style: TextStyle(color: AppTheme.textSecondary, fontSize: 16)),
           if (!allKnown) ...[
             const SizedBox(height: 24),
             Wrap(
@@ -446,16 +526,34 @@ class _FlashcardsPageState extends State<FlashcardsPage> {
               style: ElevatedButton.styleFrom(minimumSize: const Size.fromHeight(52)),
             ),
           const SizedBox(height: 12),
-          OutlinedButton.icon(
-            onPressed: () => _startAIFlashcards(selectedTopic!),
-            icon: const Icon(Icons.auto_awesome),
-            label: const Text('New cards for this topic'),
-            style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(52)),
-          ),
+          if (_staticDeck == null)
+            OutlinedButton.icon(
+              onPressed: () => _startAIFlashcards(selectedTopic!),
+              icon: const Icon(Icons.auto_awesome),
+              label: const Text('New cards for this topic'),
+              style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(52)),
+            )
+          else if (_queue.isNotEmpty)
+            OutlinedButton.icon(
+              onPressed: () => setState(() {
+                _roundNumber = 1;
+                _nextBatch();
+              }),
+              icon: const Icon(Icons.arrow_forward_rounded),
+              label: Text('Next ${min(_roundSize, _queue.length)} cards (${_queue.length} left)'),
+              style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(52)),
+            )
+          else
+            OutlinedButton.icon(
+              onPressed: () => setState(() => _startStatic(_staticDeck!)),
+              icon: const Icon(Icons.shuffle_rounded),
+              label: Text('Start again with all ${_staticDeck!.length} cards'),
+              style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(52)),
+            ),
           const SizedBox(height: 12),
           TextButton(
-            onPressed: () => setState(() => selectedTopic = null),
-            child: const Text('Back to topics'),
+            onPressed: _backToTopics,
+            child: Text(widget.deck != null ? 'Back to the list' : 'Back to topics'),
           ),
         ],
       ),
@@ -473,7 +571,7 @@ class SectionHeader extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 16, left: 8),
       child: Text(
         title,
-        style: const TextStyle(
+        style: TextStyle(
           letterSpacing: 1.5,
           fontSize: 12,
           fontWeight: FontWeight.bold,

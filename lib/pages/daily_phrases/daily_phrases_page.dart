@@ -783,7 +783,7 @@ class _DailyPhrasesPageState extends State<DailyPhrasesPage> {
       body: Column(
         children: [
           if (_isTranslating)
-            const LinearProgressIndicator(
+            LinearProgressIndicator(
               backgroundColor: Colors.transparent,
               valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primary),
               minHeight: 2,
@@ -813,7 +813,7 @@ class _DailyPhrasesPageState extends State<DailyPhrasesPage> {
       decoration: BoxDecoration(
         color: AppTheme.surface,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.1), width: 1.5),
+        border: Border.all(color: AppTheme.fg.withValues(alpha: 0.1), width: 1.5),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.2),
@@ -841,22 +841,22 @@ class _DailyPhrasesPageState extends State<DailyPhrasesPage> {
             ),
             title: Text(
               isArabic ? section['arabicTitle'] : section['title'],
-              style: const TextStyle(
+              style: TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 18,
-                color: Colors.white,
+                color: AppTheme.textPrimary,
                 fontFamily: 'Outfit',
               ),
             ),
             subtitle: Text(
               '${(section['phrases'] as List).length} phrases',
               style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.5),
+                color: AppTheme.fg.withValues(alpha: 0.5),
                 fontSize: 13,
               ),
             ),
             iconColor: AppTheme.primary,
-            collapsedIconColor: Colors.white54,
+            collapsedIconColor: AppTheme.textTertiary,
             childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
             children: (section['phrases'] as List).map<Widget>((phrase) {
               final id = '${section['title']}_${phrase['fr']}';
@@ -866,7 +866,7 @@ class _DailyPhrasesPageState extends State<DailyPhrasesPage> {
               return Container(
                 margin: const EdgeInsets.only(bottom: 12),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.05),
+                  color: AppTheme.fg.withValues(alpha: 0.05),
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
                     color: isPlaying ? AppTheme.primary.withValues(alpha: 0.4) : Colors.transparent,
@@ -880,7 +880,7 @@ class _DailyPhrasesPageState extends State<DailyPhrasesPage> {
                     style: TextStyle(
                       fontSize: 17,
                       fontWeight: FontWeight.w600,
-                      color: isPlaying ? AppTheme.primary : Colors.white,
+                      color: isPlaying ? AppTheme.primary : AppTheme.textPrimary,
                     ),
                   ),
                   subtitle: showTranslation
@@ -889,7 +889,7 @@ class _DailyPhrasesPageState extends State<DailyPhrasesPage> {
                           child: Text(
                             _dynamicTranslations[id] ?? phrase['ar'],
                             style: TextStyle(
-                              color: Colors.white.withValues(alpha: 0.6),
+                              color: AppTheme.fg.withValues(alpha: 0.6),
                               fontSize: 15,
                               fontStyle: isArabic ? FontStyle.normal : FontStyle.italic,
                             ),
@@ -902,7 +902,7 @@ class _DailyPhrasesPageState extends State<DailyPhrasesPage> {
                       IconButton(
                         icon: Icon(
                           showTranslation ? Icons.visibility : Icons.visibility_off_outlined,
-                          color: showTranslation ? AppTheme.primary : Colors.white38,
+                          color: showTranslation ? AppTheme.primary : AppTheme.textTertiary,
                           size: 22,
                         ),
                         onPressed: () => _handleTranslation(phrase['fr'], phrase['ar'], id, lp),

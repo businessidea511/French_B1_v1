@@ -6,16 +6,16 @@ import 'translated_text.dart';
 /// Small speaker button that reads French text aloud.
 class SpeakButton extends StatelessWidget {
   final String french;
-  final Color color;
+  final Color? color;
 
-  const SpeakButton(this.french, {super.key, this.color = AppTheme.primary});
+  const SpeakButton(this.french, {super.key, this.color});
 
   @override
   Widget build(BuildContext context) {
     return IconButton(
       tooltip: 'Écouter',
       visualDensity: VisualDensity.compact,
-      icon: Icon(Icons.volume_up_rounded, color: color, size: 22),
+      icon: Icon(Icons.volume_up_rounded, color: color ?? AppTheme.primary, size: 22),
       onPressed: () => TtsService.instance.speak(french),
     );
   }
@@ -64,7 +64,7 @@ class ExpressionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const color = Color(0xFFFBBF24); // Belgian yellow
+    final color = AppTheme.sun; // Belgian yellow
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 8),
       padding: const EdgeInsets.all(16),
@@ -77,7 +77,7 @@ class ExpressionCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text('$_flags  $_where · ${register == 'familier' ? 'familier (street language)' : 'courant'}',
-              style: const TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.w600)),
+              style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.w600)),
           const SizedBox(height: 6),
           Directionality(
             textDirection: TextDirection.ltr,
@@ -85,20 +85,19 @@ class ExpressionCard extends StatelessWidget {
               children: [
                 Expanded(
                   child: Text('« $expression »',
-                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
                 ),
-                SpeakButton(expression, color: color),
               ],
             ),
           ),
           if (meaning.isNotEmpty)
-            TranslatedText(meaning, style: const TextStyle(color: AppTheme.textSecondary, fontSize: 14, height: 1.5)),
+            TranslatedText(meaning, style: TextStyle(color: AppTheme.textSecondary, fontSize: 14, height: 1.5)),
           if (example.isNotEmpty) ...[
             const SizedBox(height: 8),
             Directionality(
               textDirection: TextDirection.ltr,
               child: Text('💬 $example',
-                  style: const TextStyle(color: Colors.white, fontStyle: FontStyle.italic, height: 1.5)),
+                  style: TextStyle(color: AppTheme.textPrimary, fontStyle: FontStyle.italic, height: 1.5)),
             ),
           ],
         ],
@@ -130,7 +129,7 @@ class MistakeCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppTheme.surface.withValues(alpha: 0.6),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+        border: Border.all(color: AppTheme.fg.withValues(alpha: 0.08)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -141,7 +140,7 @@ class MistakeCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text('❌  $wrong',
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: AppTheme.error,
                       fontSize: 16,
                       decoration: TextDecoration.lineThrough,
@@ -152,9 +151,8 @@ class MistakeCard extends StatelessWidget {
                   children: [
                     Expanded(
                       child: Text('✅  $right',
-                          style: const TextStyle(color: AppTheme.success, fontSize: 16, fontWeight: FontWeight.bold)),
+                          style: TextStyle(color: AppTheme.success, fontSize: 16, fontWeight: FontWeight.bold)),
                     ),
-                    SpeakButton(right, color: AppTheme.success),
                   ],
                 ),
               ],
@@ -162,7 +160,7 @@ class MistakeCard extends StatelessWidget {
           ),
           if (why.isNotEmpty) ...[
             const SizedBox(height: 6),
-            TranslatedText(why, style: const TextStyle(color: AppTheme.textSecondary, fontSize: 14, height: 1.5)),
+            TranslatedText(why, style: TextStyle(color: AppTheme.textSecondary, fontSize: 14, height: 1.5)),
           ],
         ],
       ),

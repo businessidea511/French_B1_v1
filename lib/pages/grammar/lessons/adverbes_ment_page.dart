@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../theme/app_theme.dart';
 import 'package:provider/provider.dart';
 import '../../../widgets/lesson_template.dart';
 import '../../../widgets/translated_text.dart';
@@ -23,17 +24,17 @@ class AdverbesMentPage extends StatelessWidget {
               TextStyle(fontSize: 16, height: 1.5, fontWeight: FontWeight.bold),
         ),
         const SectionTitle('🧙‍♂️ The Magic "Ment" Formula'),
-        const TipBox(
+        TipBox(
           title: 'Girl Power! 🚺',
           content:
               'The secret is simple: Use the FEMININE form of the adjective + MENT.\n\n'
               'Example: Lent (slow) → Lente (fem) → Lentement (slowly)',
           icon: Icons.auto_awesome,
-          color: Color(0xFF10B981),
+          color: AppTheme.success,
         ),
         const SectionTitle('📐 The 3 Rules for Adverb Success'),
         // Rules include French words — use FrenchTipBox for the examples
-        const FrenchTipBox(
+        FrenchTipBox(
           title: '3 Rules — French Examples',
           frenchText: '1️⃣  Standard: Féminin + -ment\n'
               '   Heureux  →  Heureuse  →  Heureusement\n'
@@ -46,7 +47,7 @@ class AdverbesMentPage extends StatelessWidget {
               '   Ends in -ANT  →  -AMMENT\n'
               '   Courant  →  Couramment',
           icon: Icons.rule,
-          color: Color(0xFF6366F1),
+          color: AppTheme.primary,
         ),
         const SectionTitle('✨ Real-Life Examples'),
         const ExampleBox(
@@ -63,21 +64,21 @@ class AdverbesMentPage extends StatelessWidget {
         ),
         const SectionTitle('🚫 The "Rebel" Adverbs (Irregulars)'),
         // Irregular adverbs — French words must stay in French
-        const FrenchTipBox(
+        FrenchTipBox(
           title: 'Some adverbs just hate rules!',
           frenchText: 'Bon      (Good)   →  bien       (well)\n'
               'Mauvais  (Bad)    →  mal        (badly)\n'
               'Petit    (Small)  →  peu        (little)\n'
               'Gentil   (Kind)   →  gentiment  (kindly)',
           icon: Icons.warning,
-          color: Color(0xFFEF4444),
+          color: AppTheme.error,
         ),
-        const TipBox(
+        TipBox(
           title: '👂 Dummy Ear Tip',
           content:
               'Both -emment and -amment sound EQUALLY like "ah-mah" [am-mã]. Don\'t let the spelling scare your ears!',
           icon: Icons.hearing,
-          color: Color(0xFFF59E0B),
+          color: AppTheme.warning,
         ),
       ],
     );

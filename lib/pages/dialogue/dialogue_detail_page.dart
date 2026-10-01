@@ -44,7 +44,7 @@ class _DialogueDetailPageState extends State<DialogueDetailPage> {
       appBar: AppBar(
         title: Text(widget.title),
         backgroundColor: AppTheme.primary,
-        foregroundColor: Colors.white,
+        foregroundColor: AppTheme.textPrimary,
       ),
       body: Column(
         children: [
@@ -54,7 +54,7 @@ class _DialogueDetailPageState extends State<DialogueDetailPage> {
             width: double.infinity,
             child: Text(
               widget.description,
-              style: const TextStyle(
+              style: TextStyle(
                 color: AppTheme.textSecondary,
                 fontStyle: FontStyle.italic,
               ),
@@ -97,9 +97,9 @@ class _DialogueDetailPageState extends State<DialogueDetailPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (isAgent) ...[
-            const CircleAvatar(
+            CircleAvatar(
               backgroundColor: AppTheme.primary,
-              child: Icon(Icons.support_agent, color: Colors.white),
+              child: Icon(Icons.support_agent, color: AppTheme.textPrimary),
             ),
             const SizedBox(width: 8),
           ],
@@ -107,7 +107,7 @@ class _DialogueDetailPageState extends State<DialogueDetailPage> {
             child: Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: isAgent ? Colors.white : AppTheme.primary,
+                color: isAgent ? AppTheme.textPrimary : AppTheme.primary,
                 borderRadius: BorderRadius.only(
                   topLeft: const Radius.circular(16),
                   topRight: const Radius.circular(16),
@@ -127,7 +127,7 @@ class _DialogueDetailPageState extends State<DialogueDetailPage> {
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
-                          color: isAgent ? AppTheme.primary : Colors.white70,
+                          color: isAgent ? AppTheme.primary : AppTheme.textSecondary,
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -139,7 +139,7 @@ class _DialogueDetailPageState extends State<DialogueDetailPage> {
                           size: 20,
                           color: isAgent
                               ? AppTheme.primary.withValues(alpha: 0.7)
-                              : Colors.white.withValues(alpha: 0.7),
+                              : AppTheme.fg.withValues(alpha: 0.7),
                         ),
                       ),
                     ],
@@ -149,7 +149,7 @@ class _DialogueDetailPageState extends State<DialogueDetailPage> {
                     text,
                     style: TextStyle(
                       fontSize: 16,
-                      color: isAgent ? const Color(0xFF0F172A) : Colors.white,
+                      color: isAgent ? const Color(0xFF0F172A) : AppTheme.textPrimary,
                     ),
                   ),
                 ],
@@ -162,9 +162,9 @@ class _DialogueDetailPageState extends State<DialogueDetailPage> {
             // The request was "listen to each sentence", so I will add it for both.
             // But usually for the user side, the icon should be inside or next to the bubble.
             // I'll put it inside like the Agent one.
-            const CircleAvatar(
+            CircleAvatar(
               backgroundColor: AppTheme.secondary,
-              child: Icon(Icons.person, color: Colors.white),
+              child: Icon(Icons.person, color: AppTheme.textPrimary),
             ),
           ],
         ],

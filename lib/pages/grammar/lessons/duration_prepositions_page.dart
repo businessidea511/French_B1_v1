@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../theme/app_theme.dart';
 import 'package:provider/provider.dart';
 import '../../../widgets/lesson_template.dart';
 import '../../../widgets/translated_text.dart';
@@ -34,11 +35,11 @@ class DurationPrepositionsPage extends StatelessWidget {
           french: 'Je t\'attends depuis une heure',
           english: 'I have been waiting for you for an hour (and I\'m still waiting!)',
         ),
-        const TipBox(
+        TipBox(
           title: 'Wait! What about "For"?',
           content: 'In English, you use "For" for both finished and unfinished actions. In French, you MUST use "Depuis" if it\'s still going on!',
           icon: Icons.priority_high,
-          color: Color(0xFF6366F1),
+          color: AppTheme.primary,
         ),
 
         const SectionTitle('Pendant (During / For)', emoji: '⏳'),
@@ -93,11 +94,11 @@ class DurationPrepositionsPage extends StatelessWidget {
           english: 'We went around the world in 80 days',
         ),
 
-        const TipBox(
+        TipBox(
           title: 'Quick Hack 💡',
           content: '• Still happening? -> Depuis\n• Finished duration? -> Pendant\n• How long it took? -> En\n• Specific past point? -> Il y a\n• Future point? -> Dans',
           icon: Icons.bolt,
-          color: Color(0xFFF59E0B),
+          color: AppTheme.warning,
         ),
       ],
     );

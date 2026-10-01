@@ -492,44 +492,6 @@ JSON: {"flashcards": [{"front": "...", "back": "...", "example": "...", "tip": "
     return cards;
   }
 
-  static Future<Map<String, List<String>>> conjugateVerb(String verb) async {
-    try {
-      final response = await _chat({
-          'messages': [
-            {
-              'role': 'system',
-              'content':
-                  'You are a French linguistics expert. Provide verb conjugations in JSON format. Return a JSON object where keys are tenses and values are lists of 6 conjugated forms. IMPORTANT: Each form MUST include the pronoun (je, tu, il/elle, nous, vous, ils/elles). Example: ["je parle", "tu parles", ...].'
-            },
-            {
-              'role': 'user',
-              'content':
-                  'Conjugate the French verb "$verb" in the following tenses: Présent, Passé Composé, Imparfait, Plus-que-parfait, Conditionnel, Futur Proche, Futur Simple, Subjonctif.'
-            }
-          ],
-          'response_format': {'type': 'json_object'},
-          'temperature': 0.1,
-      });
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        final content = data['choices'][0]['message']['content'];
-        final Map<String, dynamic> parsed = jsonDecode(content);
-
-        Map<String, List<String>> result = {};
-        parsed.forEach((key, value) {
-          result[key] = List<String>.from(value);
-        });
-        return result;
-      } else {
-        throw Exception('Failed to conjugate verb: ${response.statusCode}');
-      }
-    } catch (e) {
-      debugPrint('Error conjugating verb: $e');
-      rethrow;
-    }
-  }
-
   // Get AI explanation for a grammar topic
   static Future<String> getGrammarExplanation(
       String topic, String targetLanguage) async {
@@ -764,6 +726,69 @@ JSON: {"flashcards": [{"front": "...", "back": "...", "example": "...", "tip": "
       debugPrint('Translation error: $e');
       return text;
     }
+  }
+
+  /// Translates many short texts in a few requests, using (and filling) the
+  /// same cache as [translateText]. A text that cannot be translated is kept
+  /// as it is.
+  static Future<List<String>> translateBatch(List<String> texts, String targetLanguage) async {
+    final out = List<String>.from(texts);
+    SharedPreferences? prefs;
+    try {
+      prefs = await SharedPreferences.getInstance();
+    } catch (_) {}
+    final missing = <int>[];
+    for (var i = 0; i < texts.length; i++) {
+      if (texts[i].trim().isEmpty) continue;
+      final key = 'trans_${targetLanguage}_${texts[i].hashCode}';
+      final cached = _memoryCache[key] ?? prefs?.getString(key);
+      if (cached != null) {
+        _memoryCache[key] = cached;
+        out[i] = cached;
+      } else if (!missing.any((j) => texts[j] == texts[i])) {
+        missing.add(i);
+      }
+    }
+
+    Future<void> translateChunk(List<int> ids) async {
+      try {
+        final result = await chatJson([
+          {
+            'role': 'system',
+            'content': 'You translate short glosses and notes for French learners into $targetLanguage. '
+                'Translate every item of "items". Keep every French word, phrase or quotation (often between « ») '
+                'exactly as it is. Keep it short and natural. Keep the same number and order of items. '
+                'Return JSON: {"items": ["...", "..."]}',
+          },
+          {
+            'role': 'user',
+            'content': jsonEncode({'items': [for (final i in ids) texts[i]]}),
+          },
+        ], temperature: 0.2, maxTokens: 8000);
+        final items = result['items'];
+        if (items is! List || items.length != ids.length) return;
+        for (var j = 0; j < ids.length; j++) {
+          final translated = items[j].toString().trim();
+          if (translated.isEmpty) continue;
+          final key = 'trans_${targetLanguage}_${texts[ids[j]].hashCode}';
+          _memoryCache[key] = translated;
+          await prefs?.setString(key, translated);
+        }
+      } catch (e) {
+        debugPrint('Batch translation error: $e');
+      }
+    }
+
+    const chunkSize = 40;
+    await Future.wait([
+      for (var start = 0; start < missing.length; start += chunkSize)
+        translateChunk(missing.sublist(start, min(start + chunkSize, missing.length))),
+    ]);
+    // Fill every position (duplicates included) from the cache.
+    for (var i = 0; i < texts.length; i++) {
+      out[i] = _memoryCache['trans_${targetLanguage}_${texts[i].hashCode}'] ?? out[i];
+    }
+    return out;
   }
 
   // Ask a specific grammar question

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../theme/app_theme.dart';
 import 'package:provider/provider.dart';
 import '../../../widgets/lesson_template.dart';
 import '../../../widgets/translated_text.dart';
@@ -30,13 +31,13 @@ class ComparatifPage extends StatelessWidget {
           style: TextStyle(fontSize: 15, height: 1.8),
         ),
         const SectionTitle('🔧 The Magic Formulas'),
-        const FrenchTipBox(
+        FrenchTipBox(
           title: 'Comparatif — Core Formulas',
           frenchText: 'plus  + adjective + que   →  more ... than\n'
               'moins + adjective + que   →  less ... than\n'
               'aussi + adjective + que   →  as ... as',
           icon: Icons.calculate,
-          color: Color(0xFF6366F1),
+          color: AppTheme.primary,
         ),
         const SectionTitle('✨ Superiority — plus ... que (more than)'),
         const ExampleBox(
@@ -83,13 +84,13 @@ class ComparatifPage extends StatelessWidget {
           'When comparing AMOUNTS (not qualities), replace "aussi" with "autant":',
           style: TextStyle(fontSize: 15, height: 1.6),
         ),
-        const FrenchTipBox(
+        FrenchTipBox(
           title: 'Comparing quantities',
           frenchText: 'plus de  + noun + que   →  more ... than\n'
               'moins de + noun + que   →  less/fewer ... than\n'
               'autant de+ noun + que   →  as much/many ... as',
           icon: Icons.bar_chart,
-          color: Color(0xFF10B981),
+          color: AppTheme.success,
         ),
         const ExampleBox(
           french: 'J\'ai plus de temps que toi.',
@@ -108,7 +109,7 @@ class ComparatifPage extends StatelessWidget {
           'Just like in English ("good → better", NOT "more good"), French has a few irregular forms you must memorize:',
           style: TextStyle(fontSize: 15, height: 1.6),
         ),
-        const FrenchTipBox(
+        FrenchTipBox(
           title: '⚠️ Irregular Forms',
           frenchText:
               'bon  (good)   →  meilleur(e)  (better)   ❌ NOT plus bon\n'
@@ -116,7 +117,7 @@ class ComparatifPage extends StatelessWidget {
               'bien (well)   →  mieux        (better)    ❌ NOT plus bien\n'
               'mal  (badly)  →  pis / pire   (worse)     ❌ NOT plus mal',
           icon: Icons.warning,
-          color: Color(0xFFEF4444),
+          color: AppTheme.error,
         ),
         const ExampleBox(
           french: 'Ce vin est meilleur que l\'autre.',
@@ -130,19 +131,19 @@ class ComparatifPage extends StatelessWidget {
           french: 'La situation est pire qu\'avant.',
           english: 'The situation is worse than before.',
         ),
-        const TipBox(
+        TipBox(
           title: '💡 Quick Tip — "que" becomes "qu\'" before a vowel!',
           content: 'plus intelligent QUE lui  (before consonant)\n'
               'plus intelligent QU\'elle  (before vowel — drop the e!)',
           icon: Icons.lightbulb_outline,
-          color: Color(0xFFF59E0B),
+          color: AppTheme.warning,
         ),
         const SectionTitle('📝 Adjective Agreement'),
         const TranslatedText(
           'Remember: comparative adjectives still agree in GENDER and NUMBER with the noun they describe!',
           style: TextStyle(fontSize: 15, height: 1.6),
         ),
-        const FrenchTipBox(
+        FrenchTipBox(
           title: 'Agreement examples',
           frenchText: 'un sac plus lourd    (masculine singular)\n'
               'une valise plus lourde   (feminine singular)\n'
@@ -150,7 +151,7 @@ class ComparatifPage extends StatelessWidget {
               'des valises plus lourdes (feminine plural)\n\n'
               '❌ un sac plus lourd / ✅ une valise plus lourde',
           icon: Icons.spellcheck,
-          color: Color(0xFF6366F1),
+          color: AppTheme.primary,
         ),
       ],
     );

@@ -33,7 +33,7 @@ class _EssayPageState extends State<EssayPage> {
       appBar: AppBar(
         title: const Text('Rédactions (Essays)'),
         backgroundColor: AppTheme.primary,
-        foregroundColor: Colors.white,
+        foregroundColor: AppTheme.textPrimary,
       ),
       body: ListView(
         controller: _scrollController,
@@ -276,7 +276,7 @@ Des questions pour faire bonne impression :
                       ],
                     ),
                   ),
-                  const Icon(Icons.arrow_forward_ios,
+                  Icon(Icons.arrow_forward_ios,
                       size: 16, color: AppTheme.textTertiary),
                 ],
               ),

@@ -7,6 +7,7 @@ import '../../services/topic_context.dart';
 import '../../services/language_provider.dart';
 import '../../services/lessons_provider.dart';
 import '../../services/global_scroll_manager.dart';
+import '../../services/progress_service.dart';
 
 class ExercisesPage extends StatefulWidget {
   final String? initialTopic;
@@ -225,12 +226,12 @@ class _ExercisesPageState extends State<ExercisesPage> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(
+                            Text(
                               'B1 General Review',
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 20,
-                                color: Colors.white,
+                                color: AppTheme.textPrimary,
                                 fontFamily: 'Outfit',
                               ),
                             ),
@@ -238,14 +239,14 @@ class _ExercisesPageState extends State<ExercisesPage> {
                             Text(
                               'Final Exam style: All tenses + COD/COI',
                               style: TextStyle(
-                                color: Colors.white.withValues(alpha: 0.6),
+                                color: AppTheme.fg.withValues(alpha: 0.6),
                                 fontSize: 14,
                               ),
                             ),
                           ],
                         ),
                       ),
-                      const Icon(Icons.auto_awesome, color: AppTheme.primary, size: 24),
+                      Icon(Icons.auto_awesome, color: AppTheme.primary, size: 24),
                     ],
                   ),
                 ),
@@ -270,7 +271,7 @@ class _ExercisesPageState extends State<ExercisesPage> {
       decoration: BoxDecoration(
         color: AppTheme.surface,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.05), width: 1.5),
+        border: Border.all(color: AppTheme.fg.withValues(alpha: 0.05), width: 1.5),
       ),
       child: Material(
         color: Colors.transparent,
@@ -299,10 +300,10 @@ class _ExercisesPageState extends State<ExercisesPage> {
                     children: [
                       Text(
                         title,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 18,
-                          color: Colors.white,
+                          color: AppTheme.textPrimary,
                         ),
                       ),
                       const SizedBox(height: 2),
@@ -313,14 +314,14 @@ class _ExercisesPageState extends State<ExercisesPage> {
                         style: TextStyle(
                           color: _best.containsKey(title)
                               ? ((_best[title] ?? 0) >= 70 ? AppTheme.success : AppTheme.warning)
-                              : Colors.white.withValues(alpha: 0.4),
+                              : AppTheme.fg.withValues(alpha: 0.4),
                           fontSize: 13,
                         ),
                       ),
                     ],
                   ),
                 ),
-                const Icon(Icons.auto_awesome, color: AppTheme.primary, size: 20),
+                Icon(Icons.auto_awesome, color: AppTheme.primary, size: 20),
               ],
             ),
           ),
@@ -352,13 +353,13 @@ class _ExercisesPageState extends State<ExercisesPage> {
               value: (currentQuestion + 1) / questions.length,
               minHeight: 10,
               backgroundColor: AppTheme.surface,
-              valueColor: const AlwaysStoppedAnimation<Color>(AppTheme.primary),
+              valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primary),
             ),
           ),
           const SizedBox(height: 32),
           Text(
             'QUESTION ${currentQuestion + 1} OF ${questions.length}',
-            style: const TextStyle(
+            style: TextStyle(
                 letterSpacing: 1.5,
                 fontSize: 12,
                 fontWeight: FontWeight.bold,
@@ -376,14 +377,14 @@ class _ExercisesPageState extends State<ExercisesPage> {
             const SizedBox(height: 12),
             Row(
               children: [
-                const Icon(Icons.translate, size: 16, color: AppTheme.primary),
+                Icon(Icons.translate, size: 16, color: AppTheme.primary),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     question['translation'],
                     style: TextStyle(
                       fontSize: 16,
-                      color: Colors.white.withValues(alpha: 0.7),
+                      color: AppTheme.fg.withValues(alpha: 0.7),
                       fontStyle: FontStyle.italic,
                     ),
                   ),
@@ -424,6 +425,19 @@ class _ExercisesPageState extends State<ExercisesPage> {
 
     if (isCorrect) {
       setState(() => score++);
+      ProgressService.instance.addXp(3);
+    } else {
+      final q = questions[currentQuestion];
+      final options = [for (final o in q['options'] as List) o.toString()];
+      ProgressService.instance.addMistake(
+        source: 'Exercices',
+        question: q['question'].toString(),
+        wrong: options[selected],
+        right: correctText,
+        explanation: (q['explanation'] ?? '').toString(),
+        options: options,
+      );
+      ProgressService.instance.addXp(1);
     }
 
     showModalBottomSheet(
@@ -461,11 +475,11 @@ class _ExercisesPageState extends State<ExercisesPage> {
               Directionality(
                 textDirection: TextDirection.ltr,
                 child: Text('✅ $correctText',
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.success)),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.success)),
               ),
             ],
             const SizedBox(height: 16),
-            const Text(
+            Text(
               'EXPLICATION',
               style: TextStyle(
                 fontSize: 12,
@@ -477,7 +491,7 @@ class _ExercisesPageState extends State<ExercisesPage> {
             const SizedBox(height: 8),
             Text(
               questions[currentQuestion]['explanation'] ?? '',
-              style: const TextStyle(fontSize: 16, height: 1.5, color: Colors.white),
+              style: TextStyle(fontSize: 16, height: 1.5, color: AppTheme.textPrimary),
             ),
             const SizedBox(height: 32),
             ElevatedButton(
@@ -527,7 +541,7 @@ class _ExercisesPageState extends State<ExercisesPage> {
             const SizedBox(height: 12),
             Text(
               'You scored $score out of ${questions.length}',
-              style: const TextStyle(fontSize: 18, color: AppTheme.textSecondary),
+              style: TextStyle(fontSize: 18, color: AppTheme.textSecondary),
             ),
             const SizedBox(height: 40),
             Container(
@@ -568,7 +582,7 @@ class _ExercisesPageState extends State<ExercisesPage> {
               Align(
                 alignment: AlignmentDirectional.centerStart,
                 child: Text('Review your mistakes (${mistakes.length})',
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
               ),
               const SizedBox(height: 12),
               for (final i in mistakes) _buildMistakeReview(i),
@@ -598,17 +612,17 @@ class _ExercisesPageState extends State<ExercisesPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('${i + 1}. ${q['question']}', style: const TextStyle(color: Colors.white, fontSize: 16)),
+                Text('${i + 1}. ${q['question']}', style: TextStyle(color: AppTheme.textPrimary, fontSize: 16)),
                 const SizedBox(height: 8),
-                Text('❌ ${options[_chosen[i]]}', style: const TextStyle(color: AppTheme.error)),
+                Text('❌ ${options[_chosen[i]]}', style: TextStyle(color: AppTheme.error)),
                 Text('✅ ${options[q['correct']]}',
-                    style: const TextStyle(color: AppTheme.success, fontWeight: FontWeight.bold)),
+                    style: TextStyle(color: AppTheme.success, fontWeight: FontWeight.bold)),
               ],
             ),
           ),
           if ((q['explanation'] ?? '').toString().isNotEmpty) ...[
             const SizedBox(height: 6),
-            Text(q['explanation'], style: const TextStyle(color: AppTheme.textSecondary, fontSize: 14, height: 1.4)),
+            Text(q['explanation'], style: TextStyle(color: AppTheme.textSecondary, fontSize: 14, height: 1.4)),
           ],
         ],
       ),
@@ -626,7 +640,7 @@ class SectionHeader extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 16, left: 8),
       child: Text(
         title,
-        style: const TextStyle(
+        style: TextStyle(
           letterSpacing: 1.5,
           fontSize: 12,
           fontWeight: FontWeight.bold,

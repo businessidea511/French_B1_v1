@@ -50,8 +50,8 @@ class _AskAIBoxState extends State<AskAIBox> with AutomaticKeepAliveClientMixin 
         mainAxisSize: MainAxisSize.min,
         children: [
           ListTile(
-            leading: const Icon(Icons.camera_alt, color: AppTheme.primary),
-            title: const Text('Take a Photo', style: TextStyle(color: Colors.white)),
+            leading: Icon(Icons.camera_alt, color: AppTheme.primary),
+            title: Text('Take a Photo', style: TextStyle(color: AppTheme.textPrimary)),
             onTap: () async {
               Navigator.pop(context);
               final image = await picker.pickImage(
@@ -64,8 +64,8 @@ class _AskAIBoxState extends State<AskAIBox> with AutomaticKeepAliveClientMixin 
             },
           ),
           ListTile(
-            leading: const Icon(Icons.photo_library, color: AppTheme.secondary),
-            title: const Text('Choose from Gallery', style: TextStyle(color: Colors.white)),
+            leading: Icon(Icons.photo_library, color: AppTheme.secondary),
+            title: Text('Choose from Gallery', style: TextStyle(color: AppTheme.textPrimary)),
             onTap: () async {
               Navigator.pop(context);
               // For gallery, we can pick multiple at once
@@ -209,10 +209,10 @@ class _AskAIBoxState extends State<AskAIBox> with AutomaticKeepAliveClientMixin 
                           )
                         ],
                       ),
-                      child: const Icon(Icons.auto_awesome, color: Colors.white, size: 20),
+                      child: Icon(Icons.auto_awesome, color: AppTheme.textPrimary, size: 20),
                     ),
                     const SizedBox(width: 15),
-                    const Expanded(
+                    Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -222,7 +222,7 @@ class _AskAIBoxState extends State<AskAIBox> with AutomaticKeepAliveClientMixin 
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
                               fontFamily: 'Outfit',
-                              color: Colors.white,
+                              color: AppTheme.textPrimary,
                             ),
                           ),
                           TranslatedText(
@@ -242,16 +242,16 @@ class _AskAIBoxState extends State<AskAIBox> with AutomaticKeepAliveClientMixin 
                   Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.1),
+                      color: AppTheme.fg.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.1),
+                        color: AppTheme.fg.withValues(alpha: 0.1),
                       ),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Row(
+                        Row(
                           children: [
                             Icon(Icons.lightbulb, color: AppTheme.warning, size: 16),
                             SizedBox(width: 8),
@@ -275,33 +275,33 @@ class _AskAIBoxState extends State<AskAIBox> with AutomaticKeepAliveClientMixin 
                               color: Color(0xFFE2E8F0), // Slate 200 - Very readable
                               fontFamily: 'Inter',
                             ),
-                            strong: const TextStyle(
+                            strong: TextStyle(
                               color: AppTheme.secondary, // Pink for emphasis
                               fontWeight: FontWeight.bold,
                             ),
-                            em: const TextStyle(
+                            em: TextStyle(
                               color: AppTheme.accent,
                               fontStyle: FontStyle.italic,
                             ),
-                            h1: const TextStyle(
+                            h1: TextStyle(
                               color: AppTheme.primary,
                               fontSize: 24,
                               fontWeight: FontWeight.bold,
                               fontFamily: 'Outfit',
                             ),
-                            h2: const TextStyle(
+                            h2: TextStyle(
                               color: AppTheme.accent,
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
                               fontFamily: 'Outfit',
                             ),
-                            h3: const TextStyle(
+                            h3: TextStyle(
                               color: AppTheme.secondary,
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
                               fontFamily: 'Outfit',
                             ),
-                            listBullet: const TextStyle(
+                            listBullet: TextStyle(
                               color: AppTheme.primary,
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
@@ -316,28 +316,28 @@ class _AskAIBoxState extends State<AskAIBox> with AutomaticKeepAliveClientMixin 
                             codeblockDecoration: BoxDecoration(
                               color: Colors.black.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+                              border: Border.all(color: AppTheme.fg.withValues(alpha: 0.1)),
                             ),
-                            blockquote: const TextStyle(
+                            blockquote: TextStyle(
                               color: AppTheme.textTertiary,
                               fontSize: 15,
                               fontStyle: FontStyle.italic,
                             ),
                             blockquoteDecoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.1),
+                              color: AppTheme.fg.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(12),
-                              border: const Border(
+                              border: Border(
                                 left: BorderSide(color: AppTheme.primary, width: 4),
                               ),
                             ),
                             blockquotePadding: const EdgeInsets.all(16),
-                            tableHead: const TextStyle(
+                            tableHead: TextStyle(
                               color: AppTheme.primary,
                               fontWeight: FontWeight.bold,
                               fontSize: 14,
                             ),
-                            tableBody: const TextStyle(color: Colors.white, fontSize: 14),
-                            tableBorder: TableBorder.all(color: Colors.white.withValues(alpha: 0.1)),
+                            tableBody: TextStyle(color: AppTheme.textPrimary, fontSize: 14),
+                            tableBorder: TableBorder.all(color: AppTheme.fg.withValues(alpha: 0.1)),
                             tableCellsPadding: const EdgeInsets.all(12),
                           ),
                         ),
@@ -389,7 +389,7 @@ class _AskAIBoxState extends State<AskAIBox> with AutomaticKeepAliveClientMixin 
                                       color: Colors.black54,
                                       shape: BoxShape.circle,
                                     ),
-                                    child: const Icon(Icons.close, color: Colors.white, size: 16),
+                                    child: Icon(Icons.close, color: AppTheme.textPrimary, size: 16),
                                   ),
                                 ),
                               ),
@@ -415,7 +415,7 @@ class _AskAIBoxState extends State<AskAIBox> with AutomaticKeepAliveClientMixin 
                         controller: _controller,
                         decoration: InputDecoration(
                           hintText: 'Ask me anything...',
-                          hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.1)),
+                          hintStyle: TextStyle(color: AppTheme.fg.withValues(alpha: 0.1)),
                           filled: true,
                           fillColor: Colors.black.withValues(alpha: 0.1),
                           contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
@@ -424,7 +424,7 @@ class _AskAIBoxState extends State<AskAIBox> with AutomaticKeepAliveClientMixin 
                             borderSide: BorderSide.none,
                           ),
                         ),
-                        style: const TextStyle(color: Colors.white, fontSize: 15),
+                        style: TextStyle(color: AppTheme.textPrimary, fontSize: 15),
                         onSubmitted: (_) => _askQuestion(),
                       ),
                     ),
@@ -439,15 +439,15 @@ class _AskAIBoxState extends State<AskAIBox> with AutomaticKeepAliveClientMixin 
                           borderRadius: BorderRadius.circular(15),
                         ),
                         child: _isLoading
-                            ? const SizedBox(
+                            ? SizedBox(
                                 width: 24,
                                 height: 24,
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
-                                  color: Colors.white,
+                                  color: AppTheme.textPrimary,
                                 ),
                               )
-                            : const Icon(Icons.send_rounded, color: Colors.white),
+                            : Icon(Icons.send_rounded, color: AppTheme.textPrimary),
                       ),
                     ),
                   ],

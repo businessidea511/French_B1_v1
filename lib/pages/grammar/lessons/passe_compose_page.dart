@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../theme/app_theme.dart';
 import 'package:provider/provider.dart';
 import '../../../widgets/lesson_template.dart';
 import '../../../widgets/translated_text.dart';
@@ -35,11 +36,11 @@ class PasseComposePage extends StatelessWidget {
           english: 'She finished her homework (it\'s DONE!)',
         ),
         const SectionTitle('🔧 How to Build It'),
-        const TipBox(
+        TipBox(
           title: 'Formula',
           content: 'AVOIR or ÊTRE (present tense) + PAST PARTICIPLE',
           icon: Icons.calculate,
-          color: Color(0xFF6366F1),
+          color: AppTheme.primary,
         ),
         const SectionTitle('Step 1: Choose Your Helper Verb'),
         const TranslatedText(
@@ -84,16 +85,16 @@ class PasseComposePage extends StatelessWidget {
           french: 'Nous sommes partis tôt',
           english: 'We left early',
         ),
-        const TipBox(
+        TipBox(
           title: '⚠️ IMPORTANT!',
           content:
               'With ÊTRE, the past participle must AGREE with the subject:\n'
               'add -e for feminine, -s for plural, -es for feminine plural',
           icon: Icons.warning,
-          color: Color(0xFFEF4444),
+          color: AppTheme.error,
         ),
         // Irregular participles — must stay in French
-        const FrenchTipBox(
+        FrenchTipBox(
           title: '🎯 Common Irregular Past Participles',
           frenchText: 'être   →  été    (been)\n'
               'avoir  →  eu     (had)\n'
@@ -104,24 +105,24 @@ class PasseComposePage extends StatelessWidget {
               'écrire →  écrit  (written)\n'
               'lire   →  lu     (read)',
           icon: Icons.list_alt,
-          color: Color(0xFF8B5CF6),
+          color: AppTheme.accent,
         ),
         const SectionTitle('❌ Common Mistakes'),
-        const FrenchTipBox(
+        FrenchTipBox(
           title: 'Don\'t Forget the Helper Verb!',
           frenchText: '❌  Je mangé\n'
               '✅  J\'ai mangé\n\n'
               'You ALWAYS need avoir or être!',
           icon: Icons.error_outline,
-          color: Color(0xFFF59E0B),
+          color: AppTheme.warning,
         ),
-        const FrenchTipBox(
+        FrenchTipBox(
           title: 'Watch Out for Agreement!',
           frenchText: '❌  Marie est allé\n'
               '✅  Marie est allée\n\n'
               'With être, add -e for feminine subjects!',
           icon: Icons.error_outline,
-          color: Color(0xFFF59E0B),
+          color: AppTheme.warning,
         ),
       ],
     );

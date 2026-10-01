@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../theme/app_theme.dart';
 import 'package:provider/provider.dart';
 import '../../../widgets/lesson_template.dart';
 import '../../../widgets/translated_text.dart';
@@ -33,15 +34,15 @@ class PlusQueParfaitPage extends StatelessWidget {
               'He ate the cake that I HAD MADE (made it first, then he ate it)',
         ),
         const SectionTitle('🔧 How to Build It'),
-        const TipBox(
+        TipBox(
           title: 'Easy Formula!',
           content: 'AVOIR or ÊTRE (in Imparfait) + PAST PARTICIPLE\n\n'
               'It\'s just like Passé Composé, but with the helper verb in Imparfait!',
           icon: Icons.calculate,
-          color: Color(0xFF6366F1),
+          color: AppTheme.primary,
         ),
         // Helper verb conjugation — must stay in French
-        const FrenchTipBox(
+        FrenchTipBox(
           title: 'AVOIR in Imparfait (used with most verbs)',
           frenchText: 'j\'avais\n'
               'tu avais\n'
@@ -50,9 +51,9 @@ class PlusQueParfaitPage extends StatelessWidget {
               'vous aviez\n'
               'ils / elles avaient',
           icon: Icons.history,
-          color: Color(0xFF10B981),
+          color: AppTheme.success,
         ),
-        const FrenchTipBox(
+        FrenchTipBox(
           title: 'ÊTRE in Imparfait (movement & reflexive verbs)',
           frenchText: 'j\'étais\n'
               'tu étais\n'
@@ -61,7 +62,7 @@ class PlusQueParfaitPage extends StatelessWidget {
               'vous étiez\n'
               'ils / elles étaient',
           icon: Icons.directions_walk,
-          color: Color(0xFF0EA5E9),
+          color: AppTheme.accent,
         ),
         const SectionTitle('📝 Examples'),
         const ExampleBox(
@@ -76,12 +77,12 @@ class PlusQueParfaitPage extends StatelessWidget {
           french: 'Nous avions fini nos devoirs',
           english: 'We had finished our homework',
         ),
-        const TipBox(
+        TipBox(
           title: '💡 Key Signal Words',
           content:
               'Look for: déjà (already), avant (before), quand (when) — these often signal Plus-que-parfait!',
           icon: Icons.lightbulb,
-          color: Color(0xFFF59E0B),
+          color: AppTheme.warning,
         ),
       ],
     );

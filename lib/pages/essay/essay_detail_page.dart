@@ -72,12 +72,12 @@ class _EssayDetailPageState extends State<EssayDetailPage> {
       appBar: AppBar(
         title: Text(widget.title),
         backgroundColor: AppTheme.primary,
-        foregroundColor: Colors.white,
+        foregroundColor: AppTheme.textPrimary,
         actions: [
           IconButton(
             icon: Icon(
               _showTranslation ? Icons.translate : Icons.translate_outlined,
-              color: _showTranslation ? AppTheme.warning : Colors.white,
+              color: _showTranslation ? AppTheme.warning : AppTheme.textPrimary,
             ),
             onPressed: () {
               setState(() {
@@ -91,7 +91,7 @@ class _EssayDetailPageState extends State<EssayDetailPage> {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _toggleAudio,
         backgroundColor: AppTheme.accent,
-        foregroundColor: Colors.white,
+        foregroundColor: AppTheme.textPrimary,
         icon: Icon(_isPlaying ? Icons.stop_rounded : Icons.volume_up_rounded),
         label: Text(_isPlaying ? 'Arrêter' : 'Écouter'),
       ),
@@ -112,7 +112,7 @@ class _EssayDetailPageState extends State<EssayDetailPage> {
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: AppTheme.textPrimary,
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
@@ -161,7 +161,7 @@ class _EssayDetailPageState extends State<EssayDetailPage> {
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.info_outline, color: AppTheme.primary),
+                  Icon(Icons.info_outline, color: AppTheme.primary),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(

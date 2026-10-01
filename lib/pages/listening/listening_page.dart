@@ -339,7 +339,7 @@ class _ListeningPageState extends State<ListeningPage> {
       appBar: AppBar(
         title: const Text('Écouter (Listening)'),
         backgroundColor: AppTheme.primary,
-        foregroundColor: Colors.white,
+        foregroundColor: AppTheme.textPrimary,
       ),
       body: SingleChildScrollView(
         controller: _scrollController,
@@ -472,10 +472,10 @@ class _ListeningPageState extends State<ListeningPage> {
                           label: const Text('Try Reloading Voices'),
                         )
                       else
-                        const Text(
+                        Text(
                           'Note: Available voices depend on your device and browser settings.',
                           style: TextStyle(
-                              color: Colors.white54,
+                              color: AppTheme.textTertiary,
                               fontSize: 12,
                               fontStyle: FontStyle.italic),
                           textAlign: TextAlign.center,
@@ -488,11 +488,11 @@ class _ListeningPageState extends State<ListeningPage> {
                       child: ElevatedButton.icon(
                         onPressed: _isLoading ? null : _generateExercise,
                         icon: _isLoading
-                            ? const SizedBox(
+                            ? SizedBox(
                                 width: 20,
                                 height: 20,
                                 child: CircularProgressIndicator(
-                                    strokeWidth: 2, color: Colors.white),
+                                    strokeWidth: 2, color: AppTheme.textPrimary),
                               )
                             : const Icon(Icons.refresh),
                         label: Text(_isLoading
@@ -500,7 +500,7 @@ class _ListeningPageState extends State<ListeningPage> {
                             : 'Generate New Exercise'),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppTheme.accent,
-                          foregroundColor: Colors.white,
+                          foregroundColor: AppTheme.textPrimary,
                           padding: const EdgeInsets.symmetric(vertical: 16),
                         ),
                       ),
@@ -519,7 +519,7 @@ class _ListeningPageState extends State<ListeningPage> {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
                   side: BorderSide(
-                    color: Colors.white.withValues(alpha: 0.1),
+                    color: AppTheme.fg.withValues(alpha: 0.1),
                     width: 1,
                   ),
                 ),
@@ -531,19 +531,19 @@ class _ListeningPageState extends State<ListeningPage> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Text('Speed: ',
+                          Text('Speed: ',
                               style: TextStyle(
                                   fontWeight: FontWeight.bold,
-                                  color: Colors.white)),
+                                  color: AppTheme.textPrimary)),
                           DropdownButton<double>(
                             value: _playbackRate,
                             dropdownColor: AppTheme.surfaceLight,
-                            style: const TextStyle(
-                                color: Colors.white, fontSize: 16),
-                            iconEnabledColor: Colors.white,
+                            style: TextStyle(
+                                color: AppTheme.textPrimary, fontSize: 16),
+                            iconEnabledColor: AppTheme.textPrimary,
                             underline: Container(
                               height: 1,
-                              color: Colors.white.withValues(alpha: 0.1),
+                              color: AppTheme.fg.withValues(alpha: 0.1),
                             ),
                             items: [0.5, 0.75, 0.9, 1.0, 1.25, 1.5]
                                 .map((r) => DropdownMenuItem(
@@ -603,7 +603,7 @@ class _ListeningPageState extends State<ListeningPage> {
                         children: [
                           IconButton(
                             iconSize: 32,
-                            color: Colors.white,
+                            color: AppTheme.textPrimary,
                             icon: const Icon(Icons.skip_previous_rounded),
                             onPressed: _currentSentenceIndex > 0
                                 ? _prevSentence
@@ -615,11 +615,11 @@ class _ListeningPageState extends State<ListeningPage> {
                             backgroundColor: _isPlaying
                                 ? AppTheme.warning
                                 : AppTheme.primary,
-                            foregroundColor: Colors.white,
+                            foregroundColor: AppTheme.textPrimary,
                             elevation: 4,
                             child: _isAudioLoading
-                                ? const CircularProgressIndicator(
-                                    color: Colors.white)
+                                ? CircularProgressIndicator(
+                                    color: AppTheme.textPrimary)
                                 : Icon(
                                     _isPlaying
                                         ? Icons.pause_rounded
@@ -629,7 +629,7 @@ class _ListeningPageState extends State<ListeningPage> {
                           const SizedBox(width: 24),
                           IconButton(
                             iconSize: 32,
-                            color: Colors.white,
+                            color: AppTheme.textPrimary,
                             icon: const Icon(Icons.skip_next_rounded),
                             onPressed:
                                 _currentSentenceIndex < _sentences.length - 1
@@ -645,8 +645,8 @@ class _ListeningPageState extends State<ListeningPage> {
                           SliderTheme(
                             data: SliderTheme.of(context).copyWith(
                               activeTrackColor: AppTheme.primary,
-                              inactiveTrackColor: Colors.white24,
-                              thumbColor: Colors.white,
+                              inactiveTrackColor: AppTheme.fg.withValues(alpha: 0.24),
+                              thumbColor: AppTheme.textPrimary,
                               overlayColor:
                                   AppTheme.primary.withValues(alpha: 0.1),
                               trackHeight: 4.0,
@@ -683,13 +683,13 @@ class _ListeningPageState extends State<ListeningPage> {
                                   _isPlaying
                                       ? 'Sentence ${_currentSentenceIndex + 1}'
                                       : 'Paused',
-                                  style: const TextStyle(
-                                      color: Colors.white70, fontSize: 12),
+                                  style: TextStyle(
+                                      color: AppTheme.textSecondary, fontSize: 12),
                                 ),
                                 Text(
                                   'Total: ${_sentences.length}',
-                                  style: const TextStyle(
-                                      color: Colors.white70, fontSize: 12),
+                                  style: TextStyle(
+                                      color: AppTheme.textSecondary, fontSize: 12),
                                 ),
                               ],
                             ),
@@ -702,7 +702,7 @@ class _ListeningPageState extends State<ListeningPage> {
               ),
 
               const SizedBox(height: 16),
-              const Text(
+              Text(
                 'Listen specifically to the text and answer the questions below.',
                 textAlign: TextAlign.center,
                 style: TextStyle(color: AppTheme.textSecondary),
@@ -727,7 +727,7 @@ class _ListeningPageState extends State<ListeningPage> {
                   padding: const EdgeInsets.all(16),
                   margin: const EdgeInsets.only(bottom: 24),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: AppTheme.textPrimary,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(color: Colors.grey.shade300),
                   ),
@@ -860,7 +860,7 @@ class _ListeningPageState extends State<ListeningPage> {
                         : null,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppTheme.success,
-                      foregroundColor: Colors.white,
+                      foregroundColor: AppTheme.textPrimary,
                       padding: const EdgeInsets.symmetric(vertical: 16),
                     ),
                     child: const Text('Check Answers'),
@@ -869,7 +869,7 @@ class _ListeningPageState extends State<ListeningPage> {
             ],
 
             if (_isLoading)
-              const Padding(
+              Padding(
                 padding: EdgeInsets.only(top: 40),
                 child: SpinKitWave(color: AppTheme.primary, size: 30),
               ),

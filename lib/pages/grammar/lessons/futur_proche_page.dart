@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../theme/app_theme.dart';
 import 'package:provider/provider.dart';
 import '../../../widgets/lesson_template.dart';
 import '../../../widgets/translated_text.dart';
@@ -29,15 +30,15 @@ class FuturProchePage extends StatelessWidget {
           style: TextStyle(fontSize: 15, height: 1.8),
         ),
         const SectionTitle('🔧 Super Easy Formula!'),
-        const TipBox(
+        TipBox(
           title: 'The Easiest Tense!',
           content: 'ALLER (present) + INFINITIVE\n\n'
               'That\'s it! Just conjugate "aller" and add any verb in infinitive form!',
           icon: Icons.calculate,
-          color: Color(0xFF10B981),
+          color: AppTheme.success,
         ),
         // ALLER conjugation — must stay in French
-        const FrenchTipBox(
+        FrenchTipBox(
           title: 'Conjugation of ALLER (to go)',
           frenchText: 'je          vais\n'
               'tu          vas\n'
@@ -46,7 +47,7 @@ class FuturProchePage extends StatelessWidget {
               'vous        allez\n'
               'ils / elles vont',
           icon: Icons.directions_run,
-          color: Color(0xFF6366F1),
+          color: AppTheme.primary,
         ),
         const SectionTitle('✨ Examples'),
         const ExampleBox(
@@ -65,21 +66,21 @@ class FuturProchePage extends StatelessWidget {
           french: 'Attention ! Tu vas tomber !',
           english: 'Watch out! You\'re going to fall! (obvious consequence)',
         ),
-        const TipBox(
+        TipBox(
           title: '💡 Pro Tip',
           content:
               'Futur Proche is MORE COMMON in spoken French than Futur Simple. Use it when talking about your plans!',
           icon: Icons.lightbulb,
-          color: Color(0xFFF59E0B),
+          color: AppTheme.warning,
         ),
         const SectionTitle('❌ Common Mistakes'),
-        const FrenchTipBox(
+        FrenchTipBox(
           title: 'Don\'t use aller + aller!',
           frenchText: '❌  Je vais aller au cinéma.  (weird!)\n'
               '✅  Je vais au cinéma.         (just use present of aller)\n\n'
               '"Aller + aller" sounds silly — avoid it!',
           icon: Icons.error_outline,
-          color: Color(0xFFEF4444),
+          color: AppTheme.error,
         ),
       ],
     );

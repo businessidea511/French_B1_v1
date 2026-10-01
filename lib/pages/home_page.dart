@@ -1,22 +1,16 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../services/admin_auth.dart';
-import 'dart:ui';
-import '../services/pwa_service.dart';
-import '../theme/app_theme.dart';
 import '../services/language_provider.dart';
-import '../services/global_scroll_manager.dart';
-import 'grammar/grammar_page.dart';
-import 'exercises/exercises_page.dart';
-import 'flashcards/flashcards_page.dart';
-import 'verbs/verbs_page.dart';
-import 'daily_phrases/daily_phrases_page.dart';
-import 'listening/listening_page.dart';
-import 'lessons/lessons_page.dart';
-import 'ai_book/ai_book_page.dart';
-import 'admin/admin_ai_chat_page.dart';
-import 'examen/examen_one_page.dart';
+import '../services/progress_service.dart';
+import '../theme/app_theme.dart';
+import 'shell/hub_tabs.dart';
+import 'shell/me_tab.dart';
+import 'shell/onboarding_page.dart';
+import 'shell/today_tab.dart';
 
+/// App shell: five tabs (Today, Learn, Practise, Words, Me) behind a floating
+/// glass navigation bar. Shows the welcome screens on first start.
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -25,571 +19,159 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  final ScrollController _scrollController = ScrollController();
-  bool _canInstall = false;
+  int _tab = 0;
 
-  @override
-  void initState() {
-    super.initState();
-    GlobalScrollManager.register(_scrollController);
-    _setupInstallListener();
-  }
+  static const _icons = [
+    Icons.wb_sunny_rounded,
+    Icons.menu_book_rounded,
+    Icons.sports_esports_rounded,
+    Icons.translate_rounded,
+    Icons.person_rounded,
+  ];
+  static const _labels = ['tab_today', 'tab_learn', 'tab_practice', 'tab_words', 'tab_me'];
 
-  void _setupInstallListener() {
-    final bool isIOS = Theme.of(context).platform == TargetPlatform.iOS;
-    
-    if (isIOS) {
-      if (!PWAService.isStandalone()) {
-        setState(() => _canInstall = true);
-      }
-      return;
-    }
-
-    PWAService.setupInstallListener(() {
-      if (mounted) {
-        setState(() => _canInstall = true);
-      }
-    });
-  }
-
-  Future<void> _handleInstall() async {
-    final bool isIOS = Theme.of(context).platform == TargetPlatform.iOS;
-    
-    if (isIOS) {
-      _showIOSInstallInstructions();
-      return;
-    }
-
-    final success = await PWAService.installPWA();
-    if (success && mounted) {
-      setState(() => _canInstall = false);
-    }
-  }
-
-  void _showIOSInstallInstructions() {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: AppTheme.surface,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(32))),
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text('Install on iPhone', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white)),
-            const SizedBox(height: 24),
-            _buildStep(1, 'Tap the "Share" button at the bottom of Safari.', Icons.ios_share),
-            const SizedBox(height: 16),
-            _buildStep(2, 'Scroll down and tap "Add to Home Screen".', Icons.add_box_outlined),
-            const SizedBox(height: 16),
-            _buildStep(3, 'Tap "Add" in the top right corner.', Icons.done),
-            const SizedBox(height: 32),
-            ElevatedButton(
-              onPressed: () => Navigator.pop(context),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.primary,
-                minimumSize: const Size(double.infinity, 56),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              ),
-              child: const Text('Got it!', style: TextStyle(fontWeight: FontWeight.bold)),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStep(int number, String text, IconData icon) {
-    return Row(
-      children: [
-        Container(
-          width: 32,
-          height: 32,
-          decoration: const BoxDecoration(color: AppTheme.primary, shape: BoxShape.circle),
-          child: Center(child: Text('$number', style: const TextStyle(fontWeight: FontWeight.bold))),
-        ),
-        const SizedBox(width: 16),
-        Expanded(child: Text(text, style: const TextStyle(color: Colors.white70, fontSize: 15))),
-        Icon(icon, color: AppTheme.primary, size: 24),
-      ],
-    );
-  }
-
-  @override
-  void dispose() {
-    GlobalScrollManager.unregister(_scrollController);
-    _scrollController.dispose();
-    super.dispose();
-  }
-
-  void _showLanguageSelector(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: AppTheme.surface,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
-      ),
-      builder: (context) {
-        final languageProvider = Provider.of<LanguageProvider>(context);
-        return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-          constraints: BoxConstraints(
-            maxHeight: MediaQuery.of(context).size.height * 0.7,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 40,
-                height: 4,
-                margin: const EdgeInsets.only(bottom: 20),
-                decoration: BoxDecoration(
-                  color: Colors.white24,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              const Text('Select Your Language', 
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white)),
-              const SizedBox(height: 24),
-              Flexible(
-                child: SingleChildScrollView(
-                  child: Column(
-                    children: AppLanguage.values.map((lang) => ListTile(
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                      title: Text(lang.name, style: const TextStyle(color: Colors.white)),
-                      trailing: languageProvider.currentLanguage == lang 
-                        ? const Icon(Icons.check_circle, color: AppTheme.primary) 
-                        : null,
-                      onTap: () {
-                        languageProvider.setLanguage(lang);
-                        Navigator.pop(context);
-                      },
-                    )).toList(),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  void _checkAdminAccess(BuildContext context, VoidCallback onGranted) {
-    final TextEditingController passController = TextEditingController();
-    bool obscure = true;
-
-    showDialog(
-      context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setDlgState) => AlertDialog(
-          backgroundColor: AppTheme.surface,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          title: const Row(
-            children: [
-              Icon(Icons.lock_outline_rounded, color: AppTheme.primary),
-              SizedBox(width: 10),
-              Text('Admin Access', style: TextStyle(color: Colors.white, fontSize: 18)),
-            ],
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text(
-                'Please enter the admin password to access the private AI Assistant.',
-                style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: passController,
-                obscureText: obscure,
-                autofocus: true,
-                style: const TextStyle(color: Colors.white),
-                decoration: InputDecoration(
-                  hintText: 'Admin Password',
-                  prefixIcon: const Icon(Icons.password_rounded, color: AppTheme.primary),
-                  suffixIcon: IconButton(
-                    icon: Icon(obscure ? Icons.visibility_off : Icons.visibility, color: AppTheme.textSecondary),
-                    onPressed: () => setDlgState(() => obscure = !obscure),
-                  ),
-                ),
-                onSubmitted: (_) {
-                   _verifyAndProceed(passController.text, onGranted, ctx);
-                },
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () => _verifyAndProceed(passController.text, onGranted, ctx),
-              child: const Text('Verify'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Future<void> _verifyAndProceed(String input, VoidCallback onGranted, BuildContext ctx) async {
-    final granted = await AdminAuth.login(input);
-    if (!mounted || !ctx.mounted) return;
-
-    if (granted) {
-      Navigator.pop(ctx);
-      onGranted();
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('❌ Incorrect password'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
-  }
+  Widget _page(int i) => switch (i) {
+        0 => TodayTab(onOpenLanguage: () => showLanguageSheet(context)),
+        1 => const LearnTab(),
+        2 => const PracticeTab(),
+        3 => const WordsTab(),
+        _ => const MeTab(),
+      };
 
   @override
   Widget build(BuildContext context) {
-    final lp = Provider.of<LanguageProvider>(context);
+    final progress = context.watch<ProgressService>();
+    if (!progress.onboarded) return const OnboardingPage();
+    final lp = context.watch<LanguageProvider>();
+    final badge = progress.dueCount;
 
     return Scaffold(
-      body: Stack(
-        children: [
-          // Background Glows
-          Positioned(
-            top: -100,
-            right: -100,
-            child: Container(
-              width: 300,
-              height: 300,
-              decoration: BoxDecoration(
-                color: AppTheme.primary.withValues(alpha: 0.1),
-                shape: BoxShape.circle,
+      extendBody: true,
+      body: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 500),
+        switchInCurve: Curves.easeOutCubic,
+        switchOutCurve: Curves.easeInCubic,
+        transitionBuilder: (child, animation) => AnimatedBuilder(
+          animation: animation,
+          child: child,
+          builder: (context, child) {
+            final t = animation.value;
+            return Opacity(
+              opacity: t,
+              child: Transform(
+                alignment: Alignment.center,
+                transform: Matrix4.identity()
+                  ..setEntry(3, 2, 0.001)
+                  ..rotateY((1 - t) * pi / 8)
+                  ..scale(0.94 + 0.06 * t),
+                child: child,
               ),
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 50, sigmaY: 50),
-                child: Container(color: Colors.transparent),
-              ),
-            ),
-          ),
-          
-          Scrollbar(
-            controller: _scrollController,
-            thumbVisibility: true,
-            trackVisibility: true,
-            interactive: true,
-            child: CustomScrollView(
-              controller: _scrollController,
-            slivers: [
-              SliverAppBar(
-                expandedHeight: 240,
-                floating: false,
-                pinned: true,
-                backgroundColor: AppTheme.background,
-                flexibleSpace: FlexibleSpaceBar(
-                  background: Stack(
-                    children: [
-                      // Header Content
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(24, 80, 24, 0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                  decoration: BoxDecoration(
-                                    color: AppTheme.primary.withValues(alpha: 0.1),
-                                    borderRadius: BorderRadius.circular(100),
-                                    border: Border.all(color: AppTheme.primary.withValues(alpha: 0.1)),
-                                  ),
-                                  child: const Text('🇫🇷 NIVEAU B1', 
-                                    style: TextStyle(color: AppTheme.primary, fontWeight: FontWeight.bold, fontSize: 10)),
-                                ),
-                                IconButton(
-                                  icon: const Icon(Icons.language, color: Colors.white70),
-                                  onPressed: () => _showLanguageSelector(context),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 16),
-                            Text(lp.translate('greeting'), 
-                              style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w900, color: Colors.white)),
-                            Text(lp.translate('subtitle'), 
-                              style: const TextStyle(color: AppTheme.textSecondary, fontSize: 16)),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              
-              // PWA Install Banner
-              if (_canInstall)
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-                    child: _buildInstallBanner(),
-                  ),
-                ),
-              
-              // Feature Grid
-              SliverPadding(
-                padding: const EdgeInsets.all(24),
-                sliver: SliverGrid(
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: MediaQuery.of(context).size.width > 900 ? 4 : 2,
-                    mainAxisSpacing: 20,
-                    crossAxisSpacing: 20,
-                    childAspectRatio: 0.9,
-                  ),
-                  delegate: SliverChildListDelegate([
-                    _buildFeatureCard(
-                      context,
-                      title: lp.translate('grammar'),
-                      subtitle: lp.translate('master_rules'),
-                      icon: '📚',
-                      color: AppTheme.primary,
-                      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const GrammarPage())),
-                    ),
-                    _buildFeatureCard(
-                      context,
-                      title: lp.translate('ai_book'),
-                      subtitle: lp.translate('ai_book_desc'),
-                      icon: '✨',
-                      color: Colors.amber,
-                      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AIBookPage())),
-                    ),
-                    _buildFeatureCard(
-                      context,
-                      title: lp.translate('exercises'),
-                      subtitle: lp.translate('daily_practice'),
-                      icon: '✍️',
-                      color: AppTheme.secondary,
-                      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ExercisesPage())),
-                    ),
-                    _buildFeatureCard(
-                      context,
-                      title: lp.translate('lessons'),
-                      subtitle: lp.translate('culture_vocab'),
-                      icon: '📖',
-                      color: Colors.purple,
-                      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const LessonsPage())),
-                    ),
-                    _buildFeatureCard(
-                      context,
-                      title: lp.translate('flashcards'),
-                      subtitle: lp.translate('memorize_smart'),
-                      icon: '🎴',
-                      color: AppTheme.success,
-                      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const FlashcardsPage())),
-                    ),
-                    _buildFeatureCard(
-                      context,
-                      title: lp.translate('verbs'),
-                      subtitle: lp.translate('conjugations'),
-                      icon: '🔄',
-                      color: AppTheme.warning,
-                      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const VerbsPage())),
-                    ),
-                    _buildFeatureCard(
-                      context,
-                      title: lp.translate('daily_phrases'),
-                      subtitle: lp.translate('common_talk'),
-                      icon: '🗣️',
-                      color: Colors.indigo,
-                      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const DailyPhrasesPage())),
-                    ),
-                    _buildFeatureCard(
-                      context,
-                      title: lp.translate('listening'),
-                      subtitle: lp.translate('audio_skills'),
-                      icon: '🎧',
-                      color: Colors.teal,
-                      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ListeningPage())),
-                    ),
-                    _buildFeatureCard(
-                      context,
-                      title: lp.translate('examen'),
-                      subtitle: lp.translate('examen_desc'),
-                      icon: '📝',
-                      color: AppTheme.accent,
-                      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ExamenOnePage())),
-                    ),
-                    _buildFeatureCard(
-                      context,
-                      title: lp.translate('admin_ai'),
-                      subtitle: lp.translate('admin_ai_desc'),
-                      icon: '🔒',
-                      color: Colors.redAccent,
-                      onTap: () => _checkAdminAccess(context, () {
-                        Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminAIChatPage()));
-                      }),
-                    ),
-                  ]),
-                ),
-              ),
-              
-              const SliverToBoxAdapter(child: SizedBox(height: 100)),
-            ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildInstallBanner() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [AppTheme.primary, AppTheme.primary.withValues(alpha: 0.8)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+            );
+          },
         ),
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: AppTheme.primary.withValues(alpha: 0.3),
-            blurRadius: 15,
-            offset: const Offset(0, 8),
-          ),
-        ],
+        child: KeyedSubtree(key: ValueKey(_tab), child: _page(_tab)),
       ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: const Icon(Icons.install_mobile_rounded, color: Colors.white, size: 28),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Install App',
-                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18),
-                ),
-                Text(
-                  'Add PolyLearn to your home screen for a better experience!',
-                  style: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontSize: 13),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 8),
-          ElevatedButton(
-            onPressed: _handleInstall,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.white,
-              foregroundColor: AppTheme.primary,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            ),
-            child: const Text('Download', style: TextStyle(fontWeight: FontWeight.bold)),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFeatureCard(
-    BuildContext context, {
-    required String title,
-    required String subtitle,
-    required String icon,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    bool isHovered = false;
-    return StatefulBuilder(
-      builder: (context, setState) {
-        return MouseRegion(
-          onEnter: (_) => setState(() => isHovered = true),
-          onExit: (_) => setState(() => isHovered = false),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            transform: Matrix4.identity()..scale(isHovered ? 1.05 : 1.0),
-            child: InkWell(
-              onTap: onTap,
-              borderRadius: BorderRadius.circular(24),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: AppTheme.surface.withValues(alpha: 0.6),
-                  borderRadius: BorderRadius.circular(24),
-                  border: Border.all(
-                    color: isHovered ? color.withValues(alpha: 0.4) : Colors.white.withValues(alpha: 0.1),
-                    width: 2,
-                  ),
-                  boxShadow: [
-                    if (isHovered)
-                      BoxShadow(color: color.withValues(alpha: 0.2), blurRadius: 20, offset: const Offset(0, 10)),
-                    BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 10, offset: const Offset(0, 4)),
-                  ],
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(24),
-                  child: Stack(
-                    children: [
-                      Positioned(
-                        top: -20,
-                        right: -20,
-                        child: Container(
-                          width: 80,
-                          height: 80,
-                          decoration: BoxDecoration(
-                            color: color.withValues(alpha: 0.1),
-                            shape: BoxShape.circle,
-                          ),
-                        ),
+      bottomNavigationBar: SafeArea(
+        minimum: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+        child: Center(
+          heightFactor: 1,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 560),
+            child: Container(
+              height: 70,
+              padding: const EdgeInsets.symmetric(horizontal: 6),
+              decoration: BoxDecoration(
+                color: AppTheme.surface.withValues(alpha: 0.92),
+                borderRadius: BorderRadius.circular(28),
+                border: Border.all(color: AppTheme.fg.withValues(alpha: 0.12)),
+                boxShadow: [
+                  BoxShadow(color: Colors.black.withValues(alpha: 0.45), blurRadius: 30, offset: const Offset(0, 12)),
+                  BoxShadow(color: AppTheme.primary.withValues(alpha: 0.15), blurRadius: 30),
+                ],
+              ),
+              child: Row(
+                children: [
+                  for (var i = 0; i < 5; i++)
+                    Expanded(
+                      child: _NavItem(
+                        icon: _icons[i],
+                        label: lp.translate(_labels[i]),
+                        selected: _tab == i,
+                        badge: i == 2 && badge > 0 ? '$badge' : null,
+                        onTap: () => setState(() => _tab = i),
                       ),
-                      Padding(
-                        padding: const EdgeInsets.all(20),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                color: color.withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              child: Text(icon, style: const TextStyle(fontSize: 28)),
-                            ),
-                            const SizedBox(height: 12),
-                            Text(title, 
-                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white),
-                              textAlign: TextAlign.center,
-                            ),
-                            const SizedBox(height: 4),
-                            Text(subtitle, 
-                              style: const TextStyle(fontSize: 11, color: AppTheme.textTertiary),
-                              textAlign: TextAlign.center,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+                    ),
+                ],
               ),
             ),
           ),
-        );
-      }
+        ),
+      ),
+    );
+  }
+}
+
+class _NavItem extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final bool selected;
+  final String? badge;
+  final VoidCallback onTap;
+
+  const _NavItem({required this.icon, required this.label, required this.selected, required this.onTap, this.badge});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Stack(
+            clipBehavior: Clip.none,
+            children: [
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 350),
+                curve: Curves.easeOutCubic,
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                transform: Matrix4.translationValues(0, selected ? -4 : 0, 0),
+                decoration: BoxDecoration(
+                  gradient: selected ? AppTheme.primaryGradient : null,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: selected
+                      ? [BoxShadow(color: AppTheme.primary.withValues(alpha: 0.6), blurRadius: 16, offset: const Offset(0, 6))]
+                      : null,
+                ),
+                child: AnimatedScale(
+                  scale: selected ? 1.15 : 1,
+                  duration: const Duration(milliseconds: 300),
+                  child: Icon(icon, size: 22, color: selected ? AppTheme.onColor : AppTheme.textTertiary),
+                ),
+              ),
+              if (badge != null)
+                Positioned(
+                  right: -2,
+                  top: -6,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                    decoration: BoxDecoration(color: AppTheme.secondary, borderRadius: BorderRadius.circular(10)),
+                    child: Text(badge!, style: TextStyle(fontSize: 10, color: AppTheme.onColor, fontWeight: FontWeight.bold)),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 3),
+          Text(label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: selected ? FontWeight.bold : FontWeight.normal,
+                color: selected ? AppTheme.textPrimary : AppTheme.textTertiary,
+              )),
+        ],
+      ),
     );
   }
 }

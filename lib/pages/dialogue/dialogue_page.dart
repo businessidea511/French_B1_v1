@@ -33,7 +33,7 @@ class _DialoguePageState extends State<DialoguePage> {
       appBar: AppBar(
         title: const Text('Dialogues'),
         backgroundColor: AppTheme.primary,
-        foregroundColor: Colors.white,
+        foregroundColor: AppTheme.textPrimary,
       ),
       body: ListView(
         controller: _scrollController,
@@ -200,7 +200,7 @@ class _DialoguePageState extends State<DialoguePage> {
                       ],
                     ),
                   ),
-                  const Icon(Icons.arrow_forward_ios,
+                  Icon(Icons.arrow_forward_ios,
                       size: 16, color: AppTheme.textTertiary),
                 ],
               ),

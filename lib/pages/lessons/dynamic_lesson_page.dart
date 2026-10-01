@@ -72,10 +72,10 @@ class DynamicLessonPage extends StatelessWidget {
               Expanded(
                 child: TranslatedText(
                   title,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                    color: AppTheme.textPrimary,
                   ),
                 ),
               ),
@@ -92,7 +92,7 @@ class DynamicLessonPage extends StatelessWidget {
               padding: const EdgeInsets.only(bottom: 8),
               child: TranslatedText(
                 text,
-                style: const TextStyle(fontSize: 16, height: 1.6, color: Colors.white),
+                style: TextStyle(fontSize: 16, height: 1.6, color: AppTheme.textPrimary),
               ),
             ),
           );
@@ -166,7 +166,7 @@ class DynamicLessonPage extends StatelessWidget {
           final text = _clean(rawContent);
           if (text.isNotEmpty) {
             result.add(TranslatedText(text,
-                style: const TextStyle(fontSize: 16, height: 1.6, color: Colors.white)));
+                style: TextStyle(fontSize: 16, height: 1.6, color: AppTheme.textPrimary)));
           }
       }
 
@@ -181,7 +181,7 @@ class DynamicLessonPage extends StatelessWidget {
     final List<Widget> result = [];
     final colors = [
       AppTheme.primary, AppTheme.secondary, AppTheme.accent,
-      AppTheme.success, const Color(0xFFF59E0B), const Color(0xFFEC4899),
+      AppTheme.success, AppTheme.warning, AppTheme.secondary,
     ];
 
     final valid = sections.where((s) {
@@ -265,11 +265,11 @@ class DynamicLessonPage extends StatelessWidget {
 
   Color _colorFromString(String c) {
     switch (c) {
-      case 'red':    return const Color(0xFFEF4444);
-      case 'green':  return const Color(0xFF10B981);
-      case 'yellow': return const Color(0xFFF59E0B);
-      case 'purple': return const Color(0xFF8B5CF6);
-      default:       return const Color(0xFF6366F1); // blue
+      case 'red':    return AppTheme.error;
+      case 'green':  return AppTheme.success;
+      case 'yellow': return AppTheme.warning;
+      case 'purple': return AppTheme.accent;
+      default:       return AppTheme.primary; // blue
     }
   }
 

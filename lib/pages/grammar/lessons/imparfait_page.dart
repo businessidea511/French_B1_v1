@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../theme/app_theme.dart';
 import 'package:provider/provider.dart';
 import '../../../widgets/lesson_template.dart';
 import '../../../widgets/translated_text.dart';
@@ -41,15 +42,15 @@ class ImparfaitPage extends StatelessWidget {
           style: TextStyle(fontSize: 14, fontStyle: FontStyle.italic),
         ),
         const SectionTitle('🔧 How to Build It'),
-        const TipBox(
+        TipBox(
           title: 'Super Easy Formula!',
           content: 'Take the NOUS form, remove -ONS, add Imparfait endings:\n'
               '-ais, -ais, -ait, -ions, -iez, -aient',
           icon: Icons.calculate,
-          color: Color(0xFF6366F1),
+          color: AppTheme.primary,
         ),
         // Full conjugation example — must stay in French
-        const FrenchTipBox(
+        FrenchTipBox(
           title: 'Step-by-Step Example: PARLER',
           frenchText: '1. Nous parlons (present)\n'
               '2. Remove -ons  →  parl-\n'
@@ -61,7 +62,7 @@ class ImparfaitPage extends StatelessWidget {
               '   vous       parliez\n'
               '   ils/elles  parlaient',
           icon: Icons.auto_fix_high,
-          color: Color(0xFF10B981),
+          color: AppTheme.success,
         ),
         const SectionTitle('📝 More Examples'),
         const ExampleBox(
@@ -96,15 +97,15 @@ class ImparfaitPage extends StatelessWidget {
           french: 'Je dormais quand tu as appelé.',
           english: 'I was sleeping when you called.  (ongoing)',
         ),
-        const TipBox(
+        TipBox(
           title: '💡 Magic Word: "USED TO"',
           content:
               'If you can say "used to" or "was/were doing" in English, use Imparfait!',
           icon: Icons.lightbulb,
-          color: Color(0xFFF59E0B),
+          color: AppTheme.warning,
         ),
         // ÊTRE irregular — must stay in French
-        const FrenchTipBox(
+        FrenchTipBox(
           title: '⚠️ ÊTRE is the ONLY Irregular Stem!',
           frenchText: 'être  →  ét-\n\n'
               'j\'étais\n'
@@ -114,17 +115,17 @@ class ImparfaitPage extends StatelessWidget {
               'vous étiez\n'
               'ils / elles étaient',
           icon: Icons.warning,
-          color: Color(0xFFEF4444),
+          color: AppTheme.error,
         ),
         const SectionTitle('❌ Common Mistakes'),
-        const FrenchTipBox(
+        FrenchTipBox(
           title: 'Don\'t Mix Them Up!',
           frenchText: '❌ Hier, il pleuvait et je sortais.\n'
               '✅ Hier, il pleuvait et je suis sorti.\n\n'
               'La pluie = background (Imparfait)\n'
               'Sortir = specific action (Passé Composé)',
           icon: Icons.error_outline,
-          color: Color(0xFFF59E0B),
+          color: AppTheme.warning,
         ),
       ],
     );

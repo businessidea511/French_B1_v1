@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../theme/app_theme.dart';
 import 'package:provider/provider.dart';
 import '../../../widgets/lesson_template.dart';
 import '../../../widgets/translated_text.dart';
@@ -33,7 +34,7 @@ class CodCoiPage extends StatelessWidget {
         ),
         // COD pronouns — French grammar terms must stay in French
         const SectionTitle('📋 COD Pronouns (Direct Object)'),
-        const FrenchTipBox(
+        FrenchTipBox(
           title: 'COD — Direct Object Pronouns',
           frenchText: 'me / m\'  =  me\n'
               'te / t\'  =  you\n'
@@ -43,11 +44,11 @@ class CodCoiPage extends StatelessWidget {
               'vous     =  you (plural / formal)\n'
               'les      =  them',
           icon: Icons.account_circle,
-          color: Color(0xFF6366F1),
+          color: AppTheme.primary,
         ),
         // COI pronouns
         const SectionTitle('📋 COI Pronouns (Indirect Object)'),
-        const FrenchTipBox(
+        FrenchTipBox(
           title: 'COI — Indirect Object Pronouns',
           frenchText: 'me / m\'  =  to me\n'
               'te / t\'  =  to you\n'
@@ -56,7 +57,7 @@ class CodCoiPage extends StatelessWidget {
               'vous     =  to you (plural / formal)\n'
               'leur     =  to them',
           icon: Icons.account_circle_outlined,
-          color: Color(0xFF10B981),
+          color: AppTheme.success,
         ),
         const SectionTitle('✨ COD Examples'),
         const ExampleBox(
@@ -80,16 +81,16 @@ class CodCoiPage extends StatelessWidget {
           french: 'Il téléphone à ses parents → Il leur téléphone',
           english: 'He calls his parents → He calls them',
         ),
-        const TipBox(
+        TipBox(
           title: '🔍 How to Identify COD vs COI',
           content: 'Ask questions:\n'
               '• COD: WHAT? or WHO? (no preposition)\n'
               '• COI: TO WHOM? (à + person)',
           icon: Icons.help_outline,
-          color: Color(0xFF6366F1),
+          color: AppTheme.primary,
         ),
         const SectionTitle('📍 Position — Where to Put Them'),
-        const FrenchTipBox(
+        FrenchTipBox(
           title: 'Pronoun placement rules',
           frenchText: 'Present / Future  →  BEFORE the verb\n'
               '  Je le vois.  (I see him)\n\n'
@@ -98,7 +99,7 @@ class CodCoiPage extends StatelessWidget {
               'With infinitive  →  BEFORE the infinitive\n'
               '  Je vais le voir.  (I\'m going to see him)',
           icon: Icons.place,
-          color: Color(0xFFF59E0B),
+          color: AppTheme.warning,
         ),
         const SectionTitle('⚠️ Tricky Verbs with À'),
         const TranslatedText(
@@ -117,13 +118,13 @@ class CodCoiPage extends StatelessWidget {
           french: 'répondre à → Je lui réponds',
           english: 'answer → I answer him/her',
         ),
-        const FrenchTipBox(
+        FrenchTipBox(
           title: '⚠️ Agreement Alert! (Passé Composé)',
           frenchText: 'Participle agrees with COD when it comes BEFORE:\n\n'
               '✅ La pomme ? Je l\'ai mangée.   (agrees — COD)\n'
               '✅ Marie ?   Je lui ai parlé.    (no agreement — COI)',
           icon: Icons.warning,
-          color: Color(0xFFEF4444),
+          color: AppTheme.error,
         ),
       ],
     );

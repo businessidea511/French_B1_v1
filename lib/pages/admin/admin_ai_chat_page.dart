@@ -11,6 +11,7 @@ import '../../services/language_provider.dart';
 import '../../services/deepseek_service.dart';
 import '../../services/admin_qa_service.dart';
 import '../../services/hugging_face_tts_service.dart';
+import '../../services/tts_service.dart';
 import '../../services/global_scroll_manager.dart';
 
 class AdminAIChatPage extends StatefulWidget {
@@ -170,6 +171,7 @@ class _AdminAIChatPageState extends State<AdminAIChatPage>
         _isPlaying = true;
       });
       debugPrint('🔄 Using system TTS fallback.');
+      await TtsService.useFrenchVoice(_flutterTts);
       await _flutterTts.speak(cleanText);
     }
 
@@ -305,7 +307,7 @@ class _AdminAIChatPageState extends State<AdminAIChatPage>
         bottom: TabBar(
           controller: _tabController,
           indicatorColor: AppTheme.primary,
-          labelColor: Colors.white,
+          labelColor: AppTheme.textPrimary,
           unselectedLabelColor: Colors.white60,
           tabs: const [
             Tab(icon: Icon(Icons.forum_rounded), text: 'AI Chat'),
@@ -338,11 +340,11 @@ class _AdminAIChatPageState extends State<AdminAIChatPage>
             decoration: BoxDecoration(
               color: AppTheme.surface.withValues(alpha: 0.6),
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+              border: Border.all(color: AppTheme.fg.withValues(alpha: 0.05)),
             ),
             child: Row(
               children: [
-                const Icon(Icons.info_outline, color: AppTheme.primary, size: 24),
+                Icon(Icons.info_outline, color: AppTheme.primary, size: 24),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
@@ -365,7 +367,7 @@ class _AdminAIChatPageState extends State<AdminAIChatPage>
             decoration: BoxDecoration(
               color: AppTheme.surface,
               borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+              border: Border.all(color: AppTheme.fg.withValues(alpha: 0.1)),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withValues(alpha: 0.2),
@@ -380,13 +382,13 @@ class _AdminAIChatPageState extends State<AdminAIChatPage>
                 // Language Dropdown
                 Row(
                   children: [
-                    const Icon(Icons.g_translate_rounded,
+                    Icon(Icons.g_translate_rounded,
                         color: AppTheme.accent, size: 20),
                     const SizedBox(width: 8),
-                    const Text(
+                    Text(
                       'Explanation Language:',
                       style: TextStyle(
-                        color: Colors.white70,
+                        color: AppTheme.textSecondary,
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
                       ),
@@ -398,7 +400,7 @@ class _AdminAIChatPageState extends State<AdminAIChatPage>
                       decoration: BoxDecoration(
                         color: Colors.black.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.white12),
+                        border: Border.all(color: AppTheme.fg.withValues(alpha: 0.12)),
                       ),
                       child: DropdownButtonHideUnderline(
                         child: DropdownButton<String>(
@@ -408,8 +410,8 @@ class _AdminAIChatPageState extends State<AdminAIChatPage>
                             return DropdownMenuItem<String>(
                               value: value,
                               child: Text(value,
-                                  style: const TextStyle(
-                                      color: Colors.white, fontSize: 13)),
+                                  style: TextStyle(
+                                      color: AppTheme.textPrimary, fontSize: 13)),
                             );
                           }).toList(),
                           onChanged: (newValue) {
@@ -432,7 +434,7 @@ class _AdminAIChatPageState extends State<AdminAIChatPage>
                     hintText:
                         'e.g. Explain how to use the subjonctif with clear B1 examples...',
                     hintStyle:
-                        TextStyle(color: Colors.white.withValues(alpha: 0.3)),
+                        TextStyle(color: AppTheme.fg.withValues(alpha: 0.3)),
                     filled: true,
                     fillColor: Colors.black.withValues(alpha: 0.2),
                     border: OutlineInputBorder(
@@ -440,7 +442,7 @@ class _AdminAIChatPageState extends State<AdminAIChatPage>
                       borderSide: BorderSide.none,
                     ),
                   ),
-                  style: const TextStyle(color: Colors.white, fontSize: 15),
+                  style: TextStyle(color: AppTheme.textPrimary, fontSize: 15),
                 ),
                 const SizedBox(height: 16),
 
@@ -456,17 +458,17 @@ class _AdminAIChatPageState extends State<AdminAIChatPage>
                           borderRadius: BorderRadius.circular(16)),
                     ),
                     child: _isLoading
-                        ? const SizedBox(
+                        ? SizedBox(
                             width: 24,
                             height: 24,
                             child: CircularProgressIndicator(
-                                color: Colors.white, strokeWidth: 2),
+                                color: AppTheme.textPrimary, strokeWidth: 2),
                           )
-                        : const Row(
+                        : Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Icon(Icons.auto_awesome,
-                                  color: Colors.white, size: 20),
+                                  color: AppTheme.textPrimary, size: 20),
                               SizedBox(width: 8),
                               Text('Ask Professeur AI',
                                   style: TextStyle(
@@ -489,7 +491,7 @@ class _AdminAIChatPageState extends State<AdminAIChatPage>
                 color: AppTheme.surface.withValues(alpha: 0.4),
                 borderRadius: BorderRadius.circular(24),
                 border:
-                    Border.all(color: Colors.white.withValues(alpha: 0.05)),
+                    Border.all(color: AppTheme.fg.withValues(alpha: 0.05)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -497,13 +499,13 @@ class _AdminAIChatPageState extends State<AdminAIChatPage>
                   // Header row with label + Copy + Save + Audio buttons
                   Row(
                     children: [
-                      const Icon(Icons.lightbulb,
+                      Icon(Icons.lightbulb,
                           color: AppTheme.warning, size: 20),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           'AI Explanation ($_selectedLang):',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontWeight: FontWeight.bold,
                             color: AppTheme.warning,
                             fontSize: 15,
@@ -538,7 +540,7 @@ class _AdminAIChatPageState extends State<AdminAIChatPage>
                         ),
                       // Audio button
                       if (_isLoadingAudio && _currentlyPlayingText == _aiResponse)
-                        const Padding(
+                        Padding(
                           padding: EdgeInsets.only(right: 8),
                           child: SizedBox(
                             width: 20,
@@ -591,14 +593,14 @@ class _AdminAIChatPageState extends State<AdminAIChatPage>
 
   Widget _buildSavedTab() {
     if (_isLoadingLibrary) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             CircularProgressIndicator(color: AppTheme.primary),
             SizedBox(height: 16),
             Text('Loading from Supabase…',
-                style: TextStyle(color: Colors.white54)),
+                style: TextStyle(color: AppTheme.textTertiary)),
           ],
         ),
       );
@@ -615,27 +617,27 @@ class _AdminAIChatPageState extends State<AdminAIChatPage>
                 color: AppTheme.surface.withValues(alpha: 0.4),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.bookmark_border_rounded,
-                  size: 60, color: Colors.white24),
+              child: Icon(Icons.bookmark_border_rounded,
+                  size: 60, color: AppTheme.fg.withValues(alpha: 0.24)),
             ),
             const SizedBox(height: 16),
-            const Text(
+            Text(
               'No Saved Explanations Yet',
               style: TextStyle(
-                  color: Colors.white,
+                  color: AppTheme.textPrimary,
                   fontSize: 18,
                   fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
-            const Text(
+            Text(
               'Your saved Q&As will appear here.',
               style: TextStyle(color: AppTheme.textTertiary, fontSize: 14),
             ),
             const SizedBox(height: 24),
             TextButton.icon(
               onPressed: _loadSavedQAs,
-              icon: const Icon(Icons.refresh, color: AppTheme.primary),
-              label: const Text('Refresh',
+              icon: Icon(Icons.refresh, color: AppTheme.primary),
+              label: Text('Refresh',
                   style: TextStyle(color: AppTheme.primary)),
             ),
           ],
@@ -659,22 +661,22 @@ class _AdminAIChatPageState extends State<AdminAIChatPage>
             color: AppTheme.surface,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(20),
-              side: BorderSide(color: Colors.white.withValues(alpha: 0.05)),
+              side: BorderSide(color: AppTheme.fg.withValues(alpha: 0.05)),
             ),
             child: ExpansionTile(
-              leading: const Icon(Icons.bookmark, color: AppTheme.primary),
+              leading: Icon(Icons.bookmark, color: AppTheme.primary),
               title: Text(
                 item.question,
-                style: const TextStyle(
+                style: TextStyle(
                     fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                    color: AppTheme.textPrimary,
                     fontSize: 15),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
               subtitle: Text(
                 'Language: ${item.language} • Saved: $timestamp',
-                style: const TextStyle(
+                style: TextStyle(
                     color: AppTheme.textTertiary, fontSize: 11),
               ),
               trailing: Row(
@@ -682,7 +684,7 @@ class _AdminAIChatPageState extends State<AdminAIChatPage>
                 children: [
                   // Listen button
                   if (_isLoadingAudio && _currentlyPlayingText == item.answer)
-                    const Padding(
+                    Padding(
                       padding: EdgeInsets.symmetric(horizontal: 8),
                       child: SizedBox(
                         width: 20,
@@ -706,14 +708,14 @@ class _AdminAIChatPageState extends State<AdminAIChatPage>
                     ),
                   // Copy answer button
                   IconButton(
-                    icon: const Icon(Icons.copy_rounded,
+                    icon: Icon(Icons.copy_rounded,
                         color: AppTheme.accent, size: 20),
                     tooltip: 'Copy answer',
                     onPressed: () => _copyToClipboard(item.answer),
                   ),
                   // Delete button
                   IconButton(
-                    icon: const Icon(Icons.delete_outline_rounded,
+                    icon: Icon(Icons.delete_outline_rounded,
                         color: AppTheme.error),
                     tooltip: 'Delete',
                     onPressed: () => _confirmDelete(item),
@@ -725,7 +727,7 @@ class _AdminAIChatPageState extends State<AdminAIChatPage>
               children: [
                 Container(
                   height: 1,
-                  color: Colors.white.withValues(alpha: 0.05),
+                  color: AppTheme.fg.withValues(alpha: 0.05),
                   margin: const EdgeInsets.only(bottom: 16),
                 ),
                 _buildMarkdown(item.answer, smaller: true),
@@ -745,8 +747,8 @@ class _AdminAIChatPageState extends State<AdminAIChatPage>
       builder: (_) => AlertDialog(
         backgroundColor: AppTheme.surface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Delete Q&A?',
-            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        title: Text('Delete Q&A?',
+            style: TextStyle(color: AppTheme.textPrimary, fontWeight: FontWeight.bold)),
         content: Text(
           'Are you sure you want to remove this saved Q&A from Supabase?',
           style: TextStyle(color: AppTheme.textSecondary.withValues(alpha: 0.9)),
@@ -754,7 +756,7 @@ class _AdminAIChatPageState extends State<AdminAIChatPage>
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel',
+            child: Text('Cancel',
                 style: TextStyle(color: AppTheme.textTertiary)),
           ),
           ElevatedButton(
@@ -787,11 +789,11 @@ class _AdminAIChatPageState extends State<AdminAIChatPage>
           color: const Color(0xFFE2E8F0),
           fontFamily: 'Inter',
         ),
-        strong: const TextStyle(
+        strong: TextStyle(
           color: AppTheme.secondary,
           fontWeight: FontWeight.bold,
         ),
-        em: const TextStyle(
+        em: TextStyle(
           color: AppTheme.accent,
           fontStyle: FontStyle.italic,
         ),
@@ -821,7 +823,7 @@ class _AdminAIChatPageState extends State<AdminAIChatPage>
         codeblockDecoration: BoxDecoration(
           color: Colors.black.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+          border: Border.all(color: AppTheme.fg.withValues(alpha: 0.1)),
         ),
         blockquote: TextStyle(
           color: AppTheme.textTertiary,
@@ -829,9 +831,9 @@ class _AdminAIChatPageState extends State<AdminAIChatPage>
           fontStyle: FontStyle.italic,
         ),
         blockquoteDecoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.1),
+          color: AppTheme.fg.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(12),
-          border: const Border(
+          border: Border(
             left: BorderSide(color: AppTheme.primary, width: 4),
           ),
         ),

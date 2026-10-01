@@ -142,7 +142,7 @@ class _PhotoPagesSheetState extends State<_PhotoPagesSheet> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(widget.title,
-                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white)),
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
             const SizedBox(height: 4),
             Text(
                 widget.mode == PhotoImportMode.exercisesOnly
@@ -175,10 +175,10 @@ class _PhotoPagesSheetState extends State<_PhotoPagesSheet> {
                 height: 120,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
-                  border: Border.all(color: Colors.white24),
+                  border: Border.all(color: AppTheme.fg.withValues(alpha: 0.24)),
                   borderRadius: BorderRadius.circular(16),
                 ),
-                child: const Text('No pages yet', style: TextStyle(color: AppTheme.textTertiary)),
+                child: Text('No pages yet', style: TextStyle(color: AppTheme.textTertiary)),
               ),
             const SizedBox(height: 8),
             Text(
@@ -187,7 +187,7 @@ class _PhotoPagesSheetState extends State<_PhotoPagesSheet> {
               style: TextStyle(color: _tooBig ? AppTheme.error : AppTheme.textTertiary, fontSize: 12),
             ),
             if (_tooBig)
-              const Text('Too large to send at once. Remove a page or split it into two imports.',
+              Text('Too large to send at once. Remove a page or split it into two imports.',
                   style: TextStyle(color: AppTheme.error, fontSize: 12)),
             const SizedBox(height: 12),
 
@@ -216,7 +216,7 @@ class _PhotoPagesSheetState extends State<_PhotoPagesSheet> {
               TextField(
                 controller: _instructions,
                 maxLines: 2,
-                style: const TextStyle(color: Colors.white),
+                style: TextStyle(color: AppTheme.textPrimary),
                 decoration: const InputDecoration(
                   hintText: 'Optional instructions (e.g. "only exercise 3 and 4")',
                 ),
@@ -257,7 +257,7 @@ class _PhotoPagesSheetState extends State<_PhotoPagesSheet> {
             child: CircleAvatar(
               radius: 12,
               backgroundColor: AppTheme.primary,
-              child: Text('${i + 1}', style: const TextStyle(fontSize: 12, color: Colors.white)),
+              child: Text('${i + 1}', style: TextStyle(fontSize: 12, color: AppTheme.textPrimary)),
             ),
           ),
           Positioned(
@@ -266,7 +266,7 @@ class _PhotoPagesSheetState extends State<_PhotoPagesSheet> {
             child: IconButton(
               visualDensity: VisualDensity.compact,
               style: IconButton.styleFrom(backgroundColor: Colors.black54),
-              icon: const Icon(Icons.close_rounded, size: 16, color: Colors.white),
+              icon: Icon(Icons.close_rounded, size: 16, color: AppTheme.textPrimary),
               onPressed: () => setState(() => _pages.removeAt(i)),
             ),
           ),

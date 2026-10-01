@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'translated_text.dart';
-import 'grammar_cards.dart';
 import 'ask_ai_box.dart';
 import '../pages/exercises/exercises_page.dart';
 import '../pages/flashcards/flashcards_page.dart';
@@ -73,7 +72,7 @@ class _LessonTemplateState extends State<LessonTemplate> {
                 elevation: 0,
                 backgroundColor: AppTheme.background,
                 leading: IconButton(
-                  icon: const Icon(Icons.arrow_back, color: Colors.white),
+                  icon: Icon(Icons.arrow_back, color: AppTheme.textPrimary),
                   onPressed: () => Navigator.pop(context),
                 ),
                 flexibleSpace: FlexibleSpaceBar(
@@ -86,10 +85,10 @@ class _LessonTemplateState extends State<LessonTemplate> {
                       Expanded(
                         child: TranslatedText(
                           widget.title,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontWeight: FontWeight.bold, 
                             fontSize: 18, 
-                            color: Colors.white,
+                            color: AppTheme.textPrimary,
                             letterSpacing: -0.5,
                           ),
                           maxLines: 1,
@@ -230,7 +229,7 @@ class SectionTitle extends StatelessWidget {
                                 .textTheme
                                 .headlineMedium
                                 ?.copyWith(
-                                  color: Colors.white,
+                                  color: AppTheme.textPrimary,
                                   fontWeight: FontWeight.w900,
                                   letterSpacing: -0.5,
                                 ))),
@@ -238,7 +237,7 @@ class SectionTitle extends StatelessWidget {
                 )
               : TranslatedText(title,
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                        color: Colors.white,
+                        color: AppTheme.textPrimary,
                         fontWeight: FontWeight.w900,
                         letterSpacing: -0.5,
                       )),
@@ -278,7 +277,7 @@ class ExampleBox extends StatelessWidget {
         color: AppTheme.surface.withValues(alpha: 0.4),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: Colors.white.withValues(alpha: 0.05),
+          color: AppTheme.fg.withValues(alpha: 0.05),
           width: 1,
         ),
       ),
@@ -290,19 +289,18 @@ class ExampleBox extends StatelessWidget {
               Expanded(
                 child: Text(
                   french,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                    color: AppTheme.textPrimary,
                     letterSpacing: 0.2,
                   ),
                 ),
               ),
-              SpeakButton(french),
             ],
           ),
           const SizedBox(height: 8),
-          Container(height: 1, color: Colors.white.withValues(alpha: 0.05)),
+          Container(height: 1, color: AppTheme.fg.withValues(alpha: 0.05)),
           const SizedBox(height: 8),
           TranslatedText(
             english,
@@ -322,15 +320,16 @@ class TipBox extends StatelessWidget {
   final String title;
   final String content;
   final IconData icon;
-  final Color color;
+  final Color? tint;
+  Color get color => tint ?? AppTheme.warning;
 
   const TipBox({
     super.key,
     required this.title,
     required this.content,
     this.icon = Icons.lightbulb_outline,
-    this.color = const Color(0xFFF59E0B),
-  });
+    Color? color,
+  }) : tint = color;
 
   @override
   Widget build(BuildContext context) {
@@ -372,7 +371,7 @@ class TipBox extends StatelessWidget {
           const SizedBox(height: 16),
           TranslatedText(
             content,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 16,
               color: AppTheme.textPrimary,
               height: 1.5,
@@ -391,15 +390,16 @@ class FrenchTipBox extends StatelessWidget {
   final String title;
   final String frenchText;
   final IconData icon;
-  final Color color;
+  final Color? tint;
+  Color get color => tint ?? AppTheme.warning;
 
   const FrenchTipBox({
     super.key,
     required this.title,
     required this.frenchText,
     this.icon = Icons.lightbulb_outline,
-    this.color = const Color(0xFFF59E0B),
-  });
+    Color? color,
+  }) : tint = color;
 
   List<Widget> _parseLineToWidgets(String line) {
     final List<Widget> widgets = [];
@@ -415,19 +415,19 @@ class FrenchTipBox extends StatelessWidget {
       if (parts.length == 2) {
         widgets.add(Text(
           parts[0],
-          style: const TextStyle(
-            color: Colors.white,
+          style: TextStyle(
+            color: AppTheme.textPrimary,
             fontWeight: FontWeight.w600,
             fontSize: 14,
           ),
         ));
-        widgets.add(const Text(
+        widgets.add(Text(
           ' = ',
           style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
         ));
         widgets.add(TranslatedText(
           parts[1].trim(),
-          style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+          style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
         ));
         return widgets;
       }
@@ -447,14 +447,14 @@ class FrenchTipBox extends StatelessWidget {
           for (int i = 0; i < leftParts.length; i++) {
             widgets.add(Text(
               leftParts[i],
-              style: const TextStyle(
-                color: Colors.white,
+              style: TextStyle(
+                color: AppTheme.textPrimary,
                 fontWeight: FontWeight.w600,
                 fontSize: 14,
               ),
             ));
             if (i < leftParts.length - 1) {
-              widgets.add(const Text(
+              widgets.add(Text(
                 ' → ',
                 style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
               ));
@@ -463,8 +463,8 @@ class FrenchTipBox extends StatelessWidget {
         } else {
           widgets.add(Text(
             leftPart,
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: AppTheme.textPrimary,
               fontWeight: FontWeight.w600,
               fontSize: 14,
             ),
@@ -473,7 +473,7 @@ class FrenchTipBox extends StatelessWidget {
 
         widgets.add(TranslatedText(
           parenthesized,
-          style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+          style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
         ));
         return widgets;
       }
@@ -497,13 +497,13 @@ class FrenchTipBox extends StatelessWidget {
 
         widgets.add(Text(
           parts[0],
-          style: const TextStyle(
-            color: Colors.white,
+          style: TextStyle(
+            color: AppTheme.textPrimary,
             fontWeight: FontWeight.w600,
             fontSize: 14,
           ),
         ));
-        widgets.add(const Text(
+        widgets.add(Text(
           ' → ',
           style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
         ));
@@ -511,13 +511,13 @@ class FrenchTipBox extends StatelessWidget {
         if (hasEnglishExplanations) {
           widgets.add(TranslatedText(
             parts[1].trim(),
-            style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+            style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
           ));
         } else {
           widgets.add(Text(
             parts[1],
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: AppTheme.textPrimary,
               fontWeight: FontWeight.w600,
               fontSize: 14,
             ),
@@ -532,7 +532,7 @@ class FrenchTipBox extends StatelessWidget {
       trimmed,
       softWrap: true,
       overflow: TextOverflow.visible,
-      style: const TextStyle(
+      style: TextStyle(
         fontSize: 14,
         color: AppTheme.textPrimary,
         height: 1.6,
@@ -641,7 +641,7 @@ class PremiumTable extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppTheme.surface.withValues(alpha: 0.4),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.1), width: 1.5),
+        border: Border.all(color: AppTheme.fg.withValues(alpha: 0.1), width: 1.5),
       ),
       clipBehavior: Clip.antiAlias,
       child: SingleChildScrollView(
@@ -654,7 +654,7 @@ class PremiumTable extends StatelessWidget {
           columns: headers.map((h) => DataColumn(
             label: TranslatedText(
               h,
-              style: const TextStyle(
+              style: TextStyle(
                 color: AppTheme.primary,
                 fontWeight: FontWeight.bold,
                 fontSize: 16,
@@ -671,14 +671,14 @@ class PremiumTable extends StatelessWidget {
                 return DataCell(
                   TranslatedText(
                     cell,
-                    style: const TextStyle(color: AppTheme.textSecondary, fontSize: 14),
+                    style: TextStyle(color: AppTheme.textSecondary, fontSize: 14),
                   ),
                 );
               }
               return DataCell(
                 Text(
                   cell,
-                  style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600),
+                  style: TextStyle(color: AppTheme.textPrimary, fontSize: 14, fontWeight: FontWeight.w600),
                 ),
               );
             }).toList(),

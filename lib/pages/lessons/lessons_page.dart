@@ -46,11 +46,11 @@ class _LessonsPageState extends State<LessonsPage> {
       builder: (context) {
         return AlertDialog(
           backgroundColor: AppTheme.surface,
-          title: const Text('Admin Access', style: TextStyle(color: Colors.white)),
+          title: Text('Admin Access', style: TextStyle(color: AppTheme.textPrimary)),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text(
+              Text(
                 'Please enter the admin password to create new lessons.',
                 style: TextStyle(color: AppTheme.textSecondary, fontSize: 14),
               ),
@@ -58,11 +58,11 @@ class _LessonsPageState extends State<LessonsPage> {
               TextField(
                 controller: passwordController,
                 obscureText: true,
-                style: const TextStyle(color: Colors.white),
+                style: TextStyle(color: AppTheme.textPrimary),
                 decoration: InputDecoration(
                   hintText: 'Enter Password',
-                  hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.7)),
-                  prefixIcon: const Icon(Icons.lock, color: AppTheme.primary),
+                  hintStyle: TextStyle(color: AppTheme.fg.withValues(alpha: 0.7)),
+                  prefixIcon: Icon(Icons.lock, color: AppTheme.primary),
                 ),
               ),
             ],
@@ -100,7 +100,7 @@ class _LessonsPageState extends State<LessonsPage> {
       builder: (context) {
         return AlertDialog(
           backgroundColor: AppTheme.surface,
-          title: const Text('Add New Lesson', style: TextStyle(color: Colors.white)),
+          title: Text('Add New Lesson', style: TextStyle(color: AppTheme.textPrimary)),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -167,8 +167,8 @@ class _LessonsPageState extends State<LessonsPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                  Text(subtitle, style: TextStyle(color: Colors.white.withValues(alpha: 0.6), fontSize: 12)),
+                  Text(title, style: TextStyle(color: AppTheme.textPrimary, fontWeight: FontWeight.bold)),
+                  Text(subtitle, style: TextStyle(color: AppTheme.fg.withValues(alpha: 0.6), fontSize: 12)),
                 ],
               ),
             ),
@@ -186,12 +186,12 @@ class _LessonsPageState extends State<LessonsPage> {
       builder: (context) {
         return AlertDialog(
           backgroundColor: AppTheme.surface,
-          title: const Text('Enter Topic', style: TextStyle(color: Colors.white)),
+          title: Text('Enter Topic', style: TextStyle(color: AppTheme.textPrimary)),
           content: TextField(
             controller: controller,
             autofocus: true,
             decoration: const InputDecoration(hintText: 'e.g. Health, Sports...'),
-            style: const TextStyle(color: Colors.white),
+            style: TextStyle(color: AppTheme.textPrimary),
           ),
           actions: [
             TextButton(
@@ -236,7 +236,7 @@ class _LessonsPageState extends State<LessonsPage> {
               const SizedBox(width: 10),
               Text(
                 isCustom ? 'Admin Delete' : 'Admin Reset / Hide',
-                style: const TextStyle(color: Colors.white, fontSize: 18),
+                style: TextStyle(color: AppTheme.textPrimary, fontSize: 18),
               ),
             ],
           ),
@@ -263,7 +263,7 @@ class _LessonsPageState extends State<LessonsPage> {
                         isCustom
                             ? 'This action cannot be undone. Enter admin password to delete this custom lesson.'
                             : 'This is a core lesson. You can either Reset to Default (wipe AI modifications and restore original page) or Hide Lesson completely.',
-                        style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+                        style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
                       ),
                     ),
                   ],
@@ -274,7 +274,7 @@ class _LessonsPageState extends State<LessonsPage> {
                 controller: passController,
                 obscureText: obscure,
                 autofocus: true,
-                style: const TextStyle(color: Colors.white),
+                style: TextStyle(color: AppTheme.textPrimary),
                 decoration: InputDecoration(
                   hintText: 'Admin Password',
                   prefixIcon: Icon(Icons.lock_outline, color: isCustom ? AppTheme.error : AppTheme.primary),
@@ -475,16 +475,16 @@ class _LessonsPageState extends State<LessonsPage> {
           backgroundColor: AppTheme.surface,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           title: Row(
-            children: const [
+            children: [
               Icon(Icons.lock_outline_rounded, color: AppTheme.primary),
               SizedBox(width: 10),
-              Text('Admin Access', style: TextStyle(color: Colors.white, fontSize: 18)),
+              Text('Admin Access', style: TextStyle(color: AppTheme.textPrimary, fontSize: 18)),
             ],
           ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text(
+              Text(
                 'Please enter the admin password to update lesson content.',
                 style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
               ),
@@ -493,10 +493,10 @@ class _LessonsPageState extends State<LessonsPage> {
                 controller: passController,
                 obscureText: obscure,
                 autofocus: true,
-                style: const TextStyle(color: Colors.white),
+                style: TextStyle(color: AppTheme.textPrimary),
                 decoration: InputDecoration(
                   hintText: 'Admin Password',
-                  prefixIcon: const Icon(Icons.password_rounded, color: AppTheme.primary),
+                  prefixIcon: Icon(Icons.password_rounded, color: AppTheme.primary),
                   suffixIcon: IconButton(
                     icon: Icon(obscure ? Icons.visibility_off : Icons.visibility, color: AppTheme.textSecondary),
                     onPressed: () => setDlgState(() => obscure = !obscure),
@@ -546,7 +546,7 @@ class _LessonsPageState extends State<LessonsPage> {
       builder: (context) {
         return AlertDialog(
           backgroundColor: AppTheme.surface,
-          title: Text('Update "${topic.title}"', style: const TextStyle(color: Colors.white)),
+          title: Text('Update "${topic.title}"', style: TextStyle(color: AppTheme.textPrimary)),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -607,16 +607,16 @@ class _LessonsPageState extends State<LessonsPage> {
       builder: (context) {
         return AlertDialog(
           backgroundColor: AppTheme.surface,
-          title: Text('Update with AI: ${topic.title}', style: const TextStyle(color: Colors.white)),
+          title: Text('Update with AI: ${topic.title}', style: TextStyle(color: AppTheme.textPrimary)),
           content: TextField(
             controller: controller,
             autofocus: true,
             maxLines: 3,
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               hintText: 'e.g. Add the word "grippe" and its symptoms to the lesson...',
-              hintStyle: TextStyle(color: Colors.white54),
+              hintStyle: TextStyle(color: AppTheme.textTertiary),
             ),
-            style: const TextStyle(color: Colors.white),
+            style: TextStyle(color: AppTheme.textPrimary),
           ),
           actions: [
             TextButton(
@@ -673,23 +673,23 @@ class _LessonsPageState extends State<LessonsPage> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: AppTheme.surface,
-        title: Text('Update from $sourceName', style: const TextStyle(color: Colors.white)),
+        title: Text('Update from $sourceName', style: TextStyle(color: AppTheme.textPrimary)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Any specific instructions for the AI?', 
+            Text('Any specific instructions for the AI?', 
               style: TextStyle(color: AppTheme.textSecondary, fontSize: 14)),
             const SizedBox(height: 16),
             TextField(
               controller: controller,
-              style: const TextStyle(color: Colors.white),
+              style: TextStyle(color: AppTheme.textPrimary),
               autofocus: true,
               decoration: InputDecoration(
                 hintText: 'e.g. "Only add the vocabulary list" or "Focus on the dialogue section"',
-                hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.3)),
+                hintStyle: TextStyle(color: AppTheme.fg.withValues(alpha: 0.3)),
                 filled: true,
-                fillColor: Colors.white.withValues(alpha: 0.05),
+                fillColor: AppTheme.fg.withValues(alpha: 0.05),
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
               ),
               maxLines: 3,
@@ -785,11 +785,11 @@ class _LessonsPageState extends State<LessonsPage> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: AppTheme.surface,
-        title: const Row(
+        title: Row(
           children: [
             Icon(Icons.cloud_sync, color: AppTheme.primary),
             SizedBox(width: 12),
-            Text('Cloud Diagnostics', style: TextStyle(color: Colors.white)),
+            Text('Cloud Diagnostics', style: TextStyle(color: AppTheme.textPrimary)),
           ],
         ),
         content: Column(
@@ -800,10 +800,10 @@ class _LessonsPageState extends State<LessonsPage> {
                 lp.lastError != null ? Colors.red : Colors.green),
             if (lp.lastError != null) ...[
               const SizedBox(height: 12),
-              const Text('Last Error:', style: TextStyle(color: AppTheme.textTertiary, fontSize: 12)),
+              Text('Last Error:', style: TextStyle(color: AppTheme.textTertiary, fontSize: 12)),
               Text(lp.lastError!, style: const TextStyle(color: Colors.redAccent, fontSize: 13)),
             ],
-            const Divider(height: 32, color: Colors.white10),
+            Divider(height: 32, color: AppTheme.fg.withValues(alpha: 0.10)),
             ElevatedButton.icon(
               onPressed: () async {
                 final result = await lp.testConnection();
@@ -856,15 +856,15 @@ class _LessonsPageState extends State<LessonsPage> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: AppTheme.surface,
-        title: const Text('Test Results', style: TextStyle(color: Colors.white)),
+        title: Text('Test Results', style: TextStyle(color: AppTheme.textPrimary)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             _buildDiagRow('Supabase', result['status'] == 'success' ? 'Connected' : 'Failed',
                 result['status'] == 'success' ? Colors.green : Colors.red),
             if (result['status'] == 'success') ...[
-              _buildDiagRow('Latency', result['latency'], Colors.white),
-              _buildDiagRow('Cloud Rows', '${result['rows']}', Colors.white),
+              _buildDiagRow('Latency', result['latency'], AppTheme.textPrimary),
+              _buildDiagRow('Cloud Rows', '${result['rows']}', AppTheme.textPrimary),
               _buildDiagRow('Schema', result['schema'], result['schemaOk'] ? Colors.green : Colors.orange),
             ] else ...[
               Text(result['message'] ?? 'Unknown error', style: const TextStyle(color: Colors.red)),
@@ -884,7 +884,7 @@ class _LessonsPageState extends State<LessonsPage> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: const TextStyle(color: AppTheme.textSecondary)),
+          Text(label, style: TextStyle(color: AppTheme.textSecondary)),
           Flexible(
             child: Text(value, 
               textAlign: TextAlign.end,
@@ -958,7 +958,7 @@ class _LessonsPageState extends State<LessonsPage> {
                               : 1,
                       mainAxisSpacing: 20,
                       crossAxisSpacing: 20,
-                      childAspectRatio: 1.6,
+                      mainAxisExtent: 200,
                     ),
                     itemCount: lessons.length,
                     itemBuilder: (context, index) {
@@ -977,16 +977,16 @@ class _LessonsPageState extends State<LessonsPage> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const SpinKitDoubleBounce(color: AppTheme.primary, size: 80),
+                    SpinKitDoubleBounce(color: AppTheme.primary, size: 80),
                     const SizedBox(height: 20),
-                    const Text(
+                    Text(
                       'AI is generating your lesson...',
-                      style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                      style: TextStyle(color: AppTheme.textPrimary, fontSize: 18, fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 10),
                     Text(
                       'This might take a few seconds',
-                      style: TextStyle(color: Colors.white.withValues(alpha: 0.1)),
+                      style: TextStyle(color: AppTheme.fg.withValues(alpha: 0.1)),
                     ),
                   ],
                 ),
@@ -1009,7 +1009,7 @@ class _LessonsPageState extends State<LessonsPage> {
       decoration: BoxDecoration(
         color: AppTheme.surface,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.1), width: 1.5),
+        border: Border.all(color: AppTheme.fg.withValues(alpha: 0.1), width: 1.5),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.2),
@@ -1060,16 +1060,16 @@ class _LessonsPageState extends State<LessonsPage> {
                     ),
                     const Spacer(),
                     IconButton(
-                      icon: const Icon(Icons.sync_rounded, color: AppTheme.primary, size: 22),
+                      icon: Icon(Icons.sync_rounded, color: AppTheme.primary, size: 22),
                       tooltip: 'Update',
                       onPressed: () => _checkAdminAccess(() => _showUpdateOptions(topic)),
                     ),
                     IconButton(
-                      icon: const Icon(Icons.delete_outline_rounded, color: AppTheme.error, size: 22),
+                      icon: Icon(Icons.delete_outline_rounded, color: AppTheme.error, size: 22),
                       tooltip: topic.id.startsWith('custom_') ? 'Delete' : 'Reset / Hide',
                       onPressed: () => _confirmDelete(topic),
                     ),
-                    const Icon(Icons.arrow_forward_ios_rounded,
+                    Icon(Icons.arrow_forward_ios_rounded,
                         color: AppTheme.textTertiary, size: 14),
                   ],
                 ),

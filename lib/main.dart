@@ -10,6 +10,8 @@ import 'services/language_provider.dart';
 import 'services/lessons_provider.dart';
 import 'services/global_scroll_manager.dart';
 import 'services/admin_auth.dart';
+import 'services/progress_service.dart';
+import 'widgets/motion.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -49,6 +51,11 @@ void main() async {
 
   // Reload an admin session saved by an earlier login (expires after 12h)
   await AdminAuth.restore();
+  await ProgressService.instance.load();
+  final themeController = ThemeController();
+  await themeController.load();
+  AppTheme.isDark = themeController.resolveDark(
+      WidgetsBinding.instance.platformDispatcher.platformBrightness);
 
   // 2. Set UI Orientations
   await SystemChrome.setPreferredOrientations([
@@ -62,6 +69,8 @@ void main() async {
       providers: [
         ChangeNotifierProvider(create: (_) => LanguageProvider()),
         ChangeNotifierProvider(create: (_) => LessonsProvider()),
+        ChangeNotifierProvider.value(value: ProgressService.instance),
+        ChangeNotifierProvider.value(value: themeController),
       ],
       child: const FrenchB1App(),
     ),
@@ -114,7 +123,9 @@ class FrenchB1App extends StatelessWidget {
             autofocus: true,
             child: MaterialApp(
               title: 'PolyLearn French',
-              theme: AppTheme.darkTheme,
+              theme: AppTheme.lightTheme,
+              darkTheme: AppTheme.darkTheme,
+              themeMode: context.watch<ThemeController>().mode,
               debugShowCheckedModeBanner: false,
               scrollBehavior: const MaterialScrollBehavior().copyWith(
                 scrollbars: true,
@@ -164,7 +175,7 @@ class FrenchB1App extends StatelessWidget {
                           }
                         },
                       },
-                      child: child!,
+                      child: ThemeSync(child: AuroraBackground(child: child!)),
                     ),
                   ),
                 );
@@ -175,5 +186,35 @@ class FrenchB1App extends StatelessWidget {
         );
       },
     );
+  }
+}
+
+/// Keeps [AppTheme] colours in step with the light/dark mode, and rebuilds
+/// every page when the mode changes (their colours are read while building).
+class ThemeSync extends StatefulWidget {
+  final Widget child;
+  const ThemeSync({super.key, required this.child});
+
+  @override
+  State<ThemeSync> createState() => _ThemeSyncState();
+}
+
+class _ThemeSyncState extends State<ThemeSync> {
+  @override
+  Widget build(BuildContext context) {
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    if (dark != AppTheme.isDark) {
+      AppTheme.isDark = dark;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        void rebuild(Element e) {
+          e.markNeedsBuild();
+          e.visitChildren(rebuild);
+        }
+
+        (context as Element).visitChildren(rebuild);
+      });
+    }
+    return widget.child;
   }
 }

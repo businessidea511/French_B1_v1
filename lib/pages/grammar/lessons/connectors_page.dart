@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../theme/app_theme.dart';
 // Trigger redeployment
 import 'package:provider/provider.dart';
 import '../../../widgets/lesson_template.dart';
@@ -88,11 +89,11 @@ class ConnectorsPage extends StatelessWidget {
           english: 'I work in order to succeed',
         ),
 
-        const TipBox(
+        TipBox(
           title: 'Quick Hack 💡',
           content: '• Because? -> Parce que / Car\n• So? -> Donc / Aussi\n• But? -> Mais / Par contre\n• Although/However? -> Cependant\n• Despite? -> Malgré\n• To do something? -> Pour',
           icon: Icons.bolt,
-          color: Color(0xFFF59E0B),
+          color: AppTheme.warning,
         ),
       ],
     );
