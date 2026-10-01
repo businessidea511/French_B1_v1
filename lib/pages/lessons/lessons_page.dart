@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
+import '../../services/admin_auth.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:image_picker/image_picker.dart';
@@ -14,7 +15,6 @@ import '../../services/pdf_helper.dart';
 import '../../services/global_scroll_manager.dart';
 import 'metiers_page.dart';
 import 'dynamic_lesson_page.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class LessonsPage extends StatefulWidget {
   const LessonsPage({super.key});
@@ -75,15 +75,11 @@ class _LessonsPageState extends State<LessonsPage> {
               child: const Text('Cancel'),
             ),
             ElevatedButton(
-              onPressed: () {
-                // First check String.fromEnvironment (for Vercel/Production)
-                // Then check dotenv (for local dev)
-                const String envPass = String.fromEnvironment('ADMIN_PASSWORD');
-                final String adminPass = envPass.isNotEmpty 
-                    ? envPass 
-                    : (dotenv.env['ADMIN_PASSWORD'] ?? 'admin123');
+              onPressed: () async {
+                final granted = await AdminAuth.login(passwordController.text);
+                if (!context.mounted) return;
 
-                if (passwordController.text == adminPass) {
+                if (granted) {
                   Navigator.pop(context);
                   _showLessonOptionsDialog();
                 } else {
@@ -302,13 +298,11 @@ class _LessonsPageState extends State<LessonsPage> {
                 icon: const Icon(Icons.delete_forever_rounded, size: 18),
                 label: const Text('Delete'),
                 style: ElevatedButton.styleFrom(backgroundColor: AppTheme.error),
-                onPressed: () {
-                  const String envPass = String.fromEnvironment('ADMIN_PASSWORD');
-                  final String adminPass = envPass.isNotEmpty
-                      ? envPass
-                      : (dotenv.env['ADMIN_PASSWORD'] ?? 'admin123');
+                onPressed: () async {
+                  final granted = await AdminAuth.login(passController.text);
+                  if (!mounted || !ctx.mounted) return;
 
-                  if (passController.text == adminPass) {
+                  if (granted) {
                     Navigator.pop(ctx);
                     Provider.of<LessonsProvider>(context, listen: false).removeLesson(topic.id);
                     ScaffoldMessenger.of(context).showSnackBar(
@@ -332,13 +326,11 @@ class _LessonsPageState extends State<LessonsPage> {
                 icon: const Icon(Icons.restore_rounded, size: 18),
                 label: const Text('Reset to Default'),
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
-                onPressed: () {
-                  const String envPass = String.fromEnvironment('ADMIN_PASSWORD');
-                  final String adminPass = envPass.isNotEmpty
-                      ? envPass
-                      : (dotenv.env['ADMIN_PASSWORD'] ?? 'admin123');
+                onPressed: () async {
+                  final granted = await AdminAuth.login(passController.text);
+                  if (!mounted || !ctx.mounted) return;
 
-                  if (passController.text == adminPass) {
+                  if (granted) {
                     Navigator.pop(ctx);
                     Provider.of<LessonsProvider>(context, listen: false).resetLessonToDefault(topic.id);
                     ScaffoldMessenger.of(context).showSnackBar(
@@ -361,13 +353,11 @@ class _LessonsPageState extends State<LessonsPage> {
                 icon: const Icon(Icons.visibility_off_rounded, size: 18),
                 label: const Text('Hide Lesson'),
                 style: ElevatedButton.styleFrom(backgroundColor: AppTheme.error),
-                onPressed: () {
-                  const String envPass = String.fromEnvironment('ADMIN_PASSWORD');
-                  final String adminPass = envPass.isNotEmpty
-                      ? envPass
-                      : (dotenv.env['ADMIN_PASSWORD'] ?? 'admin123');
+                onPressed: () async {
+                  final granted = await AdminAuth.login(passController.text);
+                  if (!mounted || !ctx.mounted) return;
 
-                  if (passController.text == adminPass) {
+                  if (granted) {
                     Navigator.pop(ctx);
                     Provider.of<LessonsProvider>(context, listen: false).hideLesson(topic.id);
                     ScaffoldMessenger.of(context).showSnackBar(
@@ -602,13 +592,11 @@ class _LessonsPageState extends State<LessonsPage> {
     );
   }
 
-  void _verifyAndProceed(String input, VoidCallback onGranted, BuildContext ctx) {
-    const String envPass = String.fromEnvironment('ADMIN_PASSWORD');
-    final String adminPass = envPass.isNotEmpty
-        ? envPass
-        : (dotenv.env['ADMIN_PASSWORD'] ?? 'admin123');
+  Future<void> _verifyAndProceed(String input, VoidCallback onGranted, BuildContext ctx) async {
+    final granted = await AdminAuth.login(input);
+    if (!mounted || !ctx.mounted) return;
 
-    if (input == adminPass) {
+    if (granted) {
       Navigator.pop(ctx);
       onGranted();
     } else {

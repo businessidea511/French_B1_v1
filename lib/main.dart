@@ -9,6 +9,7 @@ import 'pages/home_page.dart';
 import 'services/language_provider.dart';
 import 'services/lessons_provider.dart';
 import 'services/global_scroll_manager.dart';
+import 'services/admin_auth.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -45,6 +46,9 @@ void main() async {
   } catch (e) {
     debugPrint("🔥 Initialization Critical Error: $e");
   }
+
+  // Reload an admin session saved by an earlier login (expires after 12h)
+  await AdminAuth.restore();
 
   // 2. Set UI Orientations
   await SystemChrome.setPreferredOrientations([

@@ -1,13 +1,11 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/foundation.dart';
 import 'dart:math';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'gemini_service.dart';
+import 'api_client.dart';
 
 class DeepSeekService {
-  static const String baseUrl = 'https://api.deepseek.com/v1';
   static final Map<String, String> _memoryCache = {};
 
   static Future<void> clearCache() async {
@@ -20,13 +18,79 @@ class DeepSeekService {
     debugPrint('🧹 Translation cache cleared');
   }
 
-  static String get apiKey {
-    const String dKey = String.fromEnvironment('DEEPSEEK_API_KEY');
-    if (dKey.isNotEmpty) return dKey;
+  /// Sends a chat completion request through the server proxy (/api/ai), which
+  /// holds the DeepSeek key and picks the model. The response body is DeepSeek's.
+  static Future<http.Response> _chat(Map<String, dynamic> body) =>
+      ApiClient.post('/api/ai', body);
+
+  /// Reads French textbook photos with DeepSeek vision and returns a structured
+  /// text extraction. Returns a string starting with "ERROR" on failure.
+  static Future<String> describeImages(List<String> base64Images, String mimeType) async {
+    if (base64Images.isEmpty) return 'ERROR: No images provided.';
+
+    const prompt = '''You are an expert French language teacher analyzing textbook pages.
+TASK: Extract ALL French learning content from these images with extreme precision.
+
+CRITICAL INSTRUCTION FOR HANDWRITTEN NOTES:
+- The images may contain HANDWRITTEN ARABIC NOTES added by the student.
+- You MUST IGNORE these Arabic notes when extracting the core lesson content.
+- Do NOT let handwritten Arabic interfere with the French transcription.
+- Only extract the original PRINTED textbook content (French) and its intended translations/exercises.
+- If there are handwritten French corrections, you may note them as "User Correction" but do NOT confuse them with the main text.
+
+For EACH image, extract:
+1. **Vocabulary Lists**: Every French word/phrase with its category (e.g., "les symptômes", "les médicaments", "les parties du corps", "les accessoires")
+2. **Medical/Health Items**: If health-related, list ALL items with their French names (e.g., "un thermomètre", "des pansements", "un masque", "des ciseaux")
+3. **Grammar Points**: Any grammar rules, conjugations, or structures shown
+4. **Exercises**: Questions, fill-in-the-blank, comprehension questions
+5. **Mind Maps**: If there's a vocabulary mind map, list ALL categories and their items
+
+FORMAT your response as a structured extraction:
+---VOCABULARY---
+Category: [category name]
+- French word/phrase (with article if noun)
+...
+
+---EXERCISES---
+- Exercise description and content
+...
+
+---NOTES---
+- Any additional context, tips, or cultural notes (IGNORE ARABIC NOTES HERE)
+
+Be EXHAUSTIVE for printed content. Transcribe French text EXACTLY as written.''';
+
     try {
-      return dotenv.env['DEEPSEEK_API_KEY'] ?? '';
-    } catch (_) {
-      return '';
+      final response = await _chat({
+        'messages': [
+          {
+            'role': 'user',
+            'content': [
+              {'type': 'text', 'text': prompt},
+              for (final img in base64Images)
+                {
+                  'type': 'image_url',
+                  'image_url': {'url': 'data:$mimeType;base64,$img'},
+                },
+            ],
+          }
+        ],
+        'temperature': 0.2,
+        'max_tokens': 4096,
+      });
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final text = data['choices']?[0]?['message']?['content']?.toString() ?? '';
+        if (text.isNotEmpty) {
+          debugPrint('✅ DeepSeek vision read ${base64Images.length} image(s) (${text.length} chars)');
+          return text;
+        }
+        return 'ERROR: DeepSeek vision returned an empty response.';
+      }
+      return 'ERROR: DeepSeek vision failed: ${ApiClient.errorMessage(response)}';
+    } catch (e) {
+      return 'ERROR: DeepSeek vision request failed: $e';
     }
   }
 
@@ -231,14 +295,7 @@ D. The explanation in $targetLanguage must clearly state the grammar rule and wh
     final String topicGuidance = _buildTopicGuidance(topic, targetLanguage);
 
     try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/chat/completions'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $apiKey',
-        },
-        body: jsonEncode({
-          'model': 'deepseek-chat',
+      final response = await _chat({
           'messages': [
             {
               'role': 'system',
@@ -278,8 +335,7 @@ D. The explanation in $targetLanguage must clearly state the grammar rule and wh
           ],
           'response_format': {'type': 'json_object'},
           'temperature': 0.7,
-        }),
-      );
+      });
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -302,14 +358,7 @@ D. The explanation in $targetLanguage must clearly state the grammar rule and wh
     String targetLanguage,
   ) async {
     try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/chat/completions'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $apiKey',
-        },
-        body: jsonEncode({
-          'model': 'deepseek-chat',
+      final response = await _chat({
           'messages': [
             {
               'role': 'system',
@@ -329,8 +378,7 @@ D. The explanation in $targetLanguage must clearly state the grammar rule and wh
             }
           ],
           'response_format': {'type': 'json_object'},
-        }),
-      );
+      });
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -349,14 +397,7 @@ D. The explanation in $targetLanguage must clearly state the grammar rule and wh
   static Future<List<Map<String, String>>> generateFlashcards(String topic,
       {int count = 10}) async {
     try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/chat/completions'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $apiKey',
-        },
-        body: jsonEncode({
-          'model': 'deepseek-chat',
+      final response = await _chat({
           'messages': [
             {
               'role': 'system',
@@ -371,8 +412,7 @@ D. The explanation in $targetLanguage must clearly state the grammar rule and wh
           ],
           'response_format': {'type': 'json_object'},
           'temperature': 0.7,
-        }),
-      );
+      });
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -397,14 +437,7 @@ D. The explanation in $targetLanguage must clearly state the grammar rule and wh
   // Get full conjugation for any verb
   static Future<Map<String, List<String>>> conjugateVerb(String verb) async {
     try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/chat/completions'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $apiKey',
-        },
-        body: jsonEncode({
-          'model': 'deepseek-chat',
+      final response = await _chat({
           'messages': [
             {
               'role': 'system',
@@ -419,8 +452,7 @@ D. The explanation in $targetLanguage must clearly state the grammar rule and wh
           ],
           'response_format': {'type': 'json_object'},
           'temperature': 0.1,
-        }),
-      );
+      });
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -445,14 +477,7 @@ D. The explanation in $targetLanguage must clearly state the grammar rule and wh
   static Future<String> getGrammarExplanation(
       String topic, String targetLanguage) async {
     try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/chat/completions'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $apiKey',
-        },
-        body: jsonEncode({
-          'model': 'deepseek-chat',
+      final response = await _chat({
           'messages': [
             {
               'content':
@@ -468,8 +493,7 @@ D. The explanation in $targetLanguage must clearly state the grammar rule and wh
           ],
           'temperature': 0.7,
           'max_tokens': 1200,
-        }),
-      );
+      });
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -487,14 +511,7 @@ D. The explanation in $targetLanguage must clearly state the grammar rule and wh
   static Future<String> checkAnswer(String question, String userAnswer,
       String correctAnswer, String targetLanguage) async {
     try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/chat/completions'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $apiKey',
-        },
-        body: jsonEncode({
-          'model': 'deepseek-chat',
+      final response = await _chat({
           'messages': [
             {
               'role': 'system',
@@ -509,8 +526,7 @@ D. The explanation in $targetLanguage must clearly state the grammar rule and wh
           ],
           'temperature': 0.7,
           'max_tokens': 300,
-        }),
-      );
+      });
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -595,14 +611,7 @@ D. The explanation in $targetLanguage must clearly state the grammar rule and wh
             'Generate a listening exercise about: $topic. Variation: ${Random().nextInt(10000)}. Make this story unique and different from previous versions.';
       }
 
-      final response = await http.post(
-        Uri.parse('$baseUrl/chat/completions'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $apiKey',
-        },
-        body: jsonEncode({
-          'model': 'deepseek-chat',
+      final response = await _chat({
           'messages': [
             {
               'role': 'system',
@@ -616,8 +625,7 @@ D. The explanation in $targetLanguage must clearly state the grammar rule and wh
           'temperature': isDialogue
               ? 0.7
               : 0.9, // Higher temp for variety in both cases, relying on system prompt for structure
-        }),
-      );
+      });
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -662,14 +670,7 @@ D. The explanation in $targetLanguage must clearly state the grammar rule and wh
       }
 
       // 3. Call API
-      final response = await http.post(
-        Uri.parse('$baseUrl/chat/completions'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $apiKey',
-        },
-        body: jsonEncode({
-          'model': 'deepseek-chat',
+      final response = await _chat({
           'messages': [
             {
               'role': 'system',
@@ -689,8 +690,7 @@ D. The explanation in $targetLanguage must clearly state the grammar rule and wh
             }
           ],
           'temperature': 0.3,
-        }),
-      );
+      });
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -713,14 +713,7 @@ D. The explanation in $targetLanguage must clearly state the grammar rule and wh
   static Future<String> askGrammarQuestion(
       String question, String topic, String targetLanguage) async {
     try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/chat/completions'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $apiKey',
-        },
-        body: jsonEncode({
-          'model': 'deepseek-chat',
+      final response = await _chat({
           'messages': [
             {
               'role': 'system',
@@ -749,8 +742,7 @@ D. The explanation in $targetLanguage must clearly state the grammar rule and wh
           ],
           'temperature': 0.7,
           'max_tokens': 1000,
-        }),
-      );
+      });
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -768,14 +760,7 @@ D. The explanation in $targetLanguage must clearly state the grammar rule and wh
   static Future<String> askGeneralFrenchQuestion(
       String question, String targetLanguage) async {
     try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/chat/completions'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $apiKey',
-        },
-        body: jsonEncode({
-          'model': 'deepseek-chat',
+      final response = await _chat({
           'messages': [
             {
               'role': 'system',
@@ -796,8 +781,7 @@ D. The explanation in $targetLanguage must clearly state the grammar rule and wh
           ],
           'temperature': 0.7,
           'max_tokens': 1500,
-        }),
-      );
+      });
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -816,14 +800,7 @@ D. The explanation in $targetLanguage must clearly state the grammar rule and wh
       String topic, String targetLanguage,
       {String? pdfText}) async {
     try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/chat/completions'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $apiKey',
-        },
-        body: jsonEncode({
-          'model': 'deepseek-chat',
+      final response = await _chat({
           'messages': [
             {
               'role': 'system',
@@ -922,8 +899,7 @@ EXPLANATIONS in $targetLanguage. French terms stay in French.'''            },
           ],
           'response_format': {'type': 'json_object'},
           'temperature': 0.7,
-        }),
-      );
+      });
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -942,14 +918,7 @@ EXPLANATIONS in $targetLanguage. French terms stay in French.'''            },
       String topic, String targetLanguage,
       {String? pdfText}) async {
     try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/chat/completions'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $apiKey',
-        },
-        body: jsonEncode({
-          'model': 'deepseek-chat',
+      final response = await _chat({
           'messages': [
             {
               'role': 'system',
@@ -1054,8 +1023,7 @@ EXPLANATIONS in $targetLanguage. French terms stay in French.'''            },
           ],
           'response_format': {'type': 'json_object'},
           'temperature': 0.7,
-        }),
-      );
+      });
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -1073,14 +1041,7 @@ EXPLANATIONS in $targetLanguage. French terms stay in French.'''            },
   static Future<Map<String, dynamic>> generateAIBook(
       List<String> grammarTopics, List<String> lessonTopics, String targetLanguage) async {
     try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/chat/completions'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $apiKey',
-        },
-        body: jsonEncode({
-          'model': 'deepseek-chat',
+      final response = await _chat({
           'messages': [
             {
               'role': 'system',
@@ -1106,8 +1067,7 @@ EXPLANATIONS in $targetLanguage. French terms stay in French.'''            },
           ],
           'response_format': {'type': 'json_object'},
           'temperature': 0.7,
-        }),
-      );
+      });
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -1128,24 +1088,17 @@ EXPLANATIONS in $targetLanguage. French terms stay in French.'''            },
     String targetLanguage,
   ) async {
     try {
-      // 1. Get description of ALL images using Gemini
-      final description = await GeminiService.describeImages(base64Images, mimeType);
+      // 1. Read ALL images with DeepSeek vision
+      final description = await describeImages(base64Images, mimeType);
       
-      if (description.startsWith('ERROR') || description.startsWith('EXCEPTION')) {
+      if (description.startsWith('ERROR')) {
         throw Exception(description);
       }
 
       debugPrint('📸 Multi-Image Description for Lesson: $description');
 
       // 2. Ask DeepSeek to generate lesson based on description
-      final response = await http.post(
-        Uri.parse('$baseUrl/chat/completions'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $apiKey',
-        },
-        body: jsonEncode({
-          'model': 'deepseek-chat',
+      final response = await _chat({
           'messages': [
             {
               'role': 'system',
@@ -1243,8 +1196,7 @@ EXPLANATIONS in $targetLanguage. French terms stay in French.'''
           ],
           'max_tokens': 4000,
           'response_format': {'type': 'json_object'},
-        }),
-      );
+      });
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -1271,24 +1223,17 @@ EXPLANATIONS in $targetLanguage. French terms stay in French.'''
     String topic,
   ) async {
     try {
-      // 1. Get description of ALL images using Gemini
-      final description = await GeminiService.describeImages(base64Images, mimeType);
+      // 1. Read ALL images with DeepSeek vision
+      final description = await describeImages(base64Images, mimeType);
       
-      if (description.startsWith('ERROR') || description.startsWith('EXCEPTION')) {
+      if (description.startsWith('ERROR')) {
         throw Exception(description);
       }
 
       debugPrint('📸 Multi-Image Description: $description');
 
       // 2. Ask DeepSeek to explain based on description
-      final response = await http.post(
-        Uri.parse('$baseUrl/chat/completions'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $apiKey',
-        },
-        body: jsonEncode({
-          'model': 'deepseek-chat',
+      final response = await _chat({
           'messages': [
             {
               'role': 'system',
@@ -1309,8 +1254,7 @@ EXPLANATIONS in $targetLanguage. French terms stay in French.'''
             }
           ],
           'max_tokens': 2000,
-        }),
-      );
+      });
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -1374,22 +1318,15 @@ EXPLANATIONS in $targetLanguage. French terms stay in French.'''
     String? userInstructions,
   ) async {
     try {
-      final newDescription = await GeminiService.describeImages(newBase64Images, mimeType);
-      if (newDescription.startsWith('ERROR') || newDescription.startsWith('EXCEPTION')) {
+      final newDescription = await describeImages(newBase64Images, mimeType);
+      if (newDescription.startsWith('ERROR')) {
         throw Exception(newDescription);
       }
 
       final existingWidgets = existingLesson['widgets'] ?? existingLesson['content'] ?? [];
       final String existingSummary = _buildContentSummary(existingWidgets is List ? existingWidgets : []);
 
-      final response = await http.post(
-        Uri.parse('$baseUrl/chat/completions'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $apiKey',
-        },
-        body: jsonEncode({
-          'model': 'deepseek-chat',
+      final response = await _chat({
           'messages': [
             {
               'role': 'system',
@@ -1413,8 +1350,7 @@ RULES: IGNORE handwritten Arabic notes. NO META-TALK. Explanations in $targetLan
           ],
           'response_format': {'type': 'json_object'},
           'temperature': 0.3,
-        }),
-      );
+      });
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -1446,14 +1382,7 @@ RULES: IGNORE handwritten Arabic notes. NO META-TALK. Explanations in $targetLan
       final existingWidgets = existingLesson['widgets'] ?? existingLesson['content'] ?? [];
       final String existingSummary = _buildContentSummary(existingWidgets is List ? existingWidgets : []);
 
-      final response = await http.post(
-        Uri.parse('$baseUrl/chat/completions'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $apiKey',
-        },
-        body: jsonEncode({
-          'model': 'deepseek-chat',
+      final response = await _chat({
           'messages': [
             {
               'role': 'system',
@@ -1476,8 +1405,7 @@ RULES: NO META-TALK. French stays French. Explanations in $targetLanguage.'''
             }
           ],
           'response_format': {'type': 'json_object'},
-        }),
-      );
+      });
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -1507,20 +1435,13 @@ RULES: NO META-TALK. French stays French. Explanations in $targetLanguage.'''
     String? userInstructions,
   ) async {
     try {
-      final newDescription = await GeminiService.describeImages(newBase64Images, mimeType);
+      final newDescription = await describeImages(newBase64Images, mimeType);
       if (newDescription.startsWith('ERROR')) throw Exception(newDescription);
 
       final existingWidgets = existingGrammar['widgets'] ?? existingGrammar['content'] ?? [];
       final String existingSummary = _buildContentSummary(existingWidgets is List ? existingWidgets : []);
 
-      final response = await http.post(
-        Uri.parse('$baseUrl/chat/completions'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $apiKey',
-        },
-        body: jsonEncode({
-          'model': 'deepseek-chat',
+      final response = await _chat({
           'messages': [
             {
               'role': 'system',
@@ -1543,8 +1464,7 @@ RULES: IGNORE handwritten Arabic notes. NO META-TALK. Explanations in $targetLan
             }
           ],
           'response_format': {'type': 'json_object'},
-        }),
-      );
+      });
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -1575,14 +1495,7 @@ RULES: IGNORE handwritten Arabic notes. NO META-TALK. Explanations in $targetLan
       final existingWidgets = existingGrammar['widgets'] ?? existingGrammar['content'] ?? [];
       final String existingSummary = _buildContentSummary(existingWidgets is List ? existingWidgets : []);
 
-      final response = await http.post(
-        Uri.parse('$baseUrl/chat/completions'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $apiKey',
-        },
-        body: jsonEncode({
-          'model': 'deepseek-chat',
+      final response = await _chat({
           'messages': [
             {
               'role': 'system',
@@ -1604,8 +1517,7 @@ RULES: NO META-TALK. French stays French. Explanations in $targetLanguage.'''
             }
           ],
           'response_format': {'type': 'json_object'},
-        }),
-      );
+      });
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -1637,14 +1549,7 @@ RULES: NO META-TALK. French stays French. Explanations in $targetLanguage.'''
       final existingWidgets = existingLesson['widgets'] ?? existingLesson['content'] ?? [];
       final String existingSummary = _buildContentSummary(existingWidgets is List ? existingWidgets : []);
 
-      final response = await http.post(
-        Uri.parse('$baseUrl/chat/completions'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $apiKey',
-        },
-        body: jsonEncode({
-          'model': 'deepseek-chat',
+      final response = await _chat({
           'messages': [
             {
               'role': 'system',
@@ -1688,8 +1593,7 @@ RULES:
           ],
           'response_format': {'type': 'json_object'},
           'temperature': 0.5,
-        }),
-      );
+      });
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -1721,14 +1625,7 @@ RULES:
       final existingWidgets = existingGrammar['widgets'] ?? existingGrammar['content'] ?? [];
       final String existingSummary = _buildContentSummary(existingWidgets is List ? existingWidgets : []);
 
-      final response = await http.post(
-        Uri.parse('$baseUrl/chat/completions'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $apiKey',
-        },
-        body: jsonEncode({
-          'model': 'deepseek-chat',
+      final response = await _chat({
           'messages': [
             {
               'role': 'system',
@@ -1769,8 +1666,7 @@ Explanations in $targetLanguage. NO META-TALK.'''
           ],
           'response_format': {'type': 'json_object'},
           'temperature': 0.5,
-        }),
-      );
+      });
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -1794,14 +1690,7 @@ Explanations in $targetLanguage. NO META-TALK.'''
   // ── Generate a complete FLE Exam covering Listening, Grammar, Reading, and Writing ──
   static Future<Map<String, dynamic>> generateExam(String targetLanguage) async {
     try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/chat/completions'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $apiKey',
-        },
-        body: jsonEncode({
-          'model': 'deepseek-chat',
+      final response = await _chat({
           'messages': [
             {
               'role': 'system',
@@ -1941,8 +1830,7 @@ STRICT FORMATTING AND QUALITY RULES:
           ],
           'response_format': {'type': 'json_object'},
           'temperature': 0.8,
-        }),
-      );
+      });
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -1960,14 +1848,7 @@ STRICT FORMATTING AND QUALITY RULES:
   static Future<Map<String, dynamic>> gradeEssay(
       String topic, String essayText, String targetLanguage) async {
     try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/chat/completions'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $apiKey',
-        },
-        body: jsonEncode({
-          'model': 'deepseek-chat',
+      final response = await _chat({
           'messages': [
             {
               'role': 'system',
@@ -2000,8 +1881,7 @@ Return ONLY valid JSON in this format:
           ],
           'response_format': {'type': 'json_object'},
           'temperature': 0.3,
-        }),
-      );
+      });
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);

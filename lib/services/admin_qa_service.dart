@@ -1,5 +1,7 @@
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'admin_auth.dart';
+import 'api_client.dart';
 
 /// Represents a single saved Q&A entry from the admin AI assistant.
 class AdminQA {
@@ -34,20 +36,22 @@ class AdminQA {
       };
 }
 
-/// Service for managing saved Admin AI Q&As in Supabase.
+/// Service for managing saved Admin AI Q&As in Supabase. The table is private,
+/// so every call goes through /api/content with the admin session token.
 class AdminQAService {
-  static final SupabaseClient _client = Supabase.instance.client;
-  static const String _table = 'admin_ai_saved_qas';
+  static Future<Map<String, dynamic>> _call(Map<String, dynamic> body) async {
+    final token = AdminAuth.token;
+    if (token == null) throw Exception('Admin session expired. Please log in again.');
+    final response = await ApiClient.post('/api/content', body, bearerToken: token);
+    if (response.statusCode != 200) throw Exception(ApiClient.errorMessage(response));
+    return jsonDecode(response.body) as Map<String, dynamic>;
+  }
 
   /// Fetches all saved Q&As, newest first.
   static Future<List<AdminQA>> fetchAll() async {
     try {
-      final response = await _client
-          .from(_table)
-          .select()
-          .order('created_at', ascending: false);
-
-      return (response as List<dynamic>)
+      final data = await _call({'action': 'list_qas'});
+      return (data['rows'] as List<dynamic>)
           .map((e) => AdminQA.fromMap(Map<String, dynamic>.from(e)))
           .toList();
     } catch (e) {
@@ -63,17 +67,13 @@ class AdminQAService {
     required String language,
   }) async {
     try {
-      final response = await _client
-          .from(_table)
-          .insert({
-            'question': question,
-            'answer': answer,
-            'language': language,
-          })
-          .select()
-          .single();
-
-      return AdminQA.fromMap(Map<String, dynamic>.from(response));
+      final data = await _call({
+        'action': 'insert_qa',
+        'question': question,
+        'answer': answer,
+        'language': language,
+      });
+      return AdminQA.fromMap(Map<String, dynamic>.from(data['row']));
     } catch (e) {
       debugPrint('AdminQAService.insert error: $e');
       rethrow;
@@ -83,7 +83,7 @@ class AdminQAService {
   /// Deletes a Q&A row by its UUID.
   static Future<void> delete(String id) async {
     try {
-      await _client.from(_table).delete().eq('id', id);
+      await _call({'action': 'delete', 'table': 'admin_ai_saved_qas', 'id': id});
     } catch (e) {
       debugPrint('AdminQAService.delete error: $e');
       rethrow;

@@ -4,8 +4,10 @@
 set -e
 
 echo "=== PREPARING CONFIGURATION ==="
-# Create a JSON file for dart-define to avoid shell escaping issues with special characters in the API key
-echo "{\"DEEPSEEK_API_KEY\": \"$DEEPSEEK_API_KEY\", \"ADMIN_PASSWORD\": \"$ADMIN_PASSWORD\", \"HF_TOKEN\": \"$HF_TOKEN\", \"GEMINI_KEY_1\": \"$GEMINI_KEY_1\", \"GEMINI_KEY_2\": \"$GEMINI_KEY_2\", \"GEMINI_KEY_3\": \"$GEMINI_KEY_3\", \"GEMINI_KEY_4\": \"$GEMINI_KEY_4\", \"GEMINI_KEY_5\": \"$GEMINI_KEY_5\", \"SUPABASE_URL\": \"$SUPABASE_URL\", \"SUPABASE_ANON_KEY\": \"$SUPABASE_ANON_KEY\"}" > dart_config.json
+# Only PUBLIC values go into the app: everything passed here is compiled into
+# main.dart.js and readable by every visitor. API keys and the admin password
+# stay in Vercel env vars and are used only by the functions in /api.
+echo "{\"SUPABASE_URL\": \"$SUPABASE_URL\", \"SUPABASE_ANON_KEY\": \"$SUPABASE_ANON_KEY\"}" > dart_config.json
 
 # Create a dummy .env file if it doesn't exist (Flutter build requires it since it's in pubspec.yaml)
 if [ ! -f "assets/.env" ]; then

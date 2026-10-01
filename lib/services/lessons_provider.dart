@@ -4,6 +4,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/lesson_topic.dart';
 import '../models/grammar_topic.dart';
+import 'admin_auth.dart';
+import 'api_client.dart';
 
 class LessonsProvider extends ChangeNotifier {
   List<LessonTopic> _customLessons = [];
@@ -227,22 +229,17 @@ class LessonsProvider extends ChangeNotifier {
     await _saveLocalData();
 
     // Push to Cloud
-    final client = _supabase;
-    if (client == null) {
-      debugPrint('⚠️ Supabase client is NULL - skipping cloud push');
-      return;
-    }
     try {
       debugPrint('☁️ Pushing lesson to Supabase: $id');
-      final response = await client.from('lessons').upsert({
+      await _cloudUpsert('lessons', [{
         'id': id,
         'title': newLesson.title,
         'subtitle': newLesson.subtitle,
         'icon': newLesson.icon,
         'description': newLesson.description,
         'content': newLesson.content,
-      }).select();
-      debugPrint('✅ Lesson saved to cloud: ${response.length} rows affected');
+      }]);
+      debugPrint('✅ Lesson saved to cloud');
     } catch (e, stack) {
       _lastError = e.toString();
       notifyListeners();
@@ -305,21 +302,20 @@ class LessonsProvider extends ChangeNotifier {
     await _saveLocalData();
 
     // Update Cloud
-    final client = _supabase;
-    if (client != null) {
-      try {
-        await client.from('lessons').upsert({
-          'id': id,
-          'title': updated.title,
-          'subtitle': updated.subtitle,
-          'icon': updated.icon,
-          'description': updated.description,
-          'content': updated.content,
-        });
-        debugPrint('☁️ Lesson "$id" updated in cloud (${mergedContent.length} widgets)');
-      } catch (e) {
-        debugPrint('Cloud update error: $e');
-      }
+    try {
+      await _cloudUpsert('lessons', [{
+        'id': id,
+        'title': updated.title,
+        'subtitle': updated.subtitle,
+        'icon': updated.icon,
+        'description': updated.description,
+        'content': updated.content,
+      }]);
+      debugPrint('☁️ Lesson "$id" updated in cloud (${mergedContent.length} widgets)');
+    } catch (e) {
+      debugPrint('Cloud update error: $e');
+      // Surface the failure: the change is only saved on this device.
+      rethrow;
     }
   }
 
@@ -341,22 +337,17 @@ class LessonsProvider extends ChangeNotifier {
     await _saveLocalData();
 
     // Push to Cloud
-    final client = _supabase;
-    if (client == null) {
-      debugPrint('⚠️ Supabase client is NULL - skipping cloud push');
-      return;
-    }
     try {
       debugPrint('☁️ Pushing grammar to Supabase: $id');
-      final response = await client.from('grammar').upsert({
+      await _cloudUpsert('grammar', [{
         'id': id,
         'title': newGrammar.title,
         'subtitle': newGrammar.subtitle,
         'icon': newGrammar.icon,
         'description': newGrammar.description,
         'content': newGrammar.content,
-      }).select();
-      debugPrint('✅ Grammar saved to cloud: ${response.length} rows affected');
+      }]);
+      debugPrint('✅ Grammar saved to cloud');
     } catch (e, stack) {
       debugPrint('❌ Cloud grammar insert error: $e');
       debugPrint('Stack: $stack');
@@ -408,21 +399,20 @@ class LessonsProvider extends ChangeNotifier {
     await _saveLocalData();
 
     // Update Cloud
-    final client = _supabase;
-    if (client != null) {
-      try {
-        await client.from('grammar').upsert({
-          'id': id,
-          'title': updated.title,
-          'subtitle': updated.subtitle,
-          'icon': updated.icon,
-          'description': updated.description,
-          'content': updated.content,
-        });
-        debugPrint('☁️ Grammar "$id" updated in cloud (${mergedContent.length} widgets)');
-      } catch (e) {
-        debugPrint('Cloud grammar update error: $e');
-      }
+    try {
+      await _cloudUpsert('grammar', [{
+        'id': id,
+        'title': updated.title,
+        'subtitle': updated.subtitle,
+        'icon': updated.icon,
+        'description': updated.description,
+        'content': updated.content,
+      }]);
+      debugPrint('☁️ Grammar "$id" updated in cloud (${mergedContent.length} widgets)');
+    } catch (e) {
+      debugPrint('Cloud grammar update error: $e');
+      // Surface the failure: the change is only saved on this device.
+      rethrow;
     }
   }
 
@@ -431,14 +421,11 @@ class LessonsProvider extends ChangeNotifier {
     _customLessons.removeWhere((l) => l.id == id);
     notifyListeners();
     await _saveLocalData();
-    final client = _supabase;
-    if (client != null) {
-      try {
-        await client.from('lessons').delete().eq('id', id);
-        debugPrint('🗑️ Lesson deleted from cloud: $id');
-      } catch (e) {
-        debugPrint('Cloud delete lesson error: $e');
-      }
+    try {
+      await _cloudDelete('lessons', id);
+      debugPrint('🗑️ Lesson deleted from cloud: $id');
+    } catch (e) {
+      debugPrint('Cloud delete lesson error: $e');
     }
   }
 
@@ -447,14 +434,11 @@ class LessonsProvider extends ChangeNotifier {
     _customGrammar.removeWhere((g) => g.id == id);
     notifyListeners();
     await _saveLocalData();
-    final client = _supabase;
-    if (client != null) {
-      try {
-        await client.from('grammar').delete().eq('id', id);
-        debugPrint('🗑️ Grammar deleted from cloud: $id');
-      } catch (e) {
-        debugPrint('Cloud delete grammar error: $e');
-      }
+    try {
+      await _cloudDelete('grammar', id);
+      debugPrint('🗑️ Grammar deleted from cloud: $id');
+    } catch (e) {
+      debugPrint('Cloud delete grammar error: $e');
     }
   }
 
@@ -463,14 +447,11 @@ class LessonsProvider extends ChangeNotifier {
     _customLessons.removeWhere((l) => l.id == id);
     notifyListeners();
     await _saveLocalData();
-    final client = _supabase;
-    if (client != null) {
-      try {
-        await client.from('lessons').delete().eq('id', id);
-        debugPrint('🗑️ Custom lesson override deleted from cloud: $id');
-      } catch (e) {
-        debugPrint('Cloud reset lesson error: $e');
-      }
+    try {
+      await _cloudDelete('lessons', id);
+      debugPrint('🗑️ Custom lesson override deleted from cloud: $id');
+    } catch (e) {
+      debugPrint('Cloud reset lesson error: $e');
     }
   }
 
@@ -488,14 +469,11 @@ class LessonsProvider extends ChangeNotifier {
     _customGrammar.removeWhere((g) => g.id == id);
     notifyListeners();
     await _saveLocalData();
-    final client = _supabase;
-    if (client != null) {
-      try {
-        await client.from('grammar').delete().eq('id', id);
-        debugPrint('🗑️ Custom grammar override deleted from cloud: $id');
-      } catch (e) {
-        debugPrint('Cloud reset grammar error: $e');
-      }
+    try {
+      await _cloudDelete('grammar', id);
+      debugPrint('🗑️ Custom grammar override deleted from cloud: $id');
+    } catch (e) {
+      debugPrint('Cloud reset grammar error: $e');
     }
   }
 
@@ -508,47 +486,61 @@ class LessonsProvider extends ChangeNotifier {
     }
   }
 
+  /// Uploads any built-in lesson/grammar topic missing from the cloud.
+  /// Needs an admin session, so it only runs for a logged-in admin.
   Future<void> seedData() async {
     final client = _supabase;
-    if (client == null) return;
+    if (client == null || !AdminAuth.isLoggedIn) return;
 
     try {
-      debugPrint('🌱 Checking cloud for original content...');
-      
-      // Seed Lessons - Only if NOT already in cloud
-      for (var lesson in lessonTopics) {
-        final existing = await client.from('lessons').select('id').eq('id', lesson.id).maybeSingle();
-        if (existing == null) {
-          debugPrint('📤 Seeding original lesson: ${lesson.id}');
-          await client.from('lessons').upsert({
-            'id': lesson.id,
-            'title': lesson.title,
-            'subtitle': lesson.subtitle,
-            'icon': lesson.icon,
-            'description': lesson.description,
-            'content': lesson.content,
-          });
-        }
+      final lessonIds = (await client.from('lessons').select('id') as List)
+          .map((r) => r['id'] as String)
+          .toSet();
+      final missingLessons = lessonTopics.where((l) => !lessonIds.contains(l.id)).toList();
+      if (missingLessons.isNotEmpty) {
+        debugPrint('📤 Seeding ${missingLessons.length} original lesson(s)');
+        await _cloudUpsert('lessons', missingLessons.map((l) => l.toJson()).toList());
       }
 
-      // Seed Grammar - Only if NOT already in cloud
-      for (var grammar in grammarTopics) {
-        final existing = await client.from('grammar').select('id').eq('id', grammar.id).maybeSingle();
-        if (existing == null) {
-          debugPrint('📤 Seeding original grammar: ${grammar.id}');
-          await client.from('grammar').upsert({
-            'id': grammar.id,
-            'title': grammar.title,
-            'subtitle': grammar.subtitle,
-            'icon': grammar.icon,
-            'description': grammar.description,
-            'content': grammar.content,
-          });
-        }
+      final grammarIds = (await client.from('grammar').select('id') as List)
+          .map((r) => r['id'] as String)
+          .toSet();
+      final missingGrammar = grammarTopics.where((g) => !grammarIds.contains(g.id)).toList();
+      if (missingGrammar.isNotEmpty) {
+        debugPrint('📤 Seeding ${missingGrammar.length} original grammar topic(s)');
+        await _cloudUpsert('grammar', missingGrammar.map((g) => g.toJson()).toList());
       }
       debugPrint('✅ Seeding check complete');
     } catch (e) {
       debugPrint('⚠️ Seeding error: $e');
+    }
+  }
+
+  /// Cloud writes go through /api/content, which requires an admin session.
+  /// Visitors can only read the tables directly.
+  Future<void> _cloudUpsert(String table, List<Map<String, dynamic>> rows) async {
+    final token = AdminAuth.token;
+    if (token == null) throw Exception('Admin session expired. Please enter the admin password again.');
+    final response = await ApiClient.post(
+      '/api/content',
+      {'action': 'upsert', 'table': table, 'rows': rows},
+      bearerToken: token,
+    );
+    if (response.statusCode != 200) {
+      throw Exception('Cloud save failed: ${ApiClient.errorMessage(response)}');
+    }
+  }
+
+  Future<void> _cloudDelete(String table, String id) async {
+    final token = AdminAuth.token;
+    if (token == null) throw Exception('Admin session expired. Please enter the admin password again.');
+    final response = await ApiClient.post(
+      '/api/content',
+      {'action': 'delete', 'table': table, 'id': id},
+      bearerToken: token,
+    );
+    if (response.statusCode != 200) {
+      throw Exception('Cloud delete failed: ${ApiClient.errorMessage(response)}');
     }
   }
 

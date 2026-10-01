@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../services/admin_auth.dart';
 import 'dart:ui';
 import '../services/pwa_service.dart';
 import '../theme/app_theme.dart';
@@ -15,7 +16,6 @@ import 'lessons/lessons_page.dart';
 import 'ai_book/ai_book_page.dart';
 import 'admin/admin_ai_chat_page.dart';
 import 'examen/examen_one_page.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -235,13 +235,11 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  void _verifyAndProceed(String input, VoidCallback onGranted, BuildContext ctx) {
-    const String envPass = String.fromEnvironment('ADMIN_PASSWORD');
-    final String adminPass = envPass.isNotEmpty
-        ? envPass
-        : (dotenv.env['ADMIN_PASSWORD'] ?? 'admin123');
+  Future<void> _verifyAndProceed(String input, VoidCallback onGranted, BuildContext ctx) async {
+    final granted = await AdminAuth.login(input);
+    if (!mounted || !ctx.mounted) return;
 
-    if (input == adminPass) {
+    if (granted) {
       Navigator.pop(ctx);
       onGranted();
     } else {

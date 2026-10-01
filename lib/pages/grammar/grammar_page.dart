@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../services/admin_auth.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:convert';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../../theme/app_theme.dart';
 import '../../models/grammar_topic.dart';
 import '../../services/language_provider.dart';
@@ -194,13 +194,11 @@ class _GrammarPageState extends State<GrammarPage> {
     );
   }
 
-  void _verifyAndProceed(String input, VoidCallback onGranted, BuildContext ctx) {
-    const String envPass = String.fromEnvironment('ADMIN_PASSWORD');
-    final String adminPass = envPass.isNotEmpty
-        ? envPass
-        : (dotenv.env['ADMIN_PASSWORD'] ?? 'admin123');
+  Future<void> _verifyAndProceed(String input, VoidCallback onGranted, BuildContext ctx) async {
+    final granted = await AdminAuth.login(input);
+    if (!mounted || !ctx.mounted) return;
 
-    if (input == adminPass) {
+    if (granted) {
       Navigator.pop(ctx);
       onGranted();
     } else {
@@ -585,13 +583,11 @@ class _GrammarPageState extends State<GrammarPage> {
                 icon: const Icon(Icons.delete_forever_rounded, size: 18),
                 label: const Text('Delete'),
                 style: ElevatedButton.styleFrom(backgroundColor: AppTheme.error),
-                onPressed: () {
-                  const String envPass = String.fromEnvironment('ADMIN_PASSWORD');
-                  final String adminPass = envPass.isNotEmpty
-                      ? envPass
-                      : (dotenv.env['ADMIN_PASSWORD'] ?? 'admin123');
+                onPressed: () async {
+                  final granted = await AdminAuth.login(passController.text);
+                  if (!mounted || !ctx.mounted) return;
 
-                  if (passController.text == adminPass) {
+                  if (granted) {
                     Navigator.pop(ctx);
                     final lp = Provider.of<LessonsProvider>(context, listen: false);
                     lp.removeGrammar(topicId);
@@ -611,13 +607,11 @@ class _GrammarPageState extends State<GrammarPage> {
                 icon: const Icon(Icons.restore_rounded, size: 18),
                 label: const Text('Reset to Default'),
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
-                onPressed: () {
-                  const String envPass = String.fromEnvironment('ADMIN_PASSWORD');
-                  final String adminPass = envPass.isNotEmpty
-                      ? envPass
-                      : (dotenv.env['ADMIN_PASSWORD'] ?? 'admin123');
+                onPressed: () async {
+                  final granted = await AdminAuth.login(passController.text);
+                  if (!mounted || !ctx.mounted) return;
 
-                  if (passController.text == adminPass) {
+                  if (granted) {
                     Navigator.pop(ctx);
                     final lp = Provider.of<LessonsProvider>(context, listen: false);
                     lp.resetGrammarToDefault(topicId);
@@ -636,13 +630,11 @@ class _GrammarPageState extends State<GrammarPage> {
                 icon: const Icon(Icons.visibility_off_rounded, size: 18),
                 label: const Text('Hide Topic'),
                 style: ElevatedButton.styleFrom(backgroundColor: AppTheme.error),
-                onPressed: () {
-                  const String envPass = String.fromEnvironment('ADMIN_PASSWORD');
-                  final String adminPass = envPass.isNotEmpty
-                      ? envPass
-                      : (dotenv.env['ADMIN_PASSWORD'] ?? 'admin123');
+                onPressed: () async {
+                  final granted = await AdminAuth.login(passController.text);
+                  if (!mounted || !ctx.mounted) return;
 
-                  if (passController.text == adminPass) {
+                  if (granted) {
                     Navigator.pop(ctx);
                     final lp = Provider.of<LessonsProvider>(context, listen: false);
                     lp.hideGrammar(topicId);
