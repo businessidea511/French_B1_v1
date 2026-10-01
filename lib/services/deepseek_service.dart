@@ -379,7 +379,7 @@ D. The explanation in $targetLanguage must clearly state the grammar rule and wh
   // Generate multiple AI-powered exercises
   static Future<List<Map<String, dynamic>>> generateExercises(
       String topic, String difficulty, String targetLanguage,
-      {int count = 10}) async {
+      {int count = 10, String? topicContent}) async {
     // Build topic-specific guidance so the AI generates unambiguous, complete questions
     final String topicGuidance = _buildTopicGuidance(topic, targetLanguage);
 
@@ -420,6 +420,7 @@ D. The explanation in $targetLanguage must clearly state the grammar rule and wh
               'content': topic == 'mixed_review'
                   ? 'Generate $count fill-in-the-blank multiple choice exercises for a comprehensive French B1 General Review covering: Présent, Passé Composé, Imparfait, Futur Simple, Conditionnel, Subjonctif, COD/COI pronouns, Voix Passive, Négation, and L\'Impératif. Each question MUST be a complete French sentence with "___". Difficulty: $difficulty.'
                   : 'Generate $count fill-in-the-blank multiple choice exercises for French B1 topic: "$topic". Each question MUST be a complete French sentence containing "___" where the student fills in the answer. Difficulty: $difficulty. Apply ALL topic-specific rules from the system prompt.'
+                      '${topicContent == null ? '' : '\n\nThe learner studied THIS lesson content. Test what it teaches (its rules, forms and vocabulary), spread the questions across ALL of its sections, and stay within B1:\n<<<\n$topicContent\n>>>'}'
             }
           ],
           'response_format': {'type': 'json_object'},
@@ -440,90 +441,57 @@ D. The explanation in $targetLanguage must clearly state the grammar rule and wh
     }
   }
 
-  // Generate AI Story / Novel
-  static Future<Map<String, dynamic>> generateStory(
-    List<String> grammar,
-    List<String> lessons,
-    String targetLanguage,
-  ) async {
-    try {
-      final response = await _chat({
-          'messages': [
-            {
-              'role': 'system',
-              'content':
-                  'You are Professeur AI, an expert French B1 novelist and teacher. Create an engaging 5-page French story. '
-                  'The story MUST be in French. '
-                  'CRITICAL: Each page MUST have "learning_points" which are pedagogical explanations of the grammar or vocabulary used on that page. '
-                  'The "learning_points" MUST be written in $targetLanguage (the user\'s native language). '
-                  'Return ONLY valid JSON in this exact format: '
-                  '{"title":"<French Title>","pages":[{"text":"<French text for this page>","learning_points":["<Explanation in $targetLanguage>"]}]}'
-            },
-            {
-              'role': 'user',
-              'content':
-                  'Create a B1 level French story incorporating these grammar topics: ${grammar.join(", ")} and these lesson themes: ${lessons.join(", ")}. '
-                  'The story should have 5 pages. Each page needs 2-3 learning points explained in $targetLanguage.'
-            }
-          ],
-          'response_format': {'type': 'json_object'},
-      });
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        final content = data['choices'][0]['message']['content'];
-        return jsonDecode(content);
-      } else {
-        throw Exception('Failed to generate story: ${response.statusCode}');
-      }
-    } catch (e) {
-      debugPrint('Error generating story: $e');
-      rethrow;
-    }
-  }
-
-  // Generate AI flashcards
-  static Future<List<Map<String, String>>> generateFlashcards(String topic,
-      {int count = 10}) async {
-    try {
-      final response = await _chat({
-          'messages': [
-            {
-              'role': 'system',
-              'content':
-                  'You are a French B1 teacher. Generate flashcards in JSON format. Return a JSON object with a key "flashcards" containing an array of objects.'
-            },
-            {
-              'role': 'user',
-              'content':
-                  'Generate $count flashcards for French B1 topic: $topic. Each flashcard must have "front" (question/term) and "back" (answer/explanation).'
-            }
-          ],
-          'response_format': {'type': 'json_object'},
-          'temperature': 0.7,
-      });
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        final content = data['choices'][0]['message']['content'];
-        final Map<String, dynamic> parsed = jsonDecode(content);
-        return (parsed['flashcards'] as List)
-            .map((item) => {
-                  'front': item['front'].toString(),
-                  'back': item['back'].toString(),
-                })
-            .toList();
-      } else {
-        throw Exception(
-            'Failed to generate flashcards: ${response.statusCode}');
-      }
-    } catch (e) {
-      debugPrint('Error generating flashcards: $e');
-      rethrow;
-    }
-  }
-
   // Get full conjugation for any verb
+  /// Flashcards for a topic. Every card: "front" (French), "back" (answer),
+  /// optional "example" (French sentence) and "tip" (in [targetLanguage]).
+  static Future<List<Map<String, String>>> generateFlashcards(
+    String topic,
+    String targetLanguage, {
+    String? topicContent,
+    int count = 12,
+  }) async {
+    final result = await chatJson([
+      {
+        'role': 'system',
+        'content': '''You are Professeur AI, a Belgian French teacher making flashcards for B1 learners whose language is $targetLanguage.
+Make $count cards that help memorise what the topic teaches. Mix card kinds that fit the topic:
+- vocabulary: front = French word or expression WITH its article (le/la/l'/les, un/une); back = meaning in $targetLanguage.
+- conjugation / form: front = a French prompt such as "aller → nous (imparfait)"; back = the French form "nous allions".
+- rule in use: front = a short French sentence with ___ and the hint in brackets, e.g. "Hier, je ___ (aller) au marché."; back = the French answer.
+- expression: front = a common French expression; back = its meaning in $targetLanguage.
+Rules:
+- "front" is ALWAYS French and short (it is read aloud). Never put the answer on the front.
+- No card that only names or defines the topic itself (e.g. "l'imparfait → the imperfect tense"); every card practises something.
+- For a sentence with ___, "back" is EXACTLY the words that fill the blank (no repeated subject pronoun).
+- "back" is short (max ~8 words).
+- "example": one natural French sentence using the item (everyday life, Belgian places when a place is needed).
+- "tip": one short sentence in $targetLanguage that helps remember it (a trap, an exception, a memory trick).
+- Every card is different; no two cards test the same thing. Double-check every answer.
+JSON: {"flashcards": [{"front": "...", "back": "...", "example": "...", "tip": "..."}]}'''
+      },
+      {
+        'role': 'user',
+        'content': 'Topic: $topic'
+            '${topicContent == null ? '' : '\n\nMake the cards from THIS lesson content (its vocabulary, forms and rules):\n<<<\n$topicContent\n>>>'}'
+      },
+    ], temperature: 0.6);
+
+    final cards = <Map<String, String>>[];
+    for (final item in (result['flashcards'] as List? ?? const []).whereType<Map>()) {
+      final front = (item['front'] ?? '').toString().trim();
+      final back = (item['back'] ?? '').toString().trim();
+      if (front.isEmpty || back.isEmpty || front == back) continue;
+      cards.add({
+        'front': front,
+        'back': back,
+        'example': (item['example'] ?? '').toString().trim(),
+        'tip': (item['tip'] ?? '').toString().trim(),
+      });
+    }
+    if (cards.isEmpty) throw Exception('No flashcards were generated.');
+    return cards;
+  }
+
   static Future<Map<String, List<String>>> conjugateVerb(String verb) async {
     try {
       final response = await _chat({
@@ -1003,50 +971,6 @@ EXPLANATIONS in $targetLanguage. French terms stay in French.'''            },
   }
 
   // Generate a full grammar guide from a topic or PDF text
-  // Generate a full AI Book (story) combining grammar and lessons
-  static Future<Map<String, dynamic>> generateAIBook(
-      List<String> grammarTopics, List<String> lessonTopics, String targetLanguage) async {
-    try {
-      final response = await _chat({
-          'messages': [
-            {
-              'role': 'system',
-              'content':
-                  'You are Professeur AI, a professional French novelist and pedagogical expert. Generate a RICH, engaging, and detailed B1-level story in JSON format. '
-                      'The story MUST be long and immersive (at least 300-400 words total), divided into 4-6 pages. '
-                      'CRITICAL RULES: \n'
-                      '1. STORYTELLING: Write a real story with a beginning, middle, and end. Use descriptive language. \n'
-                      '2. INTEGRATION: Naturally weave the provided grammar points and vocabulary into the narrative. \n'
-                      '3. FORMATTING: Each page must have substantial text (70-100 words). Return as a list of "pages". \n'
-                      '4. ANNOTATIONS: Highlight at least 3-5 interesting grammar/vocab uses per page. \n'
-                      '5. LANGUAGE ENFORCEMENT: The story text MUST be in French. ALL annotations and explanations MUST be written in $targetLanguage. '
-                      'It is FORBIDDEN to use English if $targetLanguage is not English. \n'
-                      'Return a JSON object with: "title", "pages" (Array of {text, annotations}).'
-            },
-            {
-              'role': 'user',
-              'content': 'Write a B1 story using: \n'
-                  'Grammar: ${grammarTopics.join(', ')} \n'
-                  'Vocabulary/Lessons: ${lessonTopics.join(', ')} \n'
-                  'CRITICAL: ALL annotations and explanations MUST be in $targetLanguage.'
-            }
-          ],
-          'response_format': {'type': 'json_object'},
-          'temperature': 0.7,
-      });
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        return jsonDecode(data['choices'][0]['message']['content']);
-      } else {
-        throw Exception('Failed to generate AI Book: ${response.statusCode}');
-      }
-    } catch (e) {
-      debugPrint('Error generating AI Book: $e');
-      rethrow;
-    }
-  }
-
   // ── Generate lesson from multiple photos (Vision via Proxy) ────────────────
   static Future<Map<String, dynamic>> generateLessonFromImages(
     List<String> base64Images,

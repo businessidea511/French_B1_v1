@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../theme/app_theme.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../services/deepseek_service.dart';
+import '../../services/topic_context.dart';
 import '../../services/language_provider.dart';
 import '../../services/lessons_provider.dart';
 import '../../services/global_scroll_manager.dart';
@@ -9,6 +11,33 @@ import '../../services/global_scroll_manager.dart';
 class ExercisesPage extends StatefulWidget {
   final String? initialTopic;
   const ExercisesPage({super.key, this.initialTopic});
+
+  /// Drops malformed AI questions, removes duplicate options, shuffles the
+  /// options and re-points "correct" at the right one.
+  static List<Map<String, dynamic>> sanitize(List<Map<String, dynamic>> raw) {
+    final out = <Map<String, dynamic>>[];
+    for (final q in raw) {
+      final question = (q['question'] ?? '').toString().trim();
+      final rawOptions = q['options'];
+      final correct = q['correct'];
+      if (question.isEmpty || rawOptions is! List || correct is! num) continue;
+      final ci = correct.toInt();
+      if (ci < 0 || ci >= rawOptions.length) continue;
+      final correctText = rawOptions[ci].toString().trim();
+      final options = rawOptions.map((o) => o.toString().trim()).where((o) => o.isNotEmpty).toSet().toList()
+        ..shuffle();
+      if (options.length < 2 || !options.contains(correctText)) continue;
+      out.add({
+        ...q,
+        'question': question,
+        'options': options,
+        'correct': options.indexOf(correctText),
+        'explanation': (q['explanation'] ?? '').toString(),
+        'translation': q['translation']?.toString(),
+      });
+    }
+    return out;
+  }
 
   @override
   State<ExercisesPage> createState() => _ExercisesPageState();
@@ -20,12 +49,17 @@ class _ExercisesPageState extends State<ExercisesPage> {
   int score = 0;
   bool _isLoading = false;
   List<Map<String, dynamic>> questions = [];
+  final List<int> _chosen = []; // the option picked for each answered question
+  final Map<String, int> _best = {}; // best score (%) per topic, saved on this device
   final ScrollController _scrollController = ScrollController();
+
+  static const String _bestPrefix = 'exercise_best_';
 
   @override
   void initState() {
     super.initState();
     GlobalScrollManager.register(_scrollController);
+    _loadBestScores();
     if (widget.initialTopic != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _startAIExercises(widget.initialTopic!);
@@ -40,38 +74,49 @@ class _ExercisesPageState extends State<ExercisesPage> {
     super.dispose();
   }
 
+  Future<void> _loadBestScores() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final saved = {
+        for (final k in prefs.getKeys().where((k) => k.startsWith(_bestPrefix)))
+          k.substring(_bestPrefix.length): prefs.getInt(k) ?? 0,
+      };
+      if (mounted) setState(() => _best.addAll(saved));
+    } catch (e) {
+      debugPrint('Could not load best scores: $e');
+    }
+  }
+
+  Future<void> _saveBestScore(String topic, int percent) async {
+    if ((_best[topic] ?? -1) >= percent) return;
+    setState(() => _best[topic] = percent);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setInt('$_bestPrefix$topic', percent);
+    } catch (e) {
+      debugPrint('Could not save best score: $e');
+    }
+  }
+
   Future<void> _startAIExercises(String topic) async {
     setState(() {
       selectedTopic = topic;
       _isLoading = true;
       questions = [];
+      _chosen.clear();
     });
 
     try {
       final lp = Provider.of<LanguageProvider>(context, listen: false);
+      final topicContent = topic == 'mixed_review'
+          ? null
+          : TopicContext.forTitle(Provider.of<LessonsProvider>(context, listen: false), topic);
       final aiQuestions = await DeepSeekService.generateExercises(
-          topic, 'B1', lp.currentLanguage.englishName);
+          topic, 'B1', lp.currentLanguage.englishName,
+          topicContent: topicContent);
 
-      // Shuffle and sanitize questions
-      final sanitizedQuestions = aiQuestions.map((q) {
-        final List<String> options = List<String>.from(q['options']);
-        final String correctText = options[q['correct']];
-
-        // 1. Deduplicate (rare but possible with AI)
-        final uniqueOptions = options.toSet().toList();
-
-        // 2. Shuffle
-        uniqueOptions.shuffle();
-
-        // 3. Find new correct index
-        final newCorrectIndex = uniqueOptions.indexOf(correctText);
-
-        return {
-          ...q,
-          'options': uniqueOptions,
-          'correct': newCorrectIndex,
-        };
-      }).toList();
+      final sanitizedQuestions = ExercisesPage.sanitize(aiQuestions);
+      if (sanitizedQuestions.isEmpty) throw Exception('No usable questions');
 
       if (mounted) {
         setState(() {
@@ -262,9 +307,13 @@ class _ExercisesPageState extends State<ExercisesPage> {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        'Generate 10 dynamic exercises',
+                        _best.containsKey(title)
+                            ? 'Best: ${_best[title]}% · 10 new questions each time'
+                            : '10 new questions each time',
                         style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.4),
+                          color: _best.containsKey(title)
+                              ? ((_best[title] ?? 0) >= 70 ? AppTheme.success : AppTheme.warning)
+                              : Colors.white.withValues(alpha: 0.4),
                           fontSize: 13,
                         ),
                       ),
@@ -316,9 +365,12 @@ class _ExercisesPageState extends State<ExercisesPage> {
                 color: AppTheme.textTertiary),
           ),
           const SizedBox(height: 16),
-          Text(
-            question['question'],
-            style: Theme.of(context).textTheme.headlineMedium,
+          Directionality(
+            textDirection: TextDirection.ltr,
+            child: Text(
+              question['question'],
+              style: Theme.of(context).textTheme.headlineMedium,
+            ),
           ),
           if (question['translation'] != null) ...[
             const SizedBox(height: 12),
@@ -350,9 +402,12 @@ class _ExercisesPageState extends State<ExercisesPage> {
                   padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
                   alignment: Alignment.centerLeft,
                 ),
-                child: Text(
-                  question['options'][index],
-                  style: const TextStyle(fontSize: 16),
+                child: Directionality(
+                  textDirection: TextDirection.ltr,
+                  child: Text(
+                    question['options'][index],
+                    style: const TextStyle(fontSize: 16),
+                  ),
                 ),
               ),
             ),
@@ -364,6 +419,8 @@ class _ExercisesPageState extends State<ExercisesPage> {
 
   void _answerQuestion(int selected, int correct) {
     final isCorrect = selected == correct;
+    final correctText = (questions[currentQuestion]['options'] as List)[correct].toString();
+    _chosen.add(selected);
 
     if (isCorrect) {
       setState(() => score++);
@@ -399,6 +456,14 @@ class _ExercisesPageState extends State<ExercisesPage> {
                 ),
               ],
             ),
+            if (!isCorrect) ...[
+              const SizedBox(height: 12),
+              Directionality(
+                textDirection: TextDirection.ltr,
+                child: Text('✅ $correctText',
+                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.success)),
+              ),
+            ],
             const SizedBox(height: 16),
             const Text(
               'EXPLICATION',
@@ -411,7 +476,7 @@ class _ExercisesPageState extends State<ExercisesPage> {
             ),
             const SizedBox(height: 8),
             Text(
-              questions[currentQuestion]['explanation'],
+              questions[currentQuestion]['explanation'] ?? '',
               style: const TextStyle(fontSize: 16, height: 1.5, color: Colors.white),
             ),
             const SizedBox(height: 32),
@@ -419,8 +484,11 @@ class _ExercisesPageState extends State<ExercisesPage> {
               onPressed: () {
                 Navigator.pop(context);
                 setState(() => currentQuestion++);
+                if (currentQuestion >= questions.length && selectedTopic != null) {
+                  _saveBestScore(selectedTopic!, (score / questions.length * 100).round());
+                }
               },
-              child: const Text('Next Question'),
+              child: Text(currentQuestion + 1 >= questions.length ? 'See my results' : 'Next Question'),
             ),
           ],
         ),
@@ -431,7 +499,13 @@ class _ExercisesPageState extends State<ExercisesPage> {
   Widget _buildResults() {
     final percentage = (score / questions.length * 100).round();
 
-    return Center(
+    final mistakes = [
+      for (var i = 0; i < questions.length && i < _chosen.length; i++)
+        if (_chosen[i] != questions[i]['correct']) i
+    ];
+
+    return SingleChildScrollView(
+      controller: _scrollController,
       child: Padding(
         padding: const EdgeInsets.all(32),
         child: Column(
@@ -484,13 +558,59 @@ class _ExercisesPageState extends State<ExercisesPage> {
                 Expanded(
                   child: ElevatedButton(
                     onPressed: () => _startAIExercises(selectedTopic!),
-                    child: const Text('Retry Quiz'),
+                    child: const Text('New Questions'),
                   ),
                 ),
               ],
             ),
+            if (mistakes.isNotEmpty) ...[
+              const SizedBox(height: 40),
+              Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: Text('Review your mistakes (${mistakes.length})',
+                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+              ),
+              const SizedBox(height: 12),
+              for (final i in mistakes) _buildMistakeReview(i),
+            ],
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildMistakeReview(int i) {
+    final q = questions[i];
+    final options = q['options'] as List;
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppTheme.surface,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Directionality(
+            textDirection: TextDirection.ltr,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('${i + 1}. ${q['question']}', style: const TextStyle(color: Colors.white, fontSize: 16)),
+                const SizedBox(height: 8),
+                Text('❌ ${options[_chosen[i]]}', style: const TextStyle(color: AppTheme.error)),
+                Text('✅ ${options[q['correct']]}',
+                    style: const TextStyle(color: AppTheme.success, fontWeight: FontWeight.bold)),
+              ],
+            ),
+          ),
+          if ((q['explanation'] ?? '').toString().isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Text(q['explanation'], style: const TextStyle(color: AppTheme.textSecondary, fontSize: 14, height: 1.4)),
+          ],
+        ],
       ),
     );
   }
