@@ -296,6 +296,7 @@ class _FlashcardsPageState extends State<FlashcardsPage> {
                   children: [
                     Text(
                       '${_roundNumber > 1 ? 'Review · ' : ''}${_index + 1} / ${_round.length}',
+                      textDirection: TextDirection.ltr,
                       style: TextStyle(fontWeight: FontWeight.bold, color: AppTheme.textTertiary),
                     ),
                     const SizedBox(height: 6),

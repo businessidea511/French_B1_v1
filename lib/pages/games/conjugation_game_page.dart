@@ -202,7 +202,7 @@ class _ConjugationGamePageState extends State<ConjugationGamePage> with SingleTi
       children: [
         Row(
           children: [
-            Text('$_round / $_rounds', style: TextStyle(color: AppTheme.textTertiary, fontWeight: FontWeight.bold)),
+            Text('$_round / $_rounds', textDirection: TextDirection.ltr, style: TextStyle(color: AppTheme.textTertiary, fontWeight: FontWeight.bold)),
             const Spacer(),
             if (_combo >= 2)
               Container(
@@ -211,7 +211,7 @@ class _ConjugationGamePageState extends State<ConjugationGamePage> with SingleTi
                 child: Text('🔥 ×${min(_combo, 3)}', style: TextStyle(color: AppTheme.onColor, fontWeight: FontWeight.bold)),
               ),
             const SizedBox(width: 10),
-            Text('$_score pts', style: TextStyle(color: AppTheme.warning, fontSize: 18, fontWeight: FontWeight.w900)),
+            Text('$_score pts', textDirection: TextDirection.ltr, style: TextStyle(color: AppTheme.warning, fontSize: 18, fontWeight: FontWeight.w900)),
           ],
         ),
         const SizedBox(height: 10),
@@ -329,7 +329,7 @@ class _ConjugationGamePageState extends State<ConjugationGamePage> with SingleTi
               style: TextStyle(fontSize: 40, fontWeight: FontWeight.w900, color: AppTheme.warning)),
         ),
         Center(
-          child: Text('$_correct / $_rounds · ${_newRecord ? tr(context, 'New record!') : tr(context, 'Record: {n}', {'n': ProgressService.instance.recordOf(_recordKey)})}',
+          child: Text('$_correct / $_rounds · ${_newRecord ? tr(context, 'New record!') : tr(context, 'Record: {n}', {'n': ProgressService.instance.recordOf(_recordKey)})}', textDirection: TextDirection.ltr,
               style: TextStyle(color: AppTheme.textSecondary, fontSize: 16)),
         ),
         if (_misses.isNotEmpty) ...[

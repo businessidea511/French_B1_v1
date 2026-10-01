@@ -228,7 +228,7 @@ class _MeTabState extends State<MeTab> {
                           ),
                         ),
                         const SizedBox(height: 4),
-                        Text('${p.totalXp % 100} / 100 XP', style: TextStyle(color: AppTheme.textTertiary)),
+                        Text('${p.totalXp % 100} / 100 XP', textDirection: TextDirection.ltr, style: TextStyle(color: AppTheme.textTertiary)),
                       ],
                     ),
                   ),

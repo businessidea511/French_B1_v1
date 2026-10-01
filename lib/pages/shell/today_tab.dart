@@ -92,6 +92,7 @@ class _TodayTabState extends State<TodayTab> {
                       blendMode: BlendMode.srcIn,
                       shaderCallback: (r) => AppTheme.primaryGradient.createShader(r),
                       child: Text(_greeting(),
+                          textDirection: TextDirection.ltr, // French: "Bonsoir !" also in Arabic mode
                           style: TextStyle(fontSize: 34, fontWeight: FontWeight.w900, color: AppTheme.textPrimary)),
                     ),
                     Text('${_days[now.weekday - 1]} ${now.day} ${_months[now.month - 1]}',
@@ -211,7 +212,7 @@ class _TodayTabState extends State<TodayTab> {
               children: [
                 Text(done ? '🏆' : '${p.todayXp}',
                     style: TextStyle(fontSize: 28, fontWeight: FontWeight.w900, color: AppTheme.textPrimary)),
-                Text('/ ${p.dailyGoal} XP', style: TextStyle(color: AppTheme.textTertiary, fontSize: 12)),
+                Text('/ ${p.dailyGoal} XP', textDirection: TextDirection.ltr, style: TextStyle(color: AppTheme.textTertiary, fontSize: 12)),
               ],
             ),
           ),

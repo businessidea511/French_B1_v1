@@ -184,7 +184,8 @@ Return JSON: {"reply": "...", "correction": "", "explanation": "", "done": false
       });
       if (reply.isNotEmpty) TtsService.instance.speak(reply);
       _scrollDown();
-    } catch (e) {
+    } catch (e, stack) {
+      debugPrint('Role-play reply failed: $e $stack');
       if (!mounted) return;
       setState(() {
         _messages.remove(mine);

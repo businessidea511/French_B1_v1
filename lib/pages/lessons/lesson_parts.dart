@@ -51,6 +51,10 @@ typedef PartBuilder = List<Widget> Function(List<dynamic> widgets);
 
 String _doneKey(LessonTopic topic) => 'lesson_parts_done_${topic.id}';
 
+/// Bumped whenever a part is marked done, so the overview updates even when
+/// the learner went from part to part (pages replaced, not popped).
+final _partsChanged = ValueNotifier<int>(0);
+
 /// The list of parts on the lesson's first page, with what is already done.
 class LessonPartsList extends StatefulWidget {
   final LessonTopic topic;
@@ -70,9 +74,17 @@ class _LessonPartsListState extends State<LessonPartsList> {
   void initState() {
     super.initState();
     _load();
+    _partsChanged.addListener(_load);
+  }
+
+  @override
+  void dispose() {
+    _partsChanged.removeListener(_load);
+    super.dispose();
   }
 
   Future<void> _load() async {
+    if (!mounted) return;
     try {
       final prefs = await SharedPreferences.getInstance();
       final done = prefs.getStringList(_doneKey(widget.topic)) ?? const [];
@@ -87,7 +99,7 @@ class _LessonPartsListState extends State<LessonPartsList> {
         builder: (_) => LessonPartPage(topic: widget.topic, parts: widget.parts, index: index, buildPart: widget.buildPart),
       ),
     );
-    _load();
+    if (mounted) _load();
   }
 
   @override
@@ -208,6 +220,7 @@ class _LessonPartPageState extends State<LessonPartPage> {
       final title = widget.parts[widget.index].title;
       if (done.add(title)) {
         await prefs.setStringList(key, done.toList());
+        _partsChanged.value++;
         ProgressService.instance.addXp(3);
       }
     } catch (_) {}

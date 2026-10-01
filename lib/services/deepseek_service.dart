@@ -75,15 +75,23 @@ class DeepSeekService {
   /// Sends a JSON-mode request through the proxy and returns the decoded object.
   /// [thinking] turns on DeepSeek's slower reasoning mode; if that request fails
   /// it is retried once without thinking.
+  ///
+  /// DeepSeek's JSON mode sometimes answers with nothing but spaces for some
+  /// prompts; then the request is sent once more in normal mode, asking for the
+  /// JSON object only.
   static Future<Map<String, dynamic>> chatJson(
     List<Map<String, dynamic>> messages, {
     bool thinking = false,
     double? temperature,
     int? maxTokens,
+    bool jsonMode = true,
   }) async {
     final response = await _chat({
-      'messages': messages,
-      'response_format': {'type': 'json_object'},
+      'messages': [
+        ...messages,
+        if (!jsonMode) {'role': 'system', 'content': 'Answer with ONLY the JSON object, nothing else.'},
+      ],
+      if (jsonMode) 'response_format': {'type': 'json_object'},
       if (thinking) 'thinking': true,
       if (temperature != null) 'temperature': temperature,
       if (maxTokens != null) 'max_tokens': maxTokens,
@@ -91,7 +99,7 @@ class DeepSeekService {
     if (response.statusCode != 200) {
       if (thinking) {
         debugPrint('Thinking request failed (${response.statusCode}); retrying without thinking');
-        return chatJson(messages, temperature: temperature, maxTokens: maxTokens);
+        return chatJson(messages, temperature: temperature, maxTokens: maxTokens, jsonMode: jsonMode);
       }
       throw Exception('AI request failed: ${ApiClient.errorMessage(response)}');
     }
@@ -99,12 +107,28 @@ class DeepSeekService {
     if (choice['finish_reason'] == 'length') {
       throw Exception('The AI answer was cut off because it was too long.');
     }
-    final content = (choice['message']['content'] ?? '')
-        .toString()
-        .replaceAll('```json', '')
-        .replaceAll('```', '')
-        .trim();
-    return Map<String, dynamic>.from(jsonDecode(content));
+    final decoded = _decodeJsonObject('${choice['message']['content'] ?? ''}');
+    if (decoded != null) return decoded;
+    if (jsonMode) {
+      debugPrint('Blank or invalid JSON answer; retrying in normal mode');
+      return chatJson(messages, thinking: thinking, temperature: temperature, maxTokens: maxTokens, jsonMode: false);
+    }
+    throw const FormatException('The AI did not answer with JSON.');
+  }
+
+  /// The JSON object in an AI answer (also inside ``` fences or extra text), or null.
+  static Map<String, dynamic>? _decodeJsonObject(String content) {
+    final text = content.replaceAll('```json', '').replaceAll('```', '').trim();
+    if (text.isEmpty) return null;
+    final start = text.indexOf('{');
+    final end = text.lastIndexOf('}');
+    for (final candidate in [text, if (start >= 0 && end > start) text.substring(start, end + 1)]) {
+      try {
+        final value = jsonDecode(candidate);
+        if (value is Map) return Map<String, dynamic>.from(value);
+      } catch (_) {}
+    }
+    return null;
   }
 
   /// Reads French textbook photos with DeepSeek vision and returns a structured
@@ -738,7 +762,7 @@ JSON: {"flashcards": [{"front": "...", "back": "...", "example": "...", "tip": "
     }.toList();
 
     final leftover = <String>[];
-    if (missing.isNotEmpty && TranslationStore.serverAvailable) {
+    if (missing.isNotEmpty && TranslationStore.useServer) {
       await Future.wait([
         for (final chunk in TranslationStore.chunks(missing))
           () async {

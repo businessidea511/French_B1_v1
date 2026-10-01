@@ -156,7 +156,7 @@ class _ExerciseBlockState extends State<ExerciseBlock> {
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
               ),
               if (_gradable > 0)
-                Text('$_score / $_gradable',
+                Text('$_score / $_gradable', textDirection: TextDirection.ltr,
                     style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 15)),
             ],
           ),

@@ -155,7 +155,7 @@ class _DicteePageState extends State<DicteePage> {
       children: [
         Row(
           children: [
-            Text('${_index + 1} / ${_sentences.length}',
+            Text('${_index + 1} / ${_sentences.length}', textDirection: TextDirection.ltr,
                 style: TextStyle(color: AppTheme.textTertiary, fontWeight: FontWeight.bold)),
             const Spacer(),
             if (_scores.isNotEmpty) Text(tr(context, 'Average: {n} %', {'n': _average}), style: TextStyle(color: AppTheme.warning)),
@@ -284,7 +284,7 @@ class _DicteePageState extends State<DicteePage> {
         const SizedBox(height: 10),
         Center(child: Floating(child: Text(_average >= 80 ? '🏆' : '💪', style: const TextStyle(fontSize: 80)))),
         Center(
-          child: Text('$_average %', style: TextStyle(fontSize: 46, fontWeight: FontWeight.w900, color: AppTheme.warning)),
+          child: Text('$_average %', textDirection: TextDirection.ltr, style: TextStyle(fontSize: 46, fontWeight: FontWeight.w900, color: AppTheme.warning)),
         ),
         Center(child: Text(tr(context, 'success'), style: TextStyle(color: AppTheme.textSecondary))),
         const SizedBox(height: 24),

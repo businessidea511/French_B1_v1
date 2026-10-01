@@ -119,6 +119,7 @@ async function supabaseRest(path, { method = 'GET', body, prefer } = {}) {
 }
 
 module.exports = {
+  isAllowedOrigin,
   handleCors,
   rateLimited,
   issueAdminToken,

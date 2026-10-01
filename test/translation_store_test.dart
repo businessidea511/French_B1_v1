@@ -99,5 +99,10 @@ void main() {
     await tester.tap(find.text('Next part').last);
     await tester.pumpAndSettle();
     expect(find.text('Part 3 of 4'), findsOneWidget);
+
+    // Back on the overview, both visited parts are ticked.
+    await tester.tap(find.byIcon(Icons.arrow_back));
+    await tester.pumpAndSettle();
+    expect(find.text('2 / 4 parts done'), findsOneWidget);
   });
 }

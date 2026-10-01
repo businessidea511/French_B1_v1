@@ -72,11 +72,20 @@ class TranslationStore {
   /// False once the server says the shared store is not set up (SQL not run).
   static bool serverAvailable = true;
   static final Map<String, Future<void>> _downloads = {};
+  static DateTime? _offlineUntil; // after a failed request, wait before trying the server again
+
+  static bool get _serverReachable =>
+      serverAvailable && (_offlineUntil == null || DateTime.now().isAfter(_offlineUntil!));
+
+  /// True when missing texts should go to the server (not set up / unreachable → on the device).
+  static bool get useServer => _serverReachable;
+
+  static void _serverFailed() => _offlineUntil = DateTime.now().add(const Duration(minutes: 1));
 
   /// Downloads every shared translation of [language] (once per session).
   static Future<void> loadLanguage(String language) {
     final code = codeFor(language);
-    if (code == null || !serverAvailable) return Future.value();
+    if (code == null || !_serverReachable) return Future.value();
     return _downloads.putIfAbsent(code, () => _download(code));
   }
 
@@ -95,6 +104,7 @@ class TranslationStore {
       _dropOldCache();
     } catch (e) {
       debugPrint('Shared translations not loaded ($code): $e');
+      _serverFailed();
       _downloads.remove(code); // try again later
     }
   }
@@ -114,12 +124,18 @@ class TranslationStore {
   /// Translates [texts] (at most 30, already missing) on the server, which saves
   /// them for everyone. Returns null for a text it could not translate.
   static Future<List<String?>> translateOnServer(List<String> texts, String code, {String? adminToken}) async {
-    final response = await ApiClient.post(
-      '/api/translate',
-      {'lang': code, 'texts': texts},
-      bearerToken: adminToken,
-      timeout: const Duration(seconds: 90),
-    );
+    final http.Response response;
+    try {
+      response = await ApiClient.post(
+        '/api/translate',
+        {'lang': code, 'texts': texts},
+        bearerToken: adminToken,
+        timeout: const Duration(seconds: 90),
+      );
+    } catch (e) {
+      _serverFailed();
+      rethrow;
+    }
     if (response.statusCode == 503 || response.statusCode == 404) serverAvailable = false;
     if (response.statusCode != 200) throw Exception('translate: ${ApiClient.errorMessage(response)}');
     final items = (jsonDecode(response.body) as Map)['items'];

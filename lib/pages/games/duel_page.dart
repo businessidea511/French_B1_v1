@@ -364,7 +364,7 @@ class _DuelPageState extends State<DuelPage> {
           children: [
             Text('Code $_code', style: TextStyle(color: AppTheme.textTertiary, letterSpacing: 2)),
             const Spacer(),
-            Text('⏱ ${_seconds}s   ✓ $_correct', style: TextStyle(color: AppTheme.warning, fontWeight: FontWeight.bold)),
+            Text('⏱ ${_seconds}s   ✓ $_correct', textDirection: TextDirection.ltr, style: TextStyle(color: AppTheme.warning, fontWeight: FontWeight.bold)),
           ],
         ),
         const SizedBox(height: 8),
@@ -436,10 +436,10 @@ class _DuelPageState extends State<DuelPage> {
       children: [
         Center(child: Floating(child: Text(_correct >= 8 ? '🏆' : '⚔️', style: const TextStyle(fontSize: 72)))),
         Center(
-          child: Text('$_score pts',
+          child: Text('$_score pts', textDirection: TextDirection.ltr,
               style: TextStyle(fontSize: 42, fontWeight: FontWeight.w900, color: AppTheme.warning)),
         ),
-        Center(child: Text('$_correct / 10 · ${_seconds}s', style: TextStyle(color: AppTheme.textSecondary))),
+        Center(child: Text('$_correct / 10 · ${_seconds}s', textDirection: TextDirection.ltr, style: TextStyle(color: AppTheme.textSecondary))),
         const SizedBox(height: 16),
         if (myRank >= 0) ...[
           const SizedBox(height: 4),
@@ -473,9 +473,9 @@ class _DuelPageState extends State<DuelPage> {
                     Text(i < 3 ? ['🥇', '🥈', '🥉'][i] : '${i + 1}.', style: const TextStyle(fontSize: 24)),
                     const SizedBox(width: 12),
                     Expanded(child: Text('${row['name']}', style: TextStyle(color: AppTheme.textPrimary, fontSize: 17))),
-                    Text('${row['score']} pts', style: TextStyle(color: AppTheme.warning, fontWeight: FontWeight.bold)),
+                    Text('${row['score']} pts', textDirection: TextDirection.ltr, style: TextStyle(color: AppTheme.warning, fontWeight: FontWeight.bold)),
                     const SizedBox(width: 10),
-                    Text('${row['correct']}/10 · ${row['seconds']}s', style: TextStyle(color: AppTheme.textTertiary)),
+                    Text('${row['correct']}/10 · ${row['seconds']}s', textDirection: TextDirection.ltr, style: TextStyle(color: AppTheme.textTertiary)),
                   ],
                 ),
               ),

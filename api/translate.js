@@ -6,7 +6,7 @@
 //        never translations, so nobody can put a wrong translation in the table.
 // <hash> = first 16 hex characters of sha1(text), computed the same way in the app.
 const crypto = require('crypto');
-const { handleCors, rateLimited, isAdmin, supabaseRest } = require('./_lib');
+const { handleCors, isAllowedOrigin, rateLimited, isAdmin, supabaseRest } = require('./_lib');
 
 const LANGUAGES = {
   fr: 'French',
@@ -42,7 +42,17 @@ async function listAll(lang) {
   return items;
 }
 
+// DeepSeek's JSON mode sometimes answers with only spaces; then ask again in normal mode.
 async function deepseek(texts, language) {
+  try {
+    return await deepseekOnce(texts, language, true);
+  } catch (e) {
+    if (!/JSON|items/.test(e.message)) throw e;
+    return deepseekOnce(texts, language, false);
+  }
+}
+
+async function deepseekOnce(texts, language, jsonMode) {
   const apiKey = process.env.DEEPSEEK_API_KEY;
   if (!apiKey) throw new Error('DEEPSEEK_API_KEY is not configured');
   const response = await fetch('https://api.deepseek.com/chat/completions', {
@@ -53,7 +63,7 @@ async function deepseek(texts, language) {
       thinking: { type: 'disabled' },
       temperature: 0.2,
       max_tokens: 16384,
-      response_format: { type: 'json_object' },
+      ...(jsonMode ? { response_format: { type: 'json_object' } } : {}),
       messages: [
         {
           role: 'system',
@@ -65,18 +75,26 @@ async function deepseek(texts, language) {
             'Natural and clear. Keep the same number and order of items. Return JSON: {"items": ["...", "..."]}',
         },
         { role: 'user', content: JSON.stringify({ items: texts }) },
+        ...(jsonMode ? [] : [{ role: 'system', content: 'Answer with ONLY the JSON object, nothing else.' }]),
       ],
     }),
   });
   if (!response.ok) throw new Error(`DeepSeek failed (${response.status})`);
   const data = await response.json();
   const content = String(data.choices?.[0]?.message?.content || '').replace(/```json|```/g, '').trim();
-  const items = JSON.parse(content).items;
+  const start = content.indexOf('{');
+  const end = content.lastIndexOf('}');
+  if (start < 0 || end <= start) throw new Error('DeepSeek returned no JSON');
+  const items = JSON.parse(content.slice(start, end + 1)).items;
   if (!Array.isArray(items) || items.length !== texts.length) throw new Error('DeepSeek returned a wrong number of items');
   return items.map((t) => (typeof t === 'string' && t.trim() ? t.trim() : null));
 }
 
 async function handleGet(req, res) {
+  if (isAllowedOrigin(req.headers.origin)) {
+    res.setHeader('Access-Control-Allow-Origin', req.headers.origin);
+    res.setHeader('Vary', 'Origin');
+  }
   const lang = String(req.query.lang || '');
   if (!LANGUAGES[lang]) return res.status(400).json({ error: 'unknown language' });
   if (rateLimited(req, 'translate-get', 30, 60_000)) return res.status(429).json({ error: 'Too many requests' });
