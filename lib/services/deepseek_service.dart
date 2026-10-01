@@ -6,6 +6,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'api_client.dart';
 
 class DeepSeekService {
+  /// Language of the explanations stored in lessons and grammar topics. French
+  /// stays French; TranslatedText translates these explanations into each
+  /// learner's chosen language on screen, so stored content must use this one.
+  static const String contentLanguage = 'English';
+
   static final Map<String, String> _memoryCache = {};
 
   static Future<void> clearCache() async {
@@ -22,6 +27,41 @@ class DeepSeekService {
   /// holds the DeepSeek key and picks the model. The response body is DeepSeek's.
   static Future<http.Response> _chat(Map<String, dynamic> body) =>
       ApiClient.post('/api/ai', body);
+
+  /// Sends a JSON-mode request through the proxy and returns the decoded object.
+  /// [thinking] turns on DeepSeek's slower reasoning mode; if that request fails
+  /// it is retried once without thinking.
+  static Future<Map<String, dynamic>> chatJson(
+    List<Map<String, dynamic>> messages, {
+    bool thinking = false,
+    double? temperature,
+    int? maxTokens,
+  }) async {
+    final response = await _chat({
+      'messages': messages,
+      'response_format': {'type': 'json_object'},
+      if (thinking) 'thinking': true,
+      if (temperature != null) 'temperature': temperature,
+      if (maxTokens != null) 'max_tokens': maxTokens,
+    });
+    if (response.statusCode != 200) {
+      if (thinking) {
+        debugPrint('Thinking request failed (${response.statusCode}); retrying without thinking');
+        return chatJson(messages, temperature: temperature, maxTokens: maxTokens);
+      }
+      throw Exception('AI request failed: ${ApiClient.errorMessage(response)}');
+    }
+    final choice = jsonDecode(response.body)['choices'][0];
+    if (choice['finish_reason'] == 'length') {
+      throw Exception('The AI answer was cut off because it was too long.');
+    }
+    final content = (choice['message']['content'] ?? '')
+        .toString()
+        .replaceAll('```json', '')
+        .replaceAll('```', '')
+        .trim();
+    return Map<String, dynamic>.from(jsonDecode(content));
+  }
 
   /// Reads French textbook photos with DeepSeek vision and returns a structured
   /// text extraction. Returns a string starting with "ERROR" on failure.
@@ -42,7 +82,7 @@ For EACH image, extract:
 1. **Vocabulary Lists**: Every French word/phrase with its category (e.g., "les symptômes", "les médicaments", "les parties du corps", "les accessoires")
 2. **Medical/Health Items**: If health-related, list ALL items with their French names (e.g., "un thermomètre", "des pansements", "un masque", "des ciseaux")
 3. **Grammar Points**: Any grammar rules, conjugations, or structures shown
-4. **Exercises**: Questions, fill-in-the-blank, comprehension questions
+4. **Exercises**: EVERY exercise on the page, transcribed COMPLETELY (see format below)
 5. **Mind Maps**: If there's a vocabulary mind map, list ALL categories and their items
 
 FORMAT your response as a structured extraction:
@@ -51,8 +91,20 @@ Category: [category name]
 - French word/phrase (with article if noun)
 ...
 
+---GRAMMAR---
+- Each rule, formation pattern or conjugation shown, exactly as printed
+...
+
 ---EXERCISES---
-- Exercise description and content
+For EACH exercise:
+Exercise [number or letter]: [the printed instruction, word for word]
+Type: [fill-in-the-blank / multiple choice / true-false / matching / conjugate / reorder / answer the question / free writing]
+Items:
+1. [the full sentence or question, with each blank written as ___ ; include any word or verb given in brackets]
+   Options: [the printed choices, if any]
+2. ...
+Answer key: [only if answers are printed or clearly written on the page; otherwise write "none"]
+Transcribe EVERY item. Never summarise or skip items.
 ...
 
 ---NOTES---
@@ -76,7 +128,7 @@ Be EXHAUSTIVE for printed content. Transcribe French text EXACTLY as written.'''
           }
         ],
         'temperature': 0.2,
-        'max_tokens': 4096,
+        'max_tokens': 8000,
       });
 
       if (response.statusCode == 200) {
@@ -93,6 +145,43 @@ Be EXHAUSTIVE for printed content. Transcribe French text EXACTLY as written.'''
       return 'ERROR: DeepSeek vision request failed: $e';
     }
   }
+
+  /// Rules shared by every "content from photos" prompt: keep the main points,
+  /// and turn the page's exercises into interactive "exercise" widgets.
+  static String photoContentRules(String targetLanguage) => '''
+══════════════════════════════════════════
+  PHOTO CONTENT RULES
+══════════════════════════════════════════
+A. MAIN POINTS, NOT A COPY: Teach what the page teaches. Extract the key rules, key vocabulary and
+   useful phrases, explained simply for a beginner. Do not pad with content that is not on the page,
+   except short explanations and examples needed to understand it.
+B. KEEP THE BOOK'S FRENCH: vocabulary, example sentences and exercise sentences stay exactly as printed.
+C. EXERCISES ARE MANDATORY: if the page contains exercises, EVERY exercise becomes one "exercise" widget,
+   placed after the explanation it practises. Keep ALL items; never drop or invent items.
+${exerciseWidgetRules(targetLanguage)}D. IGNORE handwritten Arabic notes. NO META-TALK. Explanations in $targetLanguage, French stays French.
+''';
+
+  /// Format of the interactive "exercise" lesson widget, for any prompt that
+  /// asks the AI to write exercises.
+  static String exerciseWidgetRules(String targetLanguage) => '''
+EXERCISE WIDGET FORMAT:
+   {"type": "exercise",
+    "title": "Exercice 1 – short name in French",
+    "instruction": "What the student must do, in $targetLanguage",
+    "items": [ ...one object per item... ]}
+   Item kinds — choose per item:
+   • Fill-in / conjugate / transform / reorder → {"question": "Hier, nous ___ (aller) au cinéma.", "answer": "sommes allés", "alternatives": ["sommes allées"], "explanation": "..."}
+       - Keep the blank as ___ and keep any hint in brackets.
+       - "answer" is ONLY the text that fills the blank (or the full rewritten sentence for transform/reorder).
+       - "alternatives" lists other correct answers (gender variants, contractions); use [] if none.
+   • Multiple choice / true-false → {"question": "...", "options": ["...", "..."], "correct": 0, "explanation": "..."}
+       - true-false options: ["Vrai", "Faux"]. "correct" is the 0-based index.
+   • Matching → turn each pair into a multiple-choice item whose options are the possible matches.
+   • Open question / free writing → {"question": "...", "model_answer": "a short B1-level model answer in French"}
+   "explanation" is 1–2 sentences in $targetLanguage saying why the answer is right.
+ANSWERS: use the answer key from the page when given. Otherwise solve each item yourself and
+   double-check it — a wrong answer key is worse than none.
+''';
 
   /// Returns topic-specific AI guidance to ensure exercises are clear, complete, and unambiguous.
   static String _buildTopicGuidance(String topic, String targetLanguage) {
@@ -914,129 +1003,6 @@ EXPLANATIONS in $targetLanguage. French terms stay in French.'''            },
   }
 
   // Generate a full grammar guide from a topic or PDF text
-  static Future<Map<String, dynamic>> generateFullGrammar(
-      String topic, String targetLanguage,
-      {String? pdfText}) async {
-    try {
-      final response = await _chat({
-          'messages': [
-            {
-              'role': 'system',
-              'content': '''ROLE: You are an expert, Professional Belgian French Grammar Professor teaching B1 French to $targetLanguage speakers who are COMPLETE BEGINNERS. Think of your students as "dummies" who know NOTHING — explain every grammar concept from absolute zero, as clearly and simply as possible.
-GOAL: Write a COMPLETE, EXHAUSTIVE, TEXTBOOK-QUALITY grammar guide. This must read like a full chapter from a professional French grammar textbook — not a quick overview.
-AUDIENCE: Total beginners who need everything explained step by step, with analogies, examples for every rule, and zero assumptions.
-
-══════════════════════════════════════════
-  RULE 1 — DEPTH & COMPLETENESS (CRITICAL)
-══════════════════════════════════════════
-The "widgets" array MUST contain between 15 and 25 widgets. A short guide is a FAILED guide.
-Before finishing, mentally check this COMPLETENESS CHECKLIST:
-✅ Did I explain WHAT this grammar concept is (introduction with analogy)?
-✅ Did I explain WHEN to use it (context and triggers)?
-✅ Did I explain HOW to form it (step-by-step formation with formula)?
-✅ Did I provide a FULL conjugation table (for verb-based topics)?
-✅ Did I cover ALL irregular forms or exceptions?
-✅ Did I give at least 6 real sentence examples (example widgets)?
-✅ Did I explain the most common mistakes learners make?
-✅ Did I give a memory trick or mnemonic to help recall the rule?
-✅ Did I contrast this concept with a similar/confusable one if relevant?
-If ANY of these are missing, ADD more widgets until all are covered.
-
-══════════════════════════════════════════
-  RULE 2 — WIDGET VARIETY (MANDATORY)
-══════════════════════════════════════════
-- "section_title": Use at least 5 section titles to organize the guide.
-- "text": Minimum 2 sentences per text widget. Use simple, clear language with analogies.
-- "tipbox" (purple): For core grammar formulas — write the full structure clearly (e.g., "Subject + avoir/être + past participle").
-- "tipbox" (yellow): For learning tips and memory tricks.
-- "tipbox" (red): For common errors and what NOT to do.
-- "french_tipbox" (green): For conjugation groups, verb lists, or step-by-step formation.
-- "french_tipbox" (red): For irregular verbs or exception lists.
-- "table": MANDATORY for verb conjugations — show ALL 6 pronouns (je, tu, il/elle, nous, vous, ils/elles) with full conjugated forms.
-- "example": MINIMUM 6 example widgets. Each must be a real, natural French sentence with a clear translation.
-
-══════════════════════════════════════════
-  RULE 3 — BELGIAN CONTEXT (STRICT)
-══════════════════════════════════════════
-Belgian references are ONLY allowed when they are DIRECTLY RELEVANT to the grammar topic being taught.
-
-🚫 FORBIDDEN — Do NOT add Belgian notes for these grammar topics:
-   - Verb tenses (présent, passé composé, imparfait, plus-que-parfait, futur, conditionnel, subjonctif)
-   - Object pronouns (COD, COI, en, y)
-   - Relative pronouns (qui, que, dont, où)
-   - Negation forms (ne...pas, ne...jamais, etc.)
-   - Passive voice, adjective agreement, articles, prepositions (général)
-   - Any grammar topic where Belgian vocabulary is NOT the subject being taught
-   The phrase "En Belgique, on dit septante" is STRICTLY BANNED unless the grammar guide is specifically and ONLY about NUMBERS.
-   Do NOT end grammar guides with a generic Belgian cultural note just to seem relevant.
-
-✅ ALLOWED — Add a Belgian note ONLY when the grammar topic explicitly involves:
-   - Numbers (septante/nonante are genuinely part of the lesson)
-   - Meals/food vocabulary (déjeuner vs dîner vs souper Belgian distinction)
-   - Belgian institutions or administrative procedures (when that IS the topic)
-   - Politeness registers specific to Belgian culture (when teaching formal/informal speech)
-
-All sentence examples must use Belgian cities and contexts (Bruxelles, Liège, Gand, Namur, Bruges) — never Paris.
-
-══════════════════════════════════════════
-  RULE 4 — EXPLAIN LIKE FOR DUMMIES
-══════════════════════════════════════════
-- Start with a simple real-life analogy before introducing grammar terms.
-- Define every grammar term the moment you use it (e.g., "auxiliary verb = the helper verb").
-- Never assume the student knows anything. Build from zero.
-- Every single rule MUST be immediately followed by a French sentence example.
-- After showing the rule, show a common WRONG version too, so students know what to avoid.
-
-══════════════════════════════════════════
-  JSON FORMAT
-══════════════════════════════════════════
-Return ONLY a valid JSON object. NO meta-talk. NO markdown.
-{
-  "title": "Grammar Topic in French",
-  "subtitle": "Translation in $targetLanguage",
-  "icon": "relevant emoji",
-  "widgets": [
-    {"type": "section_title", "emoji": "🎯", "title": "What Is It?"},
-    {"type": "text", "content": "Simple analogy + plain-language explanation..."},
-    {"type": "section_title", "emoji": "🕰️", "title": "When to Use It"},
-    {"type": "tipbox", "title": "Use it when...", "content": "...", "color": "blue"},
-    {"type": "example", "french": "...", "translation": "..."},
-    {"type": "section_title", "emoji": "📝", "title": "How to Form It"},
-    {"type": "tipbox", "title": "La Formule", "content": "Full step-by-step formation", "color": "purple"},
-    {"type": "table", "headers": ["Pronom", "Conjugaison", "Exemple"], "rows": [["je", "...", "..."],["tu","...","..."],["il/elle","...","..."],["nous","...","..."],["vous","...","..."],["ils/elles","...","..."]]},
-    {"type": "section_title", "emoji": "⚠️", "title": "Irregular Forms & Exceptions"},
-    {"type": "french_tipbox", "title": "Irregular Verbs", "frenchText": "verb -> irregular form", "color": "red"},
-    {"type": "example", "french": "...", "translation": "..."},
-    {"type": "section_title", "emoji": "❌", "title": "Common Mistakes"},
-    {"type": "tipbox", "title": "Do NOT say...", "content": "Wrong form -> Correct form + explanation", "color": "red"},
-    {"type": "section_title", "emoji": "💡", "title": "Memory Trick"},
-    {"type": "tipbox", "title": "Easy way to remember", "content": "...", "color": "yellow"}
-  ]
-}
-EXPLANATIONS in $targetLanguage. French terms stay in French.'''            },
-            {
-              'role': 'user',
-              'content': pdfText != null
-                  ? 'Generate a detailed French B1 grammar guide based on this PDF: \n\n$pdfText\n\nTopic: $topic. Language: $targetLanguage.'
-                  : 'Generate a detailed French B1 grammar guide about: $topic. Language: $targetLanguage.'
-            }
-          ],
-          'response_format': {'type': 'json_object'},
-          'temperature': 0.7,
-      });
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        return jsonDecode(data['choices'][0]['message']['content']);
-      } else {
-        throw Exception('Failed to generate grammar: ${response.statusCode}');
-      }
-    } catch (e) {
-      debugPrint('Error generating grammar: $e');
-      rethrow;
-    }
-  }
-
   // Generate a full AI Book (story) combining grammar and lessons
   static Future<Map<String, dynamic>> generateAIBook(
       List<String> grammarTopics, List<String> lessonTopics, String targetLanguage) async {
@@ -1102,99 +1068,45 @@ EXPLANATIONS in $targetLanguage. French terms stay in French.'''            },
           'messages': [
             {
               'role': 'system',
-              'content': '''ROLE: You are an expert, Professional Belgian French Professor teaching B1 French to $targetLanguage speakers who are COMPLETE BEGINNERS. Think of your students as "dummies" who know NOTHING — explain every concept from scratch, step by step, as simply as possible.
-GOAL: Based on this multi-page lesson description: "$description", write a COMPLETE, EXHAUSTIVE, TEXTBOOK-QUALITY B1 French lesson. This must read like a real chapter from a professional French language textbook — not a quick summary.
-AUDIENCE: Total beginners who need everything spelled out clearly. Use simple words, relatable analogies, and real-life situations from Belgium.
+              'content': '''ROLE: You are Professeur AI, a patient Belgian French teacher. Your students are B1 learners whose own language is $targetLanguage, and they need every idea explained simply.
+GOAL: Turn the textbook pages described below into ONE clear lesson: the main points of the pages, explained step by step, followed by the pages' exercises as interactive exercises.
 
-══════════════════════════════════════════
-  RULE 1 — DEPTH & COMPLETENESS (CRITICAL)
-══════════════════════════════════════════
-The "widgets" array MUST contain between 15 and 25 widgets. A short lesson is a FAILED lesson.
-Before finishing, mentally check this COMPLETENESS CHECKLIST:
-✅ Did I explain WHAT this topic is (introduction in simple words)?
-✅ Did I explain WHY it is used (purpose/context)?
-✅ Did I explain HOW to use it (rules or formation)?
-✅ Did I give a full vocabulary or phrase list (french_tipbox or table)?
-✅ Did I give at least 5 real sentence examples (example widgets)?
-✅ Did I cover the most common mistakes / pitfalls?
-✅ Did I give a memory tip or learning trick?
-If ANY of these are missing, ADD more widgets until all are covered.
+STRUCTURE (in this order):
+1. "section_title" + short "text": what this lesson is about and when it is used, in simple words.
+2. For each main point on the pages: a "section_title", a short "text" or "tipbox" explaining the rule or idea,
+   then 1–3 "example" widgets (prefer the book's own sentences).
+3. Vocabulary from the pages in a "french_tipbox" ("mot -> translation" lines) or a "table".
+4. One "tipbox" (color red) with the most common mistake, if the pages give enough to say one.
+5. All exercises from the pages as "exercise" widgets, each placed after the point it practises
+   (or at the end under a "section_title" "Exercices" if they cover everything).
 
-══════════════════════════════════════════
-  RULE 2 — WIDGET VARIETY (MANDATORY)
-══════════════════════════════════════════
-- "section_title": Use at least 4 section titles to break up the lesson.
-- "text": Use for explanations — write at least 2-3 sentences per text widget, not one-liners.
-- "tipbox": Use for key rules, formulas, warnings (colors: purple=rule, yellow=tip, red=warning, blue=info, green=positive).
-- "french_tipbox": Use for vocabulary lists, conjugation blocks, or phrase lists ("word -> translation" format).
-- "example": MINIMUM 5 example widgets. Each must be a real, natural French sentence with accurate translation.
-- "table": Use for any structured data (conjugation tables, comparison tables, vocabulary grids).
-
-══════════════════════════════════════════
-  RULE 3 — BELGIAN CONTEXT (STRICT)
-══════════════════════════════════════════
-Belgian references are ONLY allowed when they are DIRECTLY RELEVANT to the lesson topic.
-
-🚫 FORBIDDEN — Do NOT include Belgian notes for:
-   - Verb conjugations (présent, passé composé, imparfait, subjonctif, etc.)
-   - Grammar rules (COD, COI, relative pronouns, négation, etc.)
-   - Adjective agreement, articles, prepositions
-   - Any topic where septante/nonante/soixante-dix is NOT the subject being taught
-   The phrase "En Belgique, on dit septante au lieu de soixante-dix" is BANNED unless the lesson topic is specifically about NUMBERS or COUNTING.
-
-✅ ALLOWED — Include a Belgian note ONLY when the topic is:
-   - Numbers and counting (septante, nonante, etc. are directly relevant)
-   - Meals and food vocabulary (déjeuner/dîner/souper Belgian variants)
-   - Belgian institutions (mutualité, CPAS, commune, STIB, TEC) when teaching administrative vocab
-   - Geography/travel vocabulary when Belgium is genuinely the topic
-   - Belgian cultural customs when teaching social/politeness expressions
-
-When a Belgian note IS included, it must add real learning value — not just say "Belgium is different from France".
-All practical examples and sentences must reference Belgium (Bruxelles, Liège, Gand, Namur, etc.) — not Paris or France.
-
-══════════════════════════════════════════
-  RULE 4 — CLARITY FOR DUMMIES
-══════════════════════════════════════════
-- Explain every new term as if the student has never heard it.
-- Use analogies and comparisons to their native language ($targetLanguage) where helpful.
-- Avoid academic jargon. If you must use a grammar term, explain it immediately in plain language.
-- Every rule must be followed by an example. No rule without an example.
-
-══════════════════════════════════════════
-  JSON FORMAT
-══════════════════════════════════════════
-Return ONLY a valid JSON object. NO meta-talk. NO markdown outside JSON.
+WIDGET STYLES: "tipbox" colors: purple=rule, yellow=tip, red=warning, blue=info, green=positive.
+BELGIAN CONTEXT: only add Belgian notes when directly relevant (numbers, meals, Belgian institutions, travel in Belgium).
+The phrase "En Belgique, on dit septante" is BANNED unless numbers are the topic. Any NEW example you write is set in Belgium (Bruxelles, Liège, Namur, Gand), never Paris.
+${photoContentRules(targetLanguage)}
+JSON FORMAT — return ONLY this object:
 {
-  "title": "Lesson Topic in French",
-  "subtitle": "Direct Translation in $targetLanguage",
-  "icon": "relevant emoji",
+  "title": "Lesson topic in French",
+  "subtitle": "Translation in $targetLanguage",
+  "icon": "one relevant emoji",
   "widgets": [
-    {"type": "section_title", "emoji": "🎯", "title": "Introduction"},
-    {"type": "text", "content": "Clear, simple introduction to the topic..."},
-    {"type": "tipbox", "title": "Why is this important?", "content": "...", "color": "blue"},
-    {"type": "section_title", "emoji": "📚", "title": "Core Vocabulary"},
-    {"type": "french_tipbox", "title": "Key Words", "frenchText": "mot -> translation", "color": "green"},
-    {"type": "table", "headers": ["French", "English", "Example"], "rows": [["...", "...", "..."]]},
-    {"type": "section_title", "emoji": "💬", "title": "How to Use It"},
-    {"type": "tipbox", "title": "The Formula", "content": "Structure: ...", "color": "purple"},
+    {"type": "section_title", "emoji": "🎯", "title": "..."},
+    {"type": "text", "content": "..."},
+    {"type": "tipbox", "title": "...", "content": "...", "color": "purple"},
     {"type": "example", "french": "...", "translation": "..."},
-    {"type": "example", "french": "...", "translation": "..."},
-    {"type": "example", "french": "...", "translation": "..."},
-    {"type": "section_title", "emoji": "⚠️", "title": "Common Mistakes"},
-    {"type": "tipbox", "title": "Attention!", "content": "...", "color": "red"},
-    {"type": "example", "french": "...", "translation": "..."},
-    {"type": "section_title", "emoji": "💡", "title": "Memory Tip"},
-    {"type": "tipbox", "title": "Easy way to remember", "content": "...", "color": "yellow"}
+    {"type": "french_tipbox", "title": "...", "frenchText": "mot -> translation", "color": "green"},
+    {"type": "table", "headers": ["...", "..."], "rows": [["...", "..."]]},
+    {"type": "exercise", "title": "...", "instruction": "...", "items": [...]}
   ]
-}
-EXPLANATIONS in $targetLanguage. French terms stay in French.'''
+}'''
             },
             {
               'role': 'user',
-              'content': 'Based on this multi-page lesson description: "$description", create a cohesive, detailed French B1 lesson. Apply all rules.'
+              'content': 'TEXTBOOK PAGES (extracted from photos):\n$description\n\nCreate the lesson. Include every exercise. Apply all rules.'
             }
           ],
-          'max_tokens': 4000,
+          'max_tokens': 12000,
+          'temperature': 0.3,
           'response_format': {'type': 'json_object'},
       });
 
@@ -1299,6 +1211,9 @@ EXPLANATIONS in $targetLanguage. French terms stay in French.'''
         case 'table':
           buffer.writeln('- Table: ${(w['headers'] as List?)?.join(', ') ?? ''}');
           break;
+        case 'exercise':
+          buffer.writeln('- Exercise: ${w['title'] ?? ''} (${(w['items'] as List?)?.length ?? 0} items)');
+          break;
         default:
           buffer.writeln('- [$type]');
       }
@@ -1315,8 +1230,12 @@ EXPLANATIONS in $targetLanguage. French terms stay in French.'''
     List<String> newBase64Images,
     String mimeType,
     String targetLanguage,
-    String? userInstructions,
-  ) async {
+    String? userInstructions, {
+    bool exercisesOnly = false,
+  }) async {
+    if (exercisesOnly) {
+      return _exercisesFromImages(existingLesson, newBase64Images, mimeType, targetLanguage, userInstructions);
+    }
     try {
       final newDescription = await describeImages(newBase64Images, mimeType);
       if (newDescription.startsWith('ERROR')) {
@@ -1340,8 +1259,8 @@ The lesson "${existingLesson['title']}" already contains:
 $existingSummary
 
 RETURN FORMAT: {"new_widgets": [<only new widgets here>]}
-WIDGET TYPES: section_title, text, french_tipbox, tipbox, example, table.
-RULES: IGNORE handwritten Arabic notes. NO META-TALK. Explanations in $targetLanguage.'''
+WIDGET TYPES: section_title, text, french_tipbox, tipbox, example, table, exercise.
+${photoContentRules(targetLanguage)}'''
             },
             {
               'role': 'user',
@@ -1370,6 +1289,64 @@ RULES: IGNORE handwritten Arabic notes. NO META-TALK. Explanations in $targetLan
       debugPrint('Error updating lesson: $e');
       rethrow;
     }
+  }
+
+  /// Turns photographed exercise pages into "exercise" widgets to append to an
+  /// existing lesson or grammar topic. Returns {"new_widgets": [...], id, title, ...}.
+  static Future<Map<String, dynamic>> _exercisesFromImages(
+    Map<String, dynamic> existing,
+    List<String> base64Images,
+    String mimeType,
+    String targetLanguage,
+    String? userInstructions,
+  ) async {
+    final description = await describeImages(base64Images, mimeType);
+    if (description.startsWith('ERROR')) throw Exception(description);
+
+    final existingWidgets = existing['widgets'] ?? existing['content'] ?? [];
+    final String existingSummary = _buildContentSummary(existingWidgets is List ? existingWidgets : []);
+
+    final response = await _chat({
+      'messages': [
+        {
+          'role': 'system',
+          'content': """You are Professeur AI, a Belgian French teacher. The photos contain EXERCISE pages for the topic "${existing['title']}".
+TASK: Convert EVERY exercise on the pages into an interactive "exercise" widget. Do NOT write lesson explanations.
+
+The topic already contains (use it so your explanations match what was taught; do not repeat exercises already listed):
+$existingSummary
+
+RETURN FORMAT: {"new_widgets": [
+  {"type": "section_title", "emoji": "✍️", "title": "Exercices – short French name"},
+  {"type": "exercise", ...}, {"type": "exercise", ...}
+]}
+${photoContentRules(targetLanguage)}"""
+        },
+        {
+          'role': 'user',
+          'content': 'EXERCISE PAGES (extracted from photos):\n$description'
+              '${userInstructions != null ? '\n\nUSER INSTRUCTIONS: $userInstructions' : ''}'
+        }
+      ],
+      'response_format': {'type': 'json_object'},
+      'temperature': 0.2,
+    });
+
+    if (response.statusCode != 200) {
+      throw Exception('DeepSeek exercise import error: ${ApiClient.errorMessage(response)}');
+    }
+    final data = jsonDecode(response.body);
+    final String content = data['choices'][0]['message']['content'];
+    final result = Map<String, dynamic>.from(jsonDecode(content));
+    final widgets = (result['new_widgets'] as List?) ?? const [];
+    if (!widgets.any((w) => w is Map && w['type'] == 'exercise')) {
+      throw Exception('No exercises were found in these photos.');
+    }
+    result['id'] = existing['id'];
+    result['title'] = existing['title'];
+    result['subtitle'] = existing['subtitle'];
+    result['icon'] = existing['icon'];
+    return result;
   }
 
   static Future<Map<String, dynamic>> updateLessonWithPdf(
@@ -1432,8 +1409,12 @@ RULES: NO META-TALK. French stays French. Explanations in $targetLanguage.'''
     List<String> newBase64Images,
     String mimeType,
     String targetLanguage,
-    String? userInstructions,
-  ) async {
+    String? userInstructions, {
+    bool exercisesOnly = false,
+  }) async {
+    if (exercisesOnly) {
+      return _exercisesFromImages(existingGrammar, newBase64Images, mimeType, targetLanguage, userInstructions);
+    }
     try {
       final newDescription = await describeImages(newBase64Images, mimeType);
       if (newDescription.startsWith('ERROR')) throw Exception(newDescription);
@@ -1456,7 +1437,8 @@ $existingSummary
 
 RETURN FORMAT: {"new_widgets": [<only new widgets here>]}
 PREMIUM STYLE: TipBox (purple) for Formulas. FrenchTipBox (green) for Conjugations. TipBox (yellow) for Tips. FrenchTipBox (red) for Irregulars.
-RULES: IGNORE handwritten Arabic notes. NO META-TALK. Explanations in $targetLanguage.'''
+WIDGET TYPES: section_title, text, french_tipbox, tipbox, example, table, exercise.
+${photoContentRules(targetLanguage)}'''
             },
             {
               'role': 'user',

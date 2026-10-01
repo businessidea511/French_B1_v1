@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../widgets/lesson_template.dart';
+import '../../widgets/exercise_block.dart';
+import '../../widgets/grammar_cards.dart';
 import '../../widgets/translated_text.dart';
 import '../../models/lesson_topic.dart';
 import '../../theme/app_theme.dart';
@@ -142,6 +144,21 @@ class DynamicLessonPage extends StatelessWidget {
               .toList();
           if (headers.isEmpty || rows.isEmpty) break;
           result.add(PremiumTable(headers: headers, rows: rows));
+          break;
+
+        case 'exercise':
+          final block = ExerciseBlock.fromJson(w);
+          if (block != null) result.add(block);
+          break;
+
+        case 'expression':
+          final card = ExpressionCard.fromJson(w);
+          if (card != null) result.add(card);
+          break;
+
+        case 'mistake':
+          final card = MistakeCard.fromJson(w);
+          if (card != null) result.add(card);
           break;
 
         default:

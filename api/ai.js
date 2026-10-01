@@ -59,9 +59,12 @@ module.exports = async (req, res) => {
   if (counts.chars > MAX_INPUT_CHARS) return res.status(413).json({ error: 'Input too long' });
   if (counts.images > MAX_IMAGES) return res.status(413).json({ error: `At most ${MAX_IMAGES} images per request` });
 
-  // Thinking mode is DeepSeek's default; it is off here because the app needs fast
-  // answers and thinking mode ignores temperature.
-  const payload = { model: MODEL, messages, thinking: { type: 'disabled' } };
+  // Thinking mode is DeepSeek's default. It is off unless the app asks for it
+  // (e.g. planning a complete grammar syllabus), because it is slower and
+  // ignores temperature.
+  const payload = body.thinking === true
+    ? { model: MODEL, messages, thinking: { type: 'enabled' }, reasoning_effort: 'high' }
+    : { model: MODEL, messages, thinking: { type: 'disabled' } };
   if (body.response_format && body.response_format.type === 'json_object') {
     payload.response_format = { type: 'json_object' };
   }

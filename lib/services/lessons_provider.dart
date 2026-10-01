@@ -328,7 +328,7 @@ class LessonsProvider extends ChangeNotifier {
       title: grammarData['title'] ?? 'Untitled',
       subtitle: grammarData['subtitle'] ?? '',
       icon: grammarData['icon'] ?? '📖',
-      description: grammarData['subtitle'] ?? grammarData['title'] ?? '',
+      description: grammarData['description'] ?? grammarData['subtitle'] ?? grammarData['title'] ?? '',
       content: rawContent is List ? rawContent : [],
     );
 
@@ -414,6 +414,30 @@ class LessonsProvider extends ChangeNotifier {
       // Surface the failure: the change is only saved on this device.
       rethrow;
     }
+  }
+
+  /// Replaces a grammar topic's whole content (used by "Rebuild"), keeping its id.
+  Future<void> replaceGrammar(String id, Map<String, dynamic> grammarData) async {
+    final original = allGrammar.where((g) => g.id == id).firstOrNull;
+    final rawContent = grammarData['widgets'] ?? grammarData['content'] ?? [];
+    final updated = GrammarTopic(
+      id: id,
+      title: grammarData['title'] ?? original?.title ?? 'Untitled',
+      subtitle: grammarData['subtitle'] ?? original?.subtitle ?? '',
+      icon: grammarData['icon'] ?? original?.icon ?? '📘',
+      description: grammarData['description'] ?? grammarData['subtitle'] ?? original?.description ?? '',
+      content: rawContent is List ? rawContent : [],
+    );
+
+    final index = _customGrammar.indexWhere((g) => g.id == id);
+    if (index != -1) {
+      _customGrammar[index] = updated;
+    } else {
+      _customGrammar.add(updated);
+    }
+    notifyListeners();
+    await _saveLocalData();
+    await _cloudUpsert('grammar', [updated.toJson()]);
   }
 
   /// Delete a custom lesson by ID (local + cloud)

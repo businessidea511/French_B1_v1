@@ -1,6 +1,9 @@
 import 'package:flutter_tts/flutter_tts.dart';
 
 class TtsService {
+  /// Shared French voice for small "listen" buttons across the app.
+  static final TtsService instance = TtsService();
+
   final FlutterTts flutterTts = FlutterTts();
 
   TtsService() {

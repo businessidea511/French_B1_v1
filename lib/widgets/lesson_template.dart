@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'translated_text.dart';
+import 'grammar_cards.dart';
 import 'ask_ai_box.dart';
 import '../pages/exercises/exercises_page.dart';
 import '../pages/flashcards/flashcards_page.dart';
@@ -297,7 +298,7 @@ class ExampleBox extends StatelessWidget {
                   ),
                 ),
               ),
-              const Icon(Icons.volume_up_rounded, color: AppTheme.primary, size: 20),
+              SpeakButton(french),
             ],
           ),
           const SizedBox(height: 8),

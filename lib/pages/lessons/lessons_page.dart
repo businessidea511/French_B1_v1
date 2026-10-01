@@ -1,16 +1,14 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 import '../../services/admin_auth.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
-import 'package:image_picker/image_picker.dart';
 import '../../theme/app_theme.dart';
 import '../../models/lesson_topic.dart';
 import '../../services/language_provider.dart';
 import '../../services/lessons_provider.dart';
 import '../../services/deepseek_service.dart';
+import '../../widgets/photo_pages_sheet.dart';
 import '../../services/pdf_helper.dart';
 import '../../services/global_scroll_manager.dart';
 import 'metiers_page.dart';
@@ -129,11 +127,11 @@ class _LessonsPageState extends State<LessonsPage> {
               _buildAddOption(
                 icon: Icons.camera_alt_rounded,
                 title: 'By Photo',
-                subtitle: 'Take a photo or pick from gallery',
+                subtitle: 'Photograph the lesson pages (camera or gallery)',
                 color: AppTheme.secondary,
                 onTap: () {
                   Navigator.pop(context);
-                  _showImageSourceDialog();
+                  _generateFromPhotos();
                 },
               ),
             ],
@@ -385,94 +383,28 @@ class _LessonsPageState extends State<LessonsPage> {
 
   // ── IMAGE CAPTURE ──────────────────────────────────────
 
-  void _showImageSourceDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppTheme.surface,
-        title: const Text('Choose Image Source', style: TextStyle(color: Colors.white)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (!kIsWeb)
-              _buildAddOption(
-                icon: Icons.camera_alt_rounded,
-                title: 'Take a Photo',
-                subtitle: 'Use your camera',
-                color: AppTheme.secondary,
-                onTap: () {
-                  Navigator.pop(context);
-                  _pickAndGenerateFromImages(ImageSource.camera);
-                },
-              ),
-            if (!kIsWeb) const SizedBox(height: 12),
-            _buildAddOption(
-              icon: Icons.photo_library_rounded,
-              title: 'Choose from Gallery',
-              subtitle: 'Pick an existing photo',
-              color: AppTheme.accent,
-              onTap: () {
-                Navigator.pop(context);
-                _pickAndGenerateFromImages(ImageSource.gallery);
-              },
-            ),
-          ],
-        ),
-      ),
+  Future<void> _generateFromPhotos() async {
+    final request = await showPhotoPagesSheet(
+      context,
+      title: 'New lesson from photos',
+      mode: PhotoImportMode.fullLesson,
+      askInstructions: false,
     );
-  }
+    if (request == null || !mounted) return;
 
-  Future<void> _pickAndGenerateFromImages(ImageSource source) async {
-    final picker = ImagePicker();
-    List<XFile> selectedFiles = [];
-
-    if (source == ImageSource.gallery) {
-      selectedFiles = await picker.pickMultiImage(
-        imageQuality: 40,
-        maxWidth: 800,
-        maxHeight: 800,
-      );
-    } else {
-      final XFile? image = await picker.pickImage(
-        source: source,
-        imageQuality: 40,
-        maxWidth: 800,
-        maxHeight: 800,
-      );
-      if (image != null) selectedFiles = [image];
-    }
-
-    if (selectedFiles.isEmpty) return;
-    if (selectedFiles.length > 10) {
-      selectedFiles = selectedFiles.sublist(0, 10);
-      _showError('Only the first 10 images will be used.');
-    }
-
+    final lessonsProvider = Provider.of<LessonsProvider>(context, listen: false);
     setState(() => _isGenerating = true);
 
-      if (!mounted) return;
-      final lp = Provider.of<LanguageProvider>(context, listen: false);
-      final lessonsProvider = Provider.of<LessonsProvider>(context, listen: false);
-
-      try {
-      final List<String> base64Images = [];
-      String? mimeType;
-
-      for (var file in selectedFiles) {
-        final bytes = await file.readAsBytes();
-        base64Images.add(base64Encode(bytes));
-        mimeType ??= file.name.toLowerCase().endsWith('.png') ? 'image/png' : 'image/jpeg';
-      }
-
+    try {
       final lessonData = await DeepSeekService.generateLessonFromImages(
-        base64Images,
-        mimeType ?? 'image/jpeg',
-        lp.currentLanguage.englishName,
+        request.base64Images,
+        request.mimeType,
+        DeepSeekService.contentLanguage,
       );
 
       if (!mounted) return;
       await lessonsProvider.addLesson(lessonData);
-      _showSuccess('Lesson generated from ${selectedFiles.length} photo(s) successfully! 📸');
+      _showSuccess('Lesson created from ${request.base64Images.length} page(s) 📸');
     } catch (e) {
       _showError('Failed to analyze images: $e');
     } finally {
@@ -510,14 +442,13 @@ class _LessonsPageState extends State<LessonsPage> {
   }
 
   Future<void> _generateLesson({required String topic, String? pdfText}) async {
-    final lp = Provider.of<LanguageProvider>(context, listen: false);
     final lessonsProvider = Provider.of<LessonsProvider>(context, listen: false);
     setState(() => _isGenerating = true);
     
     try {
       final lessonData = await DeepSeekService.generateFullLesson(
         topic,
-        lp.currentLanguage.englishName,
+        DeepSeekService.contentLanguage,
         pdfText: pdfText,
       );
       
@@ -620,24 +551,24 @@ class _LessonsPageState extends State<LessonsPage> {
             mainAxisSize: MainAxisSize.min,
             children: [
               _buildAddOption(
-                icon: Icons.camera_alt_rounded,
-                title: 'Add More Photos',
-                subtitle: 'Capture new pages from textbook',
+                icon: Icons.menu_book_rounded,
+                title: 'Add Pages (photos)',
+                subtitle: 'New textbook pages: main points + their exercises',
                 color: AppTheme.primary,
                 onTap: () {
                   Navigator.pop(context);
-                  _pickAndUpdateFromImages(topic, ImageSource.camera);
+                  _pickAndUpdateFromImages(topic, PhotoImportMode.fullLesson);
                 },
               ),
               const SizedBox(height: 12),
               _buildAddOption(
-                icon: Icons.photo_library_rounded,
-                title: 'Add from Gallery',
-                subtitle: 'Select saved textbook pages',
-                color: AppTheme.secondary,
+                icon: Icons.edit_note_rounded,
+                title: 'Add Exercises (photos)',
+                subtitle: 'Exercise pages become interactive exercises here',
+                color: AppTheme.success,
                 onTap: () {
                   Navigator.pop(context);
-                  _pickAndUpdateFromImages(topic, ImageSource.gallery);
+                  _pickAndUpdateFromImages(topic, PhotoImportMode.exercisesOnly);
                 },
               ),
               const SizedBox(height: 12),
@@ -709,7 +640,6 @@ class _LessonsPageState extends State<LessonsPage> {
   }
 
   Future<void> _updateLessonWithAI(LessonTopic topic, String instructions) async {
-    final lp = Provider.of<LanguageProvider>(context, listen: false);
     final lessonsProvider = Provider.of<LessonsProvider>(context, listen: false);
     
     setState(() => _isGenerating = true);
@@ -724,7 +654,7 @@ class _LessonsPageState extends State<LessonsPage> {
           'id': topic.id
         },
         instructions,
-        lp.currentLanguage.englishName,
+        DeepSeekService.contentLanguage,
       );
 
       if (!mounted) return;
@@ -780,48 +710,36 @@ class _LessonsPageState extends State<LessonsPage> {
     );
   }
 
-  Future<void> _pickAndUpdateFromImages(LessonTopic topic, ImageSource source) async {
-    final picker = ImagePicker();
-    List<XFile> selectedFiles = [];
+  Future<void> _pickAndUpdateFromImages(LessonTopic topic, PhotoImportMode mode) async {
+    final exercisesOnly = mode == PhotoImportMode.exercisesOnly;
+    final request = await showPhotoPagesSheet(
+      context,
+      title: exercisesOnly ? 'Add exercises to "${topic.title}"' : 'Add pages to "${topic.title}"',
+      mode: mode,
+    );
+    if (request == null || !mounted) return;
 
-    if (source == ImageSource.gallery) {
-      selectedFiles = await picker.pickMultiImage(imageQuality: 40, maxWidth: 800, maxHeight: 800);
-    } else {
-      final XFile? image = await picker.pickImage(source: source, imageQuality: 40, maxWidth: 800, maxHeight: 800);
-      if (image != null) selectedFiles = [image];
-    }
-
-    if (selectedFiles.isEmpty) return;
-
-    final instructions = await _getUpdateInstructions(source == ImageSource.camera ? 'Camera' : 'Gallery');
-    if (instructions == null) return; // User cancelled
-
+    final lessonsProvider = Provider.of<LessonsProvider>(context, listen: false);
     setState(() => _isGenerating = true);
 
-      if (!mounted) return;
-      final lp = Provider.of<LanguageProvider>(context, listen: false);
-      final lessonsProvider = Provider.of<LessonsProvider>(context, listen: false);
-
-      try {
-      final List<String> base64Images = [];
-      String? mimeType;
-      for (var file in selectedFiles) {
-        final bytes = await file.readAsBytes();
-        base64Images.add(base64Encode(bytes));
-        mimeType ??= file.name.toLowerCase().endsWith('.png') ? 'image/png' : 'image/jpeg';
-      }
-
+    try {
       final updatedData = await DeepSeekService.updateLessonFromImages(
         {'title': topic.title, 'subtitle': topic.subtitle, 'icon': topic.icon, 'widgets': topic.content ?? [], 'id': topic.id},
-        base64Images,
-        mimeType ?? 'image/jpeg',
-        lp.currentLanguage.englishName,
-        instructions.isEmpty ? null : instructions,
+        request.base64Images,
+        request.mimeType,
+        DeepSeekService.contentLanguage,
+        request.instructions,
+        exercisesOnly: exercisesOnly,
       );
 
       if (!mounted) return;
       await lessonsProvider.updateLesson(topic.id, updatedData);
-      _showSuccess('Lesson updated with new pages! 📚');
+      final added = ((updatedData['new_widgets'] as List?) ?? const [])
+          .where((w) => w is Map && w['type'] == 'exercise')
+          .length;
+      _showSuccess(exercisesOnly
+          ? '$added exercise(s) added to "${topic.title}" ✍️'
+          : '"${topic.title}" updated with ${request.base64Images.length} page(s) 📚');
     } catch (e) {
       _showError('Failed to update lesson: $e');
     } finally {
@@ -830,7 +748,6 @@ class _LessonsPageState extends State<LessonsPage> {
   }
 
   Future<void> _pickAndUpdateWithPdf(LessonTopic topic) async {
-    final lp = Provider.of<LanguageProvider>(context, listen: false);
     final lessonsProvider = Provider.of<LessonsProvider>(context, listen: false);
     final result = await FilePicker.platform.pickFiles(
       type: FileType.custom, 
@@ -849,7 +766,7 @@ class _LessonsPageState extends State<LessonsPage> {
       final updatedData = await DeepSeekService.updateLessonWithPdf(
         {'title': topic.title, 'subtitle': topic.subtitle, 'icon': topic.icon, 'widgets': topic.content ?? [], 'id': topic.id},
         text,
-        lp.currentLanguage.englishName,
+        DeepSeekService.contentLanguage,
         instructions.isEmpty ? null : instructions,
       );
 

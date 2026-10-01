@@ -1,15 +1,17 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../services/admin_auth.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:image_picker/image_picker.dart';
-import 'dart:convert';
 import '../../theme/app_theme.dart';
 import '../../models/grammar_topic.dart';
 import '../../services/language_provider.dart';
 import '../../services/lessons_provider.dart';
 import '../../services/deepseek_service.dart';
+import '../../services/grammar_generator.dart';
+import '../../services/topic_match.dart';
+import '../../widgets/photo_pages_sheet.dart';
 import '../../services/pdf_helper.dart';
 import '../../services/global_scroll_manager.dart';
 import '../lessons/dynamic_lesson_page.dart';
@@ -40,6 +42,7 @@ class GrammarPage extends StatefulWidget {
 
 class _GrammarPageState extends State<GrammarPage> {
   bool _isGenerating = false;
+  String? _progress;
   final ScrollController _scrollController = ScrollController();
 
   @override
@@ -79,7 +82,7 @@ class _GrammarPageState extends State<GrammarPage> {
                 final topic = controller.text.trim();
                 if (topic.isNotEmpty) {
                   Navigator.pop(context);
-                  _generateGrammar(topic: topic);
+                  _createTopic(topic);
                 }
               },
               child: const Text('Generate'),
@@ -95,43 +98,221 @@ class _GrammarPageState extends State<GrammarPage> {
       type: FileType.custom,
       allowedExtensions: ['pdf'],
     );
+    final bytes = result?.files.single.bytes;
+    if (bytes == null) return;
 
-    if (result != null && result.files.single.bytes != null) {
-      final bytes = result.files.single.bytes!;
-      final name = result.files.single.name;
-      
-      setState(() => _isGenerating = true);
-      
-      try {
-        final text = await PdfHelper.extractText(bytes);
-        await _generateGrammar(topic: name, pdfText: text);
-      } catch (e) {
-        _showError('Failed to process PDF: $e');
-      } finally {
-        setState(() => _isGenerating = false);
+    _startProgress('Reading the PDF…');
+    try {
+      final text = await PdfHelper.extractText(bytes);
+      if (text.trim().isEmpty) {
+        throw Exception('This PDF has no readable text (it may be scanned). Use "By Photo" instead.');
       }
+      await _createTopicsFromSource(text);
+    } catch (e) {
+      _showError('Failed to process PDF: $e');
+    } finally {
+      _stopProgress();
     }
   }
 
-  Future<void> _generateGrammar({required String topic, String? pdfText}) async {
-    setState(() => _isGenerating = true);
-    
+  Future<void> _generateFromPhotos() async {
+    final request = await showPhotoPagesSheet(
+      context,
+      title: 'New grammar topic from photos',
+      mode: PhotoImportMode.fullLesson,
+      askInstructions: false,
+    );
+    if (request == null || !mounted) return;
+
+    _startProgress('Reading ${request.base64Images.length} page(s)…');
     try {
-      final lp = Provider.of<LanguageProvider>(context, listen: false);
-      final lessonsProvider = Provider.of<LessonsProvider>(context, listen: false);
-      
-      final grammarData = await DeepSeekService.generateFullGrammar(
-        topic,
-        lp.currentLanguage.englishName,
-        pdfText: pdfText,
-      );
-      
-      await lessonsProvider.addGrammar(grammarData);
-      _showSuccess('Grammar guide "$topic" added successfully!');
+      final description = await DeepSeekService.describeImages(request.base64Images, request.mimeType);
+      if (description.startsWith('ERROR')) throw Exception(description);
+      await _createTopicsFromSource(description);
     } catch (e) {
-      _showError('Failed to generate grammar: $e');
+      _showError('Failed to create topic from photos: $e');
     } finally {
-      setState(() => _isGenerating = false);
+      _stopProgress();
+    }
+  }
+
+  /// Finds the grammar topics in a textbook extract, lets the admin choose,
+  /// then builds each chosen topic (book content + any missing rules).
+  Future<void> _createTopicsFromSource(String sourceText) async {
+    setState(() => _progress = 'Finding the grammar topics on these pages…');
+    final topics = await GrammarGenerator.detectTopics(sourceText);
+    if (!mounted) return;
+    final chosen = await _chooseTopics(topics);
+    if (chosen == null || chosen.isEmpty || !mounted) return;
+    for (final t in chosen) {
+      await _createTopic(t['title'].toString(), sourceText: sourceText, alreadyBusy: true);
+      if (!mounted) return;
+    }
+  }
+
+  /// Builds one complete topic. If a topic on the same subject already exists,
+  /// asks whether to rebuild it (keeps one topic per subject) or add a new one.
+  Future<void> _createTopic(String topic, {String? sourceText, bool alreadyBusy = false}) async {
+    final lessonsProvider = Provider.of<LessonsProvider>(context, listen: false);
+    final existing = TopicMatch.find(lessonsProvider.allGrammar, topic, (GrammarTopic g) => g.title);
+    String? replaceId;
+    if (existing != null) {
+      final choice = await _askDuplicate(topic, existing);
+      if (choice == null || !mounted) return;
+      if (choice == _DuplicateChoice.rebuild) {
+        replaceId = existing.id;
+        sourceText = _withCurrentContent(sourceText, existing);
+      }
+    }
+
+    if (!alreadyBusy) _startProgress('Starting…');
+    try {
+      final data = await GrammarGenerator.generate(
+        topic,
+        sourceText: sourceText,
+        onProgress: (step) {
+          if (mounted) setState(() => _progress = step);
+        },
+      );
+      if (replaceId != null) {
+        await lessonsProvider.replaceGrammar(replaceId, data);
+        _showSuccess('"${data['title']}" rebuilt as a complete topic ✅');
+      } else {
+        await lessonsProvider.addGrammar(data);
+        _showSuccess('"${data['title']}" added ✅');
+      }
+    } catch (e) {
+      _showError('Failed to generate "$topic": $e');
+    } finally {
+      if (!alreadyBusy) _stopProgress();
+    }
+  }
+
+  /// Adds the topic's current content to the source so a rebuild keeps it.
+  String? _withCurrentContent(String? sourceText, GrammarTopic topic) {
+    final content = topic.content ?? const [];
+    final parts = [
+      if (sourceText != null) sourceText,
+      if (content.isNotEmpty) 'CURRENT VERSION OF THIS TOPIC (keep its useful content):\n${jsonEncode(content)}',
+    ];
+    return parts.isEmpty ? null : parts.join('\n\n');
+  }
+
+  void _startProgress(String message) => setState(() {
+        _isGenerating = true;
+        _progress = message;
+      });
+
+  void _stopProgress() {
+    if (mounted) {
+      setState(() {
+        _isGenerating = false;
+        _progress = null;
+      });
+    }
+  }
+
+  Future<_DuplicateChoice?> _askDuplicate(String topic, GrammarTopic existing) {
+    return showDialog<_DuplicateChoice>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppTheme.surface,
+        title: const Text('Topic already exists', style: TextStyle(color: Colors.white)),
+        content: Text(
+          '"${existing.title}" already covers "$topic".\n\n'
+          'Rebuild it to make one complete topic (its current content is kept and completed), '
+          'or add a separate topic anyway.',
+          style: const TextStyle(color: AppTheme.textSecondary),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, _DuplicateChoice.addNew),
+            child: const Text('Add separate'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, _DuplicateChoice.rebuild),
+            child: const Text('Rebuild existing'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<List<Map<String, dynamic>>?> _chooseTopics(List<Map<String, dynamic>> topics) {
+    final selected = List<bool>.filled(topics.length, true);
+    return showDialog<List<Map<String, dynamic>>>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDlg) => AlertDialog(
+          backgroundColor: AppTheme.surface,
+          title: const Text('Grammar found on these pages', style: TextStyle(color: Colors.white)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              for (int i = 0; i < topics.length; i++)
+                CheckboxListTile(
+                  value: selected[i],
+                  onChanged: (v) => setDlg(() => selected[i] = v ?? false),
+                  title: Text(topics[i]['title'].toString(), style: const TextStyle(color: Colors.white)),
+                  subtitle: Text(
+                    '${topics[i]['subtitle'] ?? ''}\n${topics[i]['why'] ?? ''}'.trim(),
+                    style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12),
+                  ),
+                ),
+            ],
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(ctx, [
+                for (int i = 0; i < topics.length; i++)
+                  if (selected[i]) topics[i]
+              ]),
+              child: const Text('Create'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _confirmRebuild(GrammarTopic topic) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppTheme.surface,
+        title: Text('Rebuild "${topic.title}"?', style: const TextStyle(color: Colors.white)),
+        content: const Text(
+          'The AI checks every rule of this topic, keeps the useful content already here, '
+          'adds what is missing, and rewrites it as one complete, simple topic with street '
+          'expressions, a summary and a quiz.\n\nThe current version is replaced.',
+          style: TextStyle(color: AppTheme.textSecondary),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          ElevatedButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Rebuild')),
+        ],
+      ),
+    );
+    if (ok != true || !mounted) return;
+
+    _startProgress('Starting…');
+    try {
+      final data = await GrammarGenerator.generate(
+        topic.title,
+        sourceText: _withCurrentContent(null, topic),
+        onProgress: (step) {
+          if (mounted) setState(() => _progress = step);
+        },
+      );
+      if (!mounted) return;
+      await Provider.of<LessonsProvider>(context, listen: false).replaceGrammar(topic.id, data);
+      _showSuccess('"${data['title']}" rebuilt ✅');
+    } catch (e) {
+      _showError('Failed to rebuild: $e');
+    } finally {
+      _stopProgress();
     }
   }
 
@@ -222,22 +403,35 @@ class _GrammarPageState extends State<GrammarPage> {
             mainAxisSize: MainAxisSize.min,
             children: [
               _buildAddOption(
-                icon: Icons.camera_alt_rounded,
-                title: 'Add from Camera',
-                subtitle: 'Capture textbook pages',
+                icon: Icons.auto_fix_high_rounded,
+                title: 'Rebuild complete topic',
+                subtitle: 'Check every rule, fill gaps, simple explanations + quiz',
+                color: AppTheme.warning,
                 onTap: () {
                   Navigator.pop(context);
-                  _pickAndUpdateFromImages(topic, ImageSource.camera);
+                  _confirmRebuild(topic);
                 },
               ),
               const SizedBox(height: 12),
               _buildAddOption(
-                icon: Icons.photo_library_rounded,
-                title: 'Add from Gallery',
-                subtitle: 'Pick textbook photos',
+                icon: Icons.menu_book_rounded,
+                title: 'Add Pages (photos)',
+                subtitle: 'New textbook pages: main points + their exercises',
+                color: AppTheme.primary,
                 onTap: () {
                   Navigator.pop(context);
-                  _pickAndUpdateFromImages(topic, ImageSource.gallery);
+                  _pickAndUpdateFromImages(topic, PhotoImportMode.fullLesson);
+                },
+              ),
+              const SizedBox(height: 12),
+              _buildAddOption(
+                icon: Icons.edit_note_rounded,
+                title: 'Add Exercises (photos)',
+                subtitle: 'Exercise pages become interactive exercises here',
+                color: AppTheme.success,
+                onTap: () {
+                  Navigator.pop(context);
+                  _pickAndUpdateFromImages(topic, PhotoImportMode.exercisesOnly);
                 },
               ),
               const SizedBox(height: 12),
@@ -311,50 +505,38 @@ class _GrammarPageState extends State<GrammarPage> {
     );
   }
 
-  Future<void> _pickAndUpdateFromImages(GrammarTopic topic, ImageSource source) async {
-    final picker = ImagePicker();
-    List<XFile> selectedFiles = [];
+  Future<void> _pickAndUpdateFromImages(GrammarTopic topic, PhotoImportMode mode) async {
+    final exercisesOnly = mode == PhotoImportMode.exercisesOnly;
+    final request = await showPhotoPagesSheet(
+      context,
+      title: exercisesOnly ? 'Add exercises to "${topic.title}"' : 'Add pages to "${topic.title}"',
+      mode: mode,
+    );
+    if (request == null || !mounted) return;
 
-    if (source == ImageSource.gallery) {
-      selectedFiles = await picker.pickMultiImage(imageQuality: 40, maxWidth: 800, maxHeight: 800);
-    } else {
-      final XFile? image = await picker.pickImage(source: source, imageQuality: 40, maxWidth: 800, maxHeight: 800);
-      if (image != null) selectedFiles = [image];
-    }
-
-    if (selectedFiles.isEmpty) return;
-
-    final instructions = await _getUpdateInstructions(source == ImageSource.camera ? 'Camera' : 'Gallery');
-    if (instructions == null) return;
-
+    final lessonsProvider = Provider.of<LessonsProvider>(context, listen: false);
     setState(() => _isGenerating = true);
 
     try {
-      if (!mounted) return;
-      final lp = Provider.of<LanguageProvider>(context, listen: false);
-      final lessonsProvider = Provider.of<LessonsProvider>(context, listen: false);
-
-      final List<String> base64Images = [];
-      String? mimeType;
-      for (var file in selectedFiles) {
-        final bytes = await file.readAsBytes();
-        base64Images.add(base64Encode(bytes));
-        mimeType ??= file.name.toLowerCase().endsWith('.png') ? 'image/png' : 'image/jpeg';
-      }
-
       final updatedData = await DeepSeekService.updateGrammarFromImages(
         {'title': topic.title, 'subtitle': topic.subtitle, 'icon': topic.icon, 'widgets': topic.content ?? [], 'id': topic.id},
-        base64Images,
-        mimeType ?? 'image/jpeg',
-        lp.currentLanguage.englishName,
-        instructions.isEmpty ? null : instructions,
+        request.base64Images,
+        request.mimeType,
+        DeepSeekService.contentLanguage,
+        request.instructions,
+        exercisesOnly: exercisesOnly,
       );
 
       if (!mounted) return;
       await lessonsProvider.updateGrammar(topic.id, updatedData);
-      _showSuccess('Grammar guide updated with new pages! 📚');
+      final added = ((updatedData['new_widgets'] as List?) ?? const [])
+          .where((w) => w is Map && w['type'] == 'exercise')
+          .length;
+      _showSuccess(exercisesOnly
+          ? '$added exercise(s) added to "${topic.title}" ✍️'
+          : '"${topic.title}" updated with ${request.base64Images.length} page(s) 📚');
     } catch (e) {
-      _showError('Failed to update grammar: $e');
+      _showError('Failed to update grammar topic: $e');
     } finally {
       if (mounted) setState(() => _isGenerating = false);
     }
@@ -400,7 +582,6 @@ class _GrammarPageState extends State<GrammarPage> {
   }
 
   Future<void> _updateGrammarWithAI(GrammarTopic topic, String instructions) async {
-    final lp = Provider.of<LanguageProvider>(context, listen: false);
     final lessonsProvider = Provider.of<LessonsProvider>(context, listen: false);
     
     setState(() => _isGenerating = true);
@@ -415,7 +596,7 @@ class _GrammarPageState extends State<GrammarPage> {
           'id': topic.id
         },
         instructions,
-        lp.currentLanguage.englishName,
+        DeepSeekService.contentLanguage,
       );
 
       if (!mounted) return;
@@ -483,13 +664,12 @@ class _GrammarPageState extends State<GrammarPage> {
       final text = await PdfHelper.extractText(result.files.single.bytes!);
 
       if (!mounted) return;
-      final lp = Provider.of<LanguageProvider>(context, listen: false);
       final lessonsProvider = Provider.of<LessonsProvider>(context, listen: false);
 
       final updatedData = await DeepSeekService.updateGrammarWithPdf(
         {'title': topic.title, 'subtitle': topic.subtitle, 'icon': topic.icon, 'widgets': topic.content ?? [], 'id': topic.id},
         text,
-        lp.currentLanguage.englishName,
+        DeepSeekService.contentLanguage,
         instructions.isEmpty ? null : instructions,
       );
 
@@ -719,13 +899,17 @@ class _GrammarPageState extends State<GrammarPage> {
                   children: [
                     const SpinKitDoubleBounce(color: AppTheme.primary, size: 80),
                     const SizedBox(height: 20),
-                    const Text(
-                      'AI is generating your grammar guide...',
-                      style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      child: Text(
+                        _progress ?? 'AI is generating your grammar guide...',
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
                     ),
                     const SizedBox(height: 10),
                     Text(
-                      'This might take a few seconds',
+                      'A complete topic takes about a minute',
                       style: TextStyle(color: Colors.white.withValues(alpha: 0.7)),
                     ),
                   ],
@@ -754,6 +938,16 @@ class _GrammarPageState extends State<GrammarPage> {
                           onTap: () {
                             Navigator.pop(context);
                             _showTopicNameDialog();
+                          },
+                        ),
+                        ListTile(
+                          leading: const Icon(Icons.photo_camera_rounded, color: AppTheme.success),
+                          title: const Text('By Photo', style: TextStyle(color: Colors.white)),
+                          subtitle: const Text('Photograph the grammar pages of your book',
+                              style: TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
+                          onTap: () {
+                            Navigator.pop(context);
+                            _generateFromPhotos();
                           },
                         ),
                         ListTile(
@@ -943,3 +1137,5 @@ class _GrammarPageState extends State<GrammarPage> {
     }
   }
 }
+
+enum _DuplicateChoice { rebuild, addNew }
