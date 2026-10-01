@@ -234,7 +234,7 @@ class _DicteePageState extends State<DicteePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(score == 100 ? '🎉 Parfait !' : '$score %',
+            Text(score == 100 ? '🎉 Parfait !' : '$score %', textDirection: TextDirection.ltr,
                 style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: AppTheme.textPrimary)),
             const SizedBox(height: 10),
             Directionality(

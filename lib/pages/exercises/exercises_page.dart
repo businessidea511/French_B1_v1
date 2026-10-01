@@ -554,7 +554,7 @@ class _ExercisesPageState extends State<ExercisesPage> {
                 borderRadius: BorderRadius.circular(100),
               ),
               child: Text(
-                '$percentage%',
+                '$percentage%', textDirection: TextDirection.ltr,
                 style: Theme.of(context).textTheme.displayMedium?.copyWith(
                       color: percentage >= 70 ? AppTheme.success : AppTheme.warning,
                     ),
