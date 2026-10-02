@@ -79,9 +79,9 @@ JSON: {"topics": [{"title": "French topic name, e.g. Le Passé Composé", "subti
         rules.sublist(i, i + _rulesPerBatch > rules.length ? rules.length : i + _rulesPerBatch),
     ];
     final results = await Future.wait([
-      for (final batch in batches) _writeRules(title, batch, source),
-      _wrapUp(title, rules, expressions),
-      if (source != null) _bookExercises(title, source),
+      for (final batch in batches) _writeRulesSafe(title, batch, source),
+      _wrapUpSafe(title, rules, expressions),
+      if (source != null) _bookExercisesSafe(title, source),
     ]);
 
     // Collect rule sections in plan order and see which rules were covered.
@@ -92,8 +92,15 @@ JSON: {"topics": [{"title": "French topic name, e.g. Le Passé Composé", "subti
     final missing = rules.where((r) => (ruleWidgets[r['id']] ?? const []).isEmpty).toList();
     if (missing.isNotEmpty) {
       onProgress?.call('Completing ${missing.length} missing rule(s)…');
-      final retry = await _writeRules(title, missing, source);
-      ruleWidgets.addAll(Map<String, List<dynamic>>.from(retry['by_rule'] as Map));
+      // One rule per request this time: the smallest possible answers.
+      final retries = await Future.wait([for (final r in missing) _writeRulesSafe(title, [r], source)]);
+      for (final retry in retries) {
+        ruleWidgets.addAll(Map<String, List<dynamic>>.from(retry['by_rule'] as Map));
+      }
+    }
+    final written = rules.where((r) => (ruleWidgets[r['id']] ?? const []).isNotEmpty).length;
+    if (written < (rules.length + 1) ~/ 2) {
+      throw Exception('Only $written of ${rules.length} rules could be written. Please try again.');
     }
 
     final wrap = results[batches.length];
@@ -192,6 +199,32 @@ WIDGETS you may use:
 {"type": "example", "french": "French sentence", "translation": "English translation"}
 {"type": "mistake", "wrong": "French sentence learners wrongly say", "right": "correct French sentence", "why": "English: why"}''';
 
+  /// [_writeRules], but a batch whose answer is too long (or fails) is split in
+  /// two and retried, down to one rule; a rule that still fails is left out
+  /// (and retried once more at the end of [generate]).
+  static Future<Map<String, dynamic>> _writeRulesSafe(
+      String title, List<Map<String, dynamic>> rules, String? source) async {
+    try {
+      return await _writeRules(title, rules, source);
+    } catch (e) {
+      if (rules.length == 1) {
+        debugPrint('Rule "${rules.first['name']}" failed: $e');
+        return {'by_rule': <String, List<dynamic>>{}};
+      }
+      debugPrint('Rule batch of ${rules.length} failed ($e); splitting it');
+      final half = rules.length ~/ 2;
+      final parts = await Future.wait([
+        _writeRulesSafe(title, rules.sublist(0, half), source),
+        _writeRulesSafe(title, rules.sublist(half), source),
+      ]);
+      return {
+        'by_rule': {
+          for (final part in parts) ...Map<String, List<dynamic>>.from(part['by_rule'] as Map),
+        },
+      };
+    }
+  }
+
   /// Returns {"by_rule": {"r1": [widgets], ...}}.
   static Future<Map<String, dynamic>> _writeRules(
       String title, List<Map<String, dynamic>> rules, String? source) async {
@@ -235,9 +268,30 @@ JSON: {"by_rule": {"<rule id>": [widgets for that rule], ...}}'''
 
   // ── Step 4: intro, expressions, summary, quiz ─────────────────────────────
 
+  /// [_wrapUp] in one request, or in two smaller ones when the answer is too long.
+  static Future<Map<String, dynamic>> _wrapUpSafe(
+      String title, List<Map<String, dynamic>> rules, List<Map> expressions) async {
+    try {
+      return await _wrapUp(title, rules, expressions);
+    } catch (e) {
+      debugPrint('Intro/summary/quiz in one request failed ($e); writing them in two');
+      final parts = await Future.wait([
+        _wrapUp(title, rules, expressions, parts: const {'intro', 'expressions'})
+            .catchError((_) => <String, dynamic>{}),
+        _wrapUp(title, rules, expressions, parts: const {'summary', 'quiz'})
+            .catchError((_) => <String, dynamic>{}),
+      ]);
+      return {for (final part in parts) ...part};
+    }
+  }
+
+  static const _allWrapUpParts = {'intro', 'expressions', 'summary', 'quiz'};
+
   static Future<Map<String, dynamic>> _wrapUp(
-      String title, List<Map<String, dynamic>> rules, List<Map> expressions) {
+      String title, List<Map<String, dynamic>> rules, List<Map> expressions,
+      {Set<String> parts = _allWrapUpParts}) {
     final ruleNames = rules.map((r) => '- ${r['id']}: ${r['name']} — ${r['teach']}').join('\n');
+    final wanted = [for (final k in ['intro', 'expressions', 'summary', 'quiz']) if (parts.contains(k)) k];
     return chat([
       {
         'role': 'system',
@@ -251,7 +305,7 @@ ${DeepSeekService.exerciseWidgetRules(_explanationLanguage)}
 The lesson teaches these rules (in order):
 $ruleNames
 
-Write:
+Write ONLY these parts: ${wanted.map((k) => '"$k"').join(', ')} (skip the others below).
 A. "intro": section_title (🎯, French, e.g. "C'est quoi l'imparfait ?"), a text that explains the topic from zero with an
    everyday analogy, and a tipbox blue "In this lesson" listing the French rule names.
 B. "expressions": if the list below is not empty, a section_title "🇧🇪 Dans la rue" followed by one expression widget each
@@ -262,9 +316,9 @@ C. "summary": section_title "📌 Résumé" and ONE tipbox yellow cheat sheet: o
 D. "quiz": section_title "✍️ Quiz" and ONE exercise widget with ONE item per rule (at most 16 items; mix multiple choice
    and typed answers). Every item makes the learner USE the rule in a French sentence — never ask for definitions.
    Double-check every answer.
-JSON: {"intro": [...], "expressions": [...], "summary": [...], "quiz": [...]}'''
+JSON: {${wanted.map((k) => '"$k": [...]').join(', ')}}'''
       },
-      {'role': 'user', 'content': 'Write the four parts for "$title".'},
+      {'role': 'user', 'content': 'Write ${wanted.join(', ')} for "$title".'},
     ], temperature: 0.4);
   }
 
@@ -337,6 +391,16 @@ JSON: {"fixes": [{"id": "w12", "action": "replace", "value": {...}}, {"id": "w40
     final fixes = (result['fixes'] as List? ?? const []).length;
     debugPrint('🔎 Review of "$title": $fixes fix(es)');
     return [for (var i = 0; i < out.length; i++) if (!removedWidgets.contains(i)) out[i]];
+  }
+
+  /// [_bookExercises], but the lesson is still built if they fail.
+  static Future<Map<String, dynamic>> _bookExercisesSafe(String title, String source) async {
+    try {
+      return await _bookExercises(title, source);
+    } catch (e) {
+      debugPrint('Book exercises failed, lesson built without them: $e');
+      return {'widgets': const []};
+    }
   }
 
   /// Turns the exercises of a textbook extract into exercise widgets.

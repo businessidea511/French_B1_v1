@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:french_course_b1/services/deepseek_service.dart';
 import 'package:french_course_b1/services/grammar_generator.dart';
 import 'package:french_course_b1/services/language_provider.dart';
 import 'package:french_course_b1/services/topic_match.dart';
@@ -15,6 +16,11 @@ class _FakeAi {
   final calls = <String>[];
   bool thinkingUsedForPlan = false;
   int writerCalls = 0;
+
+  /// Imitates a big topic: any answer covering several rules, or all four
+  /// closing parts at once, is cut off by the output limit.
+  final bool tooLong;
+  _FakeAi({this.tooLong = false});
 
   Future<Map<String, dynamic>> call(List<Map<String, dynamic>> messages,
       {bool thinking = false, double? temperature, int? maxTokens}) async {
@@ -35,10 +41,11 @@ class _FakeAi {
       writerCalls++;
       calls.add('write');
       final ids = (jsonDecode(user.substring(user.indexOf('['))) as List).map((r) => r['id'] as String);
+      if (tooLong && ids.length > 1) throw const AiAnswerTooLong();
       return {
         'by_rule': {
           for (final id in ids)
-            if (!(writerCalls == 1 && id == 'r2'))
+            if (tooLong || !(writerCalls == 1 && id == 'r2'))
               id: [
                 _section(id),
                 if (id == 'r1') {'type': 'mistake', 'wrong': 'Je parlais.', 'right': 'Je parlais !'},
@@ -49,6 +56,16 @@ class _FakeAi {
     }
     if (system.contains('opening and closing parts')) {
       calls.add('wrap');
+      if (tooLong) {
+        if (system.contains('"intro", "expressions", "summary", "quiz"')) throw const AiAnswerTooLong();
+        if (system.contains('Write ONLY these parts: "intro", "expressions"')) {
+          return {'intro': [{'type': 'section_title', 'title': 'intro'}], 'expressions': []};
+        }
+        return {
+          'summary': [{'type': 'section_title', 'title': 'résumé'}],
+          'quiz': [{'type': 'section_title', 'title': 'quiz'}],
+        };
+      }
       return {
         'intro': [{'type': 'section_title', 'title': 'intro'}],
         'expressions': [],
@@ -115,6 +132,15 @@ void main() {
       final quiz = widgets.firstWhere((w) => w['type'] == 'exercise');
       expect((quiz['items'] as List).map((i) => i['question']), ['Je ___ (parler).']);
       expect(result['title'], "L'Imparfait");
+    });
+
+    test('a big topic whose answers are too long is split into smaller requests', () async {
+      final fake = _FakeAi(tooLong: true);
+      GrammarGenerator.chat = fake.call;
+
+      final result = await GrammarGenerator.generate('subjonctif');
+      final titles = (result['widgets'] as List).where((w) => w['type'] == 'section_title').map((w) => w['title']).toList();
+      expect(titles, ['intro', 'rule r1', 'rule r2', 'rule r3', 'rule r4', 'rule r5', 'résumé', 'quiz']);
     });
 
     test('adds book exercises before the quiz when generated from pages', () async {

@@ -105,7 +105,13 @@ class DeepSeekService {
     }
     final choice = jsonDecode(response.body)['choices'][0];
     if (choice['finish_reason'] == 'length') {
-      throw Exception('The AI answer was cut off because it was too long.');
+      // In thinking mode the hidden reasoning counts towards the same limit,
+      // so the answer itself often fits once thinking is off.
+      if (thinking) {
+        debugPrint('Thinking answer cut off; retrying without thinking');
+        return chatJson(messages, temperature: temperature, maxTokens: maxTokens, jsonMode: jsonMode);
+      }
+      throw const AiAnswerTooLong();
     }
     final decoded = _decodeJsonObject('${choice['message']['content'] ?? ''}');
     if (decoded != null) return decoded;
@@ -1863,4 +1869,12 @@ Return ONLY valid JSON in this format:
       rethrow;
     }
   }
+}
+
+/// The AI hit its output limit before finishing (the request asked for too much at once).
+class AiAnswerTooLong implements Exception {
+  const AiAnswerTooLong();
+
+  @override
+  String toString() => 'The AI answer was cut off because it was too long.';
 }
