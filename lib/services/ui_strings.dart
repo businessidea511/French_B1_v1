@@ -167,6 +167,18 @@ class UiStrings {
     'Copy the invitation': ['Copier l\'invitation', 'انسخ الدعوة', 'Скопіювати запрошення', 'Copia l\'invito', 'ዕድመ ቕዳሕ', 'Daveti kopyala', 'Salin undangan'],
     'Ranking': ['Classement', 'الترتيب', 'Рейтинг', 'Classifica', 'ደረጃ ተወዳደርቲ', 'Sıralama', 'Peringkat'],
     'You are #{rank} of {total}': ['Tu es n° {rank} sur {total}', 'أنت في المركز {rank} من {total}', 'Ти №{rank} з {total}', 'Sei n° {rank} su {total}', 'ቁጽሪ {rank} ካብ {total} ኢኻ', '{total} kişi içinde {rank}. sıradasın', 'Kamu #{rank} dari {total}'],
+    'What should the duel cover?': ['Sur quoi porte le duel ?', 'ما مواضيع المبارزة؟', 'Що буде в дуелі?', 'Su cosa sarà la sfida?', 'ውድድር ብዛዕባ እንታይ ይኸውን?', 'Düello hangi konularda olsun?', 'Duel ini tentang apa?'],
+    'All topics': ['Tous les sujets', 'كل المواضيع', 'Усі теми', 'Tutti gli argomenti', 'ኩሎም ኣርእስታት', 'Tüm konular', 'Semua topik'],
+    'Grammar': ['Grammaire', 'القواعد', 'Граматика', 'Grammatica', 'ሰዋሰው', 'Dil bilgisi', 'Tata bahasa'],
+    'How many questions?': ['Combien de questions ?', 'كم عدد الأسئلة؟', 'Скільки питань?', 'Quante domande?', 'ክንደይ ሕቶታት?', 'Kaç soru?', 'Berapa pertanyaan?'],
+    'From easy to hard.': ['Du plus facile au plus difficile.', 'من السهل إلى الصعب.', 'Від легкого до складного.', 'Dalla più facile alla più difficile.', 'ካብ ቀሊል ናብ ከቢድ።', 'Kolaydan zora.', 'Dari mudah ke sulit.'],
+    'Choose at least one topic.': ['Choisis au moins un sujet.', 'اختر موضوعًا واحدًا على الأقل.', 'Обери хоча б одну тему.', 'Scegli almeno un argomento.', 'እንተወሓደ ሓደ ኣርእስቲ ምረጽ።', 'En az bir konu seç.', 'Pilih minimal satu topik.'],
+    'Create the duel': ['Créer le duel', 'أنشئ المبارزة', 'Створити дуель', 'Crea la sfida', 'ውድድር ፍጠር', 'Düelloyu oluştur', 'Buat duelnya'],
+    'Preparing the questions…': ['Préparation des questions…', 'جارٍ تحضير الأسئلة…', 'Готуємо питання…', 'Preparo le domande…', 'ሕቶታት ይዳለዉ ኣለዉ…', 'Sorular hazırlanıyor…', 'Menyiapkan pertanyaan…'],
+    'Loading the duel…': ['Chargement du duel…', 'جارٍ تحميل المبارزة…', 'Завантаження дуелі…', 'Caricamento della sfida…', 'ውድድር ይጽዕን ኣሎ…', 'Düello yükleniyor…', 'Memuat duel…'],
+    '{n} questions': ['{n} questions', '{n} أسئلة', '{n} питань', '{n} domande', '{n} ሕቶታት', '{n} soru', '{n} pertanyaan'],
+    'Could not prepare the questions. Try again.': ['Impossible de préparer les questions. Réessaie.', 'تعذّر تحضير الأسئلة. حاول مرة أخرى.', 'Не вдалося підготувати питання. Спробуй ще раз.', 'Impossibile preparare le domande. Riprova.', 'ሕቶታት ክዳለዉ ኣይከኣሉን። እንደገና ፈትን።', 'Sorular hazırlanamadı. Tekrar dene.', 'Tidak bisa menyiapkan pertanyaan. Coba lagi.'],
+    'The class duel server is not ready yet.': ['Le serveur des duels de classe n\'est pas encore prêt.', 'خادم مبارزات الصف غير جاهز بعد.', 'Сервер класних дуелей ще не готовий.', 'Il server delle sfide di classe non è ancora pronto.', 'ሰርቨር ውድድር ክፍሊ ገና ድሉው ኣይኮነን።', 'Sınıf düellosu sunucusu henüz hazır değil.', 'Server duel kelas belum siap.'],
     'New duel': ['Nouveau duel', 'مبارزة جديدة', 'Нова дуель', 'Nuova sfida', 'ሓድሽ ውድድር', 'Yeni düello', 'Duel baru'],
 
     // Missions, mistakes

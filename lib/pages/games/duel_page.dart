@@ -4,9 +4,10 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../data/vocabulary_data.dart';
+import 'package:provider/provider.dart';
 import '../../services/api_client.dart';
-import '../../services/practice_logic.dart';
+import '../../services/duel_questions.dart';
+import '../../services/lessons_provider.dart';
 import '../../services/progress_service.dart';
 import '../../services/ui_strings.dart';
 import '../../services/web_share.dart';
@@ -15,38 +16,9 @@ import '../../widgets/motion.dart';
 import '../../widgets/translated_text.dart';
 import '../../widgets/ui_kit.dart';
 
-class DuelQuestion {
-  final String prompt; // French or English (translated on screen)
-  final bool promptIsEnglish;
-  final String hint;
-  final List<String> options;
-  final int correct;
-  const DuelQuestion(this.prompt, this.promptIsEnglish, this.hint, this.options, this.correct);
-}
+export '../../services/duel_questions.dart' show DuelQuestion, duelQuestions;
 
-/// The 10 questions of a duel. Both players get the same ones because they
-/// come from the duel code.
-List<DuelQuestion> duelQuestions(String code) {
-  final seed = code.codeUnits.fold<int>(17, (h, c) => (h * 31 + c) & 0x7fffffff);
-  final random = Random(seed);
-  final questions = <DuelQuestion>[];
-  for (var i = 0; i < 6; i++) {
-    final q = ConjugationQuiz.make(random, 'Moyen');
-    final options = [q.answer, ...ConjugationQuiz.distractors(q, random)]..shuffle(random);
-    questions.add(DuelQuestion('${q.prefix} ___', false, '${q.verb} · ${q.tenseLabel}', options, options.indexOf(q.answer)));
-  }
-  final categories = vocabularySection.categories.where((c) => !c.cognate && c.id != 'faux_amis').toList();
-  for (var i = 0; i < 4; i++) {
-    final category = categories[random.nextInt(categories.length)];
-    final words = List.of(category.items)..shuffle(random);
-    final answer = words.first;
-    final options = [for (final w in words.take(4)) w.fr]..shuffle(random);
-    questions.add(DuelQuestion(answer.en, true, category.title, options, options.indexOf(answer.fr)));
-  }
-  return questions..shuffle(random);
-}
-
-/// Friendly duel: same 10 questions for both players, scores shared by code.
+/// Friendly duel for a friend or a whole class: same questions for everyone, scores shared by code.
 class DuelPage extends StatefulWidget {
   /// Code from an invitation link (…/?duel=ABC123): the lobby opens with it filled in.
   final String? initialCode;
@@ -62,6 +34,16 @@ class DuelPage extends StatefulWidget {
   @visibleForTesting
   static Future<List<Map<String, dynamic>>> Function(Map<String, dynamic> body) api = _callApi;
 
+  /// Saves or loads a duel's questions. Throws [DuelServerError] with the HTTP status on failure.
+  @visibleForTesting
+  static Future<Map<String, dynamic>> Function(Map<String, dynamic> body) send = _send;
+
+  static Future<Map<String, dynamic>> _send(Map<String, dynamic> body) async {
+    final response = await ApiClient.post('/api/duel', body, timeout: const Duration(seconds: 20));
+    if (response.statusCode != 200) throw DuelServerError(response.statusCode);
+    return Map<String, dynamic>.from(jsonDecode(response.body) as Map);
+  }
+
   static Future<List<Map<String, dynamic>>> _callApi(Map<String, dynamic> body) async {
     final response = await ApiClient.post('/api/duel', body, timeout: const Duration(seconds: 20));
     if (response.statusCode != 200) throw Exception(ApiClient.errorMessage(response));
@@ -72,7 +54,14 @@ class DuelPage extends StatefulWidget {
   State<DuelPage> createState() => _DuelPageState();
 }
 
-enum _Stage { lobby, ready, play, result }
+class DuelServerError implements Exception {
+  final int status;
+  const DuelServerError(this.status);
+  @override
+  String toString() => 'Duel server error $status';
+}
+
+enum _Stage { lobby, preparing, ready, play, result }
 
 class _DuelPageState extends State<DuelPage> {
   final _name = TextEditingController();
@@ -80,6 +69,8 @@ class _DuelPageState extends State<DuelPage> {
   _Stage _stage = _Stage.lobby;
   String _code = '';
   List<DuelQuestion> _questions = [];
+  List<String> _topics = [];
+  String _preparing = '';
   int _index = 0;
   int _correct = 0;
   int? _picked;
@@ -124,14 +115,97 @@ class _DuelPageState extends State<DuelPage> {
     return true;
   }
 
-  /// Creator: make a code and show it, so it can be sent before playing.
+  /// Creator: choose topics and number of questions, prepare the questions,
+  /// save them with a new code and show the code, so it can be sent before playing.
   Future<void> _create() async {
     if (!await _checkName()) return;
+    if (!mounted) return;
+    final grammar = context.read<LessonsProvider>().allGrammar;
+    final choice = await showModalBottomSheet<(DuelTopics, int)>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppTheme.surface,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
+      builder: (_) => _DuelSetupSheet(grammarTitles: [for (final g in grammar) g.title]),
+    );
+    if (choice == null || !mounted) return;
+    final (topics, count) = choice;
     setState(() {
       _error = null;
-      _code = _newCode();
-      _stage = _Stage.ready;
+      _preparing = tr(context, 'Preparing the questions…');
+      _stage = _Stage.preparing;
     });
+    try {
+      final rules = {
+        for (final g in grammar)
+          if (topics.grammar.contains(g.title))
+            g.title: [
+              for (final w in g.content ?? const [])
+                if (w is Map && w['type'] == 'section_title') '${w['title'] ?? ''}',
+            ],
+      };
+      final questions = await DuelBuilder.build(topics, count: count, grammarRules: rules);
+      for (var attempt = 0; ; attempt++) {
+        final code = _newCode();
+        try {
+          await DuelPage.send({
+            'action': 'create',
+            'code': code,
+            'topics': topics.names,
+            'questions': [for (final q in questions) q.toJson()],
+          });
+          _code = code;
+          break;
+        } on DuelServerError catch (e) {
+          if (e.status == 409 && attempt < 3) continue; // code already taken
+          // Server not ready (duels.sql not run): only the classic duel works, its questions come from the code.
+          if (topics.grammar.isEmpty && topics.withConjugation && topics.withVocabulary && count == 10) {
+            _code = code;
+            _questions = duelQuestions(code);
+            _topics = topics.names;
+            if (mounted) setState(() => _stage = _Stage.ready);
+            return;
+          }
+          rethrow;
+        }
+      }
+      if (!mounted) return;
+      setState(() {
+        _questions = questions;
+        _topics = topics.names;
+        _stage = _Stage.ready;
+      });
+    } catch (e) {
+      debugPrint('Duel not created: $e');
+      if (!mounted) return;
+      setState(() {
+        _stage = _Stage.lobby;
+        _error = tr(context, e is DuelServerError && e.status == 503
+            ? 'The class duel server is not ready yet.'
+            : 'Could not prepare the questions. Try again.');
+      });
+    }
+  }
+
+  /// The questions of a duel: saved with the code, or (older duels) made from the code.
+  Future<List<DuelQuestion>> _loadQuestions(String code) async {
+    if (code == _code && _questions.isNotEmpty) return _questions;
+    try {
+      final duel = (await DuelPage.send({'action': 'get', 'code': code}))['duel'];
+      if (duel is Map) {
+        final questions = [
+          for (final raw in (duel['questions'] as List? ?? const [])) DuelQuestion.fromJson(raw),
+        ].whereType<DuelQuestion>().toList();
+        if (questions.isNotEmpty) {
+          _topics = [for (final t in (duel['topics'] as List? ?? const [])) '$t'];
+          return questions;
+        }
+      }
+    } catch (e) {
+      debugPrint('Duel questions not loaded, using the classic ones: $e');
+    }
+    _topics = [];
+    return duelQuestions(code);
   }
 
   Future<void> _start(String code) async {
@@ -143,8 +217,14 @@ class _DuelPageState extends State<DuelPage> {
     }
     setState(() {
       _error = null;
+      _preparing = tr(context, 'Loading the duel…');
+      _stage = _Stage.preparing;
+    });
+    final questions = await _loadQuestions(code);
+    if (!mounted) return;
+    setState(() {
       _code = code;
-      _questions = duelQuestions(code);
+      _questions = questions;
       _index = 0;
       _correct = 0;
       _picked = null;
@@ -189,7 +269,8 @@ class _DuelPageState extends State<DuelPage> {
   }
 
   int get _seconds => _clock.elapsed.inSeconds;
-  int get _score => _correct * 100 + max(0, 300 - _seconds);
+  /// 100 points per right answer, plus a speed bonus (30 seconds per question).
+  int get _score => _correct * 100 + max(0, 30 * _questions.length - _seconds);
 
   Future<void> _finish() async {
     _clock.stop();
@@ -198,7 +279,7 @@ class _DuelPageState extends State<DuelPage> {
       _stage = _Stage.result;
       _sending = true;
     });
-    if (_correct >= 8) Confetti.burst(context);
+    if (_correct >= _questions.length * 0.8) Confetti.burst(context);
     try {
       final board = await DuelPage.api({
         'action': 'submit',
@@ -278,6 +359,7 @@ class _DuelPageState extends State<DuelPage> {
         duration: const Duration(milliseconds: 400),
         child: switch (_stage) {
           _Stage.lobby => _buildLobby(),
+          _Stage.preparing => _buildPreparing(),
           _Stage.ready => _buildReady(),
           _Stage.play => _buildPlay(),
           _Stage.result => _buildResult(),
@@ -293,7 +375,7 @@ class _DuelPageState extends State<DuelPage> {
         const Center(child: Floating(child: Text('⚔️', style: TextStyle(fontSize: 70)))),
         const SizedBox(height: 10),
         TranslatedText(
-          'Challenge a friend or your whole class! Everyone with the code answers the same 10 questions. Create a duel and send the code, or enter the code you received.',
+          'Challenge a friend or your whole class! Choose the topics and the number of questions; everyone with the code answers the same questions, from easy to hard. Create a duel and send the code, or enter the code you received.',
           textAlign: TextAlign.center,
           style: TextStyle(color: AppTheme.textSecondary, fontSize: 15, height: 1.4),
         ),
@@ -334,6 +416,34 @@ class _DuelPageState extends State<DuelPage> {
     );
   }
 
+  /// "10 questions · Le Subjonctif · Conjugaison"
+  Widget _topicsLine() => Wrap(
+        alignment: WrapAlignment.center,
+        spacing: 6,
+        runSpacing: 6,
+        children: [
+          Chip(
+            label: Text(tr(context, '{n} questions', {'n': _questions.length})),
+            backgroundColor: AppTheme.primary.withValues(alpha: 0.15),
+          ),
+          for (final t in _topics) Chip(label: Text(t)),
+        ],
+      );
+
+  Widget _buildPreparing() {
+    return PageBody(
+      key: const ValueKey('preparing'),
+      children: [
+        const SizedBox(height: 60),
+        const Center(child: Floating(child: Text('🧠', style: TextStyle(fontSize: 64)))),
+        const SizedBox(height: 18),
+        Center(child: Text(_preparing, style: TextStyle(color: AppTheme.textSecondary, fontSize: 16))),
+        const SizedBox(height: 18),
+        const Center(child: SizedBox(width: 36, height: 36, child: CircularProgressIndicator(strokeWidth: 3))),
+      ],
+    );
+  }
+
   Widget _buildReady() {
     return PageBody(
       key: const ValueKey('ready'),
@@ -341,9 +451,11 @@ class _DuelPageState extends State<DuelPage> {
         const Center(child: Floating(child: Text('📨', style: TextStyle(fontSize: 64)))),
         const SizedBox(height: 10),
         _codeCard(),
+        const SizedBox(height: 12),
+        _topicsLine(),
         const SizedBox(height: 14),
         TranslatedText(
-          'Send it to one friend or to your class group. Everyone opens the link (or Practice → Duel and types the code) and plays the same 10 questions, whenever they want. The ranking shows who wins.',
+          'Send it to one friend or to your class group. Everyone opens the link (or Practice → Duel and types the code) and plays the same questions, whenever they want. The ranking shows who wins.',
           textAlign: TextAlign.center,
           style: TextStyle(color: AppTheme.textSecondary, fontSize: 14, height: 1.4),
         ),
@@ -434,12 +546,12 @@ class _DuelPageState extends State<DuelPage> {
     return PageBody(
       key: const ValueKey('result'),
       children: [
-        Center(child: Floating(child: Text(_correct >= 8 ? '🏆' : '⚔️', style: const TextStyle(fontSize: 72)))),
+        Center(child: Floating(child: Text(_correct >= _questions.length * 0.8 ? '🏆' : '⚔️', style: const TextStyle(fontSize: 72)))),
         Center(
           child: Text('$_score pts', textDirection: TextDirection.ltr,
               style: TextStyle(fontSize: 42, fontWeight: FontWeight.w900, color: AppTheme.warning)),
         ),
-        Center(child: Text('$_correct / 10 · ${_seconds}s', textDirection: TextDirection.ltr, style: TextStyle(color: AppTheme.textSecondary))),
+        Center(child: Text('$_correct / ${_questions.length} · ${_seconds}s', textDirection: TextDirection.ltr, style: TextStyle(color: AppTheme.textSecondary))),
         const SizedBox(height: 16),
         if (myRank >= 0) ...[
           const SizedBox(height: 4),
@@ -450,6 +562,7 @@ class _DuelPageState extends State<DuelPage> {
         ],
         const SizedBox(height: 12),
         _codeCard(),
+        if (_topics.isNotEmpty) ...[const SizedBox(height: 10), _topicsLine()],
         SectionTitle(
           '${tr(context, 'Ranking')} · ${board.length} 👥',
           trailing: IconButton(
@@ -475,7 +588,7 @@ class _DuelPageState extends State<DuelPage> {
                     Expanded(child: Text('${row['name']}', style: TextStyle(color: AppTheme.textPrimary, fontSize: 17))),
                     Text('${row['score']} pts', textDirection: TextDirection.ltr, style: TextStyle(color: AppTheme.warning, fontWeight: FontWeight.bold)),
                     const SizedBox(width: 10),
-                    Text('${row['correct']}/10 · ${row['seconds']}s', textDirection: TextDirection.ltr, style: TextStyle(color: AppTheme.textTertiary)),
+                    Text('${row['correct']}/${_questions.length} · ${row['seconds']}s', textDirection: TextDirection.ltr, style: TextStyle(color: AppTheme.textTertiary)),
                   ],
                 ),
               ),
@@ -489,6 +602,119 @@ class _DuelPageState extends State<DuelPage> {
             },
             child: Text(tr(context, 'New duel'))),
       ],
+    );
+  }
+}
+
+
+/// Creator's choices: what the duel covers and how many questions.
+class _DuelSetupSheet extends StatefulWidget {
+  final List<String> grammarTitles;
+  const _DuelSetupSheet({required this.grammarTitles});
+
+  @override
+  State<_DuelSetupSheet> createState() => _DuelSetupSheetState();
+}
+
+class _DuelSetupSheetState extends State<_DuelSetupSheet> {
+  bool _conjugation = true;
+  bool _vocabulary = true;
+  final Set<String> _grammar = {};
+  int _count = 10;
+
+  bool get _all => _conjugation && _vocabulary && _grammar.length == widget.grammarTitles.length;
+  bool get _empty => !_conjugation && !_vocabulary && _grammar.isEmpty;
+
+  void _toggleAll() => setState(() {
+        final on = !_all;
+        _conjugation = on;
+        _vocabulary = on;
+        _grammar
+          ..clear()
+          ..addAll(on ? widget.grammarTitles : const []);
+      });
+
+  @override
+  Widget build(BuildContext context) {
+    Widget chip(String label, bool selected, VoidCallback onTap, {String? emoji}) => FilterChip(
+          label: Text(emoji == null ? label : '$emoji $label'),
+          selected: selected,
+          onSelected: (_) => onTap(),
+          selectedColor: AppTheme.primary.withValues(alpha: 0.25),
+          checkmarkColor: AppTheme.primary,
+        );
+    return DraggableScrollableSheet(
+      expand: false,
+      initialChildSize: 0.85,
+      maxChildSize: 0.95,
+      builder: (context, scroll) => ListView(
+        controller: scroll,
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
+        children: [
+          Center(
+            child: Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(color: AppTheme.textTertiary, borderRadius: BorderRadius.circular(4)),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text(tr(context, 'What should the duel cover?'),
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppTheme.textPrimary)),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              chip(tr(context, 'All topics'), _all, _toggleAll, emoji: '🌍'),
+              chip(DuelTopics.conjugation, _conjugation, () => setState(() => _conjugation = !_conjugation), emoji: '🎯'),
+              chip(DuelTopics.vocabulary, _vocabulary, () => setState(() => _vocabulary = !_vocabulary), emoji: '📚'),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Text(tr(context, 'Grammar'), style: TextStyle(fontWeight: FontWeight.w700, color: AppTheme.textSecondary)),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final t in widget.grammarTitles)
+                chip(t, _grammar.contains(t), () => setState(() => _grammar.contains(t) ? _grammar.remove(t) : _grammar.add(t))),
+            ],
+          ),
+          const SizedBox(height: 20),
+          Text(tr(context, 'How many questions?'),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppTheme.textPrimary)),
+          const SizedBox(height: 10),
+          SegmentedButton<int>(
+            showSelectedIcon: false,
+            segments: [for (final n in DuelBuilder.counts) ButtonSegment(value: n, label: Text('$n'))],
+            selected: {_count},
+            onSelectionChanged: (v) => setState(() => _count = v.first),
+          ),
+          const SizedBox(height: 8),
+          Text(tr(context, 'From easy to hard.'), style: TextStyle(color: AppTheme.textTertiary, fontSize: 13)),
+          const SizedBox(height: 22),
+          if (_empty)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Text(tr(context, 'Choose at least one topic.'), style: TextStyle(color: AppTheme.error)),
+            ),
+          GlowButton(
+            label: tr(context, 'Create the duel'),
+            icon: Icons.bolt_rounded,
+            onPressed: _empty
+                ? null
+                : () => Navigator.pop(
+                      context,
+                      (
+                        DuelTopics(withConjugation: _conjugation, withVocabulary: _vocabulary, grammar: _grammar.toList()),
+                        _count,
+                      ),
+                    ),
+          ),
+        ],
+      ),
     );
   }
 }

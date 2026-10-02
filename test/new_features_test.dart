@@ -8,6 +8,7 @@ import 'package:french_course_b1/pages/games/duel_page.dart';
 import 'package:french_course_b1/pages/home_page.dart';
 import 'package:french_course_b1/pages/mistakes/mistakes_page.dart';
 import 'package:french_course_b1/pages/roleplay/roleplay_page.dart';
+import 'package:french_course_b1/services/duel_questions.dart';
 import 'package:french_course_b1/services/language_provider.dart';
 import 'package:french_course_b1/services/lessons_provider.dart';
 import 'package:french_course_b1/services/progress_service.dart';
@@ -125,6 +126,8 @@ void main() {
   });
 
   testWidgets('a duel sends the score and shows the board', (tester) async {
+    // An older duel: the server has no saved questions, so they come from the code.
+    DuelPage.send = (body) async => {'duel': null};
     final sent = <Map<String, dynamic>>[];
     DuelPage.api = (body) async {
       sent.add(body);
@@ -146,5 +149,54 @@ void main() {
     expect(sent.single['action'], 'submit');
     expect(sent.single['correct'], 10);
     expect(find.text('Sara'), findsOneWidget);
+  });
+
+  testWidgets('the creator chooses grammar topics and the number of questions', (tester) async {
+    DuelBuilder.chat = (messages, {thinking = false, temperature, maxTokens}) async => {
+          'questions': [
+            for (var i = 0; i < 6; i++)
+              {
+                'topic': 'Grammaire',
+                'level': 3 - i % 3,
+                'prompt': 'Il faut que tu ___ ($i).',
+                'options': ['sois', 'es', 'seras', 'étais'],
+                'correct': 0,
+              },
+          ],
+        };
+    final created = <Map<String, dynamic>>[];
+    DuelPage.send = (body) async {
+      created.add(body);
+      return {'ok': true};
+    };
+    await _pump(tester, const DuelPage());
+    await tester.enterText(find.byType(TextField).first, 'Sara');
+    await tester.tap(find.text('Create a duel'));
+    await _settle(tester);
+    expect(find.text('What should the duel cover?'), findsOneWidget);
+
+    await tester.tap(find.byType(FilterChip).at(3)); // the first grammar topic
+    await tester.tap(find.text('5'));
+    await _settle(tester, 500);
+    await tester.tap(find.text('Create the duel'));
+    await _settle(tester, 3000);
+
+    final body = created.single;
+    expect(body['action'], 'create');
+    final questions = body['questions'] as List;
+    expect(questions, hasLength(5));
+    final levels = [for (final q in questions) q['level'] as int];
+    expect(levels, [...levels]..sort(), reason: 'easy first, then medium, then hard');
+    expect(body['topics'], contains('Conjugaison'));
+    expect(find.text('5 questions'), findsOneWidget);
+  });
+
+  test('duel questions go from easy to hard', () async {
+    DuelBuilder.chat = (messages, {thinking = false, temperature, maxTokens}) async => {'questions': []};
+    final questions = await DuelBuilder.build(const DuelTopics(), count: 15);
+    expect(questions, hasLength(15));
+    final levels = [for (final q in questions) q.level];
+    expect(levels, [...levels]..sort());
+    expect(levels.toSet(), containsAll([1, 2, 3]));
   });
 }
