@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:provider/provider.dart';
 import '../../services/api_client.dart';
@@ -44,6 +45,17 @@ class DuelPage extends StatefulWidget {
     return Map<String, dynamic>.from(jsonDecode(response.body) as Map);
   }
 
+  /// Waiting-room status of a live duel (players, start time), polled every 2 s.
+  @visibleForTesting
+  static Future<Map<String, dynamic>?> Function(String code) status = _status;
+
+  static Future<Map<String, dynamic>?> _status(String code) async {
+    final response = await http.get(ApiClient.uri('/api/duel?code=$code')).timeout(const Duration(seconds: 10));
+    if (response.statusCode != 200) throw DuelServerError(response.statusCode);
+    final value = (jsonDecode(response.body) as Map)['status'];
+    return value is Map ? Map<String, dynamic>.from(value) : null;
+  }
+
   static Future<List<Map<String, dynamic>>> _callApi(Map<String, dynamic> body) async {
     final response = await ApiClient.post('/api/duel', body, timeout: const Duration(seconds: 20));
     if (response.statusCode != 200) throw Exception(ApiClient.errorMessage(response));
@@ -61,7 +73,7 @@ class DuelServerError implements Exception {
   String toString() => 'Duel server error $status';
 }
 
-enum _Stage { lobby, preparing, ready, play, result }
+enum _Stage { lobby, preparing, ready, waiting, play, result }
 
 class _DuelPageState extends State<DuelPage> {
   final _name = TextEditingController();
@@ -81,6 +93,17 @@ class _DuelPageState extends State<DuelPage> {
   String? _error;
   bool _sending = false;
 
+  // Live duel: everyone waits in a room and starts at the same moment.
+  String? _hostKey; // only on the creator's phone
+  Map<String, dynamic>? _liveStatus; // last status from the server
+  List<String> _players = [];
+  String? _hostName;
+  Timer? _pollTimer;
+  Timer? _countdownTimer;
+  int? _countdown; // seconds before the start, shown big
+  DateTime _waitingSince = DateTime.now();
+  bool _starting = false;
+
   @override
   void initState() {
     super.initState();
@@ -94,6 +117,8 @@ class _DuelPageState extends State<DuelPage> {
   void dispose() {
     _ticker?.cancel();
     _boardTimer?.cancel();
+    _pollTimer?.cancel();
+    _countdownTimer?.cancel();
     _name.dispose();
     _join.dispose();
     super.dispose();
@@ -145,16 +170,21 @@ class _DuelPageState extends State<DuelPage> {
             ],
       };
       final questions = await DuelBuilder.build(topics, count: count, grammarRules: rules);
+      final hostKey = _newHostKey();
+      var live = false;
       for (var attempt = 0; ; attempt++) {
         final code = _newCode();
         try {
-          await DuelPage.send({
+          final created = await DuelPage.send({
             'action': 'create',
             'code': code,
             'topics': topics.names,
             'questions': [for (final q in questions) q.toJson()],
+            'host_key': hostKey,
+            'host_name': _name.text.trim(),
           });
           _code = code;
+          live = created['live'] == true;
           break;
         } on DuelServerError catch (e) {
           if (e.status == 409 && attempt < 3) continue; // code already taken
@@ -175,6 +205,12 @@ class _DuelPageState extends State<DuelPage> {
         _topics = topics.names;
         _stage = _Stage.ready;
       });
+      if (live) {
+        _hostKey = hostKey;
+        _hostName = _name.text.trim();
+        _players = [_name.text.trim()];
+        _enterWaiting();
+      }
     } catch (e) {
       debugPrint('Duel not created: $e');
       if (!mounted) return;
@@ -187,11 +223,20 @@ class _DuelPageState extends State<DuelPage> {
     }
   }
 
+  static String _newHostKey() {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    final r = Random.secure();
+    return List.generate(24, (_) => chars[r.nextInt(chars.length)]).join();
+  }
+
   /// The questions of a duel: saved with the code, or (older duels) made from the code.
   Future<List<DuelQuestion>> _loadQuestions(String code) async {
     if (code == _code && _questions.isNotEmpty) return _questions;
+    _liveStatus = null;
     try {
-      final duel = (await DuelPage.send({'action': 'get', 'code': code}))['duel'];
+      final answer = await DuelPage.send({'action': 'get', 'code': code});
+      final duel = answer['duel'];
+      if (answer['status'] is Map) _liveStatus = Map<String, dynamic>.from(answer['status'] as Map);
       if (duel is Map) {
         final questions = [
           for (final raw in (duel['questions'] as List? ?? const [])) DuelQuestion.fromJson(raw),
@@ -222,9 +267,36 @@ class _DuelPageState extends State<DuelPage> {
     });
     final questions = await _loadQuestions(code);
     if (!mounted) return;
+    _code = code;
+    _questions = questions;
+    // Live duel created by someone else: join the waiting room (or play at once if it has started).
+    final status = _liveStatus;
+    if (_hostKey == null && status != null && status['live'] == true) {
+      final startedAt = DateTime.tryParse('${status['started_at'] ?? ''}');
+      try {
+        final joined = await DuelPage.send({'action': 'join', 'code': code, 'name': _name.text.trim()});
+        if (joined['status'] is Map) _applyStatus(Map<String, dynamic>.from(joined['status'] as Map));
+      } catch (e) {
+        debugPrint('Could not join the waiting room: $e');
+      }
+      if (!mounted) return;
+      final serverNow = DateTime.tryParse('${status['now'] ?? ''}');
+      final late = startedAt != null && serverNow != null && !startedAt.isAfter(serverNow);
+      if (!late) {
+        _enterWaiting();
+        return;
+      }
+    }
+    _begin();
+  }
+
+  /// Starts answering now (the clock and score start here).
+  void _begin() {
+    _pollTimer?.cancel();
+    _countdownTimer?.cancel();
+    if (!mounted) return;
     setState(() {
-      _code = code;
-      _questions = questions;
+      _countdown = null;
       _index = 0;
       _correct = 0;
       _picked = null;
@@ -234,8 +306,82 @@ class _DuelPageState extends State<DuelPage> {
     _clock
       ..reset()
       ..start();
+    _ticker?.cancel();
     _ticker = Timer.periodic(const Duration(seconds: 1), (_) {
       if (mounted) setState(() {});
+    });
+  }
+
+  // ── Live duel: waiting room and synchronised start ─────────────────────────
+
+  void _enterWaiting() {
+    _waitingSince = DateTime.now();
+    setState(() => _stage = _Stage.waiting);
+    _pollTimer?.cancel();
+    _pollTimer = Timer.periodic(const Duration(seconds: 2), (_) => _poll());
+    _poll();
+  }
+
+  Future<void> _poll() async {
+    if (_stage != _Stage.waiting || _countdownTimer != null) return;
+    try {
+      final status = await DuelPage.status(_code);
+      if (status != null && mounted) _applyStatus(status);
+    } catch (e) {
+      debugPrint('Waiting room status failed: $e');
+    }
+    if (mounted && _stage == _Stage.waiting) setState(() {}); // e.g. "play without waiting" after 2 min
+  }
+
+  /// Shows who is waiting and, once the creator pressed Start, counts down to
+  /// the start time. The server's clock decides, so every phone starts together.
+  void _applyStatus(Map<String, dynamic> status) {
+    setState(() {
+      _players = [for (final p in (status['players'] as List? ?? const [])) '$p'];
+      _hostName = (status['host_name'] as String?) ?? _hostName;
+    });
+    final startedAt = DateTime.tryParse('${status['started_at'] ?? ''}');
+    final serverNow = DateTime.tryParse('${status['now'] ?? ''}');
+    if (startedAt == null || serverNow == null || _countdownTimer != null || _stage != _Stage.waiting) return;
+    final startLocal = DateTime.now().add(startedAt.difference(serverNow));
+    void tick() {
+      final left = startLocal.difference(DateTime.now());
+      if (left <= Duration.zero) {
+        _begin();
+      } else if (mounted) {
+        setState(() => _countdown = (left.inMilliseconds / 1000).ceil());
+      }
+    }
+
+    _pollTimer?.cancel();
+    _countdownTimer = Timer.periodic(const Duration(milliseconds: 100), (_) => tick());
+    tick();
+  }
+
+  Future<void> _startForEveryone() async {
+    if (_hostKey == null || _starting) return;
+    setState(() => _starting = true);
+    try {
+      final answer = await DuelPage.send({'action': 'start', 'code': _code, 'host_key': _hostKey});
+      if (answer['status'] is Map && mounted) _applyStatus(Map<String, dynamic>.from(answer['status'] as Map));
+    } catch (e) {
+      debugPrint('Start failed: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr(context, 'Connection lost. Try again.'))));
+      }
+    } finally {
+      if (mounted) setState(() => _starting = false);
+    }
+  }
+
+  void _leaveWaiting() {
+    _pollTimer?.cancel();
+    _countdownTimer?.cancel();
+    _countdownTimer = null;
+    setState(() {
+      _countdown = null;
+      _hostKey = null;
+      _stage = _Stage.lobby;
     });
   }
 
@@ -361,6 +507,7 @@ class _DuelPageState extends State<DuelPage> {
           _Stage.lobby => _buildLobby(),
           _Stage.preparing => _buildPreparing(),
           _Stage.ready => _buildReady(),
+          _Stage.waiting => _buildWaiting(),
           _Stage.play => _buildPlay(),
           _Stage.result => _buildResult(),
         },
@@ -440,6 +587,84 @@ class _DuelPageState extends State<DuelPage> {
         Center(child: Text(_preparing, style: TextStyle(color: AppTheme.textSecondary, fontSize: 16))),
         const SizedBox(height: 18),
         const Center(child: SizedBox(width: 36, height: 36, child: CircularProgressIndicator(strokeWidth: 3))),
+      ],
+    );
+  }
+
+  Widget _buildWaiting() {
+    final isHost = _hostKey != null;
+    final me = _name.text.trim().toLowerCase();
+    final waitedLong = DateTime.now().difference(_waitingSince) > const Duration(minutes: 2);
+    if (_countdown != null) {
+      return Center(
+        key: const ValueKey('countdown'),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(tr(context, 'Get ready!'), style: TextStyle(color: AppTheme.textSecondary, fontSize: 20)),
+            const SizedBox(height: 12),
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 250),
+              transitionBuilder: (child, a) => ScaleTransition(scale: a, child: child),
+              child: Text('${_countdown!}',
+                  key: ValueKey(_countdown),
+                  style: TextStyle(fontSize: 120, fontWeight: FontWeight.w900, color: AppTheme.primary)),
+            ),
+          ],
+        ),
+      );
+    }
+    return PageBody(
+      key: const ValueKey('waiting'),
+      children: [
+        if (isHost) ...[
+          _codeCard(),
+          const SizedBox(height: 12),
+        ] else ...[
+          const Center(child: Floating(child: Text('⏳', style: TextStyle(fontSize: 60)))),
+          const SizedBox(height: 10),
+          Center(
+            child: Text(
+              _hostName == null
+                  ? tr(context, 'Waiting for the creator to start…')
+                  : tr(context, 'Waiting for {name} to start…', {'name': _hostName}),
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.textPrimary),
+            ),
+          ),
+          const SizedBox(height: 10),
+        ],
+        _topicsLine(),
+        SectionTitle('${tr(context, 'Players')} · ${_players.length} 👥'),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            for (final (i, p) in _players.indexed)
+              Entrance(
+                index: i,
+                child: Chip(
+                  avatar: Text(p.trim().toLowerCase() == me ? '⭐' : '🙂'),
+                  label: Text(p),
+                  backgroundColor: p.trim().toLowerCase() == me ? AppTheme.warning.withValues(alpha: 0.2) : null,
+                ),
+              ),
+          ],
+        ),
+        const SizedBox(height: 24),
+        if (isHost) ...[
+          GlowButton(
+            label: tr(context, 'Start for everyone'),
+            icon: Icons.flag_rounded,
+            onPressed: _starting ? null : _startForEveryone,
+          ),
+          const SizedBox(height: 8),
+          Text(tr(context, 'When everyone is here, press Start: all phones count down 3-2-1 and begin together.'),
+              textAlign: TextAlign.center, style: TextStyle(color: AppTheme.textTertiary, fontSize: 13)),
+        ] else if (waitedLong)
+          TextButton(onPressed: _begin, child: Text(tr(context, 'Play now without waiting'))),
+        const SizedBox(height: 8),
+        TextButton(onPressed: _leaveWaiting, child: Text(tr(context, 'Back'))),
       ],
     );
   }

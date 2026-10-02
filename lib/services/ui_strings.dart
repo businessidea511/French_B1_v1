@@ -179,6 +179,21 @@ class UiStrings {
     '{n} questions': ['{n} questions', '{n} أسئلة', '{n} питань', '{n} domande', '{n} ሕቶታት', '{n} soru', '{n} pertanyaan'],
     'Could not prepare the questions. Try again.': ['Impossible de préparer les questions. Réessaie.', 'تعذّر تحضير الأسئلة. حاول مرة أخرى.', 'Не вдалося підготувати питання. Спробуй ще раз.', 'Impossibile preparare le domande. Riprova.', 'ሕቶታት ክዳለዉ ኣይከኣሉን። እንደገና ፈትን።', 'Sorular hazırlanamadı. Tekrar dene.', 'Tidak bisa menyiapkan pertanyaan. Coba lagi.'],
     'The class duel server is not ready yet.': ['Le serveur des duels de classe n\'est pas encore prêt.', 'خادم مبارزات الصف غير جاهز بعد.', 'Сервер класних дуелей ще не готовий.', 'Il server delle sfide di classe non è ancora pronto.', 'ሰርቨር ውድድር ክፍሊ ገና ድሉው ኣይኮነን።', 'Sınıf düellosu sunucusu henüz hazır değil.', 'Server duel kelas belum siap.'],
+    'Players': ['Joueurs', 'اللاعبون', 'Гравці', 'Giocatori', 'ተጻወትቲ', 'Oyuncular', 'Pemain'],
+    'Start for everyone': ['Lancer pour tout le monde', 'ابدأ للجميع', 'Почати для всіх', 'Avvia per tutti', 'ንኹሉ ጀምር', 'Herkes için başlat', 'Mulai untuk semua'],
+    'When everyone is here, press Start: all phones count down 3-2-1 and begin together.': [
+      'Quand tout le monde est là, appuie sur Lancer : tous les téléphones comptent 3-2-1 et commencent ensemble.',
+      'عندما يحضر الجميع، اضغط ابدأ: كل الهواتف تعدّ 3-2-1 وتبدأ معًا.',
+      'Коли всі зібралися, натисни «Почати»: усі телефони рахують 3-2-1 і стартують разом.',
+      'Quando ci sono tutti, premi Avvia: tutti i telefoni contano 3-2-1 e partono insieme.',
+      'ኩሉ ምስ መጸ፡ ጀምር ጠውቕ፤ ኩሎም ስልክታት 3-2-1 ቆጺሮም ብሓባር ይጅምሩ።',
+      'Herkes gelince Başlat\'a bas: tüm telefonlar 3-2-1 sayar ve birlikte başlar.',
+      'Kalau semua sudah hadir, tekan Mulai: semua ponsel menghitung 3-2-1 dan mulai bersama.',
+    ],
+    'Waiting for {name} to start…': ['On attend que {name} lance le duel…', 'بانتظار أن يبدأ {name}…', 'Чекаємо, поки {name} почне…', 'In attesa che {name} avvii la sfida…', '{name} ክጅምር ንጽበ ኣለና…', '{name} başlatmasını bekliyoruz…', 'Menunggu {name} memulai…'],
+    'Waiting for the creator to start…': ['On attend que le créateur lance le duel…', 'بانتظار أن يبدأ المنشئ…', 'Чекаємо, поки автор почне…', 'In attesa che il creatore avvii la sfida…', 'ፈጣሪ ክጅምር ንጽበ ኣለና…', 'Oluşturanın başlatmasını bekliyoruz…', 'Menunggu pembuat memulai…'],
+    'Play now without waiting': ['Jouer maintenant sans attendre', 'العب الآن دون انتظار', 'Грати зараз, не чекаючи', 'Gioca ora senza aspettare', 'ከይተጸበኻ ሕጂ ተጻወት', 'Beklemeden şimdi oyna', 'Main sekarang tanpa menunggu'],
+    'Get ready!': ['Prêts ?', 'استعدّ!', 'Приготуйся!', 'Pronti!', 'ተዳለው!', 'Hazır ol!', 'Bersiap!'],
     'New duel': ['Nouveau duel', 'مبارزة جديدة', 'Нова дуель', 'Nuova sfida', 'ሓድሽ ውድድር', 'Yeni düello', 'Duel baru'],
 
     // Missions, mistakes

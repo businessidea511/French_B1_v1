@@ -199,4 +199,44 @@ void main() {
     expect(levels, [...levels]..sort());
     expect(levels.toSet(), containsAll([1, 2, 3]));
   });
+
+  testWidgets('classmates wait in a room and start together when the creator presses Start', (tester) async {
+    final questions = [
+      for (var i = 0; i < 5; i++)
+        {'prompt': 'Il faut que tu ___ ($i).', 'hint': 'Subjonctif', 'options': ['sois', 'es'], 'correct': 0, 'level': 1},
+    ];
+    String? startedAt;
+    final sent = <String>[];
+    DuelPage.send = (body) async {
+      sent.add(body['action'] as String);
+      final status = {'live': true, 'started_at': null, 'host_name': 'Ahmad', 'players': ['Ahmad', 'Sara'], 'now': DateTime.now().toUtc().toIso8601String()};
+      return body['action'] == 'get' ? {'duel': {'topics': ['Le Subjonctif'], 'questions': questions}, 'status': status} : {'status': status};
+    };
+    DuelPage.status = (code) async => {
+          'live': true,
+          'started_at': startedAt,
+          'host_name': 'Ahmad',
+          'players': ['Ahmad', 'Sara', 'Yassin'],
+          'now': DateTime.now().toUtc().toIso8601String(),
+        };
+    await _pump(tester, const DuelPage());
+    await tester.enterText(find.byType(TextField).first, 'Sara');
+    await tester.enterText(find.byType(TextField).last, 'LIVE01');
+    await tester.tap(find.text('Join'));
+    await _settle(tester);
+
+    expect(sent, ['get', 'join']);
+    expect(find.text('Waiting for Ahmad to start…'), findsOneWidget);
+    await _settle(tester, 2500);
+    expect(find.text('Yassin'), findsOneWidget, reason: 'the room updates while waiting');
+    expect(find.text('Il faut que tu ___ (0).'), findsNothing, reason: 'nobody plays before the start');
+
+    // The creator presses Start: the server sets a start time 3 s from now.
+    startedAt = DateTime.now().toUtc().add(const Duration(seconds: 3)).toIso8601String();
+    await _settle(tester, 2500);
+    expect(find.text('Get ready!'), findsOneWidget);
+    await tester.runAsync(() => Future.delayed(const Duration(seconds: 3)));
+    await _settle(tester, 1000);
+    expect(find.text('Il faut que tu ___ (0).'), findsOneWidget);
+  });
 }

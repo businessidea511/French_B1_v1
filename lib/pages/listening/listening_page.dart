@@ -357,12 +357,15 @@ class _ListeningPageState extends State<ListeningPage> {
                   children: [
                     DropdownButtonFormField<String>(
                       value: _selectedTopic,
+                      isExpanded: true, // long topic names stay inside the box on phones
                       decoration: const InputDecoration(
                         labelText: 'Choose a Topic',
                         border: OutlineInputBorder(),
+                        contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 14),
                       ),
                       items: _topics.map((t) {
-                        return DropdownMenuItem(value: t, child: Text(t));
+                        return DropdownMenuItem(
+                            value: t, child: Text(t, maxLines: 1, overflow: TextOverflow.ellipsis));
                       }).toList(),
                       onChanged: (val) {
                         setState(() {
@@ -376,10 +379,12 @@ class _ListeningPageState extends State<ListeningPage> {
                       // City Selector
                       DropdownButtonFormField<String>(
                         value: _selectedCity,
+                        isExpanded: true,
                         decoration: const InputDecoration(
                           labelText: 'Choose Specific City',
                           border: OutlineInputBorder(),
                           prefixIcon: Icon(Icons.location_city),
+                          contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 14),
                         ),
                         items: ['Paris', 'Bruxelles', 'Liège'].map((c) {
                           return DropdownMenuItem(value: c, child: Text(c));
