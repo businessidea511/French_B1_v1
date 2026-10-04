@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../data/story_characters.dart';
-import '../../services/deepseek_service.dart';
 import '../../services/language_provider.dart';
 import '../../services/life_story_service.dart';
 import '../../services/speech_input.dart';
@@ -243,7 +242,7 @@ class _LifeChatPageState extends State<LifeChatPage> {
                       minLines: 1,
                       maxLines: 4,
                       decoration: InputDecoration(
-                          hintText: tr(context, _listening ? "I'm listening… speak French" : 'Answer in French…')),
+                          hintText: tr(context, _listening ? "Listening… take your time. Tap the mic when you finish." : 'Answer in French…')),
                     ),
                   ),
                   if (SpeechInput.supported) ...[
@@ -318,38 +317,54 @@ class _LifeChatPageState extends State<LifeChatPage> {
                           icon: Icon(Icons.translate_rounded, size: 18, color: AppTheme.textTertiary),
                           onPressed: () async {
                             if (translation != null) return setState(() => _translations.remove(m));
-                            final lang = context.read<LanguageProvider>().currentLanguage.name;
-                            final t = await DeepSeekService.translateText(m.text, lang);
-                            if (mounted) setState(() => _translations[m] = t);
+                            final current = context.read<LanguageProvider>().currentLanguage;
+                            // A French interface still needs a translation: English then.
+                            final lang = current == AppLanguage.french ? 'English' : current.englishName;
+                            setState(() => _translations[m] = '…');
+                            try {
+                              final t = await _story.translate(m.text, lang);
+                              if (mounted) setState(() => _translations[m] = t);
+                            } catch (_) {
+                              if (!mounted) return;
+                              setState(() => _translations.remove(m));
+                              ScaffoldMessenger.of(context)
+                                  .showSnackBar(SnackBar(content: Text(tr(context, 'Translation failed. Try again.'))));
+                            }
                           },
                         ),
                       ],
                       if (!ai) const SizedBox(width: 8),
                     ],
                   ),
-                  if (translation != null) Text(translation, style: TextStyle(color: AppTheme.textTertiary, fontSize: 13)),
+                  if (translation != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4, right: 8),
+                      child: Text(translation, style: TextStyle(color: AppTheme.textSecondary, fontSize: 14, height: 1.35)),
+                    ),
                 ],
               ),
             ),
             if (m.correction.isNotEmpty)
-              Container(
-                margin: const EdgeInsets.only(top: 4),
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: AppTheme.warning.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppTheme.warning.withValues(alpha: 0.4)),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('✏️ ${m.correction}',
+              _note(
+                color: AppTheme.warning,
+                lines: [
+                  Text('✏️ ${m.correction}',
+                      textDirection: TextDirection.ltr,
+                      style: TextStyle(color: AppTheme.warning, fontWeight: FontWeight.bold)),
+                ],
+                explanation: m.explanation,
+              )
+            else if (m.checked)
+              _note(
+                color: AppTheme.success,
+                lines: [
+                  Text('✅ ${tr(context, 'Correct!')}', style: TextStyle(color: AppTheme.success, fontWeight: FontWeight.bold)),
+                  if (m.better.isNotEmpty)
+                    Text('💬 ${m.better}',
                         textDirection: TextDirection.ltr,
-                        style: TextStyle(color: AppTheme.warning, fontWeight: FontWeight.bold)),
-                    if (m.explanation.isNotEmpty)
-                      Text(m.explanation, style: TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
-                  ],
-                ),
+                        style: TextStyle(color: AppTheme.textPrimary, fontWeight: FontWeight.w600)),
+                ],
+                explanation: m.explanation,
               ),
           ],
         ),
@@ -431,4 +446,28 @@ class _Typing extends StatelessWidget {
           child: Floating(distance: 3, period: Duration(milliseconds: 900), child: Text('💬 …', style: TextStyle(fontSize: 22))),
         ),
       );
+}
+
+/// A note under the learner's message: the correction, or "correct" with a more natural way to say it.
+Widget _note({required Color color, required List<Widget> lines, required String explanation}) {
+  return Container(
+    margin: const EdgeInsets.only(top: 4),
+    padding: const EdgeInsets.all(10),
+    decoration: BoxDecoration(
+      color: color.withValues(alpha: 0.12),
+      borderRadius: BorderRadius.circular(12),
+      border: Border.all(color: color.withValues(alpha: 0.4)),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        ...lines,
+        if (explanation.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(top: 2),
+            child: Text(explanation, style: TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
+          ),
+      ],
+    ),
+  );
 }

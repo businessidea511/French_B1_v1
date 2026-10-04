@@ -9,11 +9,14 @@ import 'progress_service.dart';
 class LifeMessage {
   final bool fromAi;
   final String text;
-  String correction;
-  String explanation;
+  String correction; // the corrected sentence when there were mistakes
+  String explanation; // why, in the learner's language
+  String better; // when it was already correct: a more natural way to say it
+  bool checked; // the learner's message was checked (correct when [correction] is empty)
   final String day; // yyyy-mm-dd
 
-  LifeMessage(this.fromAi, this.text, this.day, {this.correction = '', this.explanation = ''});
+  LifeMessage(this.fromAi, this.text, this.day,
+      {this.correction = '', this.explanation = '', this.better = '', this.checked = false});
 
   Map<String, dynamic> toJson() => {
         'ai': fromAi,
@@ -21,10 +24,16 @@ class LifeMessage {
         'd': day,
         if (correction.isNotEmpty) 'c': correction,
         if (explanation.isNotEmpty) 'e': explanation,
+        if (better.isNotEmpty) 'b': better,
+        if (checked) 'k': true,
       };
 
   static LifeMessage fromJson(Map j) =>
-      LifeMessage(j['ai'] == true, '${j['t'] ?? ''}', '${j['d'] ?? ''}', correction: '${j['c'] ?? ''}', explanation: '${j['e'] ?? ''}');
+      LifeMessage(j['ai'] == true, '${j['t'] ?? ''}', '${j['d'] ?? ''}',
+          correction: '${j['c'] ?? ''}',
+          explanation: '${j['e'] ?? ''}',
+          better: '${j['b'] ?? ''}',
+          checked: j['k'] == true);
 }
 
 /// Today's situation with one character: what happens and what the learner must do.
@@ -233,8 +242,7 @@ WORDS THE LEARNER SAVED (reuse some if natural): ${words.isEmpty ? 'none yet' : 
 Write today's $count scene(s), each with a DIFFERENT character, as the next episode of an ongoing story:
 - Continue what the characters remember (follow up on past events: "Alors, ce rendez-vous ?").
 - Everyday, realistic Belgian situations: small problems, favours, invitations, news, plans, admin, the French course.
-- Belgian words only where they are correct and natural (septante = 70, nonante = 90; never forced).
-- Times, prices and dates must make sense (e.g. "à 9 h", "septante euros").
+- Belgian words only where they are correct and natural (never forced). Write clock times, prices and dates with DIGITS: "à 19 h 30", "12 €", "le 5 octobre". Never write a time in words: "septante" means the number 70 (not 7 o'clock), "nonante" means 90.
 - Each scene needs the learner to DO something in French (answer, explain, ask, accept/refuse, tell a story, give an opinion).
 - "grammar": the B1 grammar point the scene makes the learner use (e.g. "passé composé", "futur proche", "subjonctif", "conditionnel", "pronoms COD/COI", "imparfait").
 - "opening": the character's first message, 1–3 short natural French sentences (as a text message), using "tu" or "vous" like the character does, ending with a question.
@@ -282,14 +290,16 @@ WHAT YOU REMEMBER ABOUT THEM: ${(memory[c.id] ?? const []).join(' | ')}
 ${scene == null || scene.done ? 'TODAY: free chat — talk naturally about their day or your news.' : 'TODAY\'S SITUATION: ${scene.situation}\nTHE LEARNER\'S GOAL: ${scene.goal}\nMake them use: ${scene.grammar}.'}
 RULES
 - This is a chat by text message: 1 to 3 short natural sentences, ${c.usesTu ? '"tu"' : '"vous"'}, B1 French, real Belgian life.
-- Belgian words only where they are correct and natural (septante = 70, nonante = 90; never forced).
+- Belgian words only where they are correct and natural (never forced). Write clock times, prices and dates with DIGITS: "à 19 h 30", "12 €", "le 5 octobre". Never write a time in words: "septante" means the number 70 (not 7 o'clock), "nonante" means 90.
 - React to exactly what they say; ask follow-up questions so they must write more French.
 - Never write another language than French in "reply".
 - They may write by voice (speech-to-text): ignore missing punctuation and capitals.
 - When the goal is clearly reached, close this topic warmly and set "goal_done": true.
-CORRECTION of their LAST message only: if it has French mistakes, "correction" = the corrected sentence (minimal changes) and "explanation" = a very short explanation in $explanationLanguage. Otherwise both "".
+CHECK their LAST message only (ignore punctuation and capitals):
+- If it has French mistakes (grammar, spelling, agreement, wrong word, word order): "correct" = false, "correction" = the whole corrected sentence (keep their meaning, minimal changes), "explanation" = what was wrong and the rule, short, in $explanationLanguage.
+- If it is correct: "correct" = true, "correction" = "", and "better" = a more natural or richer way a native would say it (or "" if it is already natural), "explanation" = a short note in $explanationLanguage on what was good or what "better" changes (or "").
 MEMORY: in "remember", list 0–2 NEW short facts worth remembering about the learner or what was agreed (English), e.g. "has a job interview on Friday".
-Return JSON: {"reply": "...", "correction": "", "explanation": "", "goal_done": false, "remember": []}''';
+Return JSON: {"reply": "...", "correct": true, "correction": "", "better": "", "explanation": "", "goal_done": false, "remember": []}''';
 
   /// Sends the learner's message and returns the character's answer (also added to the thread).
   Future<LifeMessage> reply(String characterId, String text, {required String explanationLanguage}) async {
@@ -307,9 +317,13 @@ Return JSON: {"reply": "...", "correction": "", "explanation": "", "goal_done": 
     final answer = LifeMessage(true, '${r['reply'] ?? ''}'.trim(), today);
     if (answer.text.isEmpty) throw Exception('empty reply');
     final correction = '${r['correction'] ?? ''}'.trim();
-    if (correction.isNotEmpty && correction != mine.text) {
+    mine.checked = true;
+    mine.explanation = '${r['explanation'] ?? ''}'.trim();
+    if (correction.isEmpty || _same(correction, mine.text)) {
+      final better = '${r['better'] ?? ''}'.trim();
+      if (better.isNotEmpty && !_same(better, mine.text)) mine.better = better;
+    } else {
       mine.correction = correction;
-      mine.explanation = '${r['explanation'] ?? ''}'.trim();
       ProgressService.instance.addMistake(
         source: 'Ma vie',
         question: '${c.emoji} ${c.name}${scene == null ? '' : ' · ${scene.title}'}',
@@ -337,6 +351,33 @@ Return JSON: {"reply": "...", "correction": "", "explanation": "", "goal_done": 
     }
     await _save();
     return answer;
+  }
+
+  /// Equal apart from punctuation, capitals and spaces (voice input has none).
+  static bool _same(String a, String b) {
+    String n(String s) => s.toLowerCase().replaceAll(RegExp(r"[\s.,!?;:'’«»\-]+"), '');
+    return n(a) == n(b);
+  }
+
+  final Map<String, String> _translated = {};
+
+  /// Translates a message of the story into the learner's language. Chat
+  /// messages are new every time, so they go straight to the AI.
+  Future<String> translate(String french, String language) async {
+    final key = '$language|$french';
+    final known = _translated[key];
+    if (known != null) return known;
+    final r = await chat([
+      {
+        'role': 'system',
+        'content': 'Translate the French chat message into $language. Natural, faithful, same tone. '
+            'Return JSON: {"translation": "..."}',
+      },
+      {'role': 'user', 'content': french},
+    ], temperature: 0.2, maxTokens: 600);
+    final t = '${r['translation'] ?? ''}'.trim();
+    if (t.isEmpty) throw Exception('empty translation');
+    return _translated[key] = t;
   }
 
   /// One natural sentence the learner could write now (the 💡 button).

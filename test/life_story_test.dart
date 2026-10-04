@@ -16,6 +16,20 @@ class _FakeAi {
       {bool thinking = false, double? temperature, int? maxTokens}) async {
     final system = messages.first['content'] as String;
     prompts.add(system);
+    if (system.startsWith('Translate the French chat message')) {
+      return {'translation': 'Hello! Your parcel is at my place.'};
+    }
+    final last = messages.last['content'] as String;
+    if (last == 'Je vais passer demain matin.') {
+      return {
+        'reply': 'Très bien !',
+        'correct': true,
+        'correction': '',
+        'better': 'Je passerai demain matin.',
+        'explanation': 'futur simple sounds more natural here',
+        'remember': [],
+      };
+    }
     if (system.contains('You are the writer')) {
       return {
         'scenes': [
@@ -155,5 +169,33 @@ void main() {
     expect(find.text('Parfait, à demain alors !'), findsOneWidget);
     expect(find.text('✏️ Je vais passer demain.'), findsOneWidget);
     expect(LifeStoryService.instance.unread['voisine'], 0);
+
+    // A correct sentence gets a green check and a more natural version.
+    ScaffoldMessenger.of(tester.element(find.byType(LifeChatPage))).removeCurrentSnackBar(); // "Scene complete"
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField), 'Je vais passer demain matin.');
+    await tester.tap(find.byIcon(Icons.send_rounded));
+    await tester.pumpAndSettle();
+    expect(find.text('✅ Correct!'), findsOneWidget);
+    expect(find.text('💬 Je passerai demain matin.'), findsOneWidget);
+
+    // Translate a message of the character: really translated, even with an English interface.
+    await tester.tap(find.byIcon(Icons.translate_rounded).first);
+    await tester.pumpAndSettle();
+    expect(find.text('Hello! Your parcel is at my place.'), findsOneWidget);
+    expect(ai.prompts.last, contains('into English'));
+  });
+
+  test('voice input without punctuation is not reported as a mistake', () async {
+    final story = LifeStoryService.instance;
+    await configure();
+    await story.ensureToday();
+    LifeStoryService.chat = (messages, {thinking = false, temperature, maxTokens}) async =>
+        {'reply': 'Super !', 'correct': true, 'correction': 'Je passe demain.', 'explanation': ''};
+    await story.reply('voisine', 'je passe demain', explanationLanguage: 'English');
+    final mine = story.thread('voisine')[1];
+    expect(mine.correction, isEmpty);
+    expect(mine.checked, isTrue);
+    expect(ProgressService.instance.mistakes, isEmpty);
   });
 }

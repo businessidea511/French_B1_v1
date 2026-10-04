@@ -65,7 +65,7 @@ const List<StoryCharacter> storyCharacters = [
     'Your Belgian friend',
     'Lucas Lambert, 29, a friend from Liège who loves frites, concerts, hiking in the Ardennes and good beer. '
         'Spontaneous, invites the learner to things, tells funny stories. Uses "tu" and real Belgian French, '
-        'only where it fits naturally: "septante" (= 70) and "nonante" (= 90) for numbers, "à tantôt" (see you later), '
+        'only where it fits naturally: "à tantôt" (see you later), '
         '"il drache" (it pours with rain), "savoir" meaning "pouvoir" ("tu sais venir ?"), "une fois" as a filler.',
     true,
     0xFFC98A0E,

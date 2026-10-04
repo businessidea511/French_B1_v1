@@ -318,7 +318,7 @@ Return JSON: {"reply": "...", "correction": "", "explanation": "", "done": false
                       minLines: 1,
                       maxLines: 4,
                       textInputAction: TextInputAction.send,
-                      decoration: InputDecoration(hintText: tr(context, _listening ? "I'm listening… speak French" : 'Answer in French…')),
+                      decoration: InputDecoration(hintText: tr(context, _listening ? "Listening… take your time. Tap the mic when you finish." : 'Answer in French…')),
                       onSubmitted: (_) => _send(),
                     ),
                   ),
