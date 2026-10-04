@@ -5,6 +5,7 @@ import 'package:french_course_b1/pages/lessons/dynamic_lesson_page.dart';
 import 'package:french_course_b1/pages/lessons/lesson_parts.dart';
 import 'package:french_course_b1/services/language_provider.dart';
 import 'package:french_course_b1/services/translation_store.dart';
+import 'package:french_course_b1/widgets/translated_text.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -104,5 +105,20 @@ void main() {
     await tester.tap(find.byIcon(Icons.arrow_back));
     await tester.pumpAndSettle();
     expect(find.text('2 / 4 parts done'), findsOneWidget);
+  });
+
+  testWidgets('a reused TranslatedText shows its new text, not the old one', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    Widget page(String text) => ChangeNotifierProvider(
+          create: (_) => LanguageProvider(),
+          child: MaterialApp(home: Scaffold(body: TranslatedText(text))),
+        );
+    await tester.pumpWidget(page('Your colleague'));
+    await tester.pumpAndSettle();
+    expect(find.text('Your colleague'), findsOneWidget);
+    await tester.pumpWidget(page('Your landlord'));
+    await tester.pumpAndSettle();
+    expect(find.text('Your landlord'), findsOneWidget);
+    expect(find.text('Your colleague'), findsNothing);
   });
 }

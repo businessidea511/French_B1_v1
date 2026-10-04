@@ -11,6 +11,7 @@ import 'package:french_course_b1/pages/roleplay/roleplay_page.dart';
 import 'package:french_course_b1/services/duel_questions.dart';
 import 'package:french_course_b1/services/language_provider.dart';
 import 'package:french_course_b1/services/lessons_provider.dart';
+import 'package:french_course_b1/services/life_story_service.dart';
 import 'package:french_course_b1/services/progress_service.dart';
 import 'package:french_course_b1/theme/app_theme.dart';
 import 'package:french_course_b1/widgets/exercise_block.dart';
@@ -31,6 +32,7 @@ Future<void> _pump(WidgetTester tester, Widget page) async {
       ChangeNotifierProvider(create: (_) => LanguageProvider()),
       ChangeNotifierProvider(create: (_) => LessonsProvider()),
       ChangeNotifierProvider.value(value: ProgressService.instance),
+      ChangeNotifierProvider.value(value: LifeStoryService.instance),
       ChangeNotifierProvider(create: (_) => ThemeController()),
     ],
     child: MaterialApp(home: page),

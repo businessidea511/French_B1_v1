@@ -13,6 +13,7 @@ import '../../widgets/motion.dart';
 import '../../widgets/translated_text.dart';
 import '../../widgets/ui_kit.dart';
 import '../admin/admin_ai_chat_page.dart';
+import '../life/life_home.dart';
 import '../mistakes/mistakes_page.dart';
 import 'hub_tabs.dart';
 import '../../services/ui_strings.dart';
@@ -365,6 +366,12 @@ class _MeTabState extends State<MeTab> {
                   title: Text(lp.translate('app_language')),
                   trailing: Text(lp.currentLanguage.name, style: TextStyle(color: AppTheme.textSecondary)),
                   onTap: () => showLanguageSheet(context),
+                ),
+                ListTile(
+                  leading: const Text('🏡', style: TextStyle(fontSize: 22)),
+                  title: const Text('Ma vie en Belgique', textDirection: TextDirection.ltr),
+                  subtitle: Text(tr(context, 'Characters, time per day, about you')),
+                  onTap: () => openPage(context, const LifeSetupPage()),
                 ),
                 ListTile(
                   leading: Icon(Icons.menu_book_rounded, color: AppTheme.error),

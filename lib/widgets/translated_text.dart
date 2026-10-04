@@ -40,6 +40,17 @@ class _TranslatedTextState extends State<TranslatedText> {
     }
   }
 
+  /// The same widget can be reused for another text (e.g. a list that is
+  /// re-ordered): then the old translation must not stay on screen.
+  @override
+  void didUpdateWidget(TranslatedText oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.text == widget.text) return;
+    final lp = Provider.of<LanguageProvider>(context, listen: false);
+    _translatedText = DeepSeekService.getCachedTranslation(widget.text, lp.currentLanguage.name);
+    if (_translatedText == null) _translate();
+  }
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();

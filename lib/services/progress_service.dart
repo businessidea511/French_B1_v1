@@ -12,6 +12,9 @@ class ProgressService extends ChangeNotifier {
   @visibleForTesting
   static DateTime Function() clock = DateTime.now;
 
+  /// The current time (follows [clock], so tests can move the day).
+  static DateTime now() => clock();
+
   static const String _prefKey = 'progress_v1';
 
   /// Days until the next review for each box. A card goes up one box each

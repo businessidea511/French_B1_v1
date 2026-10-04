@@ -2,6 +2,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/language_provider.dart';
+import '../services/life_story_service.dart';
 import '../services/progress_service.dart';
 import '../theme/app_theme.dart';
 import 'games/duel_page.dart';
@@ -59,6 +60,7 @@ class _HomePageState extends State<HomePage> {
     _openDuelLink();
     final lp = context.watch<LanguageProvider>();
     final badge = progress.dueCount;
+    final messages = context.watch<LifeStoryService>().unreadTotal; // new story messages
 
     return Scaffold(
       extendBody: true,
@@ -112,7 +114,9 @@ class _HomePageState extends State<HomePage> {
                         icon: _icons[i],
                         label: lp.translate(_labels[i]),
                         selected: _tab == i,
-                        badge: i == 2 && badge > 0 ? '$badge' : null,
+                        badge: i == 0 && messages > 0
+                            ? '$messages'
+                            : (i == 2 && badge > 0 ? '$badge' : null),
                         onTap: () => setState(() => _tab = i),
                       ),
                     ),

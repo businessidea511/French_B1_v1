@@ -19,6 +19,7 @@ import '../games/dictee_page.dart';
 import '../games/duel_page.dart';
 import '../missions/missions_page.dart';
 import '../mistakes/mistakes_page.dart';
+import '../life/life_home.dart';
 import '../roleplay/roleplay_page.dart';
 import 'hub_tabs.dart';
 import '../../services/ui_strings.dart';
@@ -105,6 +106,8 @@ class _TodayTabState extends State<TodayTab> {
             ],
           ),
           const SizedBox(height: 18),
+          const Entrance(child: LifeInbox()),
+          const SizedBox(height: 14),
           Entrance(child: _goalCard(lp, p)),
           const SizedBox(height: 14),
           Row(

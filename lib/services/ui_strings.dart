@@ -73,6 +73,32 @@ class UiStrings {
     'Next part': ['Partie suivante', 'الجزء التالي', 'Наступна частина', 'Parte successiva', 'ዝቕጽል ክፍሊ', 'Sonraki bölüm', 'Bagian berikutnya'],
     'Previous part': ['Partie précédente', 'الجزء السابق', 'Попередня частина', 'Parte precedente', 'ዝሓለፈ ክፍሊ', 'Önceki bölüm', 'Bagian sebelumnya'],
 
+    // Ma vie en Belgique
+    'Start my story': ['Commencer mon histoire', 'ابدأ قصتي', 'Почати мою історію', 'Inizia la mia storia', 'ዛንታይ ጀምር', 'Hikayemi başlat', 'Mulai ceritaku'],
+    'About you': ['À propos de toi', 'عنك', 'Про тебе', 'Su di te', 'ብዛዕባኻ', 'Hakkında', 'Tentang kamu'],
+    'Your city': ['Ta ville', 'مدينتك', 'Твоє місто', 'La tua città', 'ከተማኻ', 'Şehrin', 'Kotamu'],
+    'A few words about you: work, family, why you learn French… (any language)': [
+      "Quelques mots sur toi : travail, famille, pourquoi tu apprends le français… (n'importe quelle langue)",
+      'بعض الكلمات عنك: العمل، العائلة، لماذا تتعلم الفرنسية… (بأي لغة)',
+      "Кілька слів про тебе: робота, сім'я, чому вчиш французьку… (будь-якою мовою)",
+      'Qualche parola su di te: lavoro, famiglia, perché impari il francese… (in qualsiasi lingua)',
+      'ቁሩብ ቃላት ብዛዕባኻ፡ ስራሕ፡ ስድራ፡ ስለምንታይ ፈረንሳይኛ ትምሃር… (ብዝኾነ ቋንቋ)',
+      'Kendinden birkaç kelime: iş, aile, neden Fransızca öğreniyorsun… (herhangi bir dilde)',
+      'Beberapa kata tentang kamu: kerja, keluarga, kenapa belajar bahasa Prancis… (bahasa apa saja)',
+    ],
+    'Your characters': ['Tes personnages', 'شخصياتك', 'Твої персонажі', 'I tuoi personaggi', 'ገጸ-ባህርያትካ', 'Karakterlerin', 'Tokoh-tokohmu'],
+    'Time per day': ['Temps par jour', 'الوقت في اليوم', 'Час на день', 'Tempo al giorno', 'ግዜ ኣብ መዓልቲ', 'Günlük süre', 'Waktu per hari'],
+    '{n} conversation(s) a day': ['{n} conversation(s) par jour', '{n} محادثة في اليوم', '{n} розмов(и) на день', '{n} conversazione/i al giorno', '{n} ዕላል ኣብ መዓልቲ', 'Günde {n} sohbet', '{n} percakapan per hari'],
+    'Choose at least one character.': ['Choisis au moins un personnage.', 'اختر شخصية واحدة على الأقل.', 'Обери хоча б одного персонажа.', 'Scegli almeno un personaggio.', 'እንተወሓደ ሓደ ገጸ-ባህሪ ምረጽ።', 'En az bir karakter seç.', 'Pilih minimal satu tokoh.'],
+    'Your characters are writing to you…': ["Tes personnages t'écrivent…", 'شخصياتك تكتب لك…', 'Твої персонажі пишуть тобі…', 'I tuoi personaggi ti stanno scrivendo…', 'ገጸ-ባህርያትካ ይጽሕፉልካ ኣለዉ…', 'Karakterlerin sana yazıyor…', 'Tokoh-tokohmu sedang menulis untukmu…'],
+    'Try again': ['Réessayer', 'حاول مرة أخرى', 'Спробувати ще', 'Riprova', 'እንደገና ፈትን', 'Tekrar dene', 'Coba lagi'],
+    'You': ['Toi', 'أنت', 'Ти', 'Tu', 'ንስኻ', 'Sen', 'Kamu'],
+    'Today': ["Aujourd'hui", 'اليوم', 'Сьогодні', 'Oggi', 'ሎሚ', 'Bugün', 'Hari ini'],
+    'Send': ['Envoyer', 'إرسال', 'Надіслати', 'Invia', 'ስደድ', 'Gönder', 'Kirim'],
+    'Scene complete! +10 XP': ['Scène réussie ! +10 XP', 'أكملت المشهد! +10 XP', 'Сцену завершено! +10 XP', 'Scena completata! +10 XP', 'ትዕይንቲ ተወዲኡ! +10 XP', 'Sahne tamam! +10 XP', 'Adegan selesai! +10 XP'],
+    'Done for today! You can keep chatting.': ["Fini pour aujourd'hui ! Tu peux continuer à discuter.", 'انتهيت لليوم! يمكنك متابعة الدردشة.', 'На сьогодні все! Можеш продовжувати спілкування.', 'Finito per oggi! Puoi continuare a chattare.', 'ንሎሚ ተወዲኡ! ምዝራብ ክትቅጽል ትኽእል ኢኻ።', 'Bugünlük bitti! Sohbete devam edebilirsin.', 'Selesai untuk hari ini! Kamu bisa terus mengobrol.'],
+    'Characters, time per day, about you': ['Personnages, temps par jour, à propos de toi', 'الشخصيات، الوقت اليومي، معلوماتك', 'Персонажі, час на день, про тебе', 'Personaggi, tempo al giorno, su di te', 'ገጸ-ባህርያት፡ ግዜ ኣብ መዓልቲ፡ ብዛዕባኻ', 'Karakterler, günlük süre, hakkında', 'Tokoh, waktu per hari, tentang kamu'],
+
     // Exercises
     'Exercises': ['Exercices', 'التمارين', 'Вправи', 'Esercizi', 'ልምምዳት', 'Alıştırmalar', 'Latihan'],
     'Could not create exercises. Please try again.': [

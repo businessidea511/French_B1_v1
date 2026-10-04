@@ -11,6 +11,7 @@ import 'services/lessons_provider.dart';
 import 'services/global_scroll_manager.dart';
 import 'services/admin_auth.dart';
 import 'services/deepseek_service.dart';
+import 'services/life_story_service.dart';
 import 'services/progress_service.dart';
 import 'services/translation_store.dart';
 import 'widgets/motion.dart';
@@ -54,7 +55,7 @@ void main() async {
 
   // Reload an admin session saved by an earlier login (expires after 12h)
   await AdminAuth.restore();
-  await Future.wait([ProgressService.instance.load(), DeepSeekService.warmCache()]);
+  await Future.wait([ProgressService.instance.load(), LifeStoryService.instance.load(), DeepSeekService.warmCache()]);
   final themeController = ThemeController();
   await themeController.load();
   AppTheme.isDark = themeController.resolveDark(
@@ -73,6 +74,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => LanguageProvider()),
         ChangeNotifierProvider(create: (_) => LessonsProvider()),
         ChangeNotifierProvider.value(value: ProgressService.instance),
+        ChangeNotifierProvider.value(value: LifeStoryService.instance),
         ChangeNotifierProvider.value(value: themeController),
       ],
       child: const FrenchB1App(),
