@@ -1,10 +1,11 @@
 // PolyLearn offline support.
 // - The app itself (index.html, main.dart.js…): network first, so updates
-//   arrive at once; the saved copy is used when there is no internet.
+//   arrive at once; the saved copy is used when there is no internet, or
+//   when the network is too slow (no answer in 4 s).
 // - Other app files and Google-hosted engine/fonts: saved copy first.
 // - /api/translate (shared translations, GET): network first, saved copy offline.
 // - The rest of /api (AI, duels) and Supabase are never cached.
-const CACHE = 'polylearn-offline-v2';
+const CACHE = 'polylearn-offline-v3';
 const SHELL = [
   './',
   'index.html',
@@ -19,6 +20,7 @@ const SHELL = [
   'assets/packages/cupertino_icons/assets/CupertinoIcons.ttf',
   'assets/assets/logo.png',
 ];
+const SLOW_NETWORK_MS = 4000;
 const NETWORK_FIRST = /(\/|index\.html|main\.dart\.js|flutter_bootstrap\.js|manifest\.json|version\.json)$/;
 const CDN = /^https:\/\/(www\.gstatic\.com|fonts\.gstatic\.com|fonts\.googleapis\.com)\//;
 
@@ -40,16 +42,28 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-async function networkFirst(request, ignoreSearch = true) {
+async function networkFirst(request, ignoreSearch = true, slowMs = 0) {
   const cache = await caches.open(CACHE);
-  try {
-    const response = await fetch(request);
+  const savedCopy = async () =>
+    (await cache.match(request, { ignoreSearch })) ||
+    (request.mode === 'navigate' ? await cache.match('index.html') : undefined);
+  const network = fetch(request).then((response) => {
     if (response.ok) cache.put(request, response.clone());
     return response;
+  });
+  if (slowMs > 0) {
+    // Slow network: open the saved copy now; the download keeps going and
+    // refreshes the saved copy for next time.
+    const slow = new Promise((resolve) => setTimeout(resolve, slowMs, 'slow'));
+    const first = await Promise.race([network.catch(() => 'failed'), slow]);
+    if (first !== 'slow' && first !== 'failed') return first;
+    const saved = await savedCopy();
+    if (saved) return saved;
+  }
+  try {
+    return await network;
   } catch (e) {
-    const saved =
-      (await cache.match(request, { ignoreSearch })) ||
-      (request.mode === 'navigate' ? await cache.match('index.html') : undefined);
+    const saved = await savedCopy();
     if (saved) return saved;
     throw e;
   }
@@ -76,7 +90,7 @@ self.addEventListener('fetch', (event) => {
     }
     if (url.pathname.startsWith('/api/')) return;
     const appFile = request.mode === 'navigate' || NETWORK_FIRST.test(url.pathname);
-    event.respondWith(appFile ? networkFirst(request) : cacheFirst(request));
+    event.respondWith(appFile ? networkFirst(request, true, SLOW_NETWORK_MS) : cacheFirst(request));
   } else if (CDN.test(request.url)) {
     event.respondWith(cacheFirst(request));
   }

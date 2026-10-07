@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../services/admin_auth.dart';
@@ -12,7 +13,8 @@ import '../../services/deepseek_service.dart';
 import '../../services/grammar_generator.dart';
 import '../../services/topic_match.dart';
 import '../../widgets/photo_pages_sheet.dart';
-import '../../services/pdf_helper.dart';
+// The PDF reader is big and only the admin uses it: loaded on demand.
+import '../../services/pdf_helper.dart' deferred as pdf;
 import '../../services/global_scroll_manager.dart';
 import '../lessons/dynamic_lesson_page.dart';
 import '../../models/lesson_topic.dart';
@@ -105,7 +107,7 @@ class _GrammarPageState extends State<GrammarPage> {
 
     _startProgress('Reading the PDF…');
     try {
-      final text = await PdfHelper.extractText(bytes);
+      final text = await _readPdf(bytes);
       if (text.trim().isEmpty) {
         throw Exception('This PDF has no readable text (it may be scanned). Use "By Photo" instead.');
       }
@@ -663,7 +665,7 @@ class _GrammarPageState extends State<GrammarPage> {
 
     setState(() => _isGenerating = true);
     try {
-      final text = await PdfHelper.extractText(result.files.single.bytes!);
+      final text = await _readPdf(result.files.single.bytes!);
 
       if (!mounted) return;
       final lessonsProvider = Provider.of<LessonsProvider>(context, listen: false);
@@ -1157,3 +1159,8 @@ Widget grammarPageFor(GrammarTopic topic) {
 }
 
 enum _DuplicateChoice { rebuild, addNew }
+
+Future<String> _readPdf(Uint8List bytes) async {
+  await pdf.loadLibrary();
+  return pdf.PdfHelper.extractText(bytes);
+}

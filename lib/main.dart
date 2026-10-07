@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/gestures.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'theme/app_theme.dart';
 import 'pages/home_page.dart';
 import 'services/language_provider.dart';
@@ -12,6 +10,7 @@ import 'services/global_scroll_manager.dart';
 import 'services/admin_auth.dart';
 import 'services/deepseek_service.dart';
 import 'services/life_story_service.dart';
+import 'services/perf_mode.dart';
 import 'services/progress_service.dart';
 import 'services/translation_store.dart';
 import 'widgets/motion.dart';
@@ -20,42 +19,17 @@ import 'widgets/translation_banner.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // 1. Initialize Services (Supabase, Env) BEFORE UI
-  try {
-    // Try loading environment from multiple possible locations
-    final possiblePaths = [".env", "assets/.env", "assets/env/.env", "env/.env"];
-    for (String path in possiblePaths) {
-      try {
-        await dotenv.load(fileName: path);
-        debugPrint("✅ Loaded environment from $path");
-      } catch (_) {}
-    }
-    
-    // Get keys with priority: 1. Build Args, 2. Env File
-    final String supabaseUrl = const String.fromEnvironment('SUPABASE_URL').isNotEmpty
-        ? const String.fromEnvironment('SUPABASE_URL')
-        : (dotenv.env['SUPABASE_URL'] ?? '');
-        
-    final String supabaseKey = const String.fromEnvironment('SUPABASE_ANON_KEY').isNotEmpty
-        ? const String.fromEnvironment('SUPABASE_ANON_KEY')
-        : (dotenv.env['SUPABASE_ANON_KEY'] ?? '');
-
-    if (supabaseUrl.isNotEmpty && supabaseKey.isNotEmpty) {
-      await Supabase.initialize(
-        url: supabaseUrl,
-        anonKey: supabaseKey,
-      );
-      debugPrint("🚀 Supabase Initialized Successfully");
-    } else {
-      debugPrint("❌ Supabase keys NOT FOUND. Available env keys: ${dotenv.env.keys}");
-    }
-  } catch (e) {
-    debugPrint("🔥 Initialization Critical Error: $e");
-  }
+  // Lessons and grammar are read straight from Supabase's REST API (see
+  // SupabaseRest): nothing to initialise, so the app starts sooner.
 
   // Reload an admin session saved by an earlier login (expires after 12h)
   await AdminAuth.restore();
-  await Future.wait([ProgressService.instance.load(), LifeStoryService.instance.load(), DeepSeekService.warmCache()]);
+  await Future.wait([
+    ProgressService.instance.load(),
+    LifeStoryService.instance.load(),
+    DeepSeekService.warmCache(),
+    PerfMode.instance.load(),
+  ]);
   final themeController = ThemeController();
   await themeController.load();
   AppTheme.isDark = themeController.resolveDark(
@@ -76,6 +50,7 @@ void main() async {
         ChangeNotifierProvider.value(value: ProgressService.instance),
         ChangeNotifierProvider.value(value: LifeStoryService.instance),
         ChangeNotifierProvider.value(value: themeController),
+        ChangeNotifierProvider.value(value: PerfMode.instance),
       ],
       child: const FrenchB1App(),
     ),
@@ -117,6 +92,7 @@ class FrenchB1App extends StatelessWidget {
 
     return Consumer<LanguageProvider>(
       builder: (context, languageProvider, child) {
+        context.watch<PerfMode>(); // fast mode changes the background and transitions
         return Listener(
           onPointerDown: (_) {
             if (!rootFocusNode.hasFocus) {
@@ -131,6 +107,7 @@ class FrenchB1App extends StatelessWidget {
               theme: AppTheme.lightTheme,
               darkTheme: AppTheme.darkTheme,
               themeMode: context.watch<ThemeController>().mode,
+
               debugShowCheckedModeBanner: false,
               scrollBehavior: const MaterialScrollBehavior().copyWith(
                 scrollbars: true,

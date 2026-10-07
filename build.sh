@@ -9,13 +9,6 @@ echo "=== PREPARING CONFIGURATION ==="
 # stay in Vercel env vars and are used only by the functions in /api.
 echo "{\"SUPABASE_URL\": \"$SUPABASE_URL\", \"SUPABASE_ANON_KEY\": \"$SUPABASE_ANON_KEY\"}" > dart_config.json
 
-# Create a dummy .env file if it doesn't exist (Flutter build requires it since it's in pubspec.yaml)
-if [ ! -f "assets/.env" ]; then
-  echo "Creating dummy .env for build compatibility..."
-  mkdir -p assets
-  touch assets/.env
-fi
-
 echo "=== STARTING FLUTTER BUILD ==="
 # Using --dart-define-from-file is much more stable than passing it via command line
 ./flutter/bin/flutter build web --release --dart-define-from-file=dart_config.json --no-wasm-dry-run

@@ -1,12 +1,12 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/lesson_topic.dart';
 import '../models/grammar_topic.dart';
 import 'grammar_tricks_service.dart';
 import 'admin_auth.dart';
 import 'api_client.dart';
+import 'supabase_rest.dart';
 import 'translation_store.dart';
 
 class LessonsProvider extends ChangeNotifier {
@@ -20,13 +20,6 @@ class LessonsProvider extends ChangeNotifier {
   static const String _prefKeyHiddenLessons = 'hidden_lessons';
   static const String _prefKeyHiddenGrammar = 'hidden_grammar';
 
-  SupabaseClient? get _supabase {
-    try {
-      return Supabase.instance.client;
-    } catch (_) {
-      return null;
-    }
-  }
 
   LessonsProvider() {
     debugPrint("📚 LessonsProvider initialized");
@@ -108,20 +101,19 @@ class LessonsProvider extends ChangeNotifier {
   String? get lastError => _lastError;
 
   Future<Map<String, dynamic>> testConnection() async {
-    final client = _supabase;
-    if (client == null) return {'status': 'error', 'message': 'Supabase not initialized'};
+    if (!SupabaseRest.configured) return {'status': 'error', 'message': 'Supabase not configured'};
     
     try {
       final startTime = DateTime.now();
       // Test simple select
-      final response = await client.from('lessons').select('id').limit(1);
+      final response = await SupabaseRest.select('lessons', columns: 'id', limit: 1);
       final duration = DateTime.now().difference(startTime).inMilliseconds;
       
       // Test schema (check if columns exist)
       bool schemaOk = true;
       String schemaMsg = 'Schema OK';
       try {
-        await client.from('lessons').select('description, content').limit(1);
+        await SupabaseRest.select('lessons', columns: 'description,content', limit: 1);
       } catch (e) {
         schemaOk = false;
         schemaMsg = 'Missing columns: description or content. Run the SQL fix.';
@@ -148,22 +140,21 @@ class LessonsProvider extends ChangeNotifier {
       notifyListeners();
       
       debugPrint('☁️ Syncing from Supabase Cloud...');
-      final client = _supabase;
-      if (client == null) {
-        debugPrint('❌ Supabase client is NULL');
+      if (!SupabaseRest.configured) {
+        debugPrint('❌ Supabase is not configured');
         _isSyncing = false;
         notifyListeners();
         return;
       }
 
       // Sync Lessons - pull ALL cloud items (both custom and updated hardcoded)
-      final List<dynamic> cloudLessons = await client.from('lessons').select();
+      final List<dynamic> cloudLessons = await SupabaseRest.select('lessons');
       _customLessons = cloudLessons
           .map((item) => LessonTopic.fromJson(item))
           .toList();
       
       // Sync Grammar - pull ALL cloud items
-      final List<dynamic> cloudGrammar = await client.from('grammar').select();
+      final List<dynamic> cloudGrammar = await SupabaseRest.select('grammar');
       _customGrammar = cloudGrammar
           .map((item) => GrammarTopic.fromJson(item))
           .toList();
@@ -524,11 +515,10 @@ class LessonsProvider extends ChangeNotifier {
   /// Uploads any built-in lesson/grammar topic missing from the cloud.
   /// Needs an admin session, so it only runs for a logged-in admin.
   Future<void> seedData() async {
-    final client = _supabase;
-    if (client == null || !AdminAuth.isLoggedIn) return;
+    if (!SupabaseRest.configured || !AdminAuth.isLoggedIn) return;
 
     try {
-      final lessonIds = (await client.from('lessons').select('id') as List)
+      final lessonIds = (await SupabaseRest.select('lessons', columns: 'id'))
           .map((r) => r['id'] as String)
           .toSet();
       final missingLessons = lessonTopics.where((l) => !lessonIds.contains(l.id)).toList();
@@ -537,7 +527,7 @@ class LessonsProvider extends ChangeNotifier {
         await _cloudUpsert('lessons', missingLessons.map((l) => l.toJson()).toList(), translate: false);
       }
 
-      final grammarIds = (await client.from('grammar').select('id') as List)
+      final grammarIds = (await SupabaseRest.select('grammar', columns: 'id'))
           .map((r) => r['id'] as String)
           .toSet();
       final missingGrammar = grammarTopics.where((g) => !grammarIds.contains(g.id)).toList();

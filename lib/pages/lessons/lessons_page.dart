@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../services/admin_auth.dart';
@@ -9,7 +10,8 @@ import '../../services/language_provider.dart';
 import '../../services/lessons_provider.dart';
 import '../../services/deepseek_service.dart';
 import '../../widgets/photo_pages_sheet.dart';
-import '../../services/pdf_helper.dart';
+// The PDF reader is big and only the admin uses it: loaded on demand.
+import '../../services/pdf_helper.dart' deferred as pdf;
 import '../../services/global_scroll_manager.dart';
 import 'metiers_page.dart';
 import 'dynamic_lesson_page.dart';
@@ -427,7 +429,7 @@ class _LessonsPageState extends State<LessonsPage> {
       setState(() => _isGenerating = true);
       
       try {
-        final text = await PdfHelper.extractText(bytes);
+        final text = await _readPdf(bytes);
         if (text.trim().isEmpty) {
           _showError('This PDF seems to have no readable text. It might be a scanned image.');
           return;
@@ -761,7 +763,7 @@ class _LessonsPageState extends State<LessonsPage> {
 
     setState(() => _isGenerating = true);
     try {
-      final text = await PdfHelper.extractText(result.files.single.bytes!);
+      final text = await _readPdf(result.files.single.bytes!);
 
       final updatedData = await DeepSeekService.updateLessonWithPdf(
         {'title': topic.title, 'subtitle': topic.subtitle, 'icon': topic.icon, 'widgets': topic.content ?? [], 'id': topic.id},
@@ -1129,4 +1131,9 @@ class _LessonsPageState extends State<LessonsPage> {
         );
     }
   }
+}
+
+Future<String> _readPdf(Uint8List bytes) async {
+  await pdf.loadLibrary();
+  return pdf.PdfHelper.extractText(bytes);
 }

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import '../services/perf_mode.dart';
 import '../theme/app_theme.dart';
 
 /// Slowly moving glowing colours and drifting particles behind every page.
@@ -16,33 +17,38 @@ class AuroraBackground extends StatefulWidget {
 class _AuroraBackgroundState extends State<AuroraBackground> {
   // The motion is very slow (one loop in 40 s), so 20 frames a second look the
   // same as 60 and cost a third: lighter on phones and their batteries.
-  final _progress = ValueNotifier<double>(0);
+  // In light mode (older phones) the background is drawn once and stays still.
+  final _progress = ValueNotifier<double>(0.2);
   final _clock = Stopwatch()..start();
-  late final Timer _timer = Timer.periodic(const Duration(milliseconds: 50), (_) {
-    _progress.value = (_clock.elapsedMilliseconds % 40000) / 40000;
-  });
+  Timer? _timer;
 
-  @override
-  void initState() {
-    super.initState();
-    _timer;
+  void _sync(bool moving) {
+    if (moving && _timer == null) {
+      _timer = Timer.periodic(const Duration(milliseconds: 50), (_) {
+        _progress.value = (_clock.elapsedMilliseconds % 40000) / 40000;
+      });
+    } else if (!moving && _timer != null) {
+      _timer!.cancel();
+      _timer = null;
+    }
   }
 
   @override
   void dispose() {
-    _timer.cancel();
+    _timer?.cancel();
     _progress.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final reduceMotion = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+    final still = PerfMode.light || (MediaQuery.maybeDisableAnimationsOf(context) ?? false);
+    _sync(!still);
     return Stack(
       children: [
         Positioned.fill(
           child: RepaintBoundary(
-            child: CustomPaint(painter: _AuroraPainter(reduceMotion ? const AlwaysStoppedAnimation(0.2) : _progress)),
+            child: CustomPaint(painter: _AuroraPainter(still ? const AlwaysStoppedAnimation(0.2) : _progress, particles: !still)),
           ),
         ),
         widget.child,
@@ -53,7 +59,8 @@ class _AuroraBackgroundState extends State<AuroraBackground> {
 
 class _AuroraPainter extends CustomPainter {
   final ValueListenable<double> t;
-  _AuroraPainter(this.t) : super(repaint: t);
+  final bool particles;
+  _AuroraPainter(this.t, {this.particles = true}) : super(repaint: t);
 
   // A getter, so the colours follow the light/dark mode.
   static List<(Color, double, double)> get _blobs => [
@@ -87,6 +94,7 @@ class _AuroraPainter extends CustomPainter {
               .createShader(Rect.fromCircle(center: center, radius: r)),
       );
     }
+    if (!particles) return;
     final dot = Paint();
     for (final (x, y, s, speed) in _particles) {
       final dy = (y - t.value * (0.3 + speed)) % 1.0;
@@ -97,7 +105,7 @@ class _AuroraPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_AuroraPainter old) => false;
+  bool shouldRepaint(_AuroraPainter old) => old.particles != particles || old.t != t;
 }
 
 /// Tilts its child in 3D towards the mouse or finger, with a light reflection,
@@ -143,6 +151,12 @@ class _Tilt3DState extends State<Tilt3D> {
 
   @override
   Widget build(BuildContext context) {
+    if (PerfMode.light) {
+      return MouseRegion(
+        cursor: widget.onTap != null ? SystemMouseCursors.click : MouseCursor.defer,
+        child: GestureDetector(onTap: widget.onTap, child: widget.child),
+      );
+    }
     return LayoutBuilder(builder: (context, constraints) {
       final size = Size(constraints.maxWidth.isFinite ? constraints.maxWidth : 300,
           constraints.maxHeight.isFinite ? constraints.maxHeight : 200);
@@ -223,12 +237,15 @@ class Entrance extends StatefulWidget {
 }
 
 class _EntranceState extends State<Entrance> with SingleTickerProviderStateMixin {
+  // Light mode: already in place, nothing to animate.
+  final bool _still = PerfMode.light;
   late final AnimationController _c =
       AnimationController(vsync: this, duration: const Duration(milliseconds: 650));
 
   @override
   void initState() {
     super.initState();
+    if (_still) return;
     Future.delayed(widget.step * min(widget.index, 12), () {
       if (mounted) _c.forward();
     });
@@ -236,12 +253,14 @@ class _EntranceState extends State<Entrance> with SingleTickerProviderStateMixin
 
   @override
   void dispose() {
-    _c.dispose();
+    if (!_still) _c.dispose(); // never created in fast mode
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    // Decided once, so the tree keeps the same shape (and its children their state).
+    if (_still) return widget.child;
     return AnimatedBuilder(
       animation: _c,
       child: widget.child,
@@ -277,21 +296,30 @@ class Floating extends StatefulWidget {
 }
 
 class _FloatingState extends State<Floating> with SingleTickerProviderStateMixin {
-  late final AnimationController _c = AnimationController(vsync: this, duration: widget.period)..repeat();
+  final bool _still = PerfMode.light;
+  late final AnimationController _c = AnimationController(vsync: this, duration: widget.period);
+
+  @override
+  void initState() {
+    super.initState();
+    if (!_still) _c.repeat();
+  }
 
   @override
   void dispose() {
-    _c.dispose();
+    if (!_still) _c.dispose(); // never created in fast mode
     super.dispose();
   }
 
   @override
-  Widget build(BuildContext context) => AnimatedBuilder(
-        animation: _c,
-        child: widget.child,
-        builder: (context, child) =>
-            Transform.translate(offset: Offset(0, sin(_c.value * 2 * pi) * widget.distance), child: child),
-      );
+  Widget build(BuildContext context) => _still
+      ? widget.child
+      : AnimatedBuilder(
+          animation: _c,
+          child: widget.child,
+          builder: (context, child) =>
+              Transform.translate(offset: Offset(0, sin(_c.value * 2 * pi) * widget.distance), child: child),
+        );
 }
 
 /// A card that turns over in 3D when [flipped] changes.
@@ -363,8 +391,9 @@ class GlassCard extends StatelessWidget {
           BoxShadow(
             color: (glow ?? (dark ? Colors.black : const Color(0xFF8A6A4A)))
                 .withValues(alpha: dark ? (glow == null ? 0.25 : 0.2) : (glow == null ? 0.10 : 0.16)),
-            blurRadius: 26,
-            offset: const Offset(0, 12),
+            // A wide soft shadow is costly to draw; fast mode keeps a small one.
+            blurRadius: PerfMode.light ? 8 : 26,
+            offset: Offset(0, PerfMode.light ? 4 : 12),
           ),
         ],
       ),
@@ -509,6 +538,8 @@ class Swing3DPageTransitionsBuilder extends PageTransitionsBuilder {
   @override
   Widget buildTransitions<T>(PageRoute<T> route, BuildContext context, Animation<double> animation,
       Animation<double> secondaryAnimation, Widget child) {
+    // Light mode: a simple fade, cheap to draw.
+    if (PerfMode.light) return FadeTransition(opacity: animation, child: child);
     return AnimatedBuilder(
       animation: Listenable.merge([animation, secondaryAnimation]),
       child: child,

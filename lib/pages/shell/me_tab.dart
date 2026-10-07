@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../data/grammar_tricks.dart';
+import '../../services/perf_mode.dart';
 import 'package:provider/provider.dart';
 import '../../services/admin_auth.dart';
 import '../../services/lessons_provider.dart';
@@ -360,6 +361,48 @@ class _MeTabState extends State<MeTab> {
               ],
             ),
           ),
+          const SizedBox(height: 12),
+          ListenableBuilder(
+              listenable: PerfMode.instance,
+              builder: (context, _) {
+            final perf = PerfMode.instance;
+            return GlassCard(
+              padding: const EdgeInsets.all(14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.speed_rounded, color: AppTheme.primary),
+                      const SizedBox(width: 12),
+                      Expanded(child: Text(tr(context, 'Speed'))),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  // On its own line: three labels do not fit next to the title on a small phone.
+                  SizedBox(
+                    width: double.infinity,
+                    child: SegmentedButton<String>(
+                        showSelectedIcon: false,
+                        segments: [
+                          const ButtonSegment(value: PerfMode.auto, label: Text('Auto')),
+                          ButtonSegment(value: PerfMode.on, label: Text('⚡ ${tr(context, 'Fast')}')),
+                          ButtonSegment(value: PerfMode.off, label: Text('✨ ${tr(context, 'Full')}')),
+                        ],
+                        selected: {perf.choice},
+                        onSelectionChanged: (s) => perf.set(s.first),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    '${tr(context, 'Fast mode: a still background and no 3D effects. Best for older phones.')} '
+                    '${perf.choice == PerfMode.auto ? tr(context, perf.isLight ? 'This phone uses fast mode.' : 'This phone uses full effects.') : ''}',
+                    style: TextStyle(color: AppTheme.textTertiary, fontSize: 12),
+                  ),
+                ],
+              ),
+            );
+          }),
           const SizedBox(height: 12),
           GlassCard(
             padding: const EdgeInsets.symmetric(vertical: 6),
