@@ -176,6 +176,10 @@ class DynamicLessonPage extends StatelessWidget {
           if (card != null) result.add(card);
           break;
 
+        case 'memory_tricks':
+          // Shown on its own page (🧠 button), not inside the lesson.
+          continue;
+
         default:
           // Fallback: render as translated text
           final text = clean(rawContent);

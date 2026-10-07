@@ -32,6 +32,8 @@ import 'lessons/subjonctif_page.dart';
 import 'lessons/comparatif_page.dart';
 import 'lessons/duration_prepositions_page.dart';
 import 'lessons/connectors_page.dart';
+import 'grammar_tricks_page.dart';
+import '../../services/ui_strings.dart';
 
 class GrammarPage extends StatefulWidget {
   const GrammarPage({super.key});
@@ -857,6 +859,13 @@ class _GrammarPageState extends State<GrammarPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text(lp.translate('grammar_lessons')),
+        actions: [
+          TextButton.icon(
+            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const GrammarTricksPage())),
+            icon: const Text('🧠', style: TextStyle(fontSize: 18)),
+            label: Text(tr(context, 'Tricks')),
+          ),
+        ],
       ),
       body: Stack(
         children: [
@@ -1032,6 +1041,12 @@ class _GrammarPageState extends State<GrammarPage> {
                     ),
                     const Spacer(),
                     IconButton(
+                      icon: const Text('🧠', style: TextStyle(fontSize: 20)),
+                      tooltip: tr(context, 'Grammar tricks'),
+                      onPressed: () => Navigator.push(
+                          context, MaterialPageRoute(builder: (_) => GrammarTricksDetailPage(topic: topic))),
+                    ),
+                    IconButton(
                       icon: Icon(Icons.sync_rounded, color: AppTheme.primary, size: 22),
                       tooltip: 'Update',
                       onPressed: () => _checkAdminAccess(() => _showUpdateOptions(topic)),
@@ -1095,46 +1110,49 @@ class _GrammarPageState extends State<GrammarPage> {
     );
   }
 
-  Widget _getGrammarPage(GrammarTopic topic) {
-    // If it has cloud content, use the dynamic viewer
-    if (topic.content != null && topic.content!.isNotEmpty) {
-      return DynamicLessonPage(
-        topic: LessonTopic(
-          id: topic.id,
-          title: topic.title,
-          subtitle: topic.subtitle,
-          icon: topic.icon,
-          description: topic.description,
-          content: topic.content,
-        ),
-      );
-    }
+  Widget _getGrammarPage(GrammarTopic topic) => grammarPageFor(topic);
+}
 
-    // Fallback to hardcoded pages
-    switch (topic.id) {
-      case 'present': return const PresentPage();
-      case 'passe_compose': return const PasseComposePage();
-      case 'imparfait': return const ImparfaitPage();
-      case 'plus_que_parfait': return const PlusQueParfaitPage();
-      case 'conditionnel': return const ConditionnelPage();
-      case 'negative_complex': return const NegativeComplexPage();
-      case 'futur_proche': return const FuturProchePage();
-      case 'futur_simple': return const FuturSimplePage();
-      case 'cod_coi': return const CodCoiPage();
-      case 'si_seulement': return const SiSeulementPage();
-      case 'voix_passive': return const VoixPassivePage();
-      case 'adverbes_ment': return const AdverbesMentPage();
-      case 'subjonctif': return const SubjonctifPage();
-      case 'comparatif': return const ComparatifPage();
-      case 'time_prepositions': return const DurationPrepositionsPage();
-      case 'connectors': return const ConnectorsPage();
-      default:
-        // For truly custom ones that somehow lack content
-        return Scaffold(
-          appBar: AppBar(title: Text(topic.title)),
-          body: const Center(child: Text('No content available yet.')),
-        );
-    }
+/// The lesson page of a grammar topic.
+Widget grammarPageFor(GrammarTopic topic) {
+  // If it has cloud content, use the dynamic viewer
+  if (topic.content != null && topic.content!.isNotEmpty) {
+    return DynamicLessonPage(
+      topic: LessonTopic(
+        id: topic.id,
+        title: topic.title,
+        subtitle: topic.subtitle,
+        icon: topic.icon,
+        description: topic.description,
+        content: topic.content,
+      ),
+    );
+  }
+
+  // Fallback to hardcoded pages
+  switch (topic.id) {
+    case 'present': return const PresentPage();
+    case 'passe_compose': return const PasseComposePage();
+    case 'imparfait': return const ImparfaitPage();
+    case 'plus_que_parfait': return const PlusQueParfaitPage();
+    case 'conditionnel': return const ConditionnelPage();
+    case 'negative_complex': return const NegativeComplexPage();
+    case 'futur_proche': return const FuturProchePage();
+    case 'futur_simple': return const FuturSimplePage();
+    case 'cod_coi': return const CodCoiPage();
+    case 'si_seulement': return const SiSeulementPage();
+    case 'voix_passive': return const VoixPassivePage();
+    case 'adverbes_ment': return const AdverbesMentPage();
+    case 'subjonctif': return const SubjonctifPage();
+    case 'comparatif': return const ComparatifPage();
+    case 'time_prepositions': return const DurationPrepositionsPage();
+    case 'connectors': return const ConnectorsPage();
+    default:
+      // For truly custom ones that somehow lack content
+      return Scaffold(
+        appBar: AppBar(title: Text(topic.title)),
+        body: const Center(child: Text('No content available yet.')),
+      );
   }
 }
 

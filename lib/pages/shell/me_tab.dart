@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../data/grammar_tricks.dart';
 import 'package:provider/provider.dart';
 import '../../services/admin_auth.dart';
 import '../../services/lessons_provider.dart';
@@ -121,6 +122,9 @@ class _MeTabState extends State<MeTab> {
     final texts = <String>[
       for (final l in lessons.allLessons) ...TranslationStore.lessonTexts(l.title, l.content),
       for (final g in lessons.allGrammar) ...TranslationStore.lessonTexts(g.title, g.content),
+      for (final t in curatedTricks.values) ...t.texts,
+      'Grammar tricks', 'Every grammar topic in tricks you remember',
+      'Not the whole lesson: only the tricks that make each rule stick in your mind, and the classic traps.',
       for (final section in WordDecks.sections)
         for (final category in section.categories)
           for (final w in category.items) ...[w.en, if (w.note.isNotEmpty) w.note],

@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/lesson_topic.dart';
 import '../models/grammar_topic.dart';
+import 'grammar_tricks_service.dart';
 import 'admin_auth.dart';
 import 'api_client.dart';
 import 'translation_store.dart';
@@ -324,13 +325,16 @@ class LessonsProvider extends ChangeNotifier {
     final String id = 'custom_grammar_${DateTime.now().millisecondsSinceEpoch}';
     // Support new 'widgets' format AND old 'sections'/'content' format
     final dynamic rawContent = grammarData['widgets'] ?? grammarData['sections'] ?? grammarData['content'] ?? [];
+    final String title = grammarData['title'] ?? 'Untitled';
+    final String subtitle = grammarData['subtitle'] ?? '';
     final newGrammar = GrammarTopic(
       id: id,
-      title: grammarData['title'] ?? 'Untitled',
-      subtitle: grammarData['subtitle'] ?? '',
+      title: title,
+      subtitle: subtitle,
       icon: grammarData['icon'] ?? '📖',
       description: grammarData['description'] ?? grammarData['subtitle'] ?? grammarData['title'] ?? '',
-      content: rawContent is List ? rawContent : [],
+      // A new topic comes with its memory tricks.
+      content: await GrammarTricksService.attach(id, title, subtitle, rawContent is List ? rawContent : []),
     );
 
     _customGrammar.add(newGrammar);
@@ -377,7 +381,11 @@ class LessonsProvider extends ChangeNotifier {
       }
     }
 
-    final List<dynamic> mergedContent = [...originalWidgets, ...newWidgets];
+    final title = grammarData['title'] ?? original?.title ?? 'Untitled';
+    final subtitle = grammarData['subtitle'] ?? original?.subtitle ?? '';
+    // New pages can bring new rules: the memory tricks are written again.
+    final List<dynamic> mergedContent =
+        await GrammarTricksService.attach(id, title, subtitle, [...originalWidgets, ...newWidgets]);
     debugPrint('✅ MERGE RESULT: ${originalWidgets.length} original + ${newWidgets.length} new = ${mergedContent.length} total widgets');
 
     final updated = GrammarTopic(
@@ -421,13 +429,15 @@ class LessonsProvider extends ChangeNotifier {
   Future<void> replaceGrammar(String id, Map<String, dynamic> grammarData) async {
     final original = allGrammar.where((g) => g.id == id).firstOrNull;
     final rawContent = grammarData['widgets'] ?? grammarData['content'] ?? [];
+    final String title = grammarData['title'] ?? original?.title ?? 'Untitled';
+    final String subtitle = grammarData['subtitle'] ?? original?.subtitle ?? '';
     final updated = GrammarTopic(
       id: id,
-      title: grammarData['title'] ?? original?.title ?? 'Untitled',
-      subtitle: grammarData['subtitle'] ?? original?.subtitle ?? '',
+      title: title,
+      subtitle: subtitle,
       icon: grammarData['icon'] ?? original?.icon ?? '📘',
       description: grammarData['description'] ?? grammarData['subtitle'] ?? original?.description ?? '',
-      content: rawContent is List ? rawContent : [],
+      content: await GrammarTricksService.attach(id, title, subtitle, rawContent is List ? rawContent : []),
     );
 
     final index = _customGrammar.indexWhere((g) => g.id == id);

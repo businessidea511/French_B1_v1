@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:crypto/crypto.dart';
+import '../data/grammar_tricks.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -280,6 +281,8 @@ class TranslationStore {
           }
         case 'expression':
           if ('${w['meaning'] ?? ''}'.trim().isNotEmpty) out.add('${w['meaning']}');
+        case GrammarTricks.widgetType:
+          out.addAll(GrammarTricks.fromJson(w)?.texts ?? const []);
         case 'mistake':
           if ('${w['why'] ?? ''}'.trim().isNotEmpty) out.add('${w['why']}');
         default:
