@@ -37,12 +37,43 @@ class WordDecks {
         {
           'front': category.items[i].fr,
           'back': glosses[i].meaning,
+          'en': category.items[i].en, // the meaning follows a later change of language
           'example': category.items[i].example,
           'tip': [
             if (category.cognate && glosses[i].meaning != category.items[i].en) '🇬🇧 ${category.items[i].en}',
             if (glosses[i].note.isNotEmpty) glosses[i].note,
           ].join('\n'),
         }
+    ];
+  }
+
+  static Map<String, String>? _bank;
+
+  /// The English meaning of a card: kept on the card, or found in the word lists.
+  static String? englishOf(Map<String, String> card) {
+    final en = card['en']?.trim();
+    if (en != null && en.isNotEmpty) return en;
+    _bank ??= {
+      for (final section in sections)
+        for (final category in section.categories)
+          for (final w in category.items) w.fr: w.en,
+    };
+    return _bank![card['front']?.trim()];
+  }
+
+  /// The cards with their meaning ("back") in [language]. A card saved while
+  /// the app was in another language shows the meaning in the current one.
+  /// Cards whose English meaning is unknown (or whose answer is French) stay as they are.
+  static Future<List<Map<String, String>>> localize(List<Map<String, String>> cards, AppLanguage language) async {
+    final english = cards.map(englishOf).whereType<String>().where((e) => e.isNotEmpty).toSet().toList();
+    if (english.isEmpty) return cards;
+    final translated = language == AppLanguage.english
+        ? english
+        : await DeepSeekService.translateBatch(english, language.name);
+    final meaning = {for (var i = 0; i < english.length; i++) english[i]: translated[i]};
+    return [
+      for (final c in cards)
+        if (englishOf(c) case final en? when meaning.containsKey(en)) {...c, 'en': en, 'back': meaning[en]!} else c,
     ];
   }
 

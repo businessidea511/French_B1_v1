@@ -104,7 +104,7 @@ class _PhotoWordsPageState extends State<PhotoWordsPage> {
 
   List<Map<String, String>> get _cards => [
         for (final i in _selected)
-          {'front': _words[i].fr, 'back': _glosses[i].meaning, 'example': _words[i].example, 'tip': ''}
+          {'front': _words[i].fr, 'back': _glosses[i].meaning, 'en': _words[i].en, 'example': _words[i].example, 'tip': ''}
       ];
 
   void _save() {
@@ -208,14 +208,69 @@ class _PhotoWordsPageState extends State<PhotoWordsPage> {
   }
 }
 
-/// Words the learner saved from photos.
-class MyWordsPage extends StatelessWidget {
+/// Words the learner saved from photos, with their meaning in the current
+/// app language (the English meaning is kept and translated when shown).
+class MyWordsPage extends StatefulWidget {
   const MyWordsPage({super.key});
+
+  @override
+  State<MyWordsPage> createState() => _MyWordsPageState();
+}
+
+class _MyWordsPageState extends State<MyWordsPage> {
+  Map<String, String> _meaning = {}; // front -> meaning in the current language
+  String _shownFor = '';
+  bool _backfilling = false;
+
+  /// Words saved before the English meaning was kept: ask for it once.
+  Future<void> _backfill(List<Map<String, String>> words) async {
+    final missing = [
+      for (final w in words)
+        if (WordDecks.englishOf(w) == null && (w['front'] ?? '').isNotEmpty) w['front']!,
+    ];
+    if (missing.isEmpty || _backfilling) return;
+    _backfilling = true;
+    try {
+      final r = await DeepSeekService.chatJson([
+        {
+          'role': 'system',
+          'content': 'Give the short English meaning (1-4 words) of each French word or expression. '
+              'Return JSON: {"en": {"<French exactly as given>": "<English>"}}',
+        },
+        {'role': 'user', 'content': jsonEncode(missing)},
+      ], temperature: 0.1, maxTokens: 1500);
+      final en = <String, String>{
+        for (final e in ((r['en'] as Map?) ?? const {}).entries)
+          if ('${e.value}'.trim().isNotEmpty) '${e.key}': '${e.value}'.trim(),
+      };
+      if (en.isNotEmpty && mounted) context.read<ProgressService>().setSavedEnglish(en);
+    } catch (_) {
+      // Keep the meaning saved with the word.
+    } finally {
+      _backfilling = false;
+    }
+  }
+
+  Future<void> _localize(List<Map<String, String>> words, AppLanguage language) async {
+    final key = '${language.name}|${words.map((w) => '${w['front']}=${w['en'] ?? ''}').join(',')}';
+    if (key == _shownFor) return;
+    _shownFor = key;
+    final cards = await WordDecks.localize(words, language);
+    if (!mounted || key != _shownFor) return;
+    setState(() => _meaning = {for (final c in cards) c['front'] ?? '': c['back'] ?? ''});
+  }
 
   @override
   Widget build(BuildContext context) {
     final progress = context.watch<ProgressService>();
+    final language = context.watch<LanguageProvider>().currentLanguage;
     final words = progress.savedWords;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _backfill(words);
+      _localize(words, language);
+    });
+    String meaningOf(Map<String, String> w) => _meaning[w['front']] ?? w['back'] ?? '';
     return Scaffold(
       appBar: AppBar(title: Text('⭐ ${tr(context, 'My words')}')),
       body: PageBody(
@@ -243,12 +298,13 @@ class MyWordsPage extends StatelessWidget {
             const SizedBox(height: 16),
             for (final w in words)
               Row(
+                key: ValueKey(w['front']),
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(
                     child: WordTile(
-                      item: WordItem(w['front'] ?? '', w['back'] ?? '', example: w['example'] ?? ''),
-                      meaning: w['back'] ?? '',
+                      item: WordItem(w['front'] ?? '', meaningOf(w), example: w['example'] ?? ''),
+                      meaning: meaningOf(w),
                       note: '',
                     ),
                   ),

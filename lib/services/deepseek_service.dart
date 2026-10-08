@@ -541,7 +541,8 @@ Rules:
 - "example": one natural French sentence using the item (everyday life, Belgian places when a place is needed).
 - "tip": one short sentence in $targetLanguage that helps remember it (a trap, an exception, a memory trick).
 - Every card is different; no two cards test the same thing. Double-check every answer.
-JSON: {"flashcards": [{"front": "...", "back": "...", "example": "...", "tip": "..."}]}'''
+- For vocabulary and expression cards also give "en": the meaning in English (so the card can follow a later change of language). Leave "en" empty for French answers.
+JSON: {"flashcards": [{"front": "...", "back": "...", "en": "...", "example": "...", "tip": "..."}]}'''
       },
       {
         'role': 'user',
@@ -555,9 +556,11 @@ JSON: {"flashcards": [{"front": "...", "back": "...", "example": "...", "tip": "
       final front = (item['front'] ?? '').toString().trim();
       final back = (item['back'] ?? '').toString().trim();
       if (front.isEmpty || back.isEmpty || front == back) continue;
+      final en = (item['en'] ?? '').toString().trim();
       cards.add({
         'front': front,
         'back': back,
+        if (en.isNotEmpty) 'en': en,
         'example': (item['example'] ?? '').toString().trim(),
         'tip': (item['tip'] ?? '').toString().trim(),
       });

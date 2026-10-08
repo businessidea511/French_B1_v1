@@ -280,6 +280,22 @@ class ProgressService extends ChangeNotifier {
     _save();
   }
 
+  /// Adds the English meaning to saved words (front -> English), so they can
+  /// be shown in any language. Their review cards get it too.
+  void setSavedEnglish(Map<String, String> englishByFront) {
+    var changed = false;
+    for (var i = 0; i < _savedWords.length; i++) {
+      final front = _savedWords[i]['front'];
+      final en = englishByFront[front];
+      if (en == null || _savedWords[i]['en'] == en) continue;
+      _savedWords[i] = {..._savedWords[i], 'en': en};
+      final review = _reviews[front?.trim()];
+      if (review != null) review['card'] = {...Map<String, String>.from(review['card'] as Map), 'en': en};
+      changed = true;
+    }
+    if (changed) _save();
+  }
+
   void removeSavedWord(String front) {
     _savedWords.removeWhere((w) => w['front'] == front);
     _save();

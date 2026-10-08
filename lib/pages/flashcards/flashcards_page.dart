@@ -54,6 +54,7 @@ class _FlashcardsPageState extends State<FlashcardsPage> {
     if (widget.deck != null) {
       selectedTopic = widget.deckTitle ?? 'Flashcards';
       _startStatic(widget.deck!);
+      WidgetsBinding.instance.addPostFrameCallback((_) => _showInCurrentLanguage(widget.deck!));
     } else if (widget.initialTopic != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _startAIFlashcards(widget.initialTopic!);
@@ -66,6 +67,26 @@ class _FlashcardsPageState extends State<FlashcardsPage> {
     GlobalScrollManager.unregister(_scrollController);
     _scrollController.dispose();
     super.dispose();
+  }
+
+  /// Saved cards (reviews, my words) keep their English meaning: show it in
+  /// today's language, even if the card was saved in another one.
+  Future<void> _showInCurrentLanguage(List<Map<String, String>> deck) async {
+    if (!deck.any((c) => WordDecks.englishOf(c) != null)) return;
+    setState(() {
+      _isLoading = true;
+      _loadingText = 'Preparing your cards…';
+    });
+    final language = Provider.of<LanguageProvider>(context, listen: false).currentLanguage;
+    var cards = deck;
+    try {
+      cards = await WordDecks.localize(deck, language);
+    } catch (_) {}
+    if (!mounted) return;
+    setState(() {
+      _isLoading = false;
+      _startStatic(cards);
+    });
   }
 
   void _startStatic(List<Map<String, String>> cards) {
