@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../services/global_scroll_manager.dart';
 import '../theme/app_theme.dart';
 import 'motion.dart';
 import 'translated_text.dart';
@@ -239,25 +240,64 @@ class GlowButton extends StatelessWidget {
 }
 
 /// Page body limited to a readable width and centred.
-class PageBody extends StatelessWidget {
+/// A scrolling page with a centred column. It is the page the keyboard
+/// scrolls (arrows, Page Up/Down, Home, End) while it is on screen, and it
+/// shows a scrollbar that can be dragged with the mouse.
+class PageBody extends StatefulWidget {
   final List<Widget> children;
   final ScrollController? controller;
   final EdgeInsets padding;
   const PageBody({super.key, required this.children, this.controller, this.padding = const EdgeInsets.fromLTRB(16, 8, 16, 120)});
 
   @override
+  State<PageBody> createState() => _PageBodyState();
+}
+
+class _PageBodyState extends State<PageBody> {
+  ScrollController? _own;
+  ScrollController get _controller => widget.controller ?? (_own ??= ScrollController());
+
+  @override
+  void initState() {
+    super.initState();
+    GlobalScrollManager.register(_controller);
+  }
+
+  @override
+  void didUpdateWidget(PageBody old) {
+    super.didUpdateWidget(old);
+    if (old.controller != widget.controller) {
+      GlobalScrollManager.unregister(old.controller ?? _own!);
+      GlobalScrollManager.register(_controller);
+    }
+  }
+
+  @override
+  void dispose() {
+    GlobalScrollManager.unregister(_controller);
+    _own?.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return ListView(
-      controller: controller,
-      padding: padding,
-      children: [
-        Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 1000),
-            child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: children),
+    final wide = MediaQuery.sizeOf(context).width >= 700;
+    return Scrollbar(
+      controller: _controller,
+      thumbVisibility: wide,
+      interactive: true,
+      child: ListView(
+        controller: _controller,
+        padding: widget.padding,
+        children: [
+          Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 1000),
+              child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: widget.children),
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
