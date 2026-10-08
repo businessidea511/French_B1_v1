@@ -111,4 +111,17 @@ void main() {
     expect(find.text('⭐ 1'), findsOneWidget);
     expect(find.text(q.phrase.french), findsOneWidget, reason: 'the whole phrase is shown after answering');
   });
+
+  testWidgets('every phrase has a translate button that shows its meaning', (tester) async {
+    tester.view.physicalSize = const Size(420, 5000);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(_app(const ExamKitPage()));
+    await tester.pumpAndSettle();
+    expect(find.byIcon(Icons.translate_rounded), findsNWidgets(jokerPhrases.length + storyPlan.length));
+
+    await tester.tap(find.byIcon(Icons.translate_rounded).first);
+    await tester.pumpAndSettle();
+    expect(find.text(jokerPhrases.first.english), findsOneWidget);
+  });
 }

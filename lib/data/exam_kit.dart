@@ -16,7 +16,8 @@ class JokerPhrase {
   final String where; // English: where to put it in a text
   final String grammar; // what it shows the teacher
   final List<PhraseGap> gaps;
-  const JokerPhrase(this.french, this.where, this.grammar, this.gaps);
+  final String english; // the meaning, shown translated
+  const JokerPhrase(this.french, this.where, this.grammar, this.gaps, {required this.english});
 
   /// The phrase with [gap] replaced by "___" (first time the answer appears as a word).
   String withBlank(PhraseGap gap) {
@@ -47,6 +48,7 @@ const jokerPhrases = [
       PhraseGap('qui', ['que', 'dont', 'où'], 'qui replaces the subject: the experience marked me.'),
       PhraseGap('raconter', ['raconte', 'racontez', 'raconté'], 'After je voudrais: the infinitive.'),
     ],
+    english: "I would like to tell you about an experience that really marked me.",
   ),
   JokerPhrase(
     "À mon avis, il est important que chacun puisse s'exprimer.",
@@ -56,6 +58,7 @@ const jokerPhrases = [
       PhraseGap('puisse', ['peut', 'pourra', 'pouvoir'], 'il est important que → subjonctif: que je puisse, que chacun puisse.'),
       PhraseGap('que', ['de', 'qui', 'si'], 'il est important QUE + a new subject.'),
     ],
+    english: "In my opinion, it is important that everyone can express themselves.",
   ),
   JokerPhrase(
     'Bien que ce soit difficile, je ne regrette rien.',
@@ -65,6 +68,7 @@ const jokerPhrases = [
       PhraseGap('soit', ['est', 'sera', 'était'], 'bien que → always the subjonctif: que ce soit.'),
       PhraseGap('rien', ['pas', 'jamais rien', 'personne'], 'ne… rien = nothing (no pas with rien).'),
     ],
+    english: "Although it is difficult, I regret nothing.",
   ),
   JokerPhrase(
     "J'en ai parlé à mes amis et ils m'ont conseillé de rester calme.",
@@ -75,6 +79,7 @@ const jokerPhrases = [
       PhraseGap('de', ['à', 'que', 'pour'], 'conseiller à quelqu\'un DE faire quelque chose.'),
       PhraseGap('parlé', ['parler', 'parlée', 'parlais'], 'Passé composé with avoir: no agreement here.'),
     ],
+    english: "I talked about it with my friends and they advised me to stay calm.",
   ),
   JokerPhrase(
     "D'abord, j'ai eu peur, ensuite j'ai demandé de l'aide, mais finalement tout s'est bien passé.",
@@ -84,6 +89,7 @@ const jokerPhrases = [
       PhraseGap('ensuite', ['donc', 'parce que', 'pourtant'], 'd\'abord → ensuite → finalement: the order of events.'),
       PhraseGap('passé', ['passée', 'passer', 'passait'], 'tout s\'est passé: se passer uses être, "tout" is masculine.'),
     ],
+    english: "First I was scared, then I asked for help, but in the end everything went well.",
   ),
   JokerPhrase(
     "Cette expérience m'a appris qu'il faut que je sois patient(e).",
@@ -93,6 +99,7 @@ const jokerPhrases = [
       PhraseGap('sois', ['suis', 'serai', 'être'], 'il faut que → subjonctif: que je sois.'),
       PhraseGap('appris', ['apprend', 'apprendre', 'apprit'], 'm\'a appris: passé composé of apprendre.'),
     ],
+    english: "This experience taught me that I must be patient.",
   ),
   JokerPhrase(
     'Je suis vraiment content(e) que tu viennes !',
@@ -101,6 +108,7 @@ const jokerPhrases = [
     [
       PhraseGap('viennes', ['viens', 'viendras', 'venir'], 'content que → subjonctif: que tu viennes.'),
     ],
+    english: "I am really happy that you are coming!",
   ),
 ];
 
@@ -109,15 +117,19 @@ class StoryStep {
   final String title; // English
   final String tense;
   final String example; // French
-  const StoryStep(this.emoji, this.title, this.tense, this.example);
+  final String english; // the meaning of the example
+  const StoryStep(this.emoji, this.title, this.tense, this.example, this.english);
 }
 
 const storyPlan = [
-  StoryStep('📍', 'Where, when, who', 'imparfait', "C'était un samedi, il faisait froid et j'étais à Liège avec ma sœur."),
-  StoryStep('⚡', 'Suddenly…', 'passé composé', "Soudain, j'ai perdu mon portefeuille."),
-  StoryStep('😟', 'Your feeling', 'subjonctif', "J'avais peur que quelqu'un le prenne."),
-  StoryStep('🛠️', 'The solution', 'COD / COI', "Je l'ai cherché partout, puis j'ai téléphoné à la police et je leur ai tout expliqué."),
-  StoryStep('🎓', 'The lesson', 'phrase 6', "Cette expérience m'a appris qu'il faut que je sois plus prudent."),
+  StoryStep('📍', 'Where, when, who', 'imparfait', "C'était un samedi, il faisait froid et j'étais à Liège avec ma sœur.",
+      'It was a Saturday, it was cold and I was in Liège with my sister.'),
+  StoryStep('⚡', 'Suddenly…', 'passé composé', "Soudain, j'ai perdu mon portefeuille.", 'Suddenly, I lost my wallet.'),
+  StoryStep('😟', 'Your feeling', 'subjonctif', "J'avais peur que quelqu'un le prenne.", 'I was afraid that someone would take it.'),
+  StoryStep('🛠️', 'The solution', 'COD / COI', "Je l'ai cherché partout, puis j'ai téléphoné à la police et je leur ai tout expliqué.",
+      'I looked for it everywhere, then I called the police and explained everything to them.'),
+  StoryStep('🎓', 'The lesson', 'phrase 6', "Cette expérience m'a appris qu'il faut que je sois plus prudent.",
+      'This experience taught me that I must be more careful.'),
 ];
 
 /// English, shown translated.
@@ -260,7 +272,7 @@ List<String> dailyDictation(DateTime day) {
 
 /// The English texts of the kit, translated once for everyone ("Translate everything now").
 List<String> get examKitTexts => [
-      for (final p in jokerPhrases) ...[p.where, for (final g in p.gaps) g.why],
-      for (final s in storyPlan) s.title,
+      for (final p in jokerPhrases) ...[p.english, p.where, for (final g in p.gaps) g.why],
+      for (final s in storyPlan) ...[s.title, s.english],
       ...examChecklist,
     ];

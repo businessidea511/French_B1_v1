@@ -4,6 +4,7 @@ import '../../services/practice_logic.dart';
 import '../../services/progress_service.dart';
 import '../../services/tts_service.dart';
 import '../../theme/app_theme.dart';
+import '../../widgets/french_meaning.dart';
 import '../../widgets/motion.dart';
 import '../../widgets/translated_text.dart';
 import '../../widgets/ui_kit.dart';
@@ -28,6 +29,7 @@ class _DicteePageState extends State<DicteePage> {
   int _index = 0;
   bool _checked = false;
   final List<int> _scores = [];
+  bool _meaning = false;
 
   @override
   void initState() {
@@ -92,6 +94,7 @@ class _DicteePageState extends State<DicteePage> {
     setState(() {
       _index++;
       _checked = false;
+      _meaning = false;
       _input.clear();
     });
     Future.delayed(const Duration(milliseconds: 300), _play);
@@ -248,8 +251,17 @@ class _DicteePageState extends State<DicteePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(score == 100 ? '🎉 Parfait !' : '$score %', textDirection: TextDirection.ltr,
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: AppTheme.textPrimary)),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(score == 100 ? '🎉 Parfait !' : '$score %', textDirection: TextDirection.ltr,
+                      style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: AppTheme.textPrimary)),
+                ),
+                TranslateButton(active: _meaning, onPressed: () => setState(() => _meaning = !_meaning)),
+              ],
+            ),
+            if (_meaning)
+              Padding(padding: const EdgeInsets.only(bottom: 6), child: FrenchMeaning(french: _sentence)),
             const SizedBox(height: 10),
             Directionality(
               textDirection: TextDirection.ltr,

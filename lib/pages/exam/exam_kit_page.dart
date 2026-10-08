@@ -5,6 +5,7 @@ import '../../services/progress_service.dart';
 import '../../services/tts_service.dart';
 import '../../services/ui_strings.dart';
 import '../../theme/app_theme.dart';
+import '../../widgets/french_meaning.dart';
 import '../../widgets/motion.dart';
 import '../../widgets/translated_text.dart';
 import '../../widgets/ui_kit.dart';
@@ -125,11 +126,22 @@ class _ActionCard extends StatelessWidget {
   }
 }
 
-class _PhraseCard extends StatelessWidget {
+class _PhraseCard extends StatefulWidget {
   final int number;
   final JokerPhrase phrase;
   final Color color;
   const _PhraseCard({required this.number, required this.phrase, required this.color});
+
+  @override
+  State<_PhraseCard> createState() => _PhraseCardState();
+}
+
+class _PhraseCardState extends State<_PhraseCard> {
+  bool _meaning = false;
+
+  int get number => widget.number;
+  JokerPhrase get phrase => widget.phrase;
+  Color get color => widget.color;
 
   @override
   Widget build(BuildContext context) {
@@ -156,6 +168,8 @@ class _PhraseCard extends StatelessWidget {
                   Text(phrase.french,
                       textDirection: TextDirection.ltr,
                       style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: AppTheme.textPrimary, height: 1.35)),
+                  if (_meaning)
+                    Padding(padding: const EdgeInsets.only(top: 4), child: FrenchMeaning(french: phrase.french, english: phrase.english)),
                   const SizedBox(height: 6),
                   TranslatedText(phrase.where, style: TextStyle(fontSize: 13, color: AppTheme.textSecondary, height: 1.35)),
                   const SizedBox(height: 6),
@@ -169,10 +183,15 @@ class _PhraseCard extends StatelessWidget {
                 ],
               ),
             ),
-            IconButton(
-              tooltip: tr(context, 'Listen'),
-              icon: Icon(Icons.volume_up_rounded, color: color),
-              onPressed: () => TtsService.instance.speak(phrase.french),
+            Column(
+              children: [
+                IconButton(
+                  tooltip: tr(context, 'Listen'),
+                  icon: Icon(Icons.volume_up_rounded, color: color),
+                  onPressed: () => TtsService.instance.speak(phrase.french),
+                ),
+                TranslateButton(active: _meaning, color: color, onPressed: () => setState(() => _meaning = !_meaning)),
+              ],
             ),
           ],
         ),
@@ -181,10 +200,20 @@ class _PhraseCard extends StatelessWidget {
   }
 }
 
-class _StepCard extends StatelessWidget {
+class _StepCard extends StatefulWidget {
   final int number;
   final StoryStep step;
   const _StepCard({required this.number, required this.step});
+
+  @override
+  State<_StepCard> createState() => _StepCardState();
+}
+
+class _StepCardState extends State<_StepCard> {
+  bool _meaning = false;
+
+  int get number => widget.number;
+  StoryStep get step => widget.step;
 
   @override
   Widget build(BuildContext context) {
@@ -217,13 +246,20 @@ class _StepCard extends StatelessWidget {
                   Text(step.example,
                       textDirection: TextDirection.ltr,
                       style: TextStyle(fontSize: 15, color: AppTheme.textSecondary, fontStyle: FontStyle.italic, height: 1.35)),
+                  if (_meaning)
+                    Padding(padding: const EdgeInsets.only(top: 4), child: FrenchMeaning(french: step.example, english: step.english)),
                 ],
               ),
             ),
-            IconButton(
-              tooltip: tr(context, 'Listen'),
-              icon: Icon(Icons.volume_up_rounded, color: AppTheme.primary),
-              onPressed: () => TtsService.instance.speak(step.example),
+            Column(
+              children: [
+                IconButton(
+                  tooltip: tr(context, 'Listen'),
+                  icon: Icon(Icons.volume_up_rounded, color: AppTheme.primary),
+                  onPressed: () => TtsService.instance.speak(step.example),
+                ),
+                TranslateButton(active: _meaning, onPressed: () => setState(() => _meaning = !_meaning)),
+              ],
             ),
           ],
         ),
@@ -264,6 +300,7 @@ class _PhraseGamePageState extends State<PhraseGamePage> {
   int _index = 0;
   int _score = 0;
   String? _chosen;
+  bool _meaning = false;
 
   @override
   void initState() {
@@ -303,6 +340,7 @@ class _PhraseGamePageState extends State<PhraseGamePage> {
     setState(() {
       _index++;
       _chosen = null;
+      _meaning = false;
     });
     if (_index >= _questions.length && _score >= 8) Confetti.burst(context);
   }
@@ -357,10 +395,25 @@ class _PhraseGamePageState extends State<PhraseGamePage> {
         const SizedBox(height: 16),
         GlassCard(
           glow: AppTheme.primary,
-          child: Text(
-            answered ? q.phrase.french : q.phrase.withBlank(q.gap),
-            textDirection: TextDirection.ltr,
-            style: TextStyle(fontSize: 21, fontWeight: FontWeight.w800, color: AppTheme.textPrimary, height: 1.4),
+          padding: const EdgeInsets.fromLTRB(20, 16, 8, 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Text(
+                      answered ? q.phrase.french : q.phrase.withBlank(q.gap),
+                      textDirection: TextDirection.ltr,
+                      style: TextStyle(fontSize: 21, fontWeight: FontWeight.w800, color: AppTheme.textPrimary, height: 1.4),
+                    ),
+                  ),
+                  TranslateButton(active: _meaning, onPressed: () => setState(() => _meaning = !_meaning)),
+                ],
+              ),
+              if (_meaning) FrenchMeaning(french: q.phrase.french, english: q.phrase.english),
+            ],
           ),
         ),
         const SizedBox(height: 8),
