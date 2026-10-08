@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../data/exam_kit.dart';
 import '../../data/grammar_tricks.dart';
 import '../../services/perf_mode.dart';
 import 'package:provider/provider.dart';
@@ -124,6 +125,7 @@ class _MeTabState extends State<MeTab> {
       for (final l in lessons.allLessons) ...TranslationStore.lessonTexts(l.title, l.content),
       for (final g in lessons.allGrammar) ...TranslationStore.lessonTexts(g.title, g.content),
       for (final t in curatedTricks.values) ...t.texts,
+      ...examKitTexts,
       'Grammar tricks', 'Every grammar topic in tricks you remember',
       'Not the whole lesson: only the tricks that make each rule stick in your mind, and the classic traps.',
       for (final section in WordDecks.sections)

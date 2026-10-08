@@ -11,7 +11,10 @@ import '../../services/ui_strings.dart';
 
 /// Dictée: listen to a French sentence and write it; every word is checked.
 class DicteePage extends StatefulWidget {
-  const DicteePage({super.key});
+  /// Ready-made sentences (e.g. today's exam dictation): no level to choose.
+  final List<String>? sentences;
+  final String? title;
+  const DicteePage({super.key, this.sentences, this.title});
 
   @override
   State<DicteePage> createState() => _DicteePageState();
@@ -27,6 +30,17 @@ class _DicteePageState extends State<DicteePage> {
   final List<int> _scores = [];
 
   @override
+  void initState() {
+    super.initState();
+    final given = widget.sentences;
+    if (given != null && given.isNotEmpty) {
+      _level = 'given';
+      _sentences = List.of(given);
+      Future.delayed(const Duration(milliseconds: 600), _play);
+    }
+  }
+
+  @override
   void dispose() {
     _input.dispose();
     _focus.dispose();
@@ -38,7 +52,7 @@ class _DicteePageState extends State<DicteePage> {
   void _start(String level) {
     setState(() {
       _level = level;
-      _sentences = Dictee.sentences(level, Random());
+      _sentences = level == 'given' ? (List.of(widget.sentences!)..shuffle()) : Dictee.sentences(level, Random());
       _index = 0;
       _scores.clear();
       _checked = false;
@@ -88,7 +102,7 @@ class _DicteePageState extends State<DicteePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('🎧 ${tr(context, 'Dictation')}')),
+      appBar: AppBar(title: Text('🎧 ${widget.title ?? tr(context, 'Dictation')}')),
       body: AnimatedSwitcher(
         duration: const Duration(milliseconds: 400),
         child: _level == null
@@ -290,7 +304,8 @@ class _DicteePageState extends State<DicteePage> {
         const SizedBox(height: 24),
         GlowButton(label: tr(context, 'Another dictation'), icon: Icons.replay_rounded, onPressed: () => _start(_level!)),
         const SizedBox(height: 10),
-        TextButton(onPressed: () => setState(() => _level = null), child: Text(tr(context, 'Change level'))),
+        if (widget.sentences == null)
+          TextButton(onPressed: () => setState(() => _level = null), child: Text(tr(context, 'Change level'))),
       ],
     );
   }

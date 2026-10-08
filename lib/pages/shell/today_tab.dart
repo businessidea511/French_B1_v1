@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../exam/exam_kit_page.dart';
+import '../exam/writing_practice_page.dart';
 import 'package:provider/provider.dart';
 import '../../data/missions_data.dart';
 import '../../data/word_bank.dart';
@@ -187,6 +189,10 @@ class _TodayTabState extends State<TodayTab> {
           ],
           SectionTitle(lp.translate('quick_play')),
           FeatureGrid(tiles: [
+            FeatureTile(emoji: '✍️', title: tr(context, 'Exam writing kit'), subtitle: 'Joker phrases for any text',
+                color: const Color(0xFFE0457B), onTap: () => openPage(context, const ExamKitPage())),
+            FeatureTile(emoji: '📝', title: tr(context, 'Writing practice'), subtitle: 'Write, get a mark out of 20',
+                color: AppTheme.success, onTap: () => openPage(context, const WritingPracticePage())),
             FeatureTile(emoji: '🎯', title: lp.translate('conj_game'), subtitle: '10 verbs against the clock',
                 color: AppTheme.warning, onTap: () => openPage(context, const ConjugationGamePage())),
             FeatureTile(emoji: '🎭', title: lp.translate('roleplay'), subtitle: 'Real situations with AI',

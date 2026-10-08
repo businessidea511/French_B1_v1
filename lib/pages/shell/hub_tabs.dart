@@ -15,6 +15,7 @@ import '../flashcards/flashcards_page.dart';
 import '../games/conjugation_game_page.dart';
 import '../games/dictee_page.dart';
 import '../games/duel_page.dart';
+import '../exam/exam_kit_page.dart';
 import '../grammar/grammar_page.dart';
 import '../grammar/grammar_tricks_page.dart';
 import '../lessons/lessons_page.dart';
@@ -133,6 +134,8 @@ class PracticeTab extends StatelessWidget {
       title: lp.translate('tab_practice'),
       intro: '',
       tiles: (context) => [
+        FeatureTile(emoji: '✍️', title: tr(context, 'Exam writing kit'), subtitle: 'Joker phrases, writing practice, daily dictation',
+            color: const Color(0xFFE0457B), onTap: () => openPage(context, const ExamKitPage())),
         FeatureTile(emoji: '🔁', title: lp.translate('reviews'), subtitle: 'Smart flashcards at the right moment',
             color: AppTheme.success, badge: due > 0 ? '$due' : null, onTap: () => openReviews(context)),
         FeatureTile(emoji: '🎯', title: lp.translate('conj_game'), subtitle: '10 verbs, 20 seconds each, combos!',
