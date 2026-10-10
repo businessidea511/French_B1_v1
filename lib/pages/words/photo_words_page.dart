@@ -224,28 +224,10 @@ class _MyWordsPageState extends State<MyWordsPage> {
 
   /// Words saved before the English meaning was kept: ask for it once.
   Future<void> _backfill(List<Map<String, String>> words) async {
-    final missing = [
-      for (final w in words)
-        if (WordDecks.englishOf(w) == null && (w['front'] ?? '').isNotEmpty) w['front']!,
-    ];
-    if (missing.isEmpty || _backfilling) return;
+    if (_backfilling) return;
     _backfilling = true;
     try {
-      final r = await DeepSeekService.chatJson([
-        {
-          'role': 'system',
-          'content': 'Give the short English meaning (1-4 words) of each French word or expression. '
-              'Return JSON: {"en": {"<French exactly as given>": "<English>"}}',
-        },
-        {'role': 'user', 'content': jsonEncode(missing)},
-      ], temperature: 0.1, maxTokens: 1500);
-      final en = <String, String>{
-        for (final e in ((r['en'] as Map?) ?? const {}).entries)
-          if ('${e.value}'.trim().isNotEmpty) '${e.key}': '${e.value}'.trim(),
-      };
-      if (en.isNotEmpty && mounted) context.read<ProgressService>().setSavedEnglish(en);
-    } catch (_) {
-      // Keep the meaning saved with the word.
+      await WordDecks.repairSavedWords();
     } finally {
       _backfilling = false;
     }

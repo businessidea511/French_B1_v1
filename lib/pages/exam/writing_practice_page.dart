@@ -10,6 +10,7 @@ import '../../services/progress_service.dart';
 import '../../services/tts_service.dart';
 import '../../services/ui_strings.dart';
 import '../../theme/app_theme.dart';
+import '../../widgets/french_meaning.dart';
 import '../../widgets/motion.dart';
 import '../../widgets/translated_text.dart';
 import '../../widgets/ui_kit.dart';
@@ -163,6 +164,7 @@ class _WritingEditorPageState extends State<WritingEditorPage> {
   String? _error;
   String? _instructionTranslated;
   WritingFeedback? _feedback;
+  bool _betterMeaning = false;
 
   ExamSubject get _subject => widget.subject;
   int get _words => ExamWritingService.wordCount(_text.text);
@@ -485,15 +487,28 @@ class _WritingEditorPageState extends State<WritingEditorPage> {
       ],
       if (f.betterVersion.isNotEmpty) ...[
         SectionTitle('🌟 ${tr(context, 'A better version')}',
-            trailing: IconButton(
-              tooltip: tr(context, 'Listen'),
-              icon: Icon(Icons.volume_up_rounded, color: AppTheme.primary),
-              onPressed: () => TtsService.instance.speak(f.betterVersion),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  tooltip: tr(context, 'Listen'),
+                  icon: Icon(Icons.volume_up_rounded, color: AppTheme.primary),
+                  onPressed: () => TtsService.instance.speak(f.betterVersion),
+                ),
+                TranslateButton(active: _betterMeaning, onPressed: () => setState(() => _betterMeaning = !_betterMeaning)),
+              ],
             )),
         GlassCard(
           padding: const EdgeInsets.all(16),
-          child: SelectableText(f.betterVersion,
-              textDirection: TextDirection.ltr, style: TextStyle(fontSize: 16, height: 1.55, color: AppTheme.textPrimary)),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SelectableText(f.betterVersion,
+                  textDirection: TextDirection.ltr, style: TextStyle(fontSize: 16, height: 1.55, color: AppTheme.textPrimary)),
+              if (_betterMeaning)
+                Padding(padding: const EdgeInsets.only(top: 10), child: FrenchMeaning(french: f.betterVersion)),
+            ],
+          ),
         ),
       ],
       if (f.nextTip.isNotEmpty) ...[

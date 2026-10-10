@@ -72,7 +72,9 @@ class _FlashcardsPageState extends State<FlashcardsPage> {
   /// Saved cards (reviews, my words) keep their English meaning: show it in
   /// today's language, even if the card was saved in another one.
   Future<void> _showInCurrentLanguage(List<Map<String, String>> deck) async {
-    if (!deck.any((c) => WordDecks.englishOf(c) != null)) return;
+    final saved = {for (final w in ProgressService.instance.savedWords) w['front']};
+    final needsRepair = deck.any((c) => WordDecks.englishOf(c) == null && saved.contains(c['front']));
+    if (!needsRepair && !deck.any((c) => WordDecks.englishOf(c) != null)) return;
     setState(() {
       _isLoading = true;
       _loadingText = 'Preparing your cards…';
@@ -80,7 +82,14 @@ class _FlashcardsPageState extends State<FlashcardsPage> {
     final language = Provider.of<LanguageProvider>(context, listen: false).currentLanguage;
     var cards = deck;
     try {
-      cards = await WordDecks.localize(deck, language);
+      if (needsRepair) {
+        final english = await WordDecks.repairSavedWords();
+        cards = [
+          for (final c in cards)
+            if (english[c['front']] case final en?) {...c, 'en': en} else c,
+        ];
+      }
+      cards = await WordDecks.localize(cards, language);
     } catch (_) {}
     if (!mounted) return;
     setState(() {

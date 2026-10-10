@@ -4,7 +4,9 @@ import '../data/street_french_data.dart';
 import '../data/vocabulary_data.dart';
 import '../data/word_bank.dart';
 import '../theme/app_theme.dart';
+import 'dart:convert';
 import 'deepseek_service.dart';
+import 'progress_service.dart';
 import 'language_provider.dart';
 
 /// Meaning and note of a word, in the learner's language.
@@ -75,6 +77,45 @@ class WordDecks {
       for (final c in cards)
         if (englishOf(c) case final en? when meaning.containsKey(en)) {...c, 'en': en, 'back': meaning[en]!} else c,
     ];
+  }
+
+  static Future<void>? _repairing;
+
+  /// Saved words (photo → words) kept from before the English meaning was
+  /// saved: ask the AI once for it, so they follow the app language too.
+  /// Returns French → English for the words it repaired.
+  static Future<Map<String, String>> repairSavedWords() async {
+    final progress = ProgressService.instance;
+    final missing = [
+      for (final w in progress.savedWords)
+        if (englishOf(w) == null && (w['front'] ?? '').trim().isNotEmpty) w['front']!,
+    ];
+    if (missing.isEmpty) return const {};
+    final found = <String, String>{};
+    _repairing ??= () async {
+      try {
+        final r = await DeepSeekService.chatJson([
+          {
+            'role': 'system',
+            'content': 'Give the short English meaning (1-4 words) of each French word or expression. '
+                'Return JSON: {"en": {"<French exactly as given>": "<English>"}}',
+          },
+          {'role': 'user', 'content': jsonEncode(missing)},
+        ], temperature: 0.1, maxTokens: 1500);
+        for (final e in ((r['en'] as Map?) ?? const {}).entries) {
+          if ('${e.value}'.trim().isNotEmpty) found['${e.key}'] = '${e.value}'.trim();
+        }
+        if (found.isNotEmpty) progress.setSavedEnglish(found);
+      } catch (_) {
+        // Keep the meanings saved with the words.
+      }
+    }();
+    await _repairing;
+    _repairing = null;
+    return {
+      for (final w in progress.savedWords)
+        if (missing.contains(w['front']) && w['en'] != null) w['front']!: w['en']!,
+    };
   }
 
   static Color get masculine => AppTheme.masculine;
