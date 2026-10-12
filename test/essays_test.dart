@@ -108,6 +108,7 @@ void main() {
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
     final q = EssayService.instance.addTyped('Racontez un voyage inoubliable.');
+    await EssayService.instance.setCulture('Palestine', ''); // else the country is asked first
     await tester.pumpWidget(_app(ModelEssayPage(subject: q.subject)));
     await tester.pumpAndSettle();
     expect(find.textContaining("L'été dernier"), findsOneWidget);
@@ -135,5 +136,24 @@ void main() {
     await tester.pumpWidget(_app(WritingEditorPage(subject: question.subject)));
     await tester.pumpAndSettle();
     expect(find.text(text), findsOneWidget);
+  });
+
+  test("essays about culture use the learner's country and traditions", () async {
+    final essays = EssayService.instance;
+    final q = essays.addTyped('Décrivez une fête importante dans votre pays.');
+    await essays.writeModel(q.subject);
+    expect(prompts.last, isNot(contains('The learner comes from')), reason: 'no country chosen yet');
+
+    await essays.setCulture('Palestine', "musulman : l'Aïd el-Fitr, l'Aïd el-Adha");
+    final model = await essays.writeModel(q.subject);
+    expect(prompts.last, contains('The learner comes from Palestine'));
+    expect(prompts.last, contains("l'Aïd el-Fitr"));
+    expect(model.country, 'Palestine');
+
+    // Kept on the device.
+    essays.reset();
+    await essays.load();
+    expect(essays.country, 'Palestine');
+    expect(essays.models[q.subject.id]!.country, 'Palestine');
   });
 }

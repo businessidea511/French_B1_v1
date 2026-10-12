@@ -30,9 +30,32 @@ class _ModelEssayPageState extends State<ModelEssayPage> {
   @override
   void initState() {
     super.initState();
-    _essays.load().then((_) {
-      if (mounted && _model == null) _write();
+    _essays.load().then((_) async {
+      if (!mounted || _model != null) return;
+      // First model essay: ask the country once, so essays about culture are about it.
+      if (_essays.country.isEmpty && !_askedCountry) {
+        _askedCountry = true;
+        await _pickCountry();
+        if (!mounted) return;
+      }
+      _write();
     });
+  }
+
+  static bool _askedCountry = false; // once per visit of the app
+
+  Future<bool?> _pickCountry() => showModalBottomSheet<bool>(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: AppTheme.surface,
+        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+        builder: (_) => const _CountrySheet(),
+      );
+
+  Future<void> _chooseCountry() async {
+    final changed = await _pickCountry();
+    // A new country: the model essay is written again for it.
+    if (changed == true && mounted && (_model?.country ?? '') != _essays.country) _write();
   }
 
   Future<void> _write() async {
@@ -63,6 +86,30 @@ class _ModelEssayPageState extends State<ModelEssayPage> {
             child: Text(widget.subject.instruction,
                 textDirection: TextDirection.ltr,
                 style: TextStyle(fontWeight: FontWeight.w700, color: AppTheme.textPrimary, height: 1.4)),
+          ),
+          const SizedBox(height: 10),
+          InkWell(
+            borderRadius: BorderRadius.circular(16),
+            onTap: _writing ? null : _chooseCountry,
+            child: GlassCard(
+              radius: 16,
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              child: Row(
+                children: [
+                  const Text('🌍', style: TextStyle(fontSize: 20)),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      _essays.country.isEmpty
+                          ? tr(context, 'Choose your country: essays about culture and fêtes will be about it')
+                          : '${tr(context, 'Written for')}: ${_essays.country}${_essays.traditions.isEmpty ? '' : ' · ${_essays.traditions}'}',
+                      style: TextStyle(color: AppTheme.textSecondary, fontSize: 13, height: 1.35),
+                    ),
+                  ),
+                  Text(tr(context, 'Change'), style: TextStyle(color: AppTheme.primary, fontWeight: FontWeight.w800)),
+                ],
+              ),
+            ),
           ),
           const SizedBox(height: 14),
           if (_writing)
@@ -148,6 +195,103 @@ class _ModelEssayPageState extends State<ModelEssayPage> {
             ),
           ],
         ],
+      ),
+    );
+  }
+}
+
+/// Choose the learner's country (and traditions) for essays about culture.
+class _CountrySheet extends StatefulWidget {
+  const _CountrySheet();
+
+  @override
+  State<_CountrySheet> createState() => _CountrySheetState();
+}
+
+class _CountrySheetState extends State<_CountrySheet> {
+  final _other = TextEditingController();
+  final _traditions = TextEditingController();
+  late String _country;
+
+  EssayService get _essays => EssayService.instance;
+
+  @override
+  void initState() {
+    super.initState();
+    _country = _essays.country;
+    if (_country.isNotEmpty && !EssayService.countries.contains(_country)) _other.text = _country;
+    _traditions.text = _essays.traditions;
+  }
+
+  @override
+  void dispose() {
+    _other.dispose();
+    _traditions.dispose();
+    super.dispose();
+  }
+
+  Future<void> _save() async {
+    final country = _other.text.trim().isNotEmpty ? _other.text.trim() : _country;
+    await _essays.setCulture(country, _traditions.text);
+    if (mounted) Navigator.pop(context, true);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.fromLTRB(20, 20, 20, 20 + MediaQuery.viewInsetsOf(context).bottom),
+      child: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('🌍 ${tr(context, 'My country')}',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: AppTheme.textPrimary)),
+            const SizedBox(height: 4),
+            TranslatedText(
+              'For essays about culture, fêtes, food and traditions, the model essay talks about your country.',
+              style: TextStyle(color: AppTheme.textSecondary, fontSize: 13, height: 1.35),
+            ),
+            const SizedBox(height: 14),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                for (final c in EssayService.countries)
+                  ChoiceChip(
+                    label: Text(c),
+                    selected: _country == c && _other.text.trim().isEmpty,
+                    onSelected: (_) => setState(() {
+                      _country = c;
+                      _other.clear();
+                    }),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _other,
+              onChanged: (_) => setState(() {}),
+              decoration: InputDecoration(hintText: tr(context, 'Another country')),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _traditions,
+              minLines: 1,
+              maxLines: 3,
+              decoration: InputDecoration(
+                labelText: tr(context, 'My traditions (optional)'),
+                hintText: "musulman : l'Aïd el-Fitr, l'Aïd el-Adha",
+              ),
+            ),
+            const SizedBox(height: 18),
+            GlowButton(
+              label: tr(context, 'Save'),
+              icon: Icons.check_rounded,
+              onPressed: _country.isEmpty && _other.text.trim().isEmpty ? null : _save,
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -15,19 +15,25 @@ class EssayGrammarNote {
 class ModelEssay {
   final String essay; // French
   final List<EssayGrammarNote> notes;
-  const ModelEssay(this.essay, this.notes);
+  final String country; // the learner's country it was written for ('' = none)
+  const ModelEssay(this.essay, this.notes, {this.country = ''});
 
   Map<String, dynamic> toJson() => {
         'essay': essay,
         'notes': [for (final n in notes) {'fr': n.french, 'point': n.point}],
+        if (country.isNotEmpty) 'country': country,
       };
 
   static ModelEssay? fromJson(Object? j) {
     if (j is! Map || '${j['essay'] ?? ''}'.trim().isEmpty) return null;
-    return ModelEssay('${j['essay']}'.trim(), [
-      for (final n in (j['notes'] as List? ?? const []))
-        if (n is Map && '${n['fr'] ?? ''}'.trim().isNotEmpty) EssayGrammarNote('${n['fr']}'.trim(), '${n['point'] ?? ''}'.trim()),
-    ]);
+    return ModelEssay(
+      '${j['essay']}'.trim(),
+      [
+        for (final n in (j['notes'] as List? ?? const []))
+          if (n is Map && '${n['fr'] ?? ''}'.trim().isNotEmpty) EssayGrammarNote('${n['fr']}'.trim(), '${n['point'] ?? ''}'.trim()),
+      ],
+      country: '${j['country'] ?? ''}'.trim(),
+    );
   }
 }
 
@@ -75,6 +81,28 @@ class EssayService extends ChangeNotifier {
 
   static const _prefKey = 'my_essays_v1';
   static const _modelsKey = 'model_essays_v1';
+  static const _cultureKey = 'my_culture_v1';
+
+  /// Countries of the learners in the class, in French (the essays are in French).
+  static const countries = [
+    'Palestine', 'Syrie', 'Ukraine', 'Afghanistan', 'Érythrée', 'Turquie', 'Maroc', 'Algérie', 'Tunisie',
+    'Irak', 'Iran', 'Liban', 'Égypte', 'Somalie', 'Éthiopie', 'Soudan', 'Congo (RDC)', 'Guinée', 'Cameroun',
+    'Italie', 'Espagne', 'Pologne', 'Roumanie', 'Albanie', 'Russie', 'Indonésie', 'Inde', 'Pakistan', 'Brésil',
+  ];
+
+  /// The learner's country and traditions, for essays about culture, fêtes, food…
+  String country = '';
+  String traditions = ''; // e.g. "musulman : l'Aïd el-Fitr et l'Aïd el-Adha"
+
+  Future<void> setCulture(String newCountry, String newTraditions) async {
+    country = newCountry.trim();
+    traditions = newTraditions.trim();
+    notifyListeners();
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_cultureKey, jsonEncode({'country': country, 'traditions': traditions}));
+    } catch (_) {}
+  }
 
   /// The AI call. Tests replace it with a fake.
   @visibleForTesting
@@ -97,6 +125,12 @@ class EssayService extends ChangeNotifier {
         // Keep anything added while loading.
         final saved = [for (final q in jsonDecode(raw) as List) EssayQuestion.fromJson(q as Map)];
         questions = [...saved, ...questions.where((q) => !saved.any((s) => s.id == q.id))];
+      }
+      final rawCulture = (await SharedPreferences.getInstance()).getString(_cultureKey);
+      if (rawCulture != null && country.isEmpty) {
+        final c = jsonDecode(rawCulture) as Map;
+        country = '${c['country'] ?? ''}';
+        traditions = '${c['traditions'] ?? ''}';
       }
       final rawModels = (await SharedPreferences.getInstance()).getString(_modelsKey);
       if (rawModels != null) {
@@ -262,6 +296,8 @@ Return JSON: {"title": "", "question": "", "text": "", "words": 0}''',
 - ${q.minWords}–${q.maxWords} words, B1 level: clear, natural, correct French; short sentences; 3–4 short paragraphs.
 - SIMPLE A2–B1 VOCABULARY ONLY: common everyday words a learner already knows (maison, travail, famille, ami, aider, content…); no rare, literary or formal words (not "néanmoins", "s'avérer", "épanouissement"…); short, clear sentences.
 - Answer exactly what the question asks (type of text: story, email, letter, opinion…). Everyday life in Belgium.
+${country.isEmpty ? '' : '''- The learner comes from $country${traditions.isEmpty ? '' : ' ($traditions)'}. If the question is about culture, a fête or celebration, food, traditions, customs, family life, a wedding, the home country or "your country": write about $country and its REAL traditions (correct names, dates, dishes, customs${traditions.isEmpty ? '' : ', especially: $traditions'}), told by someone from $country now living in Belgium. Never invent traditions. For other subjects: everyday life in Belgium.
+'''}
 - Show B1 grammar naturally: passé composé + imparfait in stories, the subjonctif (il faut que, bien que, je suis content que…), COD/COI pronouns (le, la, lui, leur, en, y), connectors.
 - Use 2 or 3 of these ready-made phrases where they fit (adapt them):
 $phrases
@@ -272,7 +308,7 @@ Return JSON: {"essay": "...", "notes": [{"fr": "...", "point": "..."}]}''',
     ], temperature: 0.7, maxTokens: 2500);
     final essay = '${r['essay'] ?? ''}'.trim();
     if (essay.isEmpty) throw Exception('No essay');
-    final model = ModelEssay.fromJson({...r, 'essay': essay})!;
+    final model = ModelEssay.fromJson({...r, 'essay': essay, 'country': country})!;
     models[q.id] = model;
     await _save();
     return model;
@@ -282,6 +318,8 @@ Return JSON: {"essay": "...", "notes": [{"fr": "...", "point": "..."}]}''',
   void reset() {
     questions = [];
     models = {};
+    country = '';
+    traditions = '';
     _loaded = false;
   }
 }
