@@ -37,6 +37,69 @@ class ModelEssay {
   }
 }
 
+/// An essay the learner keeps to read again: an AI model essay, or the
+/// teacher's better version of the learner's own text.
+class SavedEssay {
+  final String id;
+  final bool corrected; // true = the learner's text corrected by the AI
+  final String title; // French
+  final String question; // French
+  final String text; // French: the model essay, or the better version
+  final String original; // the learner's own text (corrected essays)
+  final int? score; // out of 20 (corrected essays)
+  final List<EssayGrammarNote> notes; // model essays: the grammar points
+  final List<(String, String, String)> mistakes; // wrong, right, why
+  final DateTime savedAt;
+
+  const SavedEssay({
+    required this.id,
+    required this.corrected,
+    required this.title,
+    required this.question,
+    required this.text,
+    this.original = '',
+    this.score,
+    this.notes = const [],
+    this.mistakes = const [],
+    required this.savedAt,
+  });
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'corrected': corrected,
+        'title': title,
+        'question': question,
+        'text': text,
+        if (original.isNotEmpty) 'original': original,
+        if (score != null) 'score': score,
+        if (notes.isNotEmpty) 'notes': [for (final n in notes) {'fr': n.french, 'point': n.point}],
+        if (mistakes.isNotEmpty) 'mistakes': [for (final (w, r, y) in mistakes) {'wrong': w, 'right': r, 'why': y}],
+        'at': savedAt.millisecondsSinceEpoch,
+      };
+
+  static SavedEssay? fromJson(Object? j) {
+    if (j is! Map || '${j['text'] ?? ''}'.trim().isEmpty) return null;
+    return SavedEssay(
+      id: '${j['id'] ?? j['at']}',
+      corrected: j['corrected'] == true,
+      title: '${j['title'] ?? ''}',
+      question: '${j['question'] ?? ''}',
+      text: '${j['text']}',
+      original: '${j['original'] ?? ''}',
+      score: (j['score'] as num?)?.toInt(),
+      notes: [
+        for (final n in (j['notes'] as List? ?? const []))
+          if (n is Map) EssayGrammarNote('${n['fr'] ?? ''}', '${n['point'] ?? ''}'),
+      ],
+      mistakes: [
+        for (final m in (j['mistakes'] as List? ?? const []))
+          if (m is Map) ('${m['wrong'] ?? ''}', '${m['right'] ?? ''}', '${m['why'] ?? ''}'),
+      ],
+      savedAt: DateTime.fromMillisecondsSinceEpoch((j['at'] as num?)?.toInt() ?? 0),
+    );
+  }
+}
+
 /// An essay question from class (photographed or typed).
 class EssayQuestion {
   final String id;
@@ -82,6 +145,7 @@ class EssayService extends ChangeNotifier {
   static const _prefKey = 'my_essays_v1';
   static const _modelsKey = 'model_essays_v1';
   static const _cultureKey = 'my_culture_v1';
+  static const _savedKey = 'saved_essays_v1';
 
   /// Countries of the learners in the class, in French (the essays are in French).
   static const countries = [
@@ -115,6 +179,7 @@ class EssayService extends ChangeNotifier {
 
   List<EssayQuestion> questions = [];
   Map<String, ModelEssay> models = {}; // subject id → model essay
+  List<SavedEssay> saved = []; // newest first
   bool _loaded = false;
 
   Future<void> load() async {
@@ -131,6 +196,11 @@ class EssayService extends ChangeNotifier {
         final c = jsonDecode(rawCulture) as Map;
         country = '${c['country'] ?? ''}';
         traditions = '${c['traditions'] ?? ''}';
+      }
+      final rawSaved = (await SharedPreferences.getInstance()).getString(_savedKey);
+      if (rawSaved != null) {
+        final kept = [for (final e in jsonDecode(rawSaved) as List) if (SavedEssay.fromJson(e) case final s?) s];
+        saved = [...saved, ...kept.where((k) => !saved.any((s) => s.id == k.id))];
       }
       final rawModels = (await SharedPreferences.getInstance()).getString(_modelsKey);
       if (rawModels != null) {
@@ -153,6 +223,58 @@ class EssayService extends ChangeNotifier {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_prefKey, jsonEncode([for (final q in questions) q.toJson()]));
       await prefs.setString(_modelsKey, jsonEncode({for (final e in models.entries) e.key: e.value.toJson()}));
+    } catch (_) {}
+  }
+
+  /// The saved essay with this French text, if it is saved.
+  SavedEssay? savedWithText(String text) {
+    final n = _norm(text);
+    for (final s in saved) {
+      if (_norm(s.text) == n) return s;
+    }
+    return null;
+  }
+
+  /// Keeps an essay to read again. Saving the same text twice keeps one copy.
+  SavedEssay keep({
+    required bool corrected,
+    required String title,
+    required String question,
+    required String text,
+    String original = '',
+    int? score,
+    List<EssayGrammarNote> notes = const [],
+    List<(String, String, String)> mistakes = const [],
+  }) {
+    final existing = savedWithText(text);
+    if (existing != null) return existing;
+    final s = SavedEssay(
+      id: _newId(),
+      corrected: corrected,
+      title: title,
+      question: question,
+      text: text.trim(),
+      original: original.trim(),
+      score: score,
+      notes: notes,
+      mistakes: mistakes,
+      savedAt: DateTime.now(),
+    );
+    saved.insert(0, s);
+    _saveKept();
+    return s;
+  }
+
+  void unkeep(String id) {
+    saved.removeWhere((s) => s.id == id);
+    _saveKept();
+  }
+
+  Future<void> _saveKept() async {
+    notifyListeners();
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_savedKey, jsonEncode([for (final s in saved) s.toJson()]));
     } catch (_) {}
   }
 
@@ -318,6 +440,7 @@ Return JSON: {"essay": "...", "notes": [{"fr": "...", "point": "..."}]}''',
   void reset() {
     questions = [];
     models = {};
+    saved = [];
     country = '';
     traditions = '';
     _loaded = false;

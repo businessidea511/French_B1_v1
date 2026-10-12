@@ -17,6 +17,7 @@ import '../../widgets/translated_text.dart';
 import '../../widgets/photo_pages_sheet.dart';
 import '../../widgets/ui_kit.dart';
 import 'model_essay_page.dart';
+import 'saved_essays_page.dart';
 
 String _focusLabel(BuildContext context, ExamFocus f) => switch (f) {
       ExamFocus.subjonctif => 'Subjonctif',
@@ -143,6 +144,30 @@ class _WritingPracticePageState extends State<WritingPracticePage> {
       builder: (context, _) => Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          if (_essays.saved.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 14),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(20),
+                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SavedEssaysPage())),
+                child: GlassCard(
+                  radius: 20,
+                  glow: AppTheme.warning,
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                  child: Row(
+                    children: [
+                      const Text('💾', style: TextStyle(fontSize: 24)),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text('${tr(context, 'My saved essays')} (${_essays.saved.length})',
+                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: AppTheme.textPrimary)),
+                      ),
+                      Icon(Icons.chevron_right_rounded, color: AppTheme.textTertiary),
+                    ],
+                  ),
+                ),
+              ),
+            ),
           SectionTitle('📷 ${tr(context, 'My class questions')}'),
           Row(
             children: [
@@ -711,6 +736,19 @@ class _WritingEditorPageState extends State<WritingEditorPage> {
               if (_betterMeaning)
                 Padding(padding: const EdgeInsets.only(top: 10), child: FrenchMeaning(french: f.betterVersion)),
             ],
+          ),
+        ),
+        const SizedBox(height: 10),
+        SaveEssayButton(
+          text: f.betterVersion,
+          onSave: () => EssayService.instance.keep(
+            corrected: true,
+            title: _subject.title,
+            question: _subject.instruction,
+            text: f.betterVersion,
+            original: _text.text,
+            score: f.score,
+            mistakes: [for (final m in f.mistakes) (m.wrong, m.right, m.why)],
           ),
         ),
       ],

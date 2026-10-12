@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:french_course_b1/pages/exam/model_essay_page.dart';
+import 'package:french_course_b1/pages/exam/saved_essays_page.dart';
 import 'package:french_course_b1/pages/exam/writing_practice_page.dart';
 import 'package:french_course_b1/services/essay_service.dart';
 import 'package:french_course_b1/services/exam_writing_service.dart';
@@ -136,6 +137,52 @@ void main() {
     await tester.pumpWidget(_app(WritingEditorPage(subject: question.subject)));
     await tester.pumpAndSettle();
     expect(find.text(text), findsOneWidget);
+  });
+
+  testWidgets('model essays and corrected essays can be saved and read again', (tester) async {
+    tester.view.physicalSize = const Size(420, 2400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final essays = EssayService.instance;
+    final q = essays.addTyped('Racontez un voyage inoubliable.');
+    await essays.setCulture('Palestine', '');
+    await tester.pumpWidget(_app(ModelEssayPage(subject: q.subject)));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Save this essay'));
+    await tester.pumpAndSettle();
+    expect(find.text('Saved in My saved essays'), findsOneWidget);
+    expect(essays.saved.single.notes.single.french, 'je suis allé');
+
+    // The same essay saved again: one copy.
+    essays.keep(corrected: false, title: 'x', question: 'y', text: essays.saved.single.text);
+    expect(essays.saved, hasLength(1));
+
+    // A corrected text, with its mark and mistakes.
+    essays.keep(
+      corrected: true,
+      title: 'Mon week-end',
+      question: 'Racontez votre week-end.',
+      text: 'Samedi, je suis allé au marché.',
+      original: 'Samedi, je suis aller au marché.',
+      score: 14,
+      mistakes: [('je suis aller', 'je suis allé', 'participe passé')],
+    );
+    await tester.pump();
+    essays.reset();
+    await essays.load();
+    expect(essays.saved.map((s) => s.title), ['Mon week-end', 'Racontez un voyage inoubliable.']);
+    expect(essays.saved.first.score, 14);
+    expect(essays.saved.first.mistakes.single.$2, 'je suis allé');
+
+    await tester.pumpWidget(_app(const SavedEssaysPage()));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('14/20'), findsOneWidget);
+    await tester.tap(find.text('Mon week-end'));
+    await tester.pumpAndSettle();
+    expect(find.text('Samedi, je suis allé au marché.'), findsOneWidget);
+    expect(find.text('❌ je suis aller'), findsOneWidget);
+    await tester.pump(const Duration(seconds: 2));
   });
 
   test("essays about culture use the learner's country and traditions", () async {

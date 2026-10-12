@@ -8,6 +8,7 @@ import '../../widgets/french_meaning.dart';
 import '../../widgets/motion.dart';
 import '../../widgets/translated_text.dart';
 import '../../widgets/ui_kit.dart';
+import 'saved_essays_page.dart';
 
 /// A model essay written by the AI for a subject: read it, listen to it,
 /// see its grammar, and learn it. Kept on the device.
@@ -150,6 +151,17 @@ class _ModelEssayPageState extends State<ModelEssayPage> {
                 ],
               ),
             ),
+            SaveEssayButton(
+              text: model.essay,
+              onSave: () => _essays.keep(
+                corrected: false,
+                title: widget.subject.title,
+                question: widget.subject.instruction,
+                text: model.essay,
+                notes: model.notes,
+              ),
+            ),
+            const SizedBox(height: 10),
             Entrance(
               child: GlassCard(
                 padding: const EdgeInsets.all(16),
