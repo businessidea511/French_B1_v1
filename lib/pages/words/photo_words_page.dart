@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import '../../services/photo_picker.dart';
 import 'package:provider/provider.dart';
 import '../../data/word_bank.dart';
 import '../../services/deepseek_service.dart';
@@ -35,15 +36,15 @@ class _PhotoWordsPageState extends State<PhotoWordsPage> {
 
   Future<void> _pick(ImageSource source) async {
     try {
-      final file = await ImagePicker().pickImage(source: source, maxWidth: 1280, maxHeight: 1280, imageQuality: 70);
-      if (file == null) return;
-      final bytes = await file.readAsBytes();
+      final photos = await PhotoPicker.pick(camera: source == ImageSource.camera, maxSide: 1280, quality: 70);
+      if (photos.isEmpty) return;
+      final bytes = photos.first;
       setState(() {
         _image = bytes;
         _words = [];
         _error = null;
       });
-      await _analyse(bytes, file.mimeType ?? 'image/jpeg');
+      await _analyse(bytes, PhotoPicker.mimeOf(bytes));
     } catch (e) {
       setState(() => _error = 'Could not open the photo.');
     }

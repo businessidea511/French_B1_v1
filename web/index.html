@@ -95,6 +95,44 @@
   </script>
 
   <script>
+    // Shrinks a phone photo without decoding it at full size (a 12-megapixel
+    // photo decoded in full can use ~50 MB and crash the page on older phones).
+    // Returns JPEG bytes, or null when the browser cannot do it.
+    window.plShrinkImage = async (bytes, maxSide, quality) => {
+      let bmp = null;
+      try {
+        const blob = new Blob([bytes]);
+        const small = blob.size < 500 * 1024;
+        bmp = await createImageBitmap(blob, small
+          ? { imageOrientation: 'from-image' }
+          : { imageOrientation: 'from-image', resizeWidth: maxSide, resizeQuality: 'medium' });
+        const scale = Math.min(1, maxSide / Math.max(bmp.width, bmp.height));
+        const w = Math.max(1, Math.round(bmp.width * scale));
+        const h = Math.max(1, Math.round(bmp.height * scale));
+        let out;
+        if (typeof OffscreenCanvas !== 'undefined') {
+          const canvas = new OffscreenCanvas(w, h);
+          canvas.getContext('2d').drawImage(bmp, 0, 0, w, h);
+          out = await canvas.convertToBlob({ type: 'image/jpeg', quality });
+        } else {
+          const canvas = document.createElement('canvas');
+          canvas.width = w;
+          canvas.height = h;
+          canvas.getContext('2d').drawImage(bmp, 0, 0, w, h);
+          out = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', quality));
+          canvas.width = canvas.height = 0;
+        }
+        return out ? new Uint8Array(await out.arrayBuffer()) : null;
+      } catch (e) {
+        console.warn('Could not shrink the photo', e);
+        return null;
+      } finally {
+        if (bmp) bmp.close();
+      }
+    };
+  </script>
+
+  <script>
     // PWA Install Logic
     window.deferredPrompt = null;
     window.addEventListener('beforeinstallprompt', (e) => {

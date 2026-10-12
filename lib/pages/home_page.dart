@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/language_provider.dart';
 import '../services/life_story_service.dart';
+import '../services/photo_picker.dart';
 import '../services/progress_service.dart';
+import '../services/ui_strings.dart';
 import '../theme/app_theme.dart';
 import 'games/duel_page.dart';
 import 'shell/hub_tabs.dart';
@@ -41,6 +43,24 @@ class _HomePageState extends State<HomePage> {
       };
 
   static bool _duelLinkOpened = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // The phone closed the app while its camera was open: say why, and what to do.
+    PhotoPicker.closedByCamera().then((closed) {
+      if (!closed || !mounted) return;
+      showDialog<void>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: Text('📷 ${tr(ctx, 'The camera closed the app')}'),
+          content: Text(tr(ctx,
+              "Your phone needed memory for the camera, so it closed the app. Tip: take the photo with your phone's Camera app first, then come back and choose Gallery.")),
+          actions: [FilledButton(onPressed: () => Navigator.pop(ctx), child: Text(tr(ctx, 'Got it')))],
+        ),
+      );
+    });
+  }
 
   /// Invitation links (…/?duel=ABC123) open the duel with the code filled in.
   void _openDuelLink() {

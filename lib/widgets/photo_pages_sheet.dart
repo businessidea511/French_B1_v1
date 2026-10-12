@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import '../services/photo_picker.dart';
 import '../theme/app_theme.dart';
 import '../services/ui_strings.dart';
 
@@ -87,21 +88,11 @@ class _PhotoPagesSheetState extends State<_PhotoPagesSheet> {
   Future<void> _add(ImageSource source) async {
     setState(() => _picking = true);
     try {
-      final picker = ImagePicker();
       // Sharp enough for small textbook print, small enough to send ~10 pages.
-      const maxSide = 1400.0;
-      const quality = 60;
-      final List<XFile> files;
-      if (source == ImageSource.gallery) {
-        files = await picker.pickMultiImage(maxWidth: maxSide, maxHeight: maxSide, imageQuality: quality);
-      } else {
-        final photo = await picker.pickImage(
-            source: source, maxWidth: maxSide, maxHeight: maxSide, imageQuality: quality);
-        files = photo == null ? [] : [photo];
-      }
-      for (final f in files) {
+      final photos = await PhotoPicker.pick(camera: source == ImageSource.camera, multiple: true, maxSide: 1400, quality: 60);
+      for (final bytes in photos) {
         if (_pages.length >= _maxPages) break;
-        _pages.add(_Page(await f.readAsBytes()));
+        _pages.add(_Page(bytes));
       }
     } catch (e) {
       debugPrint('Photo pick error: $e');
@@ -258,7 +249,8 @@ class _PhotoPagesSheetState extends State<_PhotoPagesSheet> {
         children: [
           ClipRRect(
             borderRadius: BorderRadius.circular(12),
-            child: Image.memory(_pages[i].bytes, width: 90, height: 120, fit: BoxFit.cover),
+            // Decoded at thumbnail size, not at the photo's full size.
+            child: Image.memory(_pages[i].bytes, width: 90, height: 120, fit: BoxFit.cover, cacheWidth: 180),
           ),
           Positioned(
             left: 6,
