@@ -91,7 +91,7 @@ Be fair for B1: a clear text with a few mistakes gets 13–16; a perfect B1 text
   "why" = the rule in very simple $language (one short sentence).
 "good": 2–3 things done well ($language), e.g. a correct subjonctif or pronoun, with the French words.
 "summary": 1–2 sentences in $language: the general impression.
-"better_version": the same text corrected and slightly improved, still B1 level, same ideas, using ${_focusName(subject.focus)} where natural.
+"better_version": the same text corrected and slightly improved, still B1 level, same ideas, using ${_focusName(subject.focus)} where natural. Keep the learner's own words when they are correct. SIMPLE A2–B1 VOCABULARY ONLY: common everyday words a learner already knows (maison, travail, famille, ami, aider, content…); no rare, literary or formal words (not "néanmoins", "s'avérer", "épanouissement"…); short, clear sentences.
 "next_tip": one concrete tip in $language for the next text.
 Return JSON: {"criteria": {"task": 0, "grammar": 0, "vocabulary": 0, "organisation": 0}, "summary": "", "mistakes": [{"wrong": "", "right": "", "why": ""}], "good": [], "better_version": "", "next_tip": ""}''',
       },
@@ -111,7 +111,7 @@ Return JSON: {"criteria": {"task": 0, "grammar": 0, "vocabulary": 0, "organisati
         'content': '''You write writing subjects for a French B1 exam in Belgium (adults, everyday life).
 Write ONE new subject that naturally makes the learner use ${_focusName(focus)}.
 Types: email or letter to a friend, story of an experience, opinion with arguments, description, instructions.
-"title": short French title. "instruction": the exam instruction in French (1–2 sentences, simple B1 French). "emoji": one emoji.
+"title": short French title. "instruction": the exam instruction in French (1–2 sentences, simple A2–B1 words). "emoji": one emoji.
 Return JSON: {"title": "", "instruction": "", "emoji": ""}''',
       },
       {'role': 'user', 'content': 'A new subject, please (random seed ${DateTime.now().millisecondsSinceEpoch % 9973}).'},

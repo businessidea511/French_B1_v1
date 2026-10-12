@@ -5,7 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import '../theme/app_theme.dart';
 import '../services/ui_strings.dart';
 
-enum PhotoImportMode { fullLesson, exercisesOnly }
+enum PhotoImportMode { fullLesson, exercisesOnly, essayQuestions }
 
 /// The pages collected by [showPhotoPagesSheet].
 class PhotoImportRequest {
@@ -146,9 +146,12 @@ class _PhotoPagesSheetState extends State<_PhotoPagesSheet> {
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
             const SizedBox(height: 4),
             Text(
-                widget.mode == PhotoImportMode.exercisesOnly
-                    ? 'Add the exercise pages. Every exercise becomes an interactive exercise in this lesson.'
-                    : 'Add the lesson pages in order. You can take several photos one after another.',
+                switch (widget.mode) {
+                  PhotoImportMode.exercisesOnly =>
+                    'Add the exercise pages. Every exercise becomes an interactive exercise in this lesson.',
+                  PhotoImportMode.essayQuestions => tr(context, 'Take a photo of each class paper. Professeur AI finds every essay question on them.'),
+                  PhotoImportMode.fullLesson => 'Add the lesson pages in order. You can take several photos one after another.',
+                },
                 style: TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
             const SizedBox(height: 16),
 
@@ -229,9 +232,11 @@ class _PhotoPagesSheetState extends State<_PhotoPagesSheet> {
               icon: _picking
                   ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
                   : const Icon(Icons.auto_awesome_rounded),
-              label: Text(widget.mode == PhotoImportMode.exercisesOnly
-                  ? 'Import exercises from ${_pages.length} page${_pages.length == 1 ? '' : 's'}'
-                  : 'Create from ${_pages.length} page${_pages.length == 1 ? '' : 's'}'),
+              label: Text(switch (widget.mode) {
+                PhotoImportMode.exercisesOnly => 'Import exercises from ${_pages.length} page${_pages.length == 1 ? '' : 's'}',
+                PhotoImportMode.essayQuestions => tr(context, 'Find the questions ({n} photos)', {'n': _pages.length}),
+                PhotoImportMode.fullLesson => 'Create from ${_pages.length} page${_pages.length == 1 ? '' : 's'}',
+              }),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppTheme.primary,
                 minimumSize: const Size.fromHeight(52),

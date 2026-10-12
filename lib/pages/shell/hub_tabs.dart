@@ -16,6 +16,7 @@ import '../games/conjugation_game_page.dart';
 import '../games/dictee_page.dart';
 import '../games/duel_page.dart';
 import '../exam/exam_kit_page.dart';
+import '../exam/writing_practice_page.dart';
 import '../grammar/grammar_page.dart';
 import '../grammar/grammar_tricks_page.dart';
 import '../lessons/lessons_page.dart';
@@ -106,6 +107,8 @@ class LearnTab extends StatelessWidget {
             color: AppTheme.primary, onTap: () => openPage(context, const GrammarPage())),
         FeatureTile(emoji: '🧠', title: tr(context, 'Grammar tricks'), subtitle: 'Every grammar topic in tricks you remember',
             color: Colors.pink, onTap: () => openPage(context, const GrammarTricksPage())),
+        FeatureTile(emoji: '📝', title: tr(context, 'Write essays'), subtitle: 'Your class questions, writing practice, AI model essays',
+            color: Colors.teal.shade400, onTap: () => openPage(context, const WritingPracticePage())),
         FeatureTile(emoji: '📖', title: lp.translate('lessons'), subtitle: 'Themed lessons with exercises',
             color: Colors.purple, onTap: () => openPage(context, const LessonsPage())),
         FeatureTile(emoji: '🔄', title: lp.translate('verbs'), subtitle: 'Every verb in every tense',

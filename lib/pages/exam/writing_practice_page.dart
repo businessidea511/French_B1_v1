@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../data/exam_kit.dart';
+import '../../services/essay_service.dart';
 import '../../services/exam_writing_service.dart';
 import '../../services/language_provider.dart';
 import '../../services/life_story_service.dart';
@@ -13,7 +14,9 @@ import '../../theme/app_theme.dart';
 import '../../widgets/french_meaning.dart';
 import '../../widgets/motion.dart';
 import '../../widgets/translated_text.dart';
+import '../../widgets/photo_pages_sheet.dart';
 import '../../widgets/ui_kit.dart';
+import 'model_essay_page.dart';
 
 String _focusLabel(BuildContext context, ExamFocus f) => switch (f) {
       ExamFocus.subjonctif => 'Subjonctif',
@@ -34,6 +37,163 @@ class WritingPracticePage extends StatefulWidget {
 class _WritingPracticePageState extends State<WritingPracticePage> {
   ExamFocus _focus = ExamFocus.both;
   bool _makingSubject = false;
+  bool _readingPapers = false;
+
+  EssayService get _essays => EssayService.instance;
+
+  @override
+  void initState() {
+    super.initState();
+    _essays.load();
+  }
+
+  void _snack(String text) => ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
+
+  /// Photos of class papers → the essay questions on them.
+  Future<void> _fromPapers() async {
+    final request = await showPhotoPagesSheet(
+      context,
+      title: '📷 ${tr(context, 'Class papers')}',
+      mode: PhotoImportMode.essayQuestions,
+      askInstructions: false,
+    );
+    if (request == null || !mounted) return;
+    setState(() => _readingPapers = true);
+    try {
+      final found = await _essays.readPapers(request.base64Images, request.mimeType);
+      if (!mounted) return;
+      final added = _essays.addAll(found);
+      _snack(found.isEmpty
+          ? tr(context, 'No essay question found on these photos. Try clearer photos, or type the question.')
+          : tr(context, '{n} new question(s) added', {'n': added}));
+    } catch (_) {
+      if (mounted) _snack(tr(context, 'Could not read the photos. Try again.'));
+    } finally {
+      if (mounted) setState(() => _readingPapers = false);
+    }
+  }
+
+  Future<void> _typeQuestion() async {
+    final controller = TextEditingController();
+    final text = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(tr(ctx, 'Type a question')),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          minLines: 3,
+          maxLines: 6,
+          textDirection: TextDirection.ltr,
+          decoration: InputDecoration(hintText: tr(ctx, 'The essay question, in French')),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: Text(tr(ctx, 'Back'))),
+          FilledButton(onPressed: () => Navigator.pop(ctx, controller.text), child: Text(tr(ctx, 'Add'))),
+        ],
+      ),
+    );
+    controller.dispose();
+    if (text == null || text.trim().length < 10 || !mounted) return;
+    _essays.addTyped(text);
+  }
+
+  Future<void> _delete(EssayQuestion q) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(tr(ctx, 'Delete this question?')),
+        content: Text(q.title, textDirection: TextDirection.ltr),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(tr(ctx, 'Back'))),
+          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: Text(tr(ctx, 'Delete'))),
+        ],
+      ),
+    );
+    if (ok == true) _essays.remove(q.id);
+  }
+
+  Widget _classQuestions() {
+    return ListenableBuilder(
+      listenable: _essays,
+      builder: (context, _) => Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SectionTitle('📷 ${tr(context, 'My class questions')}'),
+          Row(
+            children: [
+              Expanded(
+                child: GlowButton(
+                  label: _readingPapers ? tr(context, 'Reading…') : tr(context, 'Class papers'),
+                  icon: Icons.photo_camera_rounded,
+                  onPressed: _readingPapers ? null : _fromPapers,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: GlowButton(
+                  label: tr(context, 'Type a question'),
+                  icon: Icons.edit_note_rounded,
+                  colors: [AppTheme.secondary, AppTheme.accent],
+                  onPressed: _typeQuestion,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          if (_essays.questions.isEmpty)
+            TranslatedText(
+              'Take photos of the essay questions from your class: they will be saved here, ready to practise.',
+              style: TextStyle(color: AppTheme.textTertiary, fontSize: 13),
+            ),
+          for (final q in _essays.questions)
+            Padding(
+              key: ValueKey(q.id),
+              padding: const EdgeInsets.only(bottom: 10),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(20),
+                onTap: () => _write(q.subject),
+                child: GlassCard(
+                  radius: 20,
+                  glow: AppTheme.success,
+                  padding: const EdgeInsets.fromLTRB(14, 12, 4, 12),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(_essays.models.containsKey(q.subject.id) ? '✨' : '📄', style: const TextStyle(fontSize: 24)),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(q.title,
+                                textDirection: TextDirection.ltr,
+                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: AppTheme.textPrimary)),
+                            if (q.question != q.title) ...[
+                              const SizedBox(height: 3),
+                              Text(q.question,
+                                textDirection: TextDirection.ltr,
+                                maxLines: 3,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(fontSize: 13, color: AppTheme.textSecondary, height: 1.35)),
+                            ],
+                          ],
+                        ),
+                      ),
+                      IconButton(
+                        tooltip: tr(context, 'Delete'),
+                        icon: Icon(Icons.delete_outline_rounded, color: AppTheme.textTertiary),
+                        onPressed: () => _delete(q),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
 
   List<ExamSubject> get _subjects => [
         for (final s in examSubjects)
@@ -74,6 +234,7 @@ class _WritingPracticePageState extends State<WritingPracticePage> {
             'Choose the grammar of your exam, then a subject. Write as in the exam (about 20 minutes), then get a correction like a teacher\'s.',
             style: TextStyle(color: AppTheme.textSecondary, height: 1.4),
           ),
+          _classQuestions(),
           SectionTitle(tr(context, 'Grammar of the exam')),
           Wrap(
             spacing: 8,
@@ -361,10 +522,21 @@ class _WritingEditorPageState extends State<WritingEditorPage> {
               child: Text(_instructionTranslated!, style: TextStyle(color: AppTheme.textSecondary, height: 1.35)),
             ),
           const SizedBox(height: 6),
-          Text(
-            '${_focusLabel(context, _subject.focus)} · ${_subject.minWords}–${_subject.maxWords} ${tr(context, 'words')}',
-            textDirection: TextDirection.ltr,
-            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: AppTheme.primary),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  '${_focusLabel(context, _subject.focus)} · ${_subject.minWords}–${_subject.maxWords} ${tr(context, 'words')}',
+                  textDirection: TextDirection.ltr,
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: AppTheme.primary),
+                ),
+              ),
+              TextButton.icon(
+                onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ModelEssayPage(subject: _subject))),
+                icon: const Text('✨'),
+                label: Text(tr(context, 'AI model essay')),
+              ),
+            ],
           ),
         ],
       ),
