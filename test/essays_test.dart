@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:french_course_b1/pages/exam/model_essay_page.dart';
 import 'package:french_course_b1/pages/exam/writing_practice_page.dart';
 import 'package:french_course_b1/services/essay_service.dart';
+import 'package:french_course_b1/services/exam_writing_service.dart';
 import 'package:french_course_b1/services/language_provider.dart';
 import 'package:french_course_b1/services/progress_service.dart';
 import 'package:provider/provider.dart';
@@ -21,6 +22,15 @@ void main() {
     EssayService.chat = (messages, {thinking = false, temperature, maxTokens}) async {
       final system = messages.first['content'] as String;
       prompts.add(system);
+      if (system.startsWith("These photos are a learner's HANDWRITTEN")) {
+        expect(system, contains('with ALL its mistakes'));
+        return {
+          'title': 'Mon week-end',
+          'question': 'Racontez votre week-end.',
+          'text': 'Samedi, je suis allé au marché avec ma soeur. Il faisait tres froid.',
+          'words': 13,
+        };
+      }
       if (system.startsWith('These are photos')) {
         expect((messages.last['content'] as List).where((p) => (p as Map)['type'] == 'image_url'), hasLength(2));
         return {
@@ -104,5 +114,26 @@ void main() {
     expect(find.text('je suis allé'), findsOneWidget);
     expect(find.text('Now write yours'), findsOneWidget);
     await tester.pump(const Duration(seconds: 2));
+  });
+
+  testWidgets('a handwritten essay: its text (with its mistakes) goes to the writing page', (tester) async {
+    tester.view.physicalSize = const Size(420, 2400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final essays = EssayService.instance;
+    final (question, text) = await essays.readHandwritten(['page1'], 'image/jpeg');
+    expect(text, contains('tres froid'), reason: 'mistakes are kept for the correction');
+    expect(question.question, 'Racontez votre week-end.');
+    expect(essays.questions.single.title, 'Mon week-end');
+
+    // Photographed again: the same topic is not added twice.
+    final (again, _) = await essays.readHandwritten(['page1'], 'image/jpeg');
+    expect(again.id, question.id);
+    expect(essays.questions, hasLength(1));
+
+    await ExamWritingService.saveDraft(question.subject.id, text);
+    await tester.pumpWidget(_app(WritingEditorPage(subject: question.subject)));
+    await tester.pumpAndSettle();
+    expect(find.text(text), findsOneWidget);
   });
 }

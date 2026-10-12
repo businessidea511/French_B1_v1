@@ -208,6 +208,50 @@ Return JSON: {"questions": [{"title": "", "question": "", "min_words": 80, "max_
     ];
   }
 
+  /// Reads photos of the learner's handwritten essay: copies the text
+  /// exactly (mistakes included, for the correction) and finds its topic.
+  /// Returns the topic as a saved question, and the text.
+  Future<(EssayQuestion, String)> readHandwritten(List<String> base64Images, String mimeType) async {
+    final r = await chat([
+      {
+        'role': 'system',
+        'content': '''These photos are a learner's HANDWRITTEN French essay (B1), page by page, in order.
+1. "text": copy the essay EXACTLY as written, word for word, with ALL its mistakes (spelling, accents, agreement, conjugation).
+   Do NOT correct anything: a teacher will correct it later. Keep the paragraphs (blank line between them).
+   Leave out crossed-out words. If one word cannot be read, write [?].
+2. "question": if the essay question / instruction is written on the paper, copy it exactly in French.
+   Otherwise write the most likely exam instruction for this essay in simple French (e.g. "Racontez un week-end avec votre famille.").
+3. "title": a short French title (2–5 words). "words": the number of words of the text.
+Return JSON: {"title": "", "question": "", "text": "", "words": 0}''',
+      },
+      {
+        'role': 'user',
+        'content': [
+          {'type': 'text', 'text': 'Copy my handwritten essay (${base64Images.length} photo(s)) and find its topic.'},
+          for (final b in base64Images)
+            {
+              'type': 'image_url',
+              'image_url': {'url': 'data:$mimeType;base64,$b'},
+            },
+        ],
+      },
+    ], temperature: 0.0, maxTokens: 4000);
+    final text = '${r['text'] ?? ''}'.trim();
+    final question = '${r['question'] ?? ''}'.trim();
+    if (text.isEmpty) throw Exception('No text found');
+    final title = '${r['title'] ?? ''}'.trim();
+    final q = EssayQuestion(
+      id: _newId(),
+      title: title.isEmpty ? 'Ma rédaction' : title,
+      question: question.isEmpty ? 'Écrivez un texte sur ce sujet : ${title.isEmpty ? 'ma rédaction' : title}.' : question,
+    );
+    // The same topic photographed again: keep the saved one.
+    final existing = questions.where((e) => _norm(e.question) == _norm(q.question)).firstOrNull;
+    if (existing != null) return (existing, text);
+    addAll([q]);
+    return (q, text);
+  }
+
   /// The AI writes a B1 model essay for the subject, to read and learn.
   Future<ModelEssay> writeModel(ExamSubject q) async {
     final phrases = [for (final p in jokerPhrases) p.french].join('\n');

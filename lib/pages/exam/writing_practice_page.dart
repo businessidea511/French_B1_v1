@@ -38,6 +38,7 @@ class _WritingPracticePageState extends State<WritingPracticePage> {
   ExamFocus _focus = ExamFocus.both;
   bool _makingSubject = false;
   bool _readingPapers = false;
+  bool _readingEssay = false;
 
   EssayService get _essays => EssayService.instance;
 
@@ -70,6 +71,29 @@ class _WritingPracticePageState extends State<WritingPracticePage> {
       if (mounted) _snack(tr(context, 'Could not read the photos. Try again.'));
     } finally {
       if (mounted) setState(() => _readingPapers = false);
+    }
+  }
+
+  /// Photos of a handwritten essay → its text in the writing page, ready to correct.
+  Future<void> _fromHandwriting() async {
+    final request = await showPhotoPagesSheet(
+      context,
+      title: '📷 ${tr(context, 'My handwritten essay')}',
+      mode: PhotoImportMode.handwrittenEssay,
+      askInstructions: false,
+    );
+    if (request == null || !mounted) return;
+    setState(() => _readingEssay = true);
+    try {
+      final (question, text) = await _essays.readHandwritten(request.base64Images, request.mimeType);
+      await ExamWritingService.saveDraft(question.subject.id, text);
+      if (!mounted) return;
+      _snack(tr(context, 'Check that the text is the same as on your paper, then press Correct.'));
+      _write(question.subject);
+    } catch (_) {
+      if (mounted) _snack(tr(context, 'Could not read the photos. Try again.'));
+    } finally {
+      if (mounted) setState(() => _readingEssay = false);
     }
   }
 
@@ -139,6 +163,13 @@ class _WritingPracticePageState extends State<WritingPracticePage> {
                 ),
               ),
             ],
+          ),
+          const SizedBox(height: 10),
+          GlowButton(
+            label: _readingEssay ? tr(context, 'Reading your handwriting…') : tr(context, 'My handwritten essay'),
+            icon: Icons.document_scanner_rounded,
+            colors: [AppTheme.success, const Color(0xFF14B8A6)],
+            onPressed: _readingEssay ? null : _fromHandwriting,
           ),
           const SizedBox(height: 10),
           if (_essays.questions.isEmpty)
