@@ -1,11 +1,10 @@
 import 'dart:convert';
-import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:image_picker/image_picker.dart';
 import '../services/deepseek_service.dart';
 import '../services/language_provider.dart';
+import '../services/photo_picker.dart';
 import '../theme/app_theme.dart';
 import 'translated_text.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
@@ -25,7 +24,7 @@ class _AskAIBoxState extends State<AskAIBox> with AutomaticKeepAliveClientMixin 
   final TextEditingController _controller = TextEditingController();
   bool _isLoading = false;
   String? _response;
-  final List<XFile> _selectedImages = [];
+  final List<Uint8List> _selectedImages = [];
   final List<String> _base64Images = [];
   String? _mimeType;
 
@@ -40,7 +39,6 @@ class _AskAIBoxState extends State<AskAIBox> with AutomaticKeepAliveClientMixin 
       return;
     }
 
-    final picker = ImagePicker();
     showModalBottomSheet(
       context: context,
       backgroundColor: AppTheme.surface,
@@ -55,13 +53,10 @@ class _AskAIBoxState extends State<AskAIBox> with AutomaticKeepAliveClientMixin 
             title: Text(tr(context, 'Take a photo'), style: TextStyle(color: AppTheme.textPrimary)),
             onTap: () async {
               Navigator.pop(context);
-              final image = await picker.pickImage(
-                source: ImageSource.camera, 
-                imageQuality: 40,
-                maxWidth: 800,
-                maxHeight: 800,
-              );
-              if (image != null) _processImage(image);
+              final photos = await PhotoPicker.pick(camera: true, maxSide: 800, quality: 40);
+              for (final p in photos) {
+                _processImage(p);
+              }
             },
           ),
           ListTile(
@@ -70,17 +65,9 @@ class _AskAIBoxState extends State<AskAIBox> with AutomaticKeepAliveClientMixin 
             onTap: () async {
               Navigator.pop(context);
               // For gallery, we can pick multiple at once
-              final images = await picker.pickMultiImage(
-                imageQuality: 40,
-                maxWidth: 800,
-                maxHeight: 800,
-              );
-              if (images.isNotEmpty) {
-                for (var img in images) {
-                  if (_selectedImages.length < 10) {
-                    await _processImage(img);
-                  }
-                }
+              final images = await PhotoPicker.pick(camera: false, multiple: true, maxSide: 800, quality: 40);
+              for (final img in images) {
+                if (_selectedImages.length < 10) _processImage(img);
               }
             },
           ),
@@ -89,12 +76,12 @@ class _AskAIBoxState extends State<AskAIBox> with AutomaticKeepAliveClientMixin 
     );
   }
 
-  Future<void> _processImage(XFile image) async {
-    final bytes = await image.readAsBytes();
+  void _processImage(Uint8List bytes) {
+    if (!mounted) return;
     setState(() {
-      _selectedImages.add(image);
+      _selectedImages.add(bytes);
       _base64Images.add(base64Encode(bytes));
-      _mimeType = image.name.toLowerCase().endsWith('.png') ? 'image/png' : 'image/jpeg';
+      _mimeType = PhotoPicker.mimeOf(bytes);
     });
   }
 
@@ -369,9 +356,7 @@ class _AskAIBoxState extends State<AskAIBox> with AutomaticKeepAliveClientMixin 
                                   borderRadius: BorderRadius.circular(15),
                                   border: Border.all(color: AppTheme.primary, width: 2),
                                   image: DecorationImage(
-                                    image: kIsWeb 
-                                      ? NetworkImage(img.path) as ImageProvider
-                                      : FileImage(File(img.path)),
+                                    image: ResizeImage(MemoryImage(img), width: 200),
                                     fit: BoxFit.cover,
                                   ),
                                 ),

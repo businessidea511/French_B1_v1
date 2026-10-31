@@ -44,6 +44,16 @@ class UiStrings {
       'Bugün tekrar edilecek bir şey yok. Yeni kartlar çalış!',
       'Tidak ada yang perlu diulang hari ini. Pelajari kartu baru!',
     ],
+    'Install on Android': ['Installer sur Android', 'التثبيت على Android', 'Встановити на Android', 'Installa su Android', 'ኣብ Android ኣእቱ', "Android'e yükle", 'Pasang di Android'],
+    'ANDROID_STEPS': [
+      "1. Ouvre ce site dans Chrome.\n2. Touche le menu ⋮ en haut à droite.\n3. Choisis « Installer l'application » ou « Ajouter à l'écran d'accueil ».\n4. Ouvre PolyLearn depuis l'icône sur ton écran d'accueil.",
+      '1. افتح هذا الموقع في Chrome.\n2. اضغط القائمة ⋮ في الأعلى.\n3. اختر «تثبيت التطبيق» أو «إضافة إلى الشاشة الرئيسية».\n4. افتح PolyLearn من الأيقونة في شاشتك الرئيسية.',
+      '1. Відкрий цей сайт у Chrome.\n2. Натисни меню ⋮ угорі праворуч.\n3. Обери «Установити додаток» або «Додати на головний екран».\n4. Відкривай PolyLearn з іконки на головному екрані.',
+      "1. Apri questo sito in Chrome.\n2. Tocca il menu ⋮ in alto a destra.\n3. Scegli «Installa app» o «Aggiungi a schermata Home».\n4. Apri PolyLearn dall'icona sulla schermata Home.",
+      '1. ነዚ መርበብ ብ Chrome ክፈቶ።\n2. ኣብ ላዕሊ ዘሎ ⋮ ጠውቕ።\n3. «ኣፕ ኣእቱ» ወይ «ናብ መበገሲ ገጽ ወስኽ» ምረጽ።\n4. PolyLearn ካብቲ ምልክት ክፈቶ።',
+      "1. Bu siteyi Chrome'da aç.\n2. Sağ üstteki ⋮ menüsüne dokun.\n3. «Uygulamayı yükle» ya da «Ana ekrana ekle»yi seç.\n4. PolyLearn'ü ana ekrandaki simgeden aç.",
+      '1. Buka situs ini di Chrome.\n2. Ketuk menu ⋮ di kanan atas.\n3. Pilih «Instal aplikasi» atau «Tambahkan ke layar utama».\n4. Buka PolyLearn dari ikon di layar utama.',
+    ],
     'Install on iPhone': ['Installer sur iPhone', 'التثبيت على iPhone', 'Встановити на iPhone', 'Installa su iPhone', 'ኣብ iPhone ኣእቱ', 'iPhone\'a yükle', 'Pasang di iPhone'],
     'IPHONE_STEPS': [
       '1. Touche le bouton « Partager » dans Safari.\n2. Choisis « Sur l\'écran d\'accueil ».\n3. Touche « Ajouter ».',
@@ -394,6 +404,7 @@ class UiStrings {
   /// English text for the entries whose key is an ID rather than the English sentence.
   static const _english = {
     'IPHONE_STEPS': '1. Tap the "Share" button in Safari.\n2. Choose "Add to Home Screen".\n3. Tap "Add".',
+    'ANDROID_STEPS': '1. Open this site in Chrome.\n2. Tap the ⋮ menu at the top right.\n3. Choose "Install app" or "Add to Home screen".\n4. Open PolyLearn from the icon on your home screen.',
     'NOT_A_VERB': '« {verb} » is not a French verb I know. Type the infinitive, e.g. « prendre » or « se lever ».',
     'DICTEE_KEY': '🟢 right   🟡 accent   🔴 wrong or missing',
     'SAVED_WORDS': '{n} words added to « My words » and to your reviews ✓',

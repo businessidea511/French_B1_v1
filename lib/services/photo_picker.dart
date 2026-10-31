@@ -9,9 +9,11 @@ import 'image_shrink.dart';
 /// which can crash the page on older phones. So the photo is picked as it
 /// is and made small by the browser without decoding it at full size.
 ///
-/// Phones also sometimes close the browser page to free memory while their
-/// camera is open: the app then starts again on the home page. A mark is
-/// kept while the camera is open, so the app can explain what happened.
+/// Photos are taken with a camera inside the page: the phone's own camera
+/// app sends the browser to the background, and Android often closes the
+/// page to free memory (the app then starts again on the home page). When
+/// the browser gives no camera access, the phone's camera is used, and a
+/// mark is kept while it is open, so the app can explain a restart.
 class PhotoPicker {
   static const _cameraKey = 'camera_opened_at';
 
@@ -21,6 +23,11 @@ class PhotoPicker {
     int maxSide = 1400,
     int quality = 60,
   }) async {
+    if (camera && kIsWeb) {
+      // The camera inside the page first: the app stays on screen.
+      final (available, photo) = await takePhotoInPage(maxSide, quality / 100);
+      if (available) return [if (photo != null) photo];
+    }
     final picker = ImagePicker();
     final prefs = await SharedPreferences.getInstance();
     if (camera) await prefs.setInt(_cameraKey, DateTime.now().millisecondsSinceEpoch);

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../../data/exam_kit.dart';
 import '../../data/grammar_tricks.dart';
@@ -74,10 +75,12 @@ class _MeTabState extends State<MeTab> {
     PWAService.setupInstallListener(() {
       if (mounted) setState(() => _canInstall = true);
     });
+    // On a phone, offer to install even when the browser gave no prompt
+    // (Samsung Internet, Firefox, or Chrome not ready yet): the steps are shown.
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted && Theme.of(context).platform == TargetPlatform.iOS && !PWAService.isStandalone()) {
-        setState(() => _canInstall = true);
-      }
+      final platform = Theme.of(context).platform;
+      final phone = platform == TargetPlatform.iOS || platform == TargetPlatform.android;
+      if (mounted && kIsWeb && phone && !PWAService.isStandalone()) setState(() => _canInstall = true);
     });
   }
 
@@ -100,7 +103,20 @@ class _MeTabState extends State<MeTab> {
       );
       return;
     }
-    if (await PWAService.installPWA() && mounted) setState(() => _canInstall = false);
+    final installed = await PWAService.installPWA();
+    if (!mounted) return;
+    if (installed == true) return setState(() => _canInstall = false);
+    if (installed == false) {
+      // No install prompt from the browser: how to do it from its menu.
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: Text(tr(context, 'Install on Android')),
+          content: Text(tr(context, 'ANDROID_STEPS')),
+          actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('OK'))],
+        ),
+      );
+    }
   }
 
   /// Admin: translates all lessons, grammar and word lists into every language

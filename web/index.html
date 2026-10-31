@@ -133,6 +133,85 @@
   </script>
 
   <script>
+    // A camera inside the page. The phone's own camera app sends the browser
+    // to the background, and Android often closes the page to free memory:
+    // the app then starts again on the home page. Here the page stays open.
+    // Resolves {bytes} (JPEG), {cancel: true}, or {unavailable: true}.
+    window.plTakePhoto = (maxSide, quality) => new Promise(async (resolve) => {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return resolve({ unavailable: true });
+      let stream;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          audio: false,
+          video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1080 } },
+        });
+      } catch (e) {
+        console.warn('In-app camera unavailable', e);
+        return resolve({ unavailable: true });
+      }
+      const box = document.createElement('div');
+      box.style.cssText = 'position:fixed;inset:0;z-index:2147483647;background:#000;display:flex;flex-direction:column;touch-action:none';
+      const video = document.createElement('video');
+      video.setAttribute('playsinline', '');
+      video.muted = true;
+      video.autoplay = true;
+      video.srcObject = stream;
+      video.style.cssText = 'flex:1;min-height:0;width:100%;object-fit:contain;background:#000';
+      const bar = document.createElement('div');
+      bar.style.cssText = 'display:flex;align-items:center;justify-content:space-around;padding:18px 0 calc(18px + env(safe-area-inset-bottom));background:#000';
+      const button = (label, size, css) => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.textContent = label;
+        b.style.cssText = `width:${size}px;height:${size}px;border-radius:50%;font-size:${size / 2.4}px;cursor:pointer;${css}`;
+        return b;
+      };
+      const cancel = button('✕', 56, 'border:none;background:rgba(255,255,255,.18);color:#fff');
+      const shutter = button('', 76, 'border:5px solid #fff;background:#E0604A;box-shadow:0 0 0 3px rgba(0,0,0,.4) inset');
+      const spacer = document.createElement('div');
+      spacer.style.cssText = 'width:56px;height:56px';
+      bar.append(cancel, shutter, spacer);
+      box.append(video, bar);
+      document.body.appendChild(box);
+      video.play().catch(() => {});
+
+      let done = false;
+      const finish = (result) => {
+        if (done) return;
+        done = true;
+        stream.getTracks().forEach((t) => t.stop());
+        window.removeEventListener('popstate', onBack);
+        box.remove();
+        resolve(result);
+      };
+      // The phone's back button also closes the camera.
+      const onBack = () => finish({ cancel: true });
+      window.addEventListener('popstate', onBack);
+      const close = finish;
+
+      cancel.onclick = () => close({ cancel: true });
+      shutter.onclick = async () => {
+        if (!video.videoWidth) return; // not ready yet
+        shutter.disabled = true;
+        shutter.style.opacity = '.5';
+        try {
+          const scale = Math.min(1, maxSide / Math.max(video.videoWidth, video.videoHeight));
+          const canvas = document.createElement('canvas');
+          canvas.width = Math.round(video.videoWidth * scale);
+          canvas.height = Math.round(video.videoHeight * scale);
+          canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+          const blob = await new Promise((r) => canvas.toBlob(r, 'image/jpeg', quality));
+          canvas.width = canvas.height = 0;
+          close(blob ? { bytes: new Uint8Array(await blob.arrayBuffer()) } : { cancel: true });
+        } catch (e) {
+          console.warn('Could not take the photo', e);
+          close({ unavailable: true });
+        }
+      };
+    });
+  </script>
+
+  <script>
     // PWA Install Logic
     window.deferredPrompt = null;
     window.addEventListener('beforeinstallprompt', (e) => {

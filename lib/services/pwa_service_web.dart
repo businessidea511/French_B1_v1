@@ -1,42 +1,41 @@
-// ignore: avoid_web_libraries_in_flutter
-import 'dart:js' as js;
+import 'dart:js_interop';
+import 'dart:js_interop_unsafe';
 import 'package:flutter/foundation.dart';
 
+/// Installing the web app on the phone (index.html keeps the browser's
+/// install prompt in window.deferredPrompt).
 class PWAService {
   static void setupInstallListener(void Function() onInstallable) {
     try {
-      // Direct global context access
-      if (js.context.hasProperty('deferredPrompt') && js.context['deferredPrompt'] != null) {
-        onInstallable();
-      }
-      
-      js.context['onAppInstallable'] = () {
-        onInstallable();
-      };
+      if (globalContext['deferredPrompt'] != null) onInstallable();
+      globalContext['onAppInstallable'] = onInstallable.toJS;
     } catch (e) {
-      debugPrint("🚀 PWA Web Listener Error: $e");
+      debugPrint('PWA listener error: $e');
     }
   }
 
-  static Future<bool> installPWA() async {
+  /// true: installed. null: the learner said no. false: the browser has no
+  /// install prompt to show (some browsers, or not ready yet): show the steps.
+  static Future<bool?> installPWA() async {
     try {
-      final result = await js.context.callMethod('installPWA');
-      return result == true;
+      if (globalContext['deferredPrompt'] == null) return false;
+      final result = await globalContext.callMethod<JSPromise<JSBoolean>>('installPWA'.toJS).toDart;
+      return result.toDart ? true : null;
     } catch (e) {
-      debugPrint("🚀 PWA Web Install Error: $e");
+      debugPrint('PWA install error: $e');
       return false;
     }
   }
 
+  /// Already opened as an installed app (from the home screen).
   static bool isStandalone() {
     try {
-      final navigator = js.context['navigator'];
-      if (navigator != null && js.JsObject.fromBrowserObject(navigator).hasProperty('standalone')) {
-        return navigator['standalone'] == true;
-      }
-    } catch (e) {
-      debugPrint("📱 PWA Standalone check error: $e");
+      final media = globalContext.callMethod<JSObject>('matchMedia'.toJS, '(display-mode: standalone)'.toJS);
+      if ((media['matches'] as JSBoolean?)?.toDart ?? false) return true;
+      final nav = globalContext['navigator'] as JSObject;
+      return (nav['standalone'] as JSBoolean?)?.toDart ?? false; // iPhone
+    } catch (_) {
+      return false;
     }
-    return false;
   }
 }

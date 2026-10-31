@@ -1,12 +1,18 @@
 {
+    "id": "/",
     "name": "PolyLearn French",
     "short_name": "PolyLearn",
-    "start_url": ".",
+    "start_url": "/",
+    "scope": "/",
     "display": "standalone",
+    "display_override": [
+        "standalone",
+        "minimal-ui"
+    ],
     "background_color": "#FBF7F0",
     "theme_color": "#E0604A",
     "description": "PolyLearn French - Advanced B1 Learning with AI Multi-Language Translation",
-    "orientation": "portrait-primary",
+    "orientation": "portrait",
     "prefer_related_applications": false,
     "icons": [
         {
