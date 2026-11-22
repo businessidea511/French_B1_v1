@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#1b2440">
+  <title>La Quête des Mots Perdus — PolyLearn</title>
+  <link rel="icon" type="image/png" href="../favicon.png">
+  <link rel="stylesheet" href="game.css">
+  <script type="importmap">
+    { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js" } }
+  </script>
+</head>
+<body>
+  <canvas id="scene"></canvas>
+
+  <!-- Title screen -->
+  <section id="title" class="screen">
+    <div class="title-card">
+      <div class="title-badge">PolyLearn</div>
+      <h1>La Quête<br>des Mots Perdus</h1>
+      <p class="subtitle" data-t="An adventure to learn French"></p>
+      <input id="playerName" maxlength="16" autocomplete="off" data-ph="Your name">
+      <label class="lang-row"><span data-t="Help language">Help language</span>
+        <select id="langPick">
+          <option value="ar">العربية</option>
+          <option value="en">English</option>
+          <option value="uk">Українська</option>
+          <option value="it">Italiano</option>
+          <option value="ti">ትግርኛ</option>
+          <option value="tr">Türkçe</option>
+          <option value="id">Bahasa Indonesia</option>
+        </select>
+      </label>
+      <button id="playBtn" class="btn primary" data-t="Play"></button>
+      <button id="resetBtn" class="btn ghost small" data-t="New game" hidden></button>
+      <a class="back-link" href="../" data-t="Back to the app"></a>
+    </div>
+  </section>
+
+  <!-- Story slides -->
+  <section id="story" class="screen" hidden>
+    <div class="story-card">
+      <div id="storyEmoji" class="story-emoji"></div>
+      <p id="storyFr" class="story-fr"></p>
+      <p id="storyHelp" class="story-help"></p>
+      <button id="storyNext" class="btn primary" data-t="Continue"></button>
+    </div>
+  </section>
+
+  <!-- HUD -->
+  <div id="hud" hidden>
+    <div class="hud-top">
+      <a class="hud-btn" href="../" aria-label="Exit">✕</a>
+      <div id="objective" class="objective"></div>
+      <button id="bookBtn" class="hud-btn wide">📖 <span id="wordCount">0</span></button>
+      <div class="hud-btn wide">🪙 <span id="coins">0</span></div>
+      <button id="musicBtn" class="hud-btn" aria-label="Music">🎵</button>
+    </div>
+    <div id="hearts" class="hearts"></div>
+    <div id="wandBar" class="wand-bar" hidden></div>
+    <button id="talkBtn" class="talk-btn" hidden>💬</button>
+    <div id="joystick" class="joystick"><div class="stick"></div></div>
+  </div>
+
+  <!-- Word found -->
+  <div id="wordCard" class="word-card" hidden>
+    <div class="word-glow"></div>
+    <div id="wordEmoji" class="word-emoji"></div>
+    <div id="wordFr" class="word-fr"></div>
+    <div id="wordHelp" class="word-help"></div>
+    <button id="wordSpeak" class="round">🔊</button>
+  </div>
+
+  <!-- Dialogue -->
+  <div id="dialogue" class="dialogue" hidden>
+    <div class="dlg-head">
+      <span id="dlgAvatar" class="dlg-avatar"></span>
+      <span id="dlgName" class="dlg-name"></span>
+      <span class="dlg-tools">
+        <button id="dlgSpeak" class="round" aria-label="Listen">🔊</button>
+        <button id="dlgTranslate" class="round" aria-label="Translate">🌐</button>
+      </span>
+    </div>
+    <p id="dlgText" class="dlg-text"></p>
+    <p id="dlgHelp" class="dlg-help" hidden></p>
+    <div id="dlgChoices" class="dlg-choices"></div>
+    <div class="dlg-foot">
+      <button id="dlgMic" class="round mic" hidden aria-label="Speak">🎤</button>
+      <span id="dlgHeard" class="heard"></span>
+      <button id="dlgNext" class="btn primary small" data-t="Continue"></button>
+    </div>
+  </div>
+
+  <!-- Fight -->
+  <div id="combat" class="combat" hidden>
+    <div class="foe-head">
+      <span id="foeIcon" class="foe-icon"></span>
+      <div class="foe-info">
+        <b id="foeName"></b>
+        <div class="foe-bar"><div id="foeHp" class="foe-hp"></div></div>
+      </div>
+      <button id="foeReplay" class="round" hidden>🔊</button>
+    </div>
+    <div id="foePrompt" class="foe-prompt"></div>
+    <p id="foeHelp" class="foe-help"></p>
+    <div id="foeChoices" class="foe-choices"></div>
+    <div class="foe-foot">
+      <div class="foe-timebar"><div id="foeTimer" class="foe-time"></div></div>
+      <button id="foeMic" class="round mic" hidden>🎤</button>
+    </div>
+  </div>
+  <div id="hurt" class="hurt"></div>
+
+  <!-- Word book -->
+  <section id="book" class="screen dim" hidden>
+    <div class="book-card">
+      <h2>📖 <span data-t="My words"></span></h2>
+      <div id="bookList" class="book-list"></div>
+      <button id="bookClose" class="btn primary" data-t="Close"></button>
+    </div>
+  </section>
+
+  <!-- Chapter complete -->
+  <section id="done" class="screen dim" hidden>
+    <div class="done-card">
+      <div class="done-map">🗺️</div>
+      <h2 data-t="Chapter 1 complete!"></h2>
+      <div id="doneStars" class="stars"></div>
+      <p id="doneStats"></p>
+      <p class="next-chapter"><b>Chapitre 2 : La Forêt des Verbes</b><br><span data-t="Coming soon"></span></p>
+      <button id="doneReplay" class="btn ghost" data-t="Explore the island"></button>
+      <a class="btn primary" href="../" data-t="Back to the app"></a>
+    </div>
+  </section>
+
+  <div id="toast" class="toast" hidden></div>
+  <div id="loading" class="loading"><div class="spinner"></div></div>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

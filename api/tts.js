@@ -1,9 +1,19 @@
-// POST /api/tts  { "text": "..." }  →  { "url": "https://...mp3" }
+// POST /api/tts  { "text": "...", "voice"?: "henri" }  →  { "url": "https://...mp3" }
 // Proxies the Edge-TTS Hugging Face Space so HF_TOKEN stays on the server.
 const { handleCors, rateLimited } = require('./_lib');
 
 const SPACE_URL = 'https://innoai-edge-tts-text-to-speech.hf.space/gradio_api/call/tts_interface';
 const VOICE = 'fr-FR-DeniseNeural - fr-FR (Female)';
+// Other natural French voices (the game gives each character their own).
+const VOICES = {
+  denise: VOICE,
+  henri: 'fr-FR-HenriNeural - fr-FR (Male)',
+  eloise: 'fr-FR-EloiseNeural - fr-FR (Female)',
+  vivienne: 'fr-FR-VivienneMultilingualNeural - fr-FR (Female)',
+  remy: 'fr-FR-RemyMultilingualNeural - fr-FR (Male)',
+  gerard: 'fr-BE-GerardNeural - fr-BE (Male)',
+  charline: 'fr-BE-CharlineNeural - fr-BE (Female)',
+};
 const MAX_TEXT_CHARS = 3000;
 
 module.exports = async (req, res) => {
@@ -16,6 +26,7 @@ module.exports = async (req, res) => {
   const text = req.body && req.body.text;
   if (typeof text !== 'string' || !text.trim()) return res.status(400).json({ error: 'text is required' });
   if (text.length > MAX_TEXT_CHARS) return res.status(413).json({ error: 'text too long' });
+  const voice = VOICES[req.body.voice] || VOICE;
 
   const headers = { 'Content-Type': 'application/json' };
   if (process.env.HF_TOKEN) headers.Authorization = `Bearer ${process.env.HF_TOKEN}`;
@@ -25,7 +36,7 @@ module.exports = async (req, res) => {
     const trigger = await fetch(SPACE_URL, {
       method: 'POST',
       headers,
-      body: JSON.stringify({ data: [text, VOICE, 0, 0] }),
+      body: JSON.stringify({ data: [text, voice, 0, 0] }),
     });
     if (!trigger.ok) {
       return res.status(502).json({ error: `TTS trigger failed (${trigger.status})` });

@@ -5,6 +5,7 @@ import '../../data/street_french_data.dart';
 import '../../data/vocabulary_data.dart';
 import '../../services/global_scroll_manager.dart';
 import '../../services/language_provider.dart';
+import '../../services/open_game.dart';
 import '../../services/progress_service.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/ui_kit.dart';
@@ -137,6 +138,8 @@ class PracticeTab extends StatelessWidget {
       title: lp.translate('tab_practice'),
       intro: '',
       tiles: (context) => [
+        FeatureTile(emoji: '🏝️', title: 'La Quête des Mots Perdus', subtitle: 'A 3D adventure: find the lost words, open the treasure',
+            color: const Color(0xFF2EC4B6), onTap: openGame),
         FeatureTile(emoji: '✍️', title: tr(context, 'Exam writing kit'), subtitle: 'Joker phrases, writing practice, daily dictation',
             color: const Color(0xFFE0457B), onTap: () => openPage(context, const ExamKitPage())),
         FeatureTile(emoji: '🔁', title: lp.translate('reviews'), subtitle: 'Smart flashcards at the right moment',

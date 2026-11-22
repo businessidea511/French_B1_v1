@@ -89,7 +89,8 @@ self.addEventListener('fetch', (event) => {
       return;
     }
     if (url.pathname.startsWith('/api/')) return;
-    const appFile = request.mode === 'navigate' || NETWORK_FIRST.test(url.pathname);
+    // The game (/game/) changes often too: network first.
+    const appFile = request.mode === 'navigate' || NETWORK_FIRST.test(url.pathname) || url.pathname.startsWith('/game/');
     event.respondWith(appFile ? networkFirst(request, true, SLOW_NETWORK_MS) : cacheFirst(request));
   } else if (CDN.test(request.url)) {
     event.respondWith(cacheFirst(request));
