@@ -217,3 +217,12 @@ body.fighting .joystick, body.fighting .talk-btn { display: none; }
 .loading.gone { opacity: 0; pointer-events: none; }
 .spinner { width: 40px; height: 40px; border-radius: 50%; border: 3px solid rgba(255, 255, 255, .1); border-top-color: var(--amber); animation: spin 1s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
+
+/* ---------- Chapters on the title screen ---------- */
+.chapter-list { display: flex; flex-direction: column; gap: 8px; }
+.chapter {
+  display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 11px 14px; border-radius: 12px;
+  background: rgba(10, 12, 18, .8); border: 1px solid var(--line); color: var(--ink); font: inherit; font-size: 14.5px; cursor: pointer; text-align: left;
+}
+.chapter.on { border-color: var(--amber); box-shadow: 0 0 0 1px var(--amber) inset; }
+.ch-tag { color: var(--amber); font-size: 12.5px; white-space: nowrap; }

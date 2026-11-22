@@ -4,9 +4,9 @@
 // street stays light enough for older phones.
 import * as THREE from 'three';
 
-const std = (color, extra = {}) => new THREE.MeshStandardMaterial({ color, roughness: 0.9, metalness: 0, ...extra });
+export const std = (color, extra = {}) => new THREE.MeshStandardMaterial({ color, roughness: 0.9, metalness: 0, ...extra });
 
-function rand(seed) {
+export function rand(seed) {
   return () => {
     seed |= 0;
     seed = (seed + 0x6d2b79f5) | 0;
@@ -17,7 +17,7 @@ function rand(seed) {
 }
 
 /** Cobblestones drawn on a canvas once, repeated on the ground. */
-function cobbleTexture(base, stone, size = 512) {
+export function cobbleTexture(base, stone, size = 512) {
   const c = document.createElement('canvas');
   c.width = c.height = size;
   const x = c.getContext('2d');
@@ -45,13 +45,13 @@ function cobbleTexture(base, stone, size = 512) {
   return tex;
 }
 
-function shade(hex, k) {
+export function shade(hex, k) {
   const c = new THREE.Color(hex).multiplyScalar(k);
   return `#${c.getHexString()}`;
 }
 
 /** A soft round glow texture (lamp light on wet stones, neon halos). */
-function glowTexture(color) {
+export function glowTexture(color) {
   const c = document.createElement('canvas');
   c.width = c.height = 128;
   const x = c.getContext('2d');
@@ -66,7 +66,7 @@ function glowTexture(color) {
 }
 
 /** Text on a sign, glowing like neon or painted. */
-function signTexture(text, { fg = '#ffd27a', bg = '#1a1410', font = 'bold 54px Georgia, serif', w = 512, h = 128, glow = true } = {}) {
+export function signTexture(text, { fg = '#ffd27a', bg = '#1a1410', font = 'bold 54px Georgia, serif', w = 512, h = 128, glow = true } = {}) {
   const c = document.createElement('canvas');
   c.width = w;
   c.height = h;
@@ -98,6 +98,7 @@ export class City {
     this.clues = [];
     this.flicker = [];
     this.houses = []; // [x, z, angle, width, height, color, depth]
+    this.occluders = []; // what can hide the player from the camera
     this.build();
   }
 
@@ -302,6 +303,7 @@ export class City {
     bodies.receiveShadow = true;
     bodies.castShadow = !this.weak;
     this.scene.add(bodies, roofs);
+    this.occluders.push(bodies, roofs);
 
     const stepMesh = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 1, 0.5), std('#ffffff', { roughness: 0.95 }), steps.length);
     steps.forEach((s, i) => {
@@ -314,6 +316,7 @@ export class City {
     });
     stepMesh.instanceColor.needsUpdate = true;
     this.scene.add(stepMesh);
+    this.occluders.push(stepMesh);
 
     const panes = (list, material, w, h) => {
       const m = new THREE.InstancedMesh(new THREE.PlaneGeometry(1, 1), material, list.length);
@@ -338,10 +341,23 @@ export class City {
       const wall = this.box(9, 6, 0.4, brick);
       wall.position.set(-11.7, 3, z);
       this.scene.add(wall);
+      this.occluders.push(wall);
     }
     const end = this.box(0.4, 6, 3.8, brick);
     end.position.set(-16.2, 3, 10);
     this.scene.add(end);
+    this.occluders.push(end);
+    // A lamp on the alley wall: the alley is dark, but not black.
+    const alleyLamp = new THREE.Mesh(new THREE.SphereGeometry(0.16, 8, 6), new THREE.MeshBasicMaterial({ color: '#ffd59a' }));
+    alleyLamp.position.set(-15.8, 3.2, 10);
+    this.scene.add(alleyLamp);
+    const alleyLight = new THREE.PointLight('#ffb36b', 9, 9, 1.8);
+    alleyLight.position.set(-15, 3.2, 10);
+    this.scene.add(alleyLight);
+    const alleyHalo = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTexture('rgba(255,190,110,0.5)'), depthWrite: false, blending: THREE.AdditiveBlending }));
+    alleyHalo.position.set(-15.7, 3.2, 10);
+    alleyHalo.scale.setScalar(2.2);
+    this.scene.add(alleyHalo);
   }
 
   // ---------- shops and their signs ----------
@@ -626,9 +642,16 @@ export class City {
     ring.rotation.x = -Math.PI / 2;
     ring.position.y = 0.2;
     g.add(ring);
+    // A thin column of light, seen from far away (over cars and benches).
+    const beam = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.07, 0.16, 7, 8, 1, true),
+      new THREE.MeshBasicMaterial({ color: '#ffd27a', transparent: true, opacity: 0.35, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide }),
+    );
+    beam.position.y = 3.5;
+    g.add(beam);
     g.position.set(x, 0, z);
     this.scene.add(g);
-    const c = { word, group: g, glint, ring, taken: false, t: Math.random() * 6 };
+    const c = { word, group: g, glint, ring, beam, taken: false, t: Math.random() * 6 };
     this.clues.push(c);
     return c;
   }
@@ -688,6 +711,7 @@ export class City {
       const s = 0.7 + Math.sin(c.t * 4) * 0.25;
       c.glint.scale.setScalar(s);
       c.ring.scale.setScalar(1 + Math.sin(c.t * 2.5) * 0.15);
+      c.beam.material.opacity = 0.22 + Math.sin(c.t * 2) * 0.1;
     }
   }
 }

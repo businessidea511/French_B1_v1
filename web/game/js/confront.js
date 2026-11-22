@@ -6,68 +6,65 @@ import * as THREE from 'three';
 import { t, isRtl } from './i18n.js';
 import { say, listen, stopListening, micProblem, canListen, closeness, sfx } from './speech.js';
 import { music } from './music.js';
-import { makeAgent } from './people.js';
+import { makeAgent, makePerson } from './people.js';
+import { HOURS, NUMBERS, DEPART_MINUTES, departLine } from './voicedata.js';
+export { bankLines } from './voicedata.js';
 
 const $ = (id) => document.getElementById(id);
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 const pick = (list) => list[Math.floor(Math.random() * list.length)];
 const shuffle = (list) => [...list].sort(() => Math.random() - 0.5);
 
-// [question, right answer, two wrong answers, English]
-const IDENTITY = [
-  ['Vous êtes qui ?', 'Je suis touriste.', ['Je es touriste.', "J'ai touriste."], 'Who are you?'],
-  ['Vous avez des papiers ?', "Oui, j'ai mon passeport.", ['Oui, je suis mon passeport.', "Oui, j'as mon passeport."], 'Do you have papers?'],
-  ['Vous avez quel âge ?', "J'ai vingt-cinq ans.", ['Je suis vingt-cinq ans.', "J'ai vingt-cinq."], 'How old are you?'],
-  ["Qu'est-ce que vous faites ici ?", 'Je cherche mon hôtel.', ['Je cherche mon hôpital.', 'Je suis mon hôtel.'], 'What are you doing here?'],
-  ['Vous habitez où ?', "J'habite à l'hôtel du Lion.", ["Je habite à l'hôtel du Lion.", "J'habites à l'hôtel du Lion."], 'Where are you staying?'],
-  ['Vous parlez français ?', 'Oui, un peu.', ['Oui, je suis un peu.', 'Non, merci beaucoup.'], 'Do you speak French?'],
-  ['Vous connaissez Élise Moreau ?', 'Non, je ne la connais pas.', ['Non, je ne connais pas la.', 'Oui, je suis Élise.'], 'Do you know Élise Moreau?'],
-  ['Vous êtes seul ce soir ?', 'Oui, je suis seul.', ["Oui, j'ai seul.", 'Oui, tu es seul.'], 'Are you alone tonight?'],
-  ['Vous allez où ?', 'Je vais à mon hôtel.', ['Je vas à mon hôtel.', 'Je suis à mon hôtel hier.'], 'Where are you going?'],
-];
-const OBJECTS = [
-  ['le téléphone', '📱'], ['la clé', '🔑'], ['le parapluie', '☂️'], ['le ticket', '🎫'], ['la lettre', '✉️'],
-  ['le passeport', '🛂'], ['le portefeuille', '👛'], ['la carte', '🗺️'], ['le stylo', '🖊️'], ['le journal', '📰'],
-  ['la montre', '⌚'], ['les lunettes', '👓'], ['le sac', '👜'], ['la photo', '📷'], ['le carnet', '📓'], ["l'argent", '💶'],
-];
-const HOURS = ['', 'une heure', 'deux heures', 'trois heures', 'quatre heures', 'cinq heures', 'six heures', 'sept heures', 'huit heures', 'neuf heures', 'dix heures', 'onze heures', 'midi'];
-const NUMBERS = ['zéro', 'un', 'deux', 'trois', 'quatre', 'cinq', 'six', 'sept', 'huit', 'neuf', 'dix', 'onze', 'douze', 'treize', 'quatorze', 'quinze', 'seize', 'dix-sept', 'dix-huit', 'dix-neuf', 'vingt', 'vingt et un', 'vingt-deux', 'vingt-trois', 'vingt-quatre', 'vingt-cinq', 'vingt-six', 'vingt-sept', 'vingt-huit', 'vingt-neuf', 'trente'];
-
-export const KINDS = {
-  identite: { icon: '🪪', help: 'Answer like a real visitor.' },
-  nombres: { icon: '🔢', help: 'Listen carefully to the number.' },
-  objets: { icon: '🔍', help: 'Say what you are holding.' },
-};
-
-/** A question: { ask (French, spoken by the man), show, big?, en, choices, spoken? }. */
-function question(kind) {
-  if (kind === 'identite') {
-    const [ask, right, wrong, en] = pick(IDENTITY);
-    return { ask, show: ask, en, choices: shuffle([{ fr: right, ok: true }, ...wrong.map((w) => ({ fr: w }))]), spoken: right };
-  }
-  if (kind === 'objets') {
-    const [word, emoji] = pick(OBJECTS);
-    const wrong = shuffle(OBJECTS.filter((o) => o[0] !== word)).slice(0, 2);
-    return {
-      ask: "Qu'est-ce que vous avez dans la main ?", show: emoji, big: true, en: 'What do you have in your hand?',
-      choices: shuffle([{ fr: word, ok: true }, ...wrong.map((w) => ({ fr: w[0] }))]), spoken: `C'est ${word.startsWith('les') ? 'des lunettes' : word}`.replace("C'est l'argent", "C'est de l'argent"),
-      accept: word,
-    };
-  }
-  if (Math.random() < 0.5) {
+// Listening questions: a sentence with a number, find the number.
+const LISTEN = {
+  heure: () => {
     const h = 1 + Math.floor(Math.random() * 11);
     const wrong = shuffle([...Array(12).keys()].filter((k) => k && k !== h)).slice(0, 2);
+    return { ask: `Il est ${HOURS[h]}. Vous êtes en retard !`, show: '🕰️', en: 'What time did he say?', right: `${h}:00`, wrong: wrong.map((k) => `${k}:00`) };
+  },
+  chambre: () => {
+    const n = 10 + Math.floor(Math.random() * 21);
+    const wrong = shuffle([...Array(31).keys()].filter((k) => k >= 10 && k !== n && Math.abs(k - n) < 9)).slice(0, 2);
+    return { ask: `Votre chambre d'hôtel, c'est la ${NUMBERS[n]} ?`, show: '🏨', en: 'Which room number did he say?', right: String(n), wrong: wrong.map(String) };
+  },
+  quai: () => {
+    const n = 1 + Math.floor(Math.random() * 12);
+    const wrong = shuffle([...Array(13).keys()].filter((k) => k && k !== n)).slice(0, 2);
+    return { ask: `Votre train part du quai ${NUMBERS[n]}.`, show: '🚉', en: 'Which platform did he say?', right: `quai ${n}`, wrong: wrong.map((k) => `quai ${k}`) };
+  },
+  depart: () => {
+    const h = 18 + Math.floor(Math.random() * 6);
+    const m = pick(DEPART_MINUTES);
+    const wrongM = pick(DEPART_MINUTES.filter((x) => x !== m));
+    const hhmm = (H, M) => `${H}:${String(M).padStart(2, '0')}`;
     return {
-      ask: `Il est ${HOURS[h]}. Vous êtes en retard !`, show: '🕰️', big: true, en: 'What time did he say?', listen: true,
-      choices: shuffle([{ fr: `${h}:00`, ok: true }, ...wrong.map((k) => ({ fr: `${k}:00` }))]),
+      ask: departLine(h, m), show: '🕰️', en: 'At what time does the train leave?',
+      right: hhmm(h, m), wrong: [hhmm(h, wrongM), hhmm(h === 23 ? 21 : h + 1, m)],
+    };
+  },
+};
+
+/**
+ * A question from a bank. Banks come from the chapter:
+ *  { kind: 'phrase', icon, help, items: [[question, right, [wrong, wrong], English]] }
+ *  { kind: 'objets', icon, help, ask, askEn, items: [[word, emoji]] }
+ *  { kind: 'ecoute', icon, help, gens: ['heure', 'chambre', 'quai', 'depart'] }
+ */
+function question(bank) {
+  if (bank.kind === 'phrase') {
+    const [ask, right, wrong, en] = pick(bank.items);
+    return { ask, show: ask, en, choices: shuffle([{ fr: right, ok: true }, ...wrong.map((w) => ({ fr: w }))]), spoken: right };
+  }
+  if (bank.kind === 'objets') {
+    const [word, emoji] = pick(bank.items);
+    const wrong = shuffle(bank.items.filter((o) => o[0] !== word)).slice(0, 2);
+    return {
+      ask: bank.ask, show: emoji, big: true, en: bank.askEn,
+      choices: shuffle([{ fr: word, ok: true }, ...wrong.map((w) => ({ fr: w[0] }))]), spoken: word, accept: word,
     };
   }
-  const n = 10 + Math.floor(Math.random() * 21);
-  const wrong = shuffle([...Array(31).keys()].filter((k) => k >= 10 && k !== n && Math.abs(k - n) < 9)).slice(0, 2);
-  return {
-    ask: `Votre chambre d'hôtel, c'est la ${NUMBERS[n]} ?`, show: '🏨', big: true, en: 'Which room number did he say?', listen: true,
-    choices: shuffle([{ fr: String(n), ok: true }, ...wrong.map((k) => ({ fr: String(k) }))]),
-  };
+  const q = LISTEN[pick(bank.gens)]();
+  return { ask: q.ask, show: q.show, big: true, en: q.en, listen: true, choices: shuffle([{ fr: q.right, ok: true }, ...q.wrong.map((w) => ({ fr: w }))]) };
 }
 
 export class Confront {
@@ -80,9 +77,10 @@ export class Confront {
   }
 
   /** A man in grey walking along a path of points. guards: a clue he stands next to. */
-  addAgent(id, path, { guards, chief } = {}) {
+  addAgent(id, path, { guards, chief, look } = {}) {
     if (this.g.state.beaten?.includes(id)) return null;
-    const body = makeAgent({ weak: this.g.weak, chief });
+    // A man in grey, or someone else (look: the ticket inspector…).
+    const body = look ? makePerson(look, { weak: this.g.weak }) : makeAgent({ weak: this.g.weak, chief });
     body.position.set(path[0][0], 0, path[0][1]);
     this.g.scene.add(body);
     const a = { id, body, path, leg: 0, guards, chief, hp: chief ? 6 : 2, maxHp: chief ? 6 : 2, wait: 0, done: false };
@@ -133,7 +131,7 @@ export class Confront {
         const want = Math.atan2(p.x - b.position.x, p.z - b.position.z);
         if (Math.hypot(p.x - b.position.x, p.z - b.position.z) < 9) b.rotation.y += (want - b.rotation.y) * Math.min(1, dt * 2);
       }
-      b.userData.cone.material.opacity = 0.12 + Math.sin(performance.now() / 300) * 0.03;
+      if (b.userData.cone) b.userData.cone.material.opacity = 0.12 + Math.sin(performance.now() / 300) * 0.03;
     }
   }
 
@@ -153,20 +151,22 @@ export class Confront {
     document.body.classList.add('fighting');
     const panel = $('combat');
     panel.hidden = false;
-    $('foeName').textContent = a.chief ? "Le chef des hommes en gris" : 'Un homme en gris';
-    const voice = a.chief ? { voice: 'remy', speed: 0.92 } : { voice: 'henri', speed: 0.95 };
-    say(a.chief ? 'Enfin. Je vous attendais.' : 'Excusez-moi. Contrôle. Une minute.', voice);
+    const L = this.g.lines;
+    $('foeName').textContent = a.chief ? L.chiefName : L.agentName;
+    const voice = a.chief ? L.chiefVoice : L.agentVoice;
+    say(a.chief ? L.chiefIntro : L.agentIntro, voice);
     await wait(1400);
     let spokenTip = false;
     let caught = false;
     while (a.hp > 0) {
-      const kind = a.chief ? ['identite', 'nombres', 'objets'][Math.floor((a.maxHp - a.hp) / 2)] : pick(['identite', 'nombres', 'objets']);
+      const banks = this.g.banks;
+      const bank = a.chief ? banks[Math.floor((a.maxHp - a.hp) / 2) % banks.length] : pick(banks);
       if (!spokenTip && canListen) {
         spokenTip = true;
         ui.toast('🎤 Answer out loud: it is twice as convincing!', 2600);
       }
-      const q = question(kind);
-      $('foeIcon').textContent = KINDS[kind].icon;
+      const q = question(bank);
+      $('foeIcon').textContent = bank.icon;
       this.renderDoubt(a);
       const outcome = await this.ask(q, a, voice);
       if (outcome === 'right' || outcome === 'spoken') {
@@ -198,7 +198,7 @@ export class Confront {
       return false;
     }
     if (!a.chief) {
-      say('Bon… Ça va. Circulez.', voice);
+      say(L.release, voice);
       a.leaving = 3;
       this.g.state.beaten = [...(this.g.state.beaten || []), a.id];
       if (a.clue) a.clue.locked = false;
@@ -307,7 +307,8 @@ export class Confront {
     document.body.classList.add('fighting');
     const panel = $('combat');
     panel.hidden = false;
-    $('foeName').textContent = 'Le chef des hommes en gris';
+    const L = this.g.lines;
+    $('foeName').textContent = L.chiefName;
     $('foeIcon').textContent = '🧩';
     $('foeHp').style.width = '8%';
     $('foeTimer').style.width = '0%';
@@ -317,7 +318,7 @@ export class Confront {
     el.className = 'foe-prompt';
     $('foeHelp').textContent = t('Tell your story: put the words in order!');
     $('foeHelp').dir = isRtl ? 'rtl' : 'ltr';
-    say('Racontez-moi votre histoire. Lentement.', { voice: 'remy', speed: 0.92 });
+    say(L.storyAsk, L.chiefVoice);
     const built = [];
     let mistakes = 0;
     await new Promise((resolve) => {
@@ -358,11 +359,13 @@ export class Confront {
 }
 
 /** English texts used here (translated once at the start). */
-export function confrontTexts() {
+export function confrontTexts(banks) {
   const out = ['🎤 Answer out loud: it is twice as convincing!', '🎤 Très convaincant ! ×2', '🕴️ He lets you go… and walks away.',
-    'Tell your story: put the words in order!', 'What do you have in your hand?', 'What time did he say?', 'Which room number did he say?',
-    'Not quite. Try again!', 'I did not hear you. Try again.'];
-  for (const k of Object.values(KINDS)) out.push(k.help);
-  for (const q of IDENTITY) out.push(q[3]);
-  return out;
+    'Tell your story: put the words in order!', 'What time did he say?', 'Which room number did he say?', 'Which platform did he say?',
+    'At what time does the train leave?', 'Not quite. Try again!', 'I did not hear you. Try again.'];
+  for (const b of banks) {
+    out.push(b.help, b.askEn);
+    if (b.kind === 'phrase') for (const q of b.items) out.push(q[3]);
+  }
+  return out.filter(Boolean);
 }

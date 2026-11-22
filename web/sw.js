@@ -89,7 +89,10 @@ self.addEventListener('fetch', (event) => {
       return;
     }
     if (url.pathname.startsWith('/api/')) return;
-    // The game (/game/) changes often too: network first.
+    // The game's recorded voices: left to the browser (iPhone Safari asks for
+    // audio in ranges, which a service worker answer can break).
+    if (url.pathname.startsWith('/game/audio/') && url.pathname.endsWith('.mp3')) return;
+    // The rest of the game (/game/) changes often: network first.
     const appFile = request.mode === 'navigate' || NETWORK_FIRST.test(url.pathname) || url.pathname.startsWith('/game/');
     event.respondWith(appFile ? networkFirst(request, true, SLOW_NETWORK_MS) : cacheFirst(request));
   } else if (CDN.test(request.url)) {

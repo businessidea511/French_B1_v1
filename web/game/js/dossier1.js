@@ -3,8 +3,56 @@
 // être/avoir, first questions. Every line is written here: playing costs no
 // AI call; the English help is translated once for everyone.
 
+export const CHAPTER = {
+  id: 1,
+  title: 'Chapitre 1 : Rue des Ombres',
+  level: 'A1–A2',
+  world: 'city',
+  saveKey: 'dossier_save_v1',
+  spawn: [-1.2, 36, Math.PI],
+  respawn: [4.6, 2.6, -Math.PI / 2], // in front of the hotel
+  lights: [[-6, 3, 26.4], [6, 3, 21], [-12, 3, -17.5], [0, 3.5, -38], [-4.4, 4, 6], [4.4, 4, -9]],
+  places: [{ id: 'metro', x: 0, z: -39.6, y: 2.4, symbol: '?' }],
+  agents: [
+    { id: 'ruelle', path: [[-12.4, 10]], guards: 'carnet' },
+    { id: 'place', path: [[-15, -15.6], [-15, -24], [-8, -24]], guards: 'lettre' },
+    { id: 'rue', path: [[-2.4, 3], [-2.4, -9]] },
+    { id: 'chef', path: [[0, -37.8]], chief: true },
+  ],
+  next: 'Chapitre 2 : La Gare du Midi',
+  doneIcon: '🗝️',
+};
+
+export const LINES = {
+  agentName: 'Un homme en gris', chiefName: 'Le chef des hommes en gris',
+  agentVoice: { voice: 'henri', speed: 0.95 }, chiefVoice: { voice: 'remy', speed: 0.92 },
+  agentIntro: 'Excusez-moi. Contrôle. Une minute.', chiefIntro: 'Enfin. Je vous attendais.',
+  release: 'Bon… Ça va. Circulez.', storyAsk: 'Racontez-moi votre histoire. Lentement.',
+  caught: 'You wake up in front of the hotel… They let you go, for now.',
+};
+
+export const BANKS = [
+  { kind: 'phrase', icon: '🪪', help: 'Answer like a real visitor.', items: [
+    ['Vous êtes qui ?', 'Je suis touriste.', ['Je es touriste.', "J'ai touriste."], 'Who are you?'],
+    ['Vous avez des papiers ?', "Oui, j'ai mon passeport.", ['Oui, je suis mon passeport.', "Oui, j'as mon passeport."], 'Do you have papers?'],
+    ['Vous avez quel âge ?', "J'ai vingt-cinq ans.", ['Je suis vingt-cinq ans.', "J'ai vingt-cinq."], 'How old are you?'],
+    ["Qu'est-ce que vous faites ici ?", 'Je cherche mon hôtel.', ['Je cherche mon hôpital.', 'Je suis mon hôtel.'], 'What are you doing here?'],
+    ['Vous habitez où ?', "J'habite à l'hôtel du Lion.", ["Je habite à l'hôtel du Lion.", "J'habites à l'hôtel du Lion."], 'Where are you staying?'],
+    ['Vous parlez français ?', 'Oui, un peu.', ['Oui, je suis un peu.', 'Non, merci beaucoup.'], 'Do you speak French?'],
+    ['Vous connaissez Élise Moreau ?', 'Non, je ne la connais pas.', ['Non, je ne connais pas la.', 'Oui, je suis Élise.'], 'Do you know Élise Moreau?'],
+    ['Vous êtes seul ce soir ?', 'Oui, je suis seul.', ["Oui, j'ai seul.", 'Oui, tu es seul.'], 'Are you alone tonight?'],
+    ['Vous allez où ?', 'Je vais à mon hôtel.', ['Je vas à mon hôtel.', 'Je suis à mon hôtel hier.'], 'Where are you going?'],
+  ] },
+  { kind: 'ecoute', icon: '🔢', help: 'Listen carefully to the number.', gens: ['heure', 'chambre'] },
+  { kind: 'objets', icon: '🔍', help: 'Say what you are holding.', ask: "Qu'est-ce que vous avez dans la main ?", askEn: 'What do you have in your hand?', items: [
+    ['le téléphone', '📱'], ['la clé', '🔑'], ['le parapluie', '☂️'], ['le ticket', '🎫'], ['la lettre', '✉️'],
+    ['le passeport', '🛂'], ['le portefeuille', '👛'], ['la carte', '🗺️'], ['le stylo', '🖊️'], ['le journal', '📰'],
+    ['la montre', '⌚'], ['les lunettes', '👓'], ['le sac', '👜'], ['la photo', '📷'], ['le carnet', '📓'], ["l'argent", '💶'],
+  ] },
+];
+
 export const CLUES = [
-  { key: 'ticket', art: 'le', noun: 'ticket de métro', g: 'm', en: 'the metro ticket', emoji: '🎫', x: 3.2, z: 31,
+  { key: 'ticket', art: 'le', noun: 'ticket de métro', g: 'm', en: 'the metro ticket', emoji: '🎫', x: 1.0, z: 33.5,
     note: 'A metro ticket, used three days ago at Bourse station.' },
   { key: 'parapluie', art: 'le', noun: 'parapluie', g: 'm', en: 'the umbrella', emoji: '☂️', x: -5.3, z: 23,
     note: "Élise's red umbrella, left at her door. She left in a hurry." },
@@ -204,8 +252,10 @@ export function hasNews(id, s) {
   return false;
 }
 
-/** Decoding Élise's letter, once everything is found. */
-export async function decode(g) {
+/** Decoding Élise's letter, once everything is found (from the case file, or after the last clue). */
+export const onBook = (g) => afterClue(g);
+
+export async function afterClue(g) {
   const s = g.state;
   if (s.flags.decoded || s.found.length < CLUES.length || !s.flags.samir) return false;
   s.mistakes += await g.ui.talk(LETTER, DECODE);
@@ -215,30 +265,41 @@ export async function decode(g) {
   return true;
 }
 
+const SHORT = {
+  lambertAgain: { fr: 'Allez au café Le Corbeau, en face. Et faites attention à vous.', en: 'Go to the café Le Corbeau, across the street. And take care of yourself.' },
+  theoClosed: { fr: 'Bonsoir ! Désolé, on ferme bientôt.', en: 'Good evening! Sorry, we are closing soon.' },
+  theoAgain: { fr: 'Samir, au kiosque. Sur la place. Bonne chance.', en: 'Samir, at the kiosk. On the square. Good luck.' },
+  samirEarly: { fr: 'Bonsoir ! Les journaux du soir sont arrivés.', en: 'Good evening! The evening papers have arrived.' },
+  samirAgain: { fr: "La lettre, l'ami. L'homme en gris l'a toujours.", en: 'The letter, my friend. The man in grey still has it.' },
+  metroEarly: { fr: "(Le métro… Mais où aller ? Il me faut plus d'indices.)", en: '(The metro… But where to go? I need more clues.)' },
+  metroDone: { fr: '(Prochaine étape : la gare du Midi, casier sept.)', en: '(Next stop: the Midi station, locker seven.)' },
+};
+const STORY_WORDS = ['Je', 'suis', 'touriste', 'et', 'je', 'cherche', 'mon', 'hôtel.'];
+
 /** Talking or acting at a place. g = { ui, state, save, confrontChief, story, finish, toast }. */
 export async function interact(id, g) {
   const s = g.state;
   const P = PEOPLE;
   if (id === 'lambert') {
-    if (s.flags.lambert) return g.ui.talk(P.lambert, [{ fr: 'Allez au café Le Corbeau, en face. Et faites attention à vous.', en: 'Go to the café Le Corbeau, across the street. And take care of yourself.' }]);
+    if (s.flags.lambert) return g.ui.talk(P.lambert, [SHORT.lambertAgain]);
     s.mistakes += await g.ui.talk(P.lambert, LAMBERT);
     s.flags.lambert = true;
   } else if (id === 'theo') {
-    if (!s.flags.lambert) return g.ui.talk(P.theo, [{ fr: "Bonsoir ! Désolé, on ferme bientôt.", en: 'Good evening! Sorry, we are closing soon.' }]);
-    if (s.flags.theo) return g.ui.talk(P.theo, [{ fr: 'Samir, au kiosque. Sur la place. Bonne chance.', en: 'Samir, at the kiosk. On the square. Good luck.' }]);
+    if (!s.flags.lambert) return g.ui.talk(P.theo, [SHORT.theoClosed]);
+    if (s.flags.theo) return g.ui.talk(P.theo, [SHORT.theoAgain]);
     s.mistakes += await g.ui.talk(P.theo, THEO);
     s.flags.theo = true;
   } else if (id === 'samir') {
-    if (!s.flags.theo) return g.ui.talk(P.samir, [{ fr: 'Bonsoir ! Les journaux du soir sont arrivés.', en: 'Good evening! The evening papers have arrived.' }]);
-    if (s.flags.samir) return g.ui.talk(P.samir, [{ fr: "La lettre, l'ami. L'homme en gris l'a toujours.", en: 'The letter, my friend. The man in grey still has it.' }]);
+    if (!s.flags.theo) return g.ui.talk(P.samir, [SHORT.samirEarly]);
+    if (s.flags.samir) return g.ui.talk(P.samir, [SHORT.samirAgain]);
     s.mistakes += await g.ui.talk(P.samir, SAMIR);
     s.flags.samir = true;
   } else if (id === 'metro') {
-    if (!s.flags.decoded) return g.ui.talk(YOU, [{ fr: "(Le métro… Mais où aller ? Il me faut plus d'indices.)", en: '(The metro… But where to go? I need more clues.)' }]);
-    if (s.flags.done) return g.ui.talk(YOU, [{ fr: '(Prochaine étape : la gare du Midi, casier sept.)', en: '(Next stop: the Midi station, locker seven.)' }]);
+    if (!s.flags.decoded) return g.ui.talk(YOU, [SHORT.metroEarly]);
+    if (s.flags.done) return g.ui.talk(YOU, [SHORT.metroDone]);
     await g.ui.talk(CHIEF, CHIEF_MEET);
     if (!(await g.confrontChief())) return;
-    s.mistakes += await g.story(['Je', 'suis', 'touriste', 'et', 'je', 'cherche', 'mon', 'hôtel.']);
+    s.mistakes += await g.story(STORY_WORDS);
     await g.ui.talk(CHIEF, ENDING);
     s.flags.done = true;
     g.save();
@@ -272,4 +333,26 @@ export function allTexts() {
     'An investigation to learn French', 'Your name', 'Play', 'Continue', 'New game', 'Back to the app', 'Close', 'Help language',
   );
   return out.filter(Boolean);
+}
+
+/** Every sentence said aloud, with its voice, to record the voices once (tools/game_voices.mjs). */
+export function voiceLines() {
+  const P = PEOPLE;
+  const out = [];
+  const talk = (speaker, nodes) => {
+    for (const n of nodes) {
+      out.push([n.fr, (n.who || speaker).voice]);
+      for (const c of n.choices || []) if (c.ok) out.push([c.fr, { voice: 'denise' }]);
+    }
+  };
+  talk(P.lambert, [...LAMBERT, SHORT.lambertAgain]);
+  talk(P.theo, [...THEO, SHORT.theoClosed, SHORT.theoAgain]);
+  talk(P.samir, [...SAMIR, SHORT.samirEarly, SHORT.samirAgain]);
+  talk(LETTER, DECODE);
+  talk(CHIEF, [...CHIEF_MEET, ...ENDING]);
+  talk(YOU, [SHORT.metroEarly, SHORT.metroDone]);
+  STORY.forEach((st, i) => out.push([st.fr, { voice: i === 0 ? 'charline' : 'denise' }]));
+  for (const c of CLUES) out.push([c.art.endsWith("'") ? c.art + c.noun : `${c.art} ${c.noun}`, { voice: 'denise' }]);
+  out.push([STORY_WORDS.join(' '), { voice: 'denise' }]);
+  return out;
 }

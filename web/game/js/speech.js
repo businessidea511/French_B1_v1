@@ -26,10 +26,18 @@ const clean = (text) =>
 const VOICE_CACHE = 'quest-voice-v1';
 const made = new Map(); // "voice|text" → Promise<url | null>
 
+// The sentences recorded once with the game (tools/game_voices.mjs): played
+// from the game's own files, with no call to the voice server at all.
+const recorded = fetch('voices.json')
+  .then((r) => (r.ok ? r.json() : {}))
+  .catch(() => ({}));
+
 function natural(text, voice) {
   const id = `${voice}|${text}`;
   if (made.has(id)) return made.get(id);
   const job = (async () => {
+    const file = (await recorded)[id];
+    if (file) return `audio/${file}`;
     const key = `/quest-voice/${voice}/${encodeURIComponent(text)}`;
     let cache = null;
     try { cache = 'caches' in window ? await caches.open(VOICE_CACHE) : null; } catch (_) {}

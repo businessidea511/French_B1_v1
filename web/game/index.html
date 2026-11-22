@@ -20,6 +20,7 @@
       <div class="title-badge">PolyLearn · Enquête</div>
       <h1><span>Le Dossier</span>Bruxelles</h1>
       <p class="subtitle" data-t="An investigation to learn French"></p>
+      <div id="chapterList" class="chapter-list"></div>
       <input id="playerName" maxlength="16" autocomplete="off" data-ph="Your name">
       <label class="lang-row"><span data-t="Help language">Help language</span>
         <select id="langPick">
@@ -127,11 +128,11 @@
   <!-- Chapter complete -->
   <section id="done" class="screen dim" hidden>
     <div class="done-card">
-      <div class="done-map">🗝️</div>
+      <div id="doneIcon" class="done-map">🗝️</div>
       <h2 data-t="Chapter 1 complete!"></h2>
       <div id="doneStars" class="stars"></div>
       <p id="doneStats"></p>
-      <p class="next-chapter"><b>Chapitre 2 : La Gare du Midi</b><br><span data-t="Coming soon"></span></p>
+      <p class="next-chapter"><b id="doneNext"></b><br><span data-t="Coming soon"></span></p>
       <button id="doneReplay" class="btn ghost" data-t="Explore the street"></button>
       <a class="btn primary" href="../" data-t="Back to the app"></a>
     </div>
