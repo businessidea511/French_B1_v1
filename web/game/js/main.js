@@ -156,6 +156,13 @@ function refresh() {
     if (p.char && ch.present) p.char.visible = ch.present(p.id, state);
     p.marker.visible = !!ch.hasNews(p.id, state) && (!p.char || p.char.visible);
   }
+  // Agents that arrive later in the story (after: a flag).
+  try {
+    for (const a of C.agents) {
+      const agent = a.after && confront.agents.find((x) => x.id === a.id);
+      if (agent) agent.body.visible = !!state.flags[a.after];
+    }
+  } catch (_) { /* the agents are not made yet */ }
 }
 prefetch([...ch.allTexts(), ...confrontTexts(ch.BANKS), ...(chaseModule ? chaseModule.chaseTexts : []), ch.LINES.caught, 'Continue', 'Chapter', 'Finished', 'Keep exploring', 'Stage complete!', 'Next stage'], () => { translatePage(); refresh(); renderChapters(); });
 
@@ -188,6 +195,7 @@ for (const a of C.agents) {
   if (a.chief) chief = agent;
 }
 confront.renderAlerts();
+refresh();
 
 // The scooter of chapter 3, and its chase.
 const chase = chaseModule
