@@ -10,9 +10,20 @@ import { Confront, confrontTexts } from './confront.js';
 const $ = (id) => document.getElementById(id);
 
 // ---------- which chapter ----------
-export const CHAPTERS = [1, 2, 3, 4, 5];
-const asked = Number(new URLSearchParams(location.search).get('ch') || localStorage.getItem('dossier_chapter') || 1);
-const chId = CHAPTERS.includes(asked) ? asked : 1;
+// Every level (A1, A2, B1) has several stages; each stage has its own saved game.
+export const STAGES = [
+  { id: '1', level: 'A1', name: 'Rue des Ombres', save: 'dossier_save_v1' },
+  { id: '1b', level: 'A1', name: "L'immeuble d'Élise", save: 'dossier_save_1b' },
+  { id: '1c', level: 'A1', name: 'La station Bourse', save: 'dossier_save_1c' },
+  { id: '2', level: 'A2', name: 'La Gare du Midi', save: 'dossier_save_ch2' },
+  { id: '3', level: 'A2', name: 'Liège — La Poursuite', save: 'dossier_save_ch3' },
+  { id: '4', level: 'B1', name: 'Le Laboratoire Lumen', save: 'dossier_save_ch4' },
+  { id: '5', level: 'B1', name: 'La Vérité', save: 'dossier_save_ch5' },
+];
+const asked = String(new URLSearchParams(location.search).get('ch') || localStorage.getItem('dossier_chapter') || '1');
+const chId = STAGES.some((s) => s.id === asked) ? asked : '1';
+const stageIndex = STAGES.findIndex((s) => s.id === chId);
+const nextStage = STAGES[stageIndex + 1];
 const ch = await import(`./dossier${chId}.js`);
 const C = ch.CHAPTER;
 const WORLDS = {
@@ -40,6 +51,7 @@ const save = () => { try { localStorage.setItem(SAVE_KEY, JSON.stringify(state))
 const canvas = $('scene');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: !weak, powerPreference: 'high-performance' });
 renderer.setPixelRatio(Math.min(devicePixelRatio, weak ? 1 : 1.6));
+renderer.localClippingEnabled = true; // the metro train vanishes into its tunnels
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.25;
 renderer.shadowMap.enabled = !weak;
@@ -142,7 +154,7 @@ function refresh() {
     p.marker.visible = !!ch.hasNews(p.id, state) && (!p.char || p.char.visible);
   }
 }
-prefetch([...ch.allTexts(), ...confrontTexts(ch.BANKS), ...(chaseModule ? chaseModule.chaseTexts : []), ch.LINES.caught, 'Continue', 'Chapter', 'Finished', 'Keep exploring'], () => { translatePage(); refresh(); renderChapters(); });
+prefetch([...ch.allTexts(), ...confrontTexts(ch.BANKS), ...(chaseModule ? chaseModule.chaseTexts : []), ch.LINES.caught, 'Continue', 'Chapter', 'Finished', 'Keep exploring', 'Stage complete!', 'Next stage'], () => { translatePage(); refresh(); renderChapters(); });
 
 // ---------- the men in grey ----------
 let shake = 0;
@@ -229,7 +241,7 @@ const game = {
     $('doneStars').textContent = m <= 3 ? '★★★' : m <= 7 ? '★★☆' : '★☆☆';
     $('doneStats').textContent = `${t('Clues found')}: ${state.found.length} · ${t('Mistakes')}: ${m}`;
     renderChapters();
-    $('done').querySelector('h2').textContent = t(`Chapter ${C.id} complete!`);
+    $('done').querySelector('h2').textContent = t('Stage complete!');
     $('done').hidden = false;
     ui.busy = true;
   },
@@ -239,36 +251,42 @@ $('doneReplay').onclick = () => { $('done').hidden = true; ui.busy = false; };
 // ---------- screens ----------
 // The chapters on the title screen (each has its own saved game).
 function chapterSave(id) {
-  try { return JSON.parse(localStorage.getItem(id === 1 ? 'dossier_save_v1' : `dossier_save_ch${id}`) || 'null'); } catch (_) { return null; }
+  const stage = STAGES.find((s) => s.id === String(id));
+  try { return JSON.parse(localStorage.getItem(stage.save) || 'null'); } catch (_) { return null; }
 }
-const CHAPTER_NAMES = {
-  1: ['Chapitre 1 : Rue des Ombres', 'A1–A2'],
-  2: ['Chapitre 2 : La Gare du Midi', 'A2'],
-  3: ['Chapitre 3 : Liège — La Poursuite', 'A2+'],
-  4: ['Chapitre 4 : Le Laboratoire Lumen', 'B1'],
-  5: ['Chapitre 5 : La Vérité', 'B1'],
-};
+function goToStage(id) {
+  localStorage.setItem('dossier_chapter', id);
+  location.href = location.pathname + (location.search.includes('debug') ? '?debug' : '');
+}
+const LEVEL_NAMES = { A1: 'Niveau A1 · Débutant', A2: 'Niveau A2 · Élémentaire', B1: 'Niveau B1 · Intermédiaire' };
 function renderChapters() {
   const list = $('chapterList');
   list.innerHTML = '';
-  for (const id of CHAPTERS) {
+  let level = '';
+  STAGES.forEach((stage, i) => {
+    if (stage.level !== level) {
+      level = stage.level;
+      const h = document.createElement('div');
+      h.className = 'level-head';
+      h.textContent = LEVEL_NAMES[level];
+      list.append(h);
+    }
     const b = document.createElement('button');
-    const saved = chapterSave(id);
-    b.className = 'chapter' + (id === chId ? ' on' : '');
-    const [name, level] = CHAPTER_NAMES[id];
+    const saved = chapterSave(stage.id);
+    b.className = 'chapter' + (stage.id === chId ? ' on' : '');
     b.innerHTML = `<span class="ch-name"></span><span class="ch-tag"></span>`;
-    b.querySelector('.ch-name').textContent = name;
-    b.querySelector('.ch-tag').textContent = saved?.flags?.done ? `✓ ${t('Finished')}` : level;
-    b.onclick = () => {
-      if (id === chId) return;
-      localStorage.setItem('dossier_chapter', String(id));
-      location.href = location.pathname + (location.search.includes('debug') ? '?debug' : '');
-    };
+    b.querySelector('.ch-name').textContent = `${i + 1}. ${stage.name}`;
+    b.querySelector('.ch-tag').textContent = saved?.flags?.done ? `✓ ${t('Finished')}` : stage.level;
+    b.onclick = () => { if (stage.id !== chId) goToStage(stage.id); };
     list.append(b);
-  }
-  $('doneNext').textContent = C.next;
+  });
+  // The done screen: the next stage, one tap away.
+  $('doneNext').textContent = nextStage ? `${stageIndex + 2}. ${nextStage.name}` : C.next;
+  $('doneSoon').hidden = !!nextStage;
+  $('doneGo').hidden = !nextStage;
   $('doneIcon').textContent = C.doneIcon;
 }
+$('doneGo').onclick = () => nextStage && goToStage(nextStage.id);
 renderChapters();
 if (state.name || chapterSave(1)?.name) $('playerName').value = state.name || chapterSave(1).name;
 if (state.introSeen) {
@@ -286,7 +304,7 @@ $('playBtn').onclick = async () => {
   state.name = ($('playerName').value.trim() || 'Alex').slice(0, 16);
   save();
   $('title').hidden = true;
-  localStorage.setItem('dossier_chapter', String(chId));
+  localStorage.setItem('dossier_chapter', chId);
   if (!state.introSeen) await playStory();
   start();
 };

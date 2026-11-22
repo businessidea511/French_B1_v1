@@ -8,6 +8,14 @@ export const DEPART_MINUTES = [0, 10, 15, 20, 30, 40, 45, 50];
 export const MINUTE_WORDS = { 0: '', 10: 'dix', 15: 'quinze', 20: 'vingt', 30: 'trente', 40: 'quarante', 45: 'quarante-cinq', 50: 'cinquante' };
 export const departLine = (h, m) => `Le train pour Charleroi part à ${NUMBERS[h]} heures${m ? ' ' + MINUTE_WORDS[m] : ''}.`;
 export const quaiLine = (n) => `Attention : le train de Namur part du quai ${NUMBERS[n]}.`;
+// Floors (ordinal numbers) and prices (euros and cents).
+export const ORDINALS = ['', 'premier', 'deuxième', 'troisième', 'quatrième', 'cinquième', 'sixième', 'septième', 'huitième', 'neuvième'];
+export const etageLine = (n) => `Le voisin habite au ${ORDINALS[n]} étage.`;
+export const etageShow = (n) => `${n === 1 ? '1er' : n + 'e'} étage`;
+export const PRICE_CENTS = [0, 10, 20, 30, 40, 50];
+const CENT_WORDS = { 10: 'dix', 20: 'vingt', 30: 'trente', 40: 'quarante', 50: 'cinquante' };
+export const prixLine = (e, c) => `Ça fait ${e === 1 ? 'un' : NUMBERS[e]} euro${e > 1 ? 's' : ''}${c ? ' ' + CENT_WORDS[c] : ''}.`;
+export const prixShow = (e, c) => `${e},${String(c).padStart(2, '0')} €`;
 
 
 /** Every sentence a man in grey can say with these banks (to record the voices once). */
@@ -22,6 +30,8 @@ export function bankLines(banks) {
         if (g === 'chambre') for (let n = 10; n <= 30; n++) out.push([`Votre chambre d'hôtel, c'est la ${NUMBERS[n]} ?`, 'agent']);
         if (g === 'quai') for (let n = 1; n <= 12; n++) out.push([quaiLine(n), 'agent']);
         if (g === 'depart') for (let h = 18; h <= 23; h++) for (const m of DEPART_MINUTES) out.push([departLine(h, m), 'agent']);
+        if (g === 'etage') for (let n = 1; n <= 9; n++) out.push([etageLine(n), 'agent']);
+        if (g === 'prix') for (let e = 1; e <= 9; e++) for (const c of PRICE_CENTS) out.push([prixLine(e, c), 'agent']);
       }
     }
   }

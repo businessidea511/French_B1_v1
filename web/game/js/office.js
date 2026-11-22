@@ -1,7 +1,7 @@
 // Inside buildings, at night: rooms, corridors, low walls (the camera looks
 // from above), furniture, and cold office light.
-// Two layouts: « lumen » (Lumen's headquarters, chapter 4) and « studio »
-// (the Télé Bruxelles TV station, chapter 5).
+// Layouts: « lumen » (Lumen's headquarters), « studio » (the TV station),
+// « immeuble » (Élise's building) and « metro » (the Bourse station).
 import * as THREE from 'three';
 import { std, glowTexture, signTexture, rand } from './city.js';
 
@@ -74,6 +74,105 @@ const LAYOUTS = {
       ['STUDIO 1 · EN DIRECT', 0, 2.6, -5.95, 0], ['RÉSERVE', -11, 2.5, -15.05, 0],
     ],
     pools: [[0, 16, '#d6e4ff'], [-12, 3, '#ffe2b8'], [12, 3, '#9fd8ff'], [4, -16, '#fff3d6'], [-15, -20, '#d6e4ff'], [-5, -10, '#ffd59a']],
+  },
+  // Élise's building, 12 rue des Ombres (stage A1-2): the hall, her flat, the attic, the cellar.
+  immeuble: {
+    bounds: [-16, 16, -20, 20],
+    floor: '#3b2c21',
+    wall: '#b7a88f',
+    cinema: [0, 16, 30, -0.5, 0, 0, 6],
+    walls: [
+      [-16, -20, 16, -20], [-16, 20, -2, 20], [2, 20, 16, 20], [-16, -20, -16, 20], [16, -20, 16, 20],
+      // the hall (south) and the flat's front door
+      [-16, 10, -1.4, 10], [1.4, 10, 16, 10],
+      // living room (west) | kitchen and bedroom (east)
+      [0, 10, 0, 7.6], [0, 4.4, 0, -0.6], [0, -3.4, 0, -6], [0, 2, 16, 2],
+      // the back of the flat: stairs to the attic (west) and to the cellar (east)
+      [-16, -6, -9.4, -6], [-6.6, -6, 6.6, -6], [9.4, -6, 16, -6], [0, -6, 0, -20],
+    ],
+    props: [
+      // hall
+      ['mailboxes', -15.6, 15, Math.PI / 2], ['stairs', 13, 15, 0], ['plant', -14.5, 11.5], ['lamp', 6, 18.5], ['bike', 9, 11],
+      // living room
+      ['sofa', -10, 6, 0], ['rug', -9, 2.5], ['lowtable', -9, 2.5], ['shelf', -15.4, 0, Math.PI / 2], ['desk', -5, -3.5, Math.PI], ['lamp', -2, 8.5], ['plant', -14.5, 8.6],
+      // kitchen
+      ['counter', 8, 9.3, Math.PI], ['fridge', 15, 9, -Math.PI / 2], ['table', 7, 5.5], ['chair', 5.6, 5.5, Math.PI / 2], ['chair', 8.4, 5.5, -Math.PI / 2],
+      // bedroom
+      ['bed', 12.5, -2, -Math.PI / 2], ['wardrobe', 5, -5.3, 0], ['lamp', 15, 1], ['rug', 9, -2],
+      // attic
+      ['trunk', -13, -9.5, 0], ['box', -4, -17], ['box', -13.5, -18], ['oldchair', -6, -10, 0.6], ['mannequin', -10.5, -14.5], ['shelf', -2, -12, -Math.PI / 2],
+      // cellar
+      ['barrels', 14, -9, 0], ['bike', 3.5, -10, Math.PI / 2], ['boiler', 14.5, -18, 0], ['box', 9, -18.5], ['box', 4, -18], ['shelf', 15.4, -13.5, -Math.PI / 2],
+    ],
+    signs: [
+      ['APPARTEMENT 3B · MOREAU', 0, 2.5, 10.17, Math.PI], ['GRENIER ↑', -8, 2.5, -5.83, Math.PI], ['CAVE ↓', 8, 2.5, -5.83, Math.PI],
+    ],
+    pools: [[0, 15, '#ffd59a'], [-9, 3, '#ffe2b8'], [8, 6, '#fff3d6'], [11, -2, '#ffcf9a'], [-8, -13, '#c9b48a'], [8, -13, '#9fb4ff']],
+  },
+  // The night train to Liège (stage A2-2): car 8 (seats), car 7 (bar), car 6 (sleeping car), car 5 (luggage).
+  train: {
+    bounds: [-2.6, 2.6, -40, 40],
+    floor: '#3e3430',
+    wall: '#8a5a3c',
+    moving: true,
+    cinema: [0, 9, 52, -0.7, 0, 0, 30],
+    walls: [
+      [-2.6, -40, 2.6, -40], [-2.6, 40, 2.6, 40], [-2.6, -40, -2.6, 40], [2.6, -40, 2.6, 40],
+      // between the cars (the door is on the right side)
+      [-2.6, 22, 0, 22], [2, 22, 2.6, 22], [-2.6, 4, 0, 4], [2, 4, 2.6, 4],
+      [-2.6, -14, 0, -14], [2, -14, 2.6, -14], [-2.6, -32, 0, -32], [2, -32, 2.6, -32],
+      // the sleeping car: four compartments on the left, the corridor on the right
+      [-0.2, 4, -0.2, 2.7], [-0.2, 1.3, -0.2, -1.6], [-0.2, -2.9, -0.2, -6.1], [-0.2, -7.4, -0.2, -10.8], [-0.2, -12.2, -0.2, -14],
+      [-2.6, 0, -0.2, 0], [-2.6, -4.5, -0.2, -4.5], [-2.6, -9, -0.2, -9],
+    ],
+    props: [
+      ['seat', -1.8, 24.6, 0], ['seat', 1.9, 24.6, 0], ['seat', -1.8, 27.2, Math.PI], ['seat', 1.9, 27.2, Math.PI], ['seat', -1.8, 29.8, Math.PI], ['seat', 1.9, 29.8, Math.PI], ['seat', -1.8, 32.4, 0], ['seat', 1.9, 32.4, 0], ['seat', -1.8, 35.0, Math.PI], ['seat', 1.9, 35.0, Math.PI], ['seat', -1.8, 37.6, Math.PI], ['seat', 1.9, 37.6, Math.PI],
+      // bar car
+      ['barcounter', -2, 12, 0], ['stool', -0.9, 9.4], ['stool', -0.9, 11.6], ['stool', -0.9, 13.8], ['bartable', 1.9, 8.5], ['bartable', 1.9, 12.5], ['bartable', 1.9, 16.5], ['lamp', 2.1, 20.5],
+      // sleeping car
+      ['bunk', -2.1, 2, 0], ['bunk', -2.1, -2.25, 0], ['bunk', -2.1, -6.75, 0], ['bunk', -2.1, -11.5, 0],
+      // luggage car
+      ['box', -1.9, -16.5], ['box', -1.9, -20], ['box', 1.9, -22], ['box', -1.9, -27], ['box', 1.9, -26.4], ['trunk', -1.8, -30, Math.PI / 2], ['bike', 1.9, -18, Math.PI / 2],
+      // front platform
+      ['box', -1.8, -38.6], ['lamp', 2, -38.6],
+    ],
+    signs: [
+      ['VOITURE 8', 1, 2.5, 21.83, Math.PI], ['VOITURE 7 · BAR', 1, 2.5, 3.83, Math.PI], ['VOITURE 6 · COUCHETTES', 1, 2.5, -14.17, Math.PI],
+      ['VOITURE 5 · BAGAGES', 1, 2.5, -32.17, Math.PI], ['3', -0.35, 2.4, -6.75, -Math.PI / 2],
+    ],
+    pools: [[0, 31, '#ffe2b8'], [0, 13, '#ffcf8a'], [1.2, -5, '#d6e4ff'], [0, -23, '#9fb4ff'], [0, -36, '#ff9a6a']],
+  },
+
+  // The Bourse metro station (stage A1-3): ticket hall, gates, corridor, two platforms over the tracks.
+  metro: {
+    bounds: [-18, 18, -26, 22],
+    floor: '#3a3d42',
+    wall: '#d9d2c3',
+    cinema: [0, 16, 30, -0.6, 0, 0, 6],
+    walls: [
+      [-18, -26, 18, -26], [-18, 22, -2.2, 22], [2.2, 22, 18, 22], [-18, -26, -18, 22], [18, -26, 18, 22],
+      // the ticket hall ends at the gates (z 8), the corridor goes north on the west side
+      [-18, 8, -9, 8], [-5, 8, 18, 8],
+      [-9, 8, -9, -1], [-5, 8, -5, 1], [-5, 1, 18, 1],
+      // the passage under the tracks to platform 2 (far west)
+      [-14, -1, -14, -15.5],
+    ],
+    // The tracks: not walkable (a train can come).
+    holes: [[-14, 18, -15.5, -10.5]],
+    tracks: [[-14, 18, -13]],
+    props: [
+      ['ticketmachine', -16.8, 16, Math.PI / 2], ['ticketmachine', -16.8, 12.5, Math.PI / 2], ['guichet', 14, 14, 0],
+      ['plant', -16.5, 20.5], ['bench', 6, 19, Math.PI], ['metromap', 0, 21.8, Math.PI],
+      ['gate', -8.3, 8], ['gate', -5.7, 8],
+      ['pillar', -2, -4], ['pillar', 6, -4], ['pillar', 14, -4], ['bench', 2, -2.2, Math.PI], ['bench', 10, -2.2, Math.PI], ['vending', 17.2, -6, -Math.PI / 2],
+      ['pillar', -2, -20], ['pillar', 6, -20], ['pillar', 14, -20], ['bench', 2, -24.6, 0], ['bench', 10, -24.6, 0], ['phonebooth', 16.6, -23.5, -Math.PI / 2],
+      ['metromap', -17.8, 3, Math.PI / 2],
+    ],
+    signs: [
+      ['BOURSE · BEURS', 0, 2.6, 21.8, Math.PI], ['QUAI 1 · DIRECTION GARE DU MIDI', 6, 2.6, 0.83, Math.PI], ['QUAI 2 · DIRECTION ROI BAUDOUIN', 6, 2.6, -25.8, 0],
+      ['→ QUAI 2', -14.17, 2.4, -6, Math.PI / 2], ['GUICHET', 15.6, 2.6, 14, -Math.PI / 2],
+    ],
+    pools: [[0, 16, '#fff3d6'], [-7, 4, '#d6e4ff'], [6, -5, '#fff3d6'], [6, -21, '#fff3d6'], [-16, -8, '#d6e4ff'], [16, -23, '#ffcf6b']],
   },
 };
 
@@ -155,6 +254,33 @@ export class Office {
       top.rotation.y = w.rotation.y;
       this.scene.add(top);
     }
+    // A moving train: lights rush past outside the windows.
+    if (L.moving) {
+      this.passing = [];
+      const lampTex = glowTexture('rgba(255,210,150,0.95)');
+      for (let k = 0; k < 18; k++) {
+        const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: lampTex, depthWrite: false, blending: THREE.AdditiveBlending }));
+        const side = k % 2 ? 1 : -1;
+        s.position.set(side * (6 + (k % 5) * 3), 2.5 + (k % 3), -60 + k * 7);
+        s.scale.setScalar(1.6);
+        this.scene.add(s);
+        this.passing.push(s);
+      }
+      const ground = new THREE.Mesh(new THREE.PlaneGeometry(220, 220), std('#0b0d10', { roughness: 1 }));
+      ground.rotation.x = -Math.PI / 2;
+      ground.position.y = -0.4;
+      this.scene.add(ground);
+      // Windows all along both sides.
+      for (const side of [-1, 1]) {
+        for (let z = -38; z <= 38; z += 2.6) {
+          const w = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 0.9), new THREE.MeshBasicMaterial({ color: '#1a2a44' }));
+          w.position.set(side * 2.42, 1.75, z);
+          w.rotation.y = -side * Math.PI / 2;
+          this.scene.add(w);
+        }
+      }
+    }
+    for (const [tx0, tx1, tz] of L.tracks || []) this.track(tx0, tx1, tz);
     for (const p of L.props) this.prop(...p);
     for (const [text, sx, sy, sz, rot] of L.signs) {
       const s = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 0.45), new THREE.MeshBasicMaterial({
@@ -267,9 +393,201 @@ export class Office {
       put(this.box(1, 1, 1, std('#8a6a4a')), 0, 0.5, 0);
       put(this.box(0.8, 0.8, 0.8, std('#7a5a3a')), 0.3, 1.4, 0.1);
       r = 0.9;
+    } else if (type === 'seat') {
+      const cloth = std('#2f4a6a', { roughness: 0.9 });
+      put(this.box(1.3, 0.45, 0.6, cloth), 0, 0.3, 0);
+      put(this.box(1.3, 0.8, 0.18, cloth), 0, 0.85, -0.3);
+      put(this.box(1.3, 0.12, 0.2, std('#e8e2d4')), 0, 1.3, -0.3);
+      r = 0.6;
+    } else if (type === 'barcounter') {
+      put(this.box(0.9, 1.05, 8, std('#4a2e1e', { roughness: 0.4 })), 0, 0.52, 0);
+      put(this.box(1, 0.06, 8.1, std('#c9a24a', { metalness: 0.7, roughness: 0.3 })), 0, 1.07, 0);
+      for (let k = -3; k <= 3; k += 1.5) put(new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.25, 8), glow(k > 0 ? '#7ad7a0' : '#ffb36b')), -0.2, 1.22, k);
+      r = 0;
+      for (let k = -3.5; k <= 3.5; k += 1) this.colliders.push({ x: px, z: pz + k, r: 0.55 });
+    } else if (type === 'stool') {
+      put(new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.75, 6), metal), 0, 0.38, 0);
+      put(new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.07, 12), std('#7a2a2a')), 0, 0.76, 0);
+      r = 0.3;
+    } else if (type === 'bartable') {
+      put(new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.45, 0.05, 14), wood), 0, 0.75, 0);
+      put(new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.75, 6), metal), 0, 0.38, 0);
+      r = 0.5;
+    } else if (type === 'bunk') {
+      for (const y of [0.4, 1.5]) {
+        put(this.box(0.8, 0.15, 3.4, std('#5a4a3a')), 0, y, 0);
+        put(this.box(0.75, 0.12, 3.3, std('#e9e4da')), 0, y + 0.12, 0);
+      }
+      r = 0;
+    } else if (type === 'mailboxes') {
+      put(this.box(0.4, 1.2, 2.4, std('#6b5a3a', { metalness: 0.3 })), 0, 1.3, 0);
+      for (let k = 0; k < 6; k++) put(this.box(0.02, 0.3, 0.7, std('#c9a24a', { metalness: 0.7 })), 0.21, 1.05 + (k % 2) * 0.45, -0.8 + Math.floor(k / 2) * 0.8);
+      r = 0.6;
+    } else if (type === 'stairs') {
+      for (let k = 0; k < 7; k++) put(this.box(3, 0.22, 0.6, wood), 0, 0.11 + k * 0.22, -1.8 + k * 0.6);
+      put(this.box(0.08, 1, 4.2, dark), 1.5, 1.4, 0);
+      r = 2.2;
+    } else if (type === 'lamp') {
+      put(new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 1.6, 6), dark), 0, 0.8, 0);
+      put(new THREE.Mesh(new THREE.ConeGeometry(0.3, 0.35, 12, 1, true), glow('#ffd59a')), 0, 1.7, 0);
+      r = 0.3;
+    } else if (type === 'bike') {
+      for (const sx of [-0.55, 0.55]) {
+        const w = put(new THREE.Mesh(new THREE.TorusGeometry(0.33, 0.04, 6, 16), dark), sx, 0.35, 0);
+        w.rotation.y = Math.PI / 2;
+      }
+      put(this.box(1.1, 0.06, 0.06, std('#7a2a2a', { metalness: 0.6 })), 0, 0.65, 0);
+      r = 0.7;
+    } else if (type === 'rug') {
+      const m = put(new THREE.Mesh(new THREE.PlaneGeometry(3.6, 2.4), std('#6a2e2e', { roughness: 1 })), 0, 0.015, 0);
+      m.rotation.x = -Math.PI / 2;
+      m.castShadow = false;
+    } else if (type === 'lowtable') {
+      put(this.box(1.4, 0.06, 0.8, wood), 0, 0.42, 0);
+      put(this.box(1.2, 0.4, 0.6, dark), 0, 0.2, 0);
+      r = 0.8;
+    } else if (type === 'table') {
+      put(this.box(1.6, 0.07, 1.1, wood), 0, 0.76, 0);
+      for (const [sx, sz] of [[-0.7, -0.45], [0.7, -0.45], [-0.7, 0.45], [0.7, 0.45]]) put(this.box(0.06, 0.76, 0.06, wood), sx, 0.38, sz);
+      put(new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.04, 0.1, 10), std('#f2efe6')), -0.3, 0.85, 0.1);
+      put(new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.04, 0.1, 10), std('#f2efe6')), 0.3, 0.85, -0.1);
+      r = 1;
+    } else if (type === 'chair' || type === 'oldchair') {
+      const c = type === 'oldchair' ? std('#4a3a2a') : wood;
+      put(this.box(0.5, 0.06, 0.5, c), 0, 0.46, 0);
+      put(this.box(0.5, 0.6, 0.06, c), 0, 0.78, -0.24);
+      for (const [sx, sz] of [[-0.22, -0.22], [0.22, -0.22], [-0.22, 0.22], [0.22, 0.22]]) put(this.box(0.04, 0.46, 0.04, c), sx, 0.23, sz);
+      r = 0.4;
+    } else if (type === 'counter') {
+      put(this.box(5, 0.9, 0.8, std('#e6e1d6')), 0, 0.45, 0);
+      put(this.box(5, 0.05, 0.85, std('#2a2a2e', { roughness: 0.3 })), 0, 0.92, 0);
+      put(new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.18, 0.02, 14), dark), -1.2, 0.95, 0);
+      r = 1.4;
+    } else if (type === 'fridge') {
+      put(this.box(0.8, 1.9, 0.8, std('#e8ecef', { roughness: 0.3 })), 0, 0.95, 0);
+      r = 0.6;
+    } else if (type === 'bed') {
+      put(this.box(2.2, 0.45, 3, wood), 0, 0.23, 0);
+      put(this.box(2.1, 0.2, 2.9, std('#e9e4da')), 0, 0.55, 0);
+      put(this.box(2.1, 0.08, 1.9, std('#7a2e3a')), 0, 0.68, 0.45);
+      put(this.box(0.9, 0.18, 0.5, std('#f4f1ea')), -0.5, 0.72, -1.15);
+      put(this.box(0.9, 0.18, 0.5, std('#f4f1ea')), 0.5, 0.72, -1.15);
+      r = 1.6;
+    } else if (type === 'wardrobe') {
+      put(this.box(2, 2.3, 0.7, std('#4a3524')), 0, 1.15, 0);
+      r = 1.1;
+    } else if (type === 'trunk') {
+      put(this.box(1.4, 0.7, 0.8, std('#5a3a22')), 0, 0.35, 0);
+      put(this.box(1.42, 0.08, 0.82, std('#a8853a', { metalness: 0.6 })), 0, 0.55, 0);
+      r = 0.9;
+    } else if (type === 'mannequin') {
+      put(new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.2, 1, 8), dark), 0, 0.5, 0);
+      put(new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.18, 0.7, 10), std('#c9b8a0')), 0, 1.3, 0);
+      r = 0.4;
+    } else if (type === 'barrels') {
+      for (const [sx, sz] of [[0, 0], [0.9, 0.3], [0.3, 1]]) put(new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 0.9, 12), std('#6a4a2a')), sx, 0.45, sz);
+      r = 1.2;
+    } else if (type === 'boiler') {
+      put(new THREE.Mesh(new THREE.CylinderGeometry(0.6, 0.6, 2, 14), metal), 0, 1, 0);
+      const l = put(new THREE.Mesh(new THREE.SphereGeometry(0.06, 6, 4), glow('#ff5a3a')), 0, 1.3, 0.61);
+      this.blinks.push({ m: l, t: 0, slow: true });
+      r = 0.8;
+    } else if (type === 'ticketmachine') {
+      put(this.box(0.7, 1.7, 1, std('#2a5a9a', { metalness: 0.4 })), 0, 0.85, 0);
+      const s = put(new THREE.Mesh(new THREE.PlaneGeometry(0.6, 0.45), glow('#9fe0ff')), 0.36, 1.25, 0);
+      s.rotation.y = Math.PI / 2;
+      r = 0.7;
+    } else if (type === 'guichet') {
+      put(this.box(1.2, 1.1, 4, std('#3a3f4a')), 0, 0.55, 0);
+      put(this.box(0.06, 1.2, 4, new THREE.MeshStandardMaterial({ color: '#9fd8ff', transparent: true, opacity: 0.25 })), -0.3, 1.7, 0);
+      r = 0.9;
+      for (const dz of [-1.4, 1.4]) this.colliders.push({ x: px + Math.sin(rot) * dz, z: pz + Math.cos(rot) * dz, r: 0.9 });
+    } else if (type === 'bench') {
+      put(this.box(2.4, 0.08, 0.5, wood), 0, 0.45, 0);
+      put(this.box(2.4, 0.5, 0.06, wood), 0, 0.75, -0.22);
+      for (const sx of [-1, 1]) put(this.box(0.06, 0.45, 0.45, dark), sx, 0.22, 0);
+      r = 1.1;
+    } else if (type === 'pillar') {
+      put(this.box(0.8, 2.9, 0.8, std('#e8e2d4')), 0, 1.45, 0);
+      put(this.box(0.84, 0.3, 0.84, std('#2a5a9a')), 0, 2.2, 0);
+      r = 0.6;
+    } else if (type === 'vending') {
+      put(this.box(0.9, 1.9, 0.8, std('#9a2a2a')), 0, 0.95, 0);
+      const s = put(new THREE.Mesh(new THREE.PlaneGeometry(0.6, 1.2), glow('#ffe6b0')), 0, 1.1, 0.41);
+      s.castShadow = false;
+      r = 0.7;
+    } else if (type === 'phonebooth') {
+      put(this.box(1.1, 2.3, 1.1, std('#2a3f6a', { metalness: 0.3 })), 0, 1.15, 0);
+      put(new THREE.Mesh(new THREE.PlaneGeometry(0.8, 0.25), new THREE.MeshBasicMaterial({
+        map: signTexture('TÉLÉPHONE', { fg: '#ffffff', bg: '#2a3f6a', w: 256, h: 64, font: 'bold 34px Arial, sans-serif', glow: false }),
+      })), 0, 2.1, 0.56);
+      r = 0.8;
+    } else if (type === 'metromap') {
+      put(new THREE.Mesh(new THREE.PlaneGeometry(2.4, 1.4), new THREE.MeshBasicMaterial({
+        map: signTexture('M  ·  1 · 2 · 3 · 4 · 5 · 6', { fg: '#ffffff', bg: '#2a5a9a', w: 512, h: 300, font: 'bold 40px Arial, sans-serif', glow: false }),
+      })), 0, 1.6, 0.05);
     }
     g.rotation.y = rot;
     this.add(g, px, 0, pz, r);
+  }
+
+  /** Metro tracks along x at z: a dark trench with rails, and a train that comes and goes. */
+  track(x0, x1, z) {
+    const len = x1 - x0;
+    const cx = (x0 + x1) / 2;
+    const pit = new THREE.Mesh(new THREE.PlaneGeometry(len, 5), std('#111216', { roughness: 0.95 }));
+    pit.rotation.x = -Math.PI / 2;
+    pit.position.set(cx, 0.01, z);
+    this.scene.add(pit);
+    const steel = std('#9aa0a8', { metalness: 0.8, roughness: 0.3 });
+    for (const dz of [-0.75, 0.75]) {
+      const rail = this.box(len, 0.08, 0.1, steel, false);
+      rail.position.set(cx, 0.06, z + dz);
+      this.scene.add(rail);
+    }
+    for (let x = x0 + 0.5; x < x1; x += 1.2) {
+      const tie = this.box(0.25, 0.05, 2.2, std('#3a2e24'), false);
+      tie.position.set(x, 0.03, z);
+      this.scene.add(tie);
+    }
+    // Yellow safety lines along both platforms.
+    for (const dz of [-2.4, 2.4]) {
+      const line = new THREE.Mesh(new THREE.PlaneGeometry(len, 0.18), new THREE.MeshBasicMaterial({ color: '#e8c33a' }));
+      line.rotation.x = -Math.PI / 2;
+      line.position.set(cx, 0.025, z + dz);
+      this.scene.add(line);
+    }
+    // The train.
+    const train = new THREE.Group();
+    const body = std('#c8ccd2', { metalness: 0.5, roughness: 0.35 });
+    const stripe = std('#d13b2f', { roughness: 0.5 });
+    for (let k = 0; k < 3; k++) {
+      const car = this.box(9, 2.7, 2.6, body);
+      car.position.set(k * 9.4, 1.55, 0);
+      train.add(car);
+      const band = this.box(9.02, 0.3, 2.62, stripe, false);
+      band.position.set(k * 9.4, 1.0, 0);
+      train.add(band);
+      for (const side of [-1, 1]) {
+        for (let w = -3; w <= 3; w += 2) {
+          const win = new THREE.Mesh(new THREE.PlaneGeometry(1.4, 0.8), new THREE.MeshBasicMaterial({ color: '#ffe9b0' }));
+          win.position.set(k * 9.4 + w, 1.95, side * 1.31);
+          if (side < 0) win.rotation.y = Math.PI;
+          train.add(win);
+        }
+      }
+    }
+    // The train is only seen between the two tunnel mouths.
+    const clip = [new THREE.Plane(new THREE.Vector3(1, 0, 0), -x0), new THREE.Plane(new THREE.Vector3(-1, 0, 0), x1)];
+    train.traverse((m) => { if (m.material) { m.material = m.material.clone(); m.material.clippingPlanes = clip; } });
+    for (const tx of [x0, x1]) {
+      const mouth = this.box(0.6, 3.4, 5.4, std('#16181d'), false);
+      mouth.position.set(tx, 1.7, z);
+      this.scene.add(mouth);
+    }
+    train.position.set(x1 + 40, 0, z);
+    this.scene.add(train);
+    this.train = { group: train, x0: x0 - 40, x1: x1 + 40, t: 6, stop: cx - 9.4 };
   }
 
   addClue(word, x, z) {
@@ -306,6 +624,7 @@ export class Office {
   walkable(x, z) {
     const [x0, x1, z0, z1] = this.L.bounds;
     if (x < x0 + 0.5 || x > x1 - 0.5 || z < z0 + 0.5 || z > z1 - 0.5) return false;
+    if ((this.L.holes || []).some(([a, b, c, d]) => x > a && x < b && z > c && z < d)) return false;
     return !this.L.walls.some((seg) => distToSegment(x, z, seg) < 0.5);
   }
 
@@ -315,6 +634,21 @@ export class Office {
 
   update(dt) {
     this.time += dt;
+    for (const s of this.passing || []) {
+      s.position.z += dt * 24;
+      if (s.position.z > 60) s.position.z -= 120;
+    }
+    const tr = this.train;
+    if (tr) {
+      // Comes in, stops 8 seconds, leaves, and comes back a little later.
+      tr.t += dt;
+      const cycle = tr.t % 34;
+      const g = tr.group.position;
+      if (cycle < 6) g.x = tr.stop + (1 - cycle / 6) ** 2 * (tr.x1 - tr.stop);
+      else if (cycle < 14) g.x = tr.stop;
+      else if (cycle < 20) g.x = tr.stop - ((cycle - 14) / 6) ** 2 * (tr.stop - tr.x0);
+      else g.x = tr.x1 + 20;
+    }
     for (const b of this.blinks) {
       b.t += dt;
       b.m.visible = b.slow ? Math.sin(b.t * 2) > -0.6 : Math.sin(b.t * 7 + b.t * b.t * 0.01) > -0.2;

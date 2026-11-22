@@ -226,6 +226,8 @@ body.fighting .joystick, body.fighting .talk-btn { display: none; }
 }
 .chapter.on { border-color: var(--amber); box-shadow: 0 0 0 1px var(--amber) inset; }
 .ch-tag { color: var(--amber); font-size: 12.5px; white-space: nowrap; }
+.level-head { color: var(--amber); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; margin: 6px 2px -2px; opacity: .85; }
+.chapter-list { max-height: 38vh; overflow-y: auto; }
 .word-note { cursor: pointer; }
 .word-note-help { font-size: 13.5px; color: #6b6253; margin: -4px 0 10px; line-height: 1.4; }
 .book-item .fr-note { display: block; font-family: var(--serif); font-style: italic; color: #3c352b; font-size: 14px; margin-top: 2px; }

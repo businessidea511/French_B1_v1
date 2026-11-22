@@ -7,7 +7,7 @@ import { t, isRtl } from './i18n.js';
 import { say, listen, stopListening, micProblem, canListen, bestMatch, sfx } from './speech.js';
 import { music } from './music.js';
 import { makeAgent, makePerson } from './people.js';
-import { HOURS, NUMBERS, DEPART_MINUTES, departLine, quaiLine } from './voicedata.js';
+import { HOURS, NUMBERS, DEPART_MINUTES, departLine, quaiLine, etageLine, etageShow, PRICE_CENTS, prixLine, prixShow } from './voicedata.js';
 export { bankLines } from './voicedata.js';
 
 const $ = (id) => document.getElementById(id);
@@ -31,6 +31,18 @@ const LISTEN = {
     const n = 1 + Math.floor(Math.random() * 12);
     const wrong = shuffle([...Array(13).keys()].filter((k) => k && k !== n)).slice(0, 2);
     return { ask: quaiLine(n), show: '🚉', en: 'Which platform does the Namur train leave from?', right: `quai ${n}`, wrong: wrong.map((k) => `quai ${k}`) };
+  },
+  etage: () => {
+    const n = 1 + Math.floor(Math.random() * 9);
+    const wrong = shuffle([1, 2, 3, 4, 5, 6, 7, 8, 9].filter((k) => k !== n)).slice(0, 2);
+    return { ask: etageLine(n), show: '🏢', en: 'Which floor did he say?', right: etageShow(n), wrong: wrong.map(etageShow) };
+  },
+  prix: () => {
+    const e = 1 + Math.floor(Math.random() * 9);
+    const c = pick(PRICE_CENTS);
+    const otherC = pick(PRICE_CENTS.filter((x) => x !== c));
+    const otherE = e === 9 ? 8 : e + 1;
+    return { ask: prixLine(e, c), show: '💶', en: 'How much did he say?', right: prixShow(e, c), wrong: [prixShow(e, otherC), prixShow(otherE, c)] };
   },
   depart: () => {
     const h = 18 + Math.floor(Math.random() * 6);
@@ -409,7 +421,7 @@ export class Confront {
 export function confrontTexts(banks) {
   const out = ['🎤 Answer out loud: it is twice as convincing!', '🎤 Très convaincant ! ×2', '🕴️ He lets you go… and walks away.',
     'Tell your story: put the words in order!', 'What time did he say?', 'Which room number did he say?', 'Which platform did he say?',
-    'At what time does the Charleroi train leave?', 'Which platform does the Namur train leave from?', 'Not quite. Try again!', 'I did not hear you. Try again.'];
+    'At what time does the Charleroi train leave?', 'Which platform does the Namur train leave from?', 'Which floor did he say?', 'How much did he say?', 'Not quite. Try again!', 'I did not hear you. Try again.'];
   for (const b of banks) {
     out.push(b.help, b.askEn);
     if (b.kind === 'phrase') for (const q of b.items) out.push(q[3]);

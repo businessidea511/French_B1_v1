@@ -19,7 +19,7 @@ export const CHAPTER = {
     { id: 'rue', path: [[-2.4, 3], [-2.4, -9]] },
     { id: 'chef', path: [[0, -37.8]], chief: true },
   ],
-  next: 'Chapitre 2 : La Gare du Midi',
+  next: "L'immeuble d'Élise",
   doneIcon: '🗝️',
 };
 
@@ -234,11 +234,8 @@ const CHIEF_MEET = [
 
 const ENDING = [
   { who: CHIEF, fr: "Hmm. Bon. Allez-y… Mais je vous ai à l'œil.", en: 'Hmm. Fine. Go on… But I have my eye on you.' },
-  { who: YOU, fr: '(Quai numéro deux. Vingt-trois heures. Personne… Soudain, un téléphone sonne.)', en: '(Platform two. Eleven p.m. Nobody… Suddenly, a phone rings.)' },
-  { who: ELISE, fr: "Allô ? C'est toi ? C'est Élise. Écoute-moi bien.", en: "Hello? Is that you? It's Élise. Listen to me carefully." },
-  { who: ELISE, fr: 'Ne prends pas le train de vingt-trois heures. Ils savent que tu es là.', en: 'Do not take the eleven p.m. train. They know you are here.' },
-  { who: ELISE, fr: 'Va à la gare du Midi. Casier numéro sept. Tu as la clé… Tout est dedans.', en: 'Go to the Midi station. Locker number seven. You have the key… Everything is inside.' },
-  { who: ELISE, fr: 'Ils arrivent. Je dois raccrocher…', en: 'They are coming. I have to hang up…' },
+  { who: YOU, fr: "(Il est vingt-deux heures. Le rendez-vous est à vingt-trois heures. J'ai une heure.)", en: '(It is ten p.m. The meeting is at eleven. I have one hour.)' },
+  { who: YOU, fr: "(D'abord, l'appartement d'Élise. Madame Lambert a peut-être une clé…)", en: "(First, Élise's flat. Madame Lambert may have a key…)" },
 ];
 
 /** The current goal (English, translated for the player). */
@@ -280,7 +277,7 @@ const SHORT = {
   samirEarly: { fr: 'Bonsoir ! Les journaux du soir sont arrivés.', en: 'Good evening! The evening papers have arrived.' },
   samirAgain: { fr: "La lettre, l'ami. L'homme en gris l'a toujours.", en: 'The letter, my friend. The man in grey still has it.' },
   metroEarly: { fr: "(Le métro… Mais où aller ? Il me faut plus d'indices.)", en: '(The metro… But where to go? I need more clues.)' },
-  metroDone: { fr: '(Prochaine étape : la gare du Midi, casier sept.)', en: '(Next stop: the Midi station, locker seven.)' },
+  metroDone: { fr: "(Prochaine étape : l'appartement d'Élise, au numéro douze.)", en: "(Next stop: Élise's flat, at number twelve.)" },
 };
 const STORY_WORDS = ['Je', 'suis', 'touriste', 'et', 'je', 'cherche', 'mon', 'hôtel.'];
 
@@ -331,13 +328,13 @@ export function allTexts() {
     '🚇 Bourse station, platform 2, 11 p.m. Go to the metro.', 'Go to the café Le Corbeau, across the street. And take care of yourself.',
     'Good evening! Sorry, we are closing soon.', 'Samir, at the kiosk. On the square. Good luck.',
     'Good evening! The evening papers have arrived.', 'The letter, my friend. The man in grey still has it.',
-    '(The metro… But where to go? I need more clues.)', '(Next stop: the Midi station, locker seven.)',
+    '(The metro… But where to go? I need more clues.)', "(Next stop: Élise's flat, at number twelve.)",
     'A man in grey guards this clue. Get past him first.', 'Hint', 'You wake up in front of the hotel… They let you go, for now.',
     'Listen and choose', 'Speak now…', 'Got it',
     'The microphone is blocked. On iPhone: Settings › Safari › Microphone › Allow. Speech recognition also needs Siri to be on.',
     'The microphone is blocked. Allow it for this site in the browser settings.',
     'No microphone found, or another app is using it.', 'Speech recognition needs the internet.', 'I did not hear you. Try again.', 'Not quite. Try again!',
-    'My clues', 'Case file', 'Words found', 'Mistakes', 'Clues found', 'Chapter 1 complete!', 'Coming soon', 'Explore the street',
+    'My clues', 'Case file', 'Words found', 'Mistakes', 'Clues found', 'Stage complete!', 'Next stage', 'Coming soon', 'Explore the street',
     'An investigation to learn French', 'Your name', 'Play', 'Continue', 'New game', 'Back to the app', 'Close', 'Help language',
   );
   return out.filter(Boolean);
