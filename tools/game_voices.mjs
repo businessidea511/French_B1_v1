@@ -9,7 +9,7 @@
 // Sentences already recorded are skipped, so running it again only records
 // what is new. Sentences with the player's name stay live (/api/tts).
 import { createHash } from 'node:crypto';
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, readdirSync, unlinkSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
@@ -42,7 +42,7 @@ function add(text, voice) {
   lines.set(`${v}|${line}`, { text: line, voice: v });
 }
 
-for (const file of ['dossier1.js', 'dossier2.js']) {
+for (const file of ['dossier1.js', 'dossier2.js', 'dossier3.js', 'dossier4.js', 'dossier5.js']) {
   const ch = await load(file);
   for (const [text, v] of ch.voiceLines()) add(text, v?.voice);
   const L = ch.LINES;
@@ -115,4 +115,9 @@ await Promise.all([worker(), worker(), worker()]);
 // Keep only the sentences the game still uses.
 for (const key of Object.keys(manifest)) if (!lines.has(key)) delete manifest[key];
 writeFileSync(manifestPath, JSON.stringify(manifest, null, 0));
+// Delete audio files nothing uses any more (sentences changed or removed).
+const used = new Set(Object.values(manifest));
+let removed = 0;
+for (const f of readdirSync(OUT)) if (f.endsWith('.mp3') && !used.has(f)) { unlinkSync(join(OUT, f)); removed++; }
+if (removed) console.log(`${removed} unused audio file(s) deleted.`);
 console.log(`Done: ${done} recorded, ${failed} failed, ${Object.keys(manifest).length} in the manifest.`);

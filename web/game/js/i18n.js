@@ -39,6 +39,7 @@ const UI = {
     'Got it': 'فهمت',
     Hint: 'تلميح',
     'Explore the street': 'استكشف الشارع',
+    'Keep exploring': 'تابع الاستكشاف',
     'Clues found': 'الأدلة',
     Mistakes: 'الأخطاء',
     'Your name': 'اسمك',

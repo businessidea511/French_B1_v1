@@ -10,7 +10,7 @@ import { Confront, confrontTexts } from './confront.js';
 const $ = (id) => document.getElementById(id);
 
 // ---------- which chapter ----------
-export const CHAPTERS = [1, 2, 3, 4];
+export const CHAPTERS = [1, 2, 3, 4, 5];
 const asked = Number(new URLSearchParams(location.search).get('ch') || localStorage.getItem('dossier_chapter') || 1);
 const chId = CHAPTERS.includes(asked) ? asked : 1;
 const ch = await import(`./dossier${chId}.js`);
@@ -142,7 +142,7 @@ function refresh() {
     p.marker.visible = !!ch.hasNews(p.id, state) && (!p.char || p.char.visible);
   }
 }
-prefetch([...ch.allTexts(), ...confrontTexts(ch.BANKS), ...(chaseModule ? chaseModule.chaseTexts : []), ch.LINES.caught, 'Continue', 'Chapter', 'Finished'], () => { translatePage(); refresh(); renderChapters(); });
+prefetch([...ch.allTexts(), ...confrontTexts(ch.BANKS), ...(chaseModule ? chaseModule.chaseTexts : []), ch.LINES.caught, 'Continue', 'Chapter', 'Finished', 'Keep exploring'], () => { translatePage(); refresh(); renderChapters(); });
 
 // ---------- the men in grey ----------
 let shake = 0;
