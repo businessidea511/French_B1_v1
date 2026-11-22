@@ -4,7 +4,7 @@
 // Three alerts, and they take you away (you wake up at the hotel).
 import * as THREE from 'three';
 import { t, isRtl } from './i18n.js';
-import { say, listen, stopListening, micProblem, canListen, closeness, sfx } from './speech.js';
+import { say, listen, stopListening, micProblem, canListen, bestMatch, sfx } from './speech.js';
 import { music } from './music.js';
 import { makeAgent, makePerson } from './people.js';
 import { HOURS, NUMBERS, DEPART_MINUTES, departLine } from './voicedata.js';
@@ -83,6 +83,8 @@ export class Confront {
     const body = look ? makePerson(look, { weak: this.g.weak }) : makeAgent({ weak: this.g.weak, chief });
     body.position.set(path[0][0], 0, path[0][1]);
     this.g.scene.add(body);
+    // Sneaking chapters: the torch light shows how far the guard can see.
+    if (this.g.detect === 'cone' && body.userData.cone) body.userData.cone.scale.setScalar(2.5);
     const a = { id, body, path, leg: 0, guards, chief, hp: chief ? 6 : 2, maxHp: chief ? 6 : 2, wait: 0, done: false };
     if (guards) {
       const clue = this.g.city.clues.find((c) => c.word.key === guards);
@@ -116,7 +118,13 @@ export class Confront {
       }
       // Patrol: walk to the next point, wait a moment, turn back.
       if (a.path.length > 1) {
-        if (a.wait > 0) { a.wait -= dt; b.userData.animate(dt, 0, false); continue; }
+        if (a.wait > 0) {
+          a.wait -= dt;
+          // Waiting: the guard looks around.
+          if (this.g.detect === 'cone') b.rotation.y = a.yaw + Math.sin(a.wait * 1.6) * 0.9;
+          b.userData.animate(dt, 0, false);
+          continue;
+        }
         const [tx, tz] = a.path[(a.leg + 1) % a.path.length];
         const dx = tx - b.position.x;
         const dz = tz - b.position.z;
@@ -124,7 +132,7 @@ export class Confront {
         if (d < 0.2) { a.leg = (a.leg + 1) % a.path.length; a.wait = 1.5 + Math.random() * 2; continue; }
         b.position.x += (dx / d) * dt * 1.3;
         b.position.z += (dz / d) * dt * 1.3;
-        b.rotation.y = Math.atan2(dx, dz);
+        b.rotation.y = a.yaw = Math.atan2(dx, dz);
         b.userData.animate(dt, 1, false);
       } else {
         b.userData.animate(dt, 0, false);
@@ -138,7 +146,28 @@ export class Confront {
   /** The man who spots the player, if any (the chief waits at the metro). */
   spotted() {
     const p = this.g.player.position;
-    return this.agents.find((a) => !a.done && !a.leaving && !a.chief && Math.hypot(p.x - a.body.position.x, p.z - a.body.position.z) < 4.2);
+    if (this.g.detect !== 'cone') {
+      return this.agents.find((a) => !a.done && !a.leaving && !a.chief && Math.hypot(p.x - a.body.position.x, p.z - a.body.position.z) < 4.2);
+    }
+    // Sneaking: seen inside the torch light (and not behind a wall), or when very close.
+    return this.agents.find((a) => {
+      if (a.done || a.leaving || a.chief) return false;
+      const b = a.body.position;
+      const dx = p.x - b.x;
+      const dz = p.z - b.z;
+      const d = Math.hypot(dx, dz);
+      if (d < 1.4) return true;
+      if (d > 6.3) return false;
+      let diff = Math.atan2(dx, dz) - a.body.rotation.y;
+      diff = Math.atan2(Math.sin(diff), Math.cos(diff));
+      if (Math.abs(diff) > 0.55) return false;
+      for (let k = 1; k < 8; k++) {
+        const x = b.x + (dx * k) / 8;
+        const z = b.z + (dz * k) / 8;
+        if (!this.g.city.walkable(x, z)) return false; // a wall in between
+      }
+      return true;
+    });
   }
 
   /** A confrontation. Resolves true if the man lets you go. */
@@ -272,16 +301,20 @@ export class Confront {
         mic.classList.add('on');
         music.hold(true);
         $('foeHelp').textContent = '🎤 ' + t('Speak now…');
-        let convinced = false;
         const { text, error } = await listen((live) => {
           $('foeHelp').textContent = `« ${live} »`;
-          if (!convinced && closeness(live, expected) >= 0.6) { convinced = true; stopListening(); }
         });
         listening = false;
         mic.classList.remove('on');
         music.hold(false);
         if (done) return;
-        if (convinced || (text && closeness(text, expected) >= 0.6)) return finish('spoken');
+        if (text) {
+          const answers = q.choices.map((c) => (c.ok ? expected : c.fr));
+          const m = bestMatch(text, answers);
+          const buttons = [...box.children];
+          if (m.sure && q.choices[m.index].ok) return finish('spoken');
+          if (m.sure) return finish('wrong', buttons[m.index]); // you said a wrong answer
+        }
         $('foeHelp').textContent = text ? `« ${text.split('|')[0].trim()} » — ${t('Not quite. Try again!')}` : t(micProblem(error));
       };
       // The clock stops while you speak: speaking takes time.

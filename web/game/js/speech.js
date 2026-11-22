@@ -217,6 +217,44 @@ export function closeness(heard, expected) {
   return want.filter((w) => got.has(w)).length / want.length;
 }
 
+/** How well one heard sentence fits one answer: both the words said and the words missing count. */
+function fit(heard, expected) {
+  const want = norm(expected).split(' ').filter(Boolean);
+  const got = norm(heard).split(' ').filter(Boolean);
+  if (!want.length || !got.length) return 0;
+  const pool = [...got];
+  let common = 0;
+  for (const w of want) {
+    const i = pool.indexOf(w);
+    if (i >= 0) { common++; pool.splice(i, 1); }
+  }
+  const recall = common / want.length;
+  const precision = common / got.length;
+  return recall + precision ? (2 * recall * precision) / (recall + precision) : 0;
+}
+
+/**
+ * The answer that fits the WHOLE sentence said best. Answers that share
+ * words (« je voudrais un café » / « je voudrais un champagne ») are told
+ * apart by the words that differ. Returns { index, score, sure }: sure is
+ * false when nothing fits well, or two answers fit almost as well.
+ */
+export function bestMatch(heard, answers) {
+  const versions = heard.split('|').map((h) => h.trim()).filter(Boolean);
+  const scores = answers.map((a) => Math.max(0, ...versions.map((v) => fit(v, a))));
+  let index = 0;
+  scores.forEach((s, i) => { if (s > scores[index]) index = i; });
+  const second = Math.max(0, ...scores.filter((_, i) => i !== index));
+  // A word said that the answer does not have, while the answer has a word
+  // not said (« café » for « thé »): that is another sentence, not this one.
+  const want = new Set(norm(answers[index]).split(' ').filter((w) => w.length > 2));
+  const swapped = versions.every((v) => {
+    const got = new Set(norm(v).split(' ').filter((w) => w.length > 2));
+    return [...got].some((w) => !want.has(w)) && [...want].some((w) => !got.has(w) && !['sil', 'vous', 'plait', 'merci'].includes(w));
+  });
+  return { index, score: scores[index], sure: !swapped && scores[index] >= 0.6 && scores[index] - second >= 0.12 };
+}
+
 // ---- Little sounds, made on the fly (no files to download) ----
 let ctx = null;
 function audio() {
@@ -252,5 +290,6 @@ export const sfx = {
   open() { [392, 523, 659, 784, 1046].forEach((f, i) => tone(f, i * 0.11, 0.6, 'triangle', 0.13)); },
   dark() { tone(110, 0, 1.2, 'sawtooth', 0.05); tone(98, 0.3, 1.2, 'sawtooth', 0.05); },
   step() { tone(140 + Math.random() * 40, 0, 0.05, 'sine', 0.03); },
+  ring() { for (let k = 0; k < 3; k++) { tone(880, k * 0.6, 0.18, 'sine', 0.1); tone(660, k * 0.6 + 0.2, 0.18, 'sine', 0.1); } },
   unlock() { audio(); },
 };

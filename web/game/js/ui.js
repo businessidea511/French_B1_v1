@@ -1,7 +1,7 @@
 // Everything drawn over the 3D scene: dialogues, word cards, the word book,
 // the objective, the joystick.
 import { t, setHelp, isRtl, fill } from './i18n.js';
-import { say, listen, stopListening, micProblem, canListen, closeness, sfx, preload } from './speech.js';
+import { say, listen, stopListening, micProblem, canListen, bestMatch, sfx, preload } from './speech.js';
 import { music } from './music.js';
 
 const $ = (id) => document.getElementById(id);
@@ -175,15 +175,10 @@ export class UI {
         if (canListen && !node.listen && node.choices.some((c) => c.fr.split(' ').length > 1)) {
           const mic = $('dlgMic');
           mic.hidden = false;
-          // The choice closest to what was said (null if none is close enough).
+          // The choice that fits the whole sentence said (null if not sure).
           const match = (heard) => {
-            let best = null;
-            let score = 0;
-            order.forEach((c, i) => {
-              const s = closeness(heard, c.fr);
-              if (s > score) { score = s; best = i; }
-            });
-            return score >= 0.5 ? best : null;
+            const m = bestMatch(heard, order.map((c) => c.fr));
+            return m.sure ? m.index : null;
           };
           let listening = false;
           mic.onclick = async () => {
@@ -193,20 +188,16 @@ export class UI {
             mic.classList.add('on');
             music.hold(true);
             $('dlgHeard').textContent = '🎤 ' + t('Speak now…');
-            let chosen = null;
+            // The words appear while you speak; the answer is chosen only
+            // when the whole sentence is finished (a short silence).
             const { text, error } = await listen((live) => {
-              // The words appear while you speak; the answer is picked as soon as it matches.
               $('dlgHeard').textContent = `« ${live} »`;
-              if (chosen === null) {
-                chosen = match(live);
-                if (chosen !== null) stopListening();
-              }
             });
             listening = false;
             mic.classList.remove('on');
             music.hold(false);
             if (done) return;
-            if (chosen === null && text) chosen = match(text);
+            const chosen = text ? match(text) : null;
             if (chosen !== null) return pick(order[chosen], box.children[chosen]);
             if (!text) { $('dlgHeard').textContent = t(micProblem(error)); return; }
             $('dlgHeard').textContent = `« ${text.split('|')[0].trim()} » — ${t('Not quite. Try again!')}`;
@@ -228,9 +219,15 @@ export class UI {
     fr.innerHTML = '';
     fr.append(wordHtml(w));
     setHelp($('wordHelp'), w.en);
+    // The note in French (tap to hear it), its translation below.
     const note = $('wordNote');
-    note.hidden = !w.note;
-    if (w.note) setHelp(note, w.note);
+    note.hidden = !w.noteFr;
+    note.textContent = w.noteFr ? `🔊 ${w.noteFr}` : '';
+    note.dir = 'ltr';
+    note.onclick = () => say(w.noteFr);
+    const noteHelp = $('wordNoteHelp');
+    noteHelp.hidden = !w.note;
+    if (w.note) setHelp(noteHelp, w.note);
     const speak = () => say(`${w.art.endsWith("'") ? w.art + w.noun : w.art + ' ' + w.noun}`);
     $('wordSpeak').onclick = speak;
     card.hidden = false;
@@ -264,12 +261,31 @@ export class UI {
         const b = document.createElement('b');
         b.textContent = w.emoji + ' ';
         b.append(wordHtml(w));
+        const fr = document.createElement('span');
+        fr.className = 'fr-note';
+        fr.textContent = w.noteFr || '';
+        fr.dir = 'ltr';
         const s = document.createElement('span');
         setHelp(s, w.note || w.en);
-        item.append(b, s);
-        item.onclick = () => say(w.art.endsWith("'") ? w.art + w.noun : `${w.art} ${w.noun}`);
+        item.append(b, fr, s);
+        item.onclick = () => say(w.noteFr || (w.art.endsWith("'") ? w.art + w.noun : `${w.art} ${w.noun}`));
       } else {
-        item.innerHTML = '<b>❔ ???</b><span>&nbsp;</span>';
+        // Not found yet: where to look — only if the player asks (💡).
+        item.innerHTML = '<b>❔ ???</b>';
+        if (w.where) {
+          const hintBtn = document.createElement('button');
+          hintBtn.className = 'hint-btn';
+          hintBtn.textContent = '💡 ' + t('Hint');
+          hintBtn.onclick = (e) => {
+            e.stopPropagation();
+            const where = document.createElement('span');
+            where.className = 'where';
+            setHelp(where, w.where);
+            where.textContent = '📍 ' + where.textContent;
+            hintBtn.replaceWith(where);
+          };
+          item.append(hintBtn);
+        }
       }
       list.append(item);
     }

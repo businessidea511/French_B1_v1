@@ -87,7 +87,7 @@ export function signTexture(text, { fg = '#ffd27a', bg = '#1a1410', font = 'bold
   return tex;
 }
 
-const WALL_COLORS = ['#7a4a3a', '#8a6a4a', '#5f5a55', '#6d5040', '#4f5866', '#7d6b55', '#5a4038', '#8b7a66', '#6a5a52', '#3f4a52'];
+export const WALL_COLORS = ['#7a4a3a', '#8a6a4a', '#5f5a55', '#6d5040', '#4f5866', '#7d6b55', '#5a4038', '#8b7a66', '#6a5a52', '#3f4a52'];
 
 export class City {
   constructor(scene, { weak }) {
@@ -121,6 +121,7 @@ export class City {
     this.buildGround();
     this.buildRows();
     this.buildHouses();
+    this.buildAlley();
     this.buildShops();
     this.buildStreetLife();
     this.buildSquare();
@@ -334,8 +335,10 @@ export class City {
     panes(dark, std('#0d1118', { roughness: 0.15, metalness: 0.5 }), 0.9, 1.4);
     panes(doors, std('#2a1a12', { roughness: 0.6 }), 1.1, 2.3);
     panes(sills, std('#8a8378'), 1.1, 0.12);
+  }
 
-    // Walls and lamps along the alley.
+  /** Rue des Ombres only: the walls and the lamp of the alley. */
+  buildAlley() {
     const brick = std('#3d2a24', { roughness: 0.95 });
     for (const z of [8.3, 11.7]) {
       const wall = this.box(9, 6, 0.4, brick);

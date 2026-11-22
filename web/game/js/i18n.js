@@ -37,6 +37,7 @@ const UI = {
     'An investigation to learn French': 'تحقيق بوليسي لتعلّم الفرنسية',
     'Case file': 'ملف القضية',
     'Got it': 'فهمت',
+    Hint: 'تلميح',
     'Explore the street': 'استكشف الشارع',
     'Clues found': 'الأدلة',
     Mistakes: 'الأخطاء',

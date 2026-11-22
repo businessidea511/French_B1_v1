@@ -56,21 +56,29 @@ export const BANKS = [
 ];
 
 export const CLUES = [
-  { key: 'valise', art: 'la', noun: 'valise', g: 'f', en: 'the suitcase', emoji: '🧳', x: 7.8, z: 7.2,
+  { key: 'valise', where: 'Next to the benches, in the middle of the hall.', art: 'la', noun: 'valise', g: 'f', en: 'the suitcase', emoji: '🧳', x: 7.8, z: 7.2,
+    noteFr: 'Une petite valise avec une étiquette : « É. M. ». Vide… Quelqu\'un l\'a fouillée.',
     note: 'A small suitcase with a tag: « É. M. ». Empty… someone searched it.' },
-  { key: 'horaire', art: "l'", noun: 'horaire', g: 'm', en: 'the timetable', emoji: '📋', x: -6.5, z: -3.4,
+  { key: 'horaire', where: 'Under the departure board, near the gate to the platforms.', art: "l'", noun: 'horaire', g: 'm', en: 'the timetable', emoji: '📋', x: -6.5, z: -3.4,
+    noteFr: 'Un horaire des trains. Le train de vingt-trois heures cinquante pour Liège est entouré en rouge.',
     note: 'A timetable. The 23:50 train to Liège is circled in red.' },
-  { key: 'badge', art: 'le', noun: 'badge', g: 'm', en: 'the badge', emoji: '🪪', x: 15.4, z: 11.6,
+  { key: 'badge', where: 'Near the lockers. A man in grey guards it.', art: 'le', noun: 'badge', g: 'm', en: 'the badge', emoji: '🪪', x: 15.4, z: 11.6,
+    noteFr: 'Un badge : « LUMEN — Accès niveau 3 ». Un homme en gris l\'a perdu.',
     note: 'A badge: « LUMEN — Accès niveau 3 ». A man in grey lost it.' },
-  { key: 'gant', art: 'le', noun: 'gant', g: 'm', en: 'the glove', emoji: '🧤', x: -7.8, z: 14.2,
+  { key: 'gant', where: 'Near the café Le Quai. A man in grey walks around it.', art: 'le', noun: 'gant', g: 'm', en: 'the glove', emoji: '🧤', x: -7.8, z: 14.2,
+    noteFr: 'Un gant en cuir gris. Les hommes en gris sont passés ici, près du café.',
     note: 'A grey leather glove. The men in grey were here, close to the café.' },
-  { key: 'plan', art: 'le', noun: 'plan de Liège', g: 'm', en: 'the map of Liège', emoji: '🗺️', x: -12.2, z: 13.2,
+  { key: 'plan', where: 'On a table of the café Le Quai.', art: 'le', noun: 'plan de Liège', g: 'm', en: 'the map of Liège', emoji: '🗺️', x: -12.2, z: 13.2,
+    noteFr: 'Un plan de Liège. Une croix près de la gare des Guillemins.',
     note: 'A map of Liège. A cross near the Guillemins station.' },
-  { key: 'enveloppe', art: "l'", noun: 'enveloppe', g: 'f', en: 'the envelope', emoji: '✉️', given: true,
+  { key: 'enveloppe', where: 'Inside locker number 7.', art: "l'", noun: 'enveloppe', g: 'f', en: 'the envelope', emoji: '✉️', given: true,
+    noteFr: 'L\'enveloppe d\'Élise, dans le casier sept : une lettre et des photos de documents secrets.',
     note: "Élise's envelope, from locker 7: a letter and photos of secret documents." },
-  { key: 'usb', art: 'la', noun: 'clé USB', g: 'f', en: 'the USB key', emoji: '💾', given: true,
+  { key: 'usb', where: 'Inside locker number 7.', art: 'la', noun: 'clé USB', g: 'f', en: 'the USB key', emoji: '💾', given: true,
+    noteFr: 'Une clé USB du casier sept. Dessus, écrit par Élise : « PREUVES ».',
     note: 'A USB key from locker 7. On it, in Élise\'s writing: « PREUVES ».' },
-  { key: 'billet', art: 'le', noun: 'billet', g: 'm', en: 'the ticket', emoji: '🎟️', given: true,
+  { key: 'billet', where: 'Buy it at the ticket office (GUICHETS).', art: 'le', noun: 'billet', g: 'm', en: 'the ticket', emoji: '🎟️', given: true,
+    noteFr: 'Un aller simple pour Liège : vingt-trois heures cinquante, quai trois, voiture huit.',
     note: 'A one-way ticket to Liège: 23:50, platform 3, car 8.' },
 ];
 
@@ -328,12 +336,12 @@ export function allTexts() {
     out.push(n.en, n.hint);
     for (const c of n.choices || []) out.push(c.en);
   }
-  for (const c of CLUES) out.push(c.en, c.note);
+  for (const c of CLUES) out.push(c.en, c.note, c.where);
   out.push(
     'Ask at the ticket office (GUICHETS) where the lockers are.', "Open locker number 7 with Élise's key. Clues: {n}/{total}.",
     'Talk to Lucien (the cleaner) and Inès (café Le Quai). Clues: {n}/{total}.', 'Buy a ticket to Liège at the ticket office.',
     'Find the last clues ({n}/{total}). Careful with the men in grey.', 'Go to platform 3: the inspector checks the tickets.',
-    'Chapter complete! Explore the station.', 'A man in grey guards this clue. Get past him first.',
+    'Chapter complete! Explore the station.', 'A man in grey guards this clue. Get past him first.', 'Hint',
     'Listen and choose', 'Speak now…', 'Got it', 'I did not hear you. Try again.', 'Not quite. Try again!',
     'Case file', 'Clues found', 'Mistakes', 'Chapter 1 complete!', 'Chapter 2 complete!', 'Coming soon', 'Explore the street',
     'An investigation to learn French', 'Your name', 'Play', 'Continue', 'New game', 'Back to the app', 'Close', 'Help language',
@@ -361,7 +369,10 @@ export function voiceLines() {
   talk(LETTER, LETTER_TEXT);
   talk(INSPECTOR, [...GATE_MEET, ...ENDING]);
   STORY.forEach((st) => out.push([st.fr, { voice: 'denise' }]));
-  for (const c of CLUES) out.push([c.art.endsWith("'") ? c.art + c.noun : `${c.art} ${c.noun}`, { voice: 'denise' }]);
+  for (const c of CLUES) {
+    out.push([c.art.endsWith("'") ? c.art + c.noun : `${c.art} ${c.noun}`, { voice: 'denise' }]);
+    out.push([c.noteFr, { voice: 'denise' }]);
+  }
   out.push([STORY_WORDS.join(' '), { voice: 'denise' }]);
   return out;
 }

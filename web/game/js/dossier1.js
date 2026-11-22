@@ -52,21 +52,29 @@ export const BANKS = [
 ];
 
 export const CLUES = [
-  { key: 'ticket', art: 'le', noun: 'ticket de métro', g: 'm', en: 'the metro ticket', emoji: '🎫', x: 1.0, z: 33.5,
+  { key: 'ticket', where: 'On the road, near the taxi where you arrived.', art: 'le', noun: 'ticket de métro', g: 'm', en: 'the metro ticket', emoji: '🎫', x: 1.0, z: 33.5,
+    noteFr: 'Un ticket de métro, utilisé il y a trois jours à la station Bourse.',
     note: 'A metro ticket, used three days ago at Bourse station.' },
-  { key: 'parapluie', art: 'le', noun: 'parapluie', g: 'm', en: 'the umbrella', emoji: '☂️', x: -5.3, z: 23,
+  { key: 'parapluie', where: 'In front of number 12, Élise\'s door.', art: 'le', noun: 'parapluie', g: 'm', en: 'the umbrella', emoji: '☂️', x: -5.3, z: 23,
+    noteFr: 'Le parapluie rouge d\'Élise, oublié devant sa porte. Elle est partie vite.',
     note: "Élise's red umbrella, left at her door. She left in a hurry." },
-  { key: 'telephone', art: 'le', noun: 'téléphone', g: 'm', en: 'the phone', emoji: '📱', x: -3.6, z: 14,
+  { key: 'telephone', where: 'In the gutter of the street, between the café and the hotel.', art: 'le', noun: 'téléphone', g: 'm', en: 'the phone', emoji: '📱', x: -3.6, z: 14,
+    noteFr: 'Le téléphone d\'Élise, cassé, dans le caniveau. Quelqu\'un voulait son silence.',
     note: "Élise's phone, broken, in the gutter. Someone wanted her silent." },
-  { key: 'carnet', art: 'le', noun: 'carnet', g: 'm', en: 'the notebook', emoji: '📓', x: -14.8, z: 10,
+  { key: 'carnet', where: 'At the end of the dark alley (left side of the street). A man in grey guards it.', art: 'le', noun: 'carnet', g: 'm', en: 'the notebook', emoji: '📓', x: -14.8, z: 10,
+    noteFr: 'Le carnet d\'Élise. Un mot, souligné trois fois : LUMEN.',
     note: "Élise's notebook. One word, underlined three times: LUMEN." },
-  { key: 'cle', art: 'la', noun: 'clé', g: 'f', en: 'the key', emoji: '🔑', x: 6.2, z: 19.3,
+  { key: 'cle', where: 'Under the terrace tables of the café Le Corbeau.', art: 'la', noun: 'clé', g: 'f', en: 'the key', emoji: '🔑', x: 6.2, z: 19.3,
+    noteFr: 'Une petite clé sous la table sept, avec une étiquette : « Casier 7 ».',
     note: 'A small key under table seven, with a tag: « Casier 7 ».' },
-  { key: 'lettre', art: 'la', noun: 'lettre', g: 'f', en: 'the letter', emoji: '✉️', x: -16.2, z: -16.4,
+  { key: 'lettre', where: 'On the square, near the newspaper kiosk. A man in grey walks around it.', art: 'la', noun: 'lettre', g: 'f', en: 'the letter', emoji: '✉️', x: -16.2, z: -16.4,
+    noteFr: 'Une lettre pour toi, écrite par Élise. Une partie est en code.',
     note: "A letter for you, in Élise's handwriting. Part of it is in code." },
-  { key: 'photo', art: 'la', noun: 'photo', g: 'f', en: 'the photo', emoji: '📷', x: 11, z: -24,
+  { key: 'photo', where: 'On a bench, on the right side of the square.', art: 'la', noun: 'photo', g: 'f', en: 'the photo', emoji: '📷', x: 11, z: -24,
+    noteFr: 'Une photo d\'Élise avec un homme en manteau gris, devant le métro.',
     note: 'A photo of Élise with a man in a grey coat, in front of the metro.' },
-  { key: 'journal', art: 'le', noun: 'journal', g: 'm', en: 'the newspaper', emoji: '📰', x: 3.8, z: -30.6,
+  { key: 'journal', where: 'At the foot of the statue, in the middle of the square.', art: 'le', noun: 'journal', g: 'm', en: 'the newspaper', emoji: '📰', x: 3.8, z: -30.6,
+    noteFr: 'La Gazette d\'il y a trois jours : « Projet Lumen : qui a peur de la vérité ? », par Élise Moreau.',
     note: 'La Gazette, three days ago: « Projet Lumen : qui a peur de la vérité ? » by Élise Moreau.' },
 ];
 
@@ -315,7 +323,7 @@ export function allTexts() {
     out.push(n.en, n.hint);
     for (const c of n.choices || []) out.push(c.en);
   }
-  for (const c of CLUES) out.push(c.en, c.note);
+  for (const c of CLUES) out.push(c.en, c.note, c.where);
   out.push(
     "Find number 12, rue des Ombres: Élise's building.", 'Talk to the waiter at the café Le Corbeau. Look for clues ({n}/{total}).',
     'Find Samir at the newspaper kiosk on the square. Clues: {n}/{total}.', 'Find all the clues ({n}/{total}). Careful with the men in grey.',
@@ -324,7 +332,7 @@ export function allTexts() {
     'Good evening! Sorry, we are closing soon.', 'Samir, at the kiosk. On the square. Good luck.',
     'Good evening! The evening papers have arrived.', 'The letter, my friend. The man in grey still has it.',
     '(The metro… But where to go? I need more clues.)', '(Next stop: the Midi station, locker seven.)',
-    'A man in grey guards this clue. Get past him first.', 'You wake up in front of the hotel… They let you go, for now.',
+    'A man in grey guards this clue. Get past him first.', 'Hint', 'You wake up in front of the hotel… They let you go, for now.',
     'Listen and choose', 'Speak now…', 'Got it',
     'The microphone is blocked. On iPhone: Settings › Safari › Microphone › Allow. Speech recognition also needs Siri to be on.',
     'The microphone is blocked. Allow it for this site in the browser settings.',
@@ -352,7 +360,10 @@ export function voiceLines() {
   talk(CHIEF, [...CHIEF_MEET, ...ENDING]);
   talk(YOU, [SHORT.metroEarly, SHORT.metroDone]);
   STORY.forEach((st, i) => out.push([st.fr, { voice: i === 0 ? 'charline' : 'denise' }]));
-  for (const c of CLUES) out.push([c.art.endsWith("'") ? c.art + c.noun : `${c.art} ${c.noun}`, { voice: 'denise' }]);
+  for (const c of CLUES) {
+    out.push([c.art.endsWith("'") ? c.art + c.noun : `${c.art} ${c.noun}`, { voice: 'denise' }]);
+    out.push([c.noteFr, { voice: 'denise' }]);
+  }
   out.push([STORY_WORDS.join(' '), { voice: 'denise' }]);
   return out;
 }

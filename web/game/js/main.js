@@ -10,12 +10,19 @@ import { Confront, confrontTexts } from './confront.js';
 const $ = (id) => document.getElementById(id);
 
 // ---------- which chapter ----------
-export const CHAPTERS = [1, 2];
+export const CHAPTERS = [1, 2, 3, 4];
 const asked = Number(new URLSearchParams(location.search).get('ch') || localStorage.getItem('dossier_chapter') || 1);
 const chId = CHAPTERS.includes(asked) ? asked : 1;
 const ch = await import(`./dossier${chId}.js`);
 const C = ch.CHAPTER;
-const World = C.world === 'station' ? (await import('./station.js')).Station : (await import('./city.js')).City;
+const WORLDS = {
+  city: async () => (await import('./city.js')).City,
+  station: async () => (await import('./station.js')).Station,
+  liege: async () => (await import('./liege.js')).Liege,
+  office: async () => (await import('./office.js')).Office,
+};
+const World = await WORLDS[C.world]();
+const chaseModule = C.chase ? await import('./chase.js') : null;
 
 // ---------- device: older phones get a lighter picture ----------
 const touch = navigator.maxTouchPoints > 0;
@@ -56,7 +63,17 @@ for (const [x, y, z, color] of C.lights.slice(0, weak ? 3 : C.lights.length)) {
   scene.add(l);
 }
 
-const city = new World(scene, { weak });
+const city = new World(scene, { weak, layout: C.layout });
+// Doors that open later in the story (a flag, or a clue found).
+const isLocked = (l) => (l.flag ? !state.flags[l.flag] : !state.found.includes(l.clue));
+function lockAt(x, z) {
+  return (C.locks || []).find((l) => isLocked(l) && x > l.rect[0] && x < l.rect[1] && z > l.rect[2] && z < l.rect[3]);
+}
+if (C.locks?.length) {
+  const base = city.walkable.bind(city);
+  city.walkable = (x, z) => base(x, z) && !lockAt(x, z);
+}
+let lockToldAt = -99;
 // Clues on the ground (others are given by the characters).
 const clues = ch.CLUES.filter((w) => !w.given).map((w) => ({ word: w, c: city.addClue(w, w.x, w.z) }));
 
@@ -66,7 +83,7 @@ player.position.set(C.spawn[0], 0, C.spawn[1]);
 player.rotation.y = C.spawn[2];
 scene.add(player);
 // The player always stands in a little light, even in the darkest corner,
-// with a soft ring on the ground pointing where they walk.
+// with a soft ring on the ground (the only arrow is the guide to the goal).
 const playerLight = new THREE.PointLight('#ffe2b8', 7, 7, 1.5);
 playerLight.position.set(0, 2.8, 0.8);
 player.add(playerLight);
@@ -80,13 +97,6 @@ const ringTex = (() => {
   g.addColorStop(1, 'rgba(255,226,170,0)');
   x.fillStyle = g;
   x.fillRect(0, 0, 128, 128);
-  // A small arrow at the front: where the player is facing.
-  x.fillStyle = 'rgba(255,226,170,0.9)';
-  x.beginPath();
-  x.moveTo(64, 124);
-  x.lineTo(54, 106);
-  x.lineTo(74, 106);
-  x.fill();
   const tex = new THREE.CanvasTexture(c);
   tex.colorSpace = THREE.SRGBColorSpace;
   return tex;
@@ -127,15 +137,18 @@ function refresh() {
   setVars({ name: state.name, n: state.found.length, total: ch.CLUES.length });
   ui.objective(ch.objective(state));
   ui.counters(state.found.length, ch.CLUES.length);
-  for (const p of talkables) p.marker.visible = !!ch.hasNews(p.id, state);
+  for (const p of talkables) {
+    if (p.char && ch.present) p.char.visible = ch.present(p.id, state);
+    p.marker.visible = !!ch.hasNews(p.id, state) && (!p.char || p.char.visible);
+  }
 }
-prefetch([...ch.allTexts(), ...confrontTexts(ch.BANKS), ch.LINES.caught, 'Continue', 'Chapter', 'Finished'], () => { translatePage(); refresh(); renderChapters(); });
+prefetch([...ch.allTexts(), ...confrontTexts(ch.BANKS), ...(chaseModule ? chaseModule.chaseTexts : []), ch.LINES.caught, 'Continue', 'Chapter', 'Finished'], () => { translatePage(); refresh(); renderChapters(); });
 
 // ---------- the men in grey ----------
 let shake = 0;
 let yaw = C.spawn[2];
 const confront = new Confront({
-  scene, player, city, ui, weak, banks: ch.BANKS, lines: ch.LINES,
+  scene, player, city, ui, weak, banks: ch.BANKS, lines: ch.LINES, detect: C.detect,
   get state() { return state; },
   save: () => { save(); refresh(); },
   hurt: () => {
@@ -160,6 +173,25 @@ for (const a of C.agents) {
   if (a.chief) chief = agent;
 }
 confront.renderAlerts();
+
+// The scooter of chapter 3, and its chase.
+const chase = chaseModule
+  ? new chaseModule.Chase({
+    scene, player, city, ui,
+    setYaw: (a) => { yaw = a; },
+    fade: async (fn) => {
+      $('fade').classList.add('on');
+      await wait(700);
+      await fn();
+      await wait(300);
+      $('fade').classList.remove('on');
+    },
+  })
+  : null;
+if (chase) {
+  chase.nodes = C.chase.nodes;
+  if (!state.flags.chased) chase.park(...C.chase.scooter);
+}
 
 // Bring back a saved game: the clues found, and where the player was standing.
 for (const { word, c } of clues) if (state.found.includes(word.key)) city.takeClue(c);
@@ -186,6 +218,11 @@ const game = {
   },
   save: () => { save(); refresh(); },
   confrontChief: () => confront.confront(chief),
+  runChase: (route, legs, heading) => chase.run(route, legs, heading),
+  ring() {
+    sfx.ring();
+    ui.toast('Your phone is ringing…', 2500);
+  },
   story: (words) => confront.story(words),
   finish() {
     const m = state.mistakes;
@@ -204,7 +241,13 @@ $('doneReplay').onclick = () => { $('done').hidden = true; ui.busy = false; };
 function chapterSave(id) {
   try { return JSON.parse(localStorage.getItem(id === 1 ? 'dossier_save_v1' : `dossier_save_ch${id}`) || 'null'); } catch (_) { return null; }
 }
-const CHAPTER_NAMES = { 1: ['Chapitre 1 : Rue des Ombres', 'A1–A2'], 2: ['Chapitre 2 : La Gare du Midi', 'A2'] };
+const CHAPTER_NAMES = {
+  1: ['Chapitre 1 : Rue des Ombres', 'A1–A2'],
+  2: ['Chapitre 2 : La Gare du Midi', 'A2'],
+  3: ['Chapitre 3 : Liège — La Poursuite', 'A2+'],
+  4: ['Chapitre 4 : Le Laboratoire Lumen', 'B1'],
+  5: ['Chapitre 5 : La Vérité', 'B1'],
+};
 function renderChapters() {
   const list = $('chapterList');
   list.innerHTML = '';
@@ -310,7 +353,7 @@ addEventListener('keydown', (e) => {
 });
 
 // ---------- clues ----------
-const lockTold = new Set();
+const lockTold = new Map(); // clue → when the player was last told it is guarded
 async function collect(entry) {
   city.takeClue(entry.c);
   state.found.push(entry.word.key);
@@ -338,6 +381,8 @@ function movePlayer(dt) {
     const nz = player.position.z + (d.y / speed) * step;
     if (!blocked(nx, player.position.z)) player.position.x = nx;
     if (!blocked(player.position.x, nz)) player.position.z = nz;
+    const lock = lockAt(nx, nz);
+    if (lock && city.time - lockToldAt > 5) { lockToldAt = city.time; ui.toast(lock.say, 3200); }
     const want = Math.atan2(d.x, d.y);
     const diff = Math.atan2(Math.sin(want - yaw), Math.cos(want - yaw));
     yaw += diff * Math.min(1, dt * 10);
@@ -394,8 +439,8 @@ function followSpot(p, k, dt, focus = p) {
 }
 const mid = new THREE.Vector3();
 
-// The guide: a gold arrow at the player's feet, pointing to the next goal
-// (someone with something to say, or the nearest clue).
+// The guide: a gold arrow at the player's feet, pointing to the next person
+// or place of the story.
 const guide = (() => {
   const shape = new THREE.Shape();
   shape.moveTo(0, 0.55);
@@ -424,8 +469,9 @@ function goal() {
     const d = Math.hypot(x - p.x, z - p.z);
     if (d < bestD) { bestD = d; best = { x, z, d }; }
   };
+  // Only the story (people and places): the clues are for the player to find
+  // (light columns, and a hint in the case file if they ask).
   for (const t of talkables) if (t.marker.visible) consider(t.x, t.z);
-  if (!best) for (const { word, c } of clues) if (!c.taken) consider(word.x, word.z);
   return best;
 }
 function updateGuide(dt) {
@@ -435,14 +481,16 @@ function updateGuide(dt) {
   const p = player.position;
   const a = Math.atan2(g.x - p.x, g.z - p.z);
   guide.position.set(p.x + Math.sin(a) * 1.25, p.y + 0.06, p.z + Math.cos(a) * 1.25);
-  guide.rotation.y = a;
+  guide.rotation.y = a + Math.PI; // the arrow shape points to -z before turning
   guide.children[0].material.opacity = 0.55 + Math.sin(city.time * 4) * 0.3;
 }
 function updateCamera(dt) {
   const portrait = innerWidth < innerHeight;
   const k = portrait ? 1.25 : 1;
   const p = player.position;
-  if (cinema) {
+  if (chase?.camera(camTarget, lookWant)) {
+    // behind the scooter (set by the chase)
+  } else if (cinema) {
     // A slow crane shot down the middle of the street, under the rain.
     cinema.t += dt;
     const k2 = Math.min(cinema.t, 24);
@@ -501,6 +549,18 @@ function frame() {
 }
 
 function step(dt) {
+  if (chase?.driving) {
+    city.update(dt, player.position);
+    chase.update(dt, ui.direction());
+    confront.update(dt);
+    for (const p of Object.values(people)) p.char.userData.animate(dt, 0, false);
+    guide.visible = false;
+    for (const p of talkables) p.marker.visible = false; // eyes on the road
+    $('talkBtn').hidden = true;
+    updateCamera(dt);
+    renderer.render(scene, camera);
+    return;
+  }
   city.update(dt, cinema ? camera.position : player.position);
   movePlayer(dt);
   confront.update(dt);
@@ -519,7 +579,9 @@ function step(dt) {
       if (entry.c.taken) continue;
       if (Math.hypot(player.position.x - entry.word.x, player.position.z - entry.word.z) < 1.3) {
         if (entry.c.locked) {
-          if (!lockTold.has(entry.word.key)) { lockTold.add(entry.word.key); ui.toast('A man in grey guards this clue. Get past him first.', 2800); }
+          // Said again every time you come back (not more than every 6 seconds).
+          const last = lockTold.get(entry.word.key) || -99;
+          if (city.time - last > 6) { lockTold.set(entry.word.key, city.time); ui.toast('A man in grey guards this clue. Get past him first.', 2800); }
         } else collect(entry);
       }
     }
@@ -528,6 +590,7 @@ function step(dt) {
     nearby = null;
     let best = 2.4;
     for (const p of talkables) {
+      if (p.char && !p.char.visible) continue;
       const d = Math.hypot(player.position.x - p.x, player.position.z - p.z);
       if (d < best) { best = d; nearby = p; }
     }
@@ -548,5 +611,5 @@ frame();
 
 // Testing only (…/game/?debug).
 if (new URLSearchParams(location.search).has('debug')) {
-  window.quest = { player, confront, city, camera, ch, step: (n = 20) => { for (let i = 0; i < n; i++) step(0.05); }, get state() { return state; }, talkTo: (id) => talkTo(talkables.find((p) => p.id === id)) };
+  window.quest = { player, confront, city, camera, ch, chase, step: (n = 20) => { for (let i = 0; i < n; i++) step(0.05); }, get state() { return state; }, talkTo: (id) => talkTo(talkables.find((p) => p.id === id)) };
 }
