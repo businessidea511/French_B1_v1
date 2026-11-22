@@ -7,7 +7,7 @@ import { t, isRtl } from './i18n.js';
 import { say, listen, stopListening, micProblem, canListen, bestMatch, sfx } from './speech.js';
 import { music } from './music.js';
 import { makeAgent, makePerson } from './people.js';
-import { HOURS, NUMBERS, DEPART_MINUTES, departLine } from './voicedata.js';
+import { HOURS, NUMBERS, DEPART_MINUTES, departLine, quaiLine } from './voicedata.js';
 export { bankLines } from './voicedata.js';
 
 const $ = (id) => document.getElementById(id);
@@ -30,7 +30,7 @@ const LISTEN = {
   quai: () => {
     const n = 1 + Math.floor(Math.random() * 12);
     const wrong = shuffle([...Array(13).keys()].filter((k) => k && k !== n)).slice(0, 2);
-    return { ask: `Votre train part du quai ${NUMBERS[n]}.`, show: '🚉', en: 'Which platform did he say?', right: `quai ${n}`, wrong: wrong.map((k) => `quai ${k}`) };
+    return { ask: quaiLine(n), show: '🚉', en: 'Which platform does the Namur train leave from?', right: `quai ${n}`, wrong: wrong.map((k) => `quai ${k}`) };
   },
   depart: () => {
     const h = 18 + Math.floor(Math.random() * 6);
@@ -38,7 +38,7 @@ const LISTEN = {
     const wrongM = pick(DEPART_MINUTES.filter((x) => x !== m));
     const hhmm = (H, M) => `${H}:${String(M).padStart(2, '0')}`;
     return {
-      ask: departLine(h, m), show: '🕰️', en: 'At what time does the train leave?',
+      ask: departLine(h, m), show: '🕰️', en: 'At what time does the Charleroi train leave?',
       right: hhmm(h, m), wrong: [hhmm(h, wrongM), hhmm(h === 23 ? 21 : h + 1, m)],
     };
   },
@@ -50,13 +50,24 @@ const LISTEN = {
  *  { kind: 'objets', icon, help, ask, askEn, items: [[word, emoji]] }
  *  { kind: 'ecoute', icon, help, gens: ['heure', 'chambre', 'quai', 'depart'] }
  */
+const asked = new Map(); // bank → items already asked (in this game session)
+function fresh(bank) {
+  const done = asked.get(bank) || new Set();
+  asked.set(bank, done);
+  let left = bank.items.filter((it) => !done.has(it));
+  if (!left.length) { done.clear(); left = bank.items; }
+  const item = pick(left);
+  done.add(item);
+  return item;
+}
+
 function question(bank) {
   if (bank.kind === 'phrase') {
-    const [ask, right, wrong, en] = pick(bank.items);
+    const [ask, right, wrong, en] = fresh(bank);
     return { ask, show: ask, en, choices: shuffle([{ fr: right, ok: true }, ...wrong.map((w) => ({ fr: w }))]), spoken: right };
   }
   if (bank.kind === 'objets') {
-    const [word, emoji] = pick(bank.items);
+    const [word, emoji] = fresh(bank);
     const wrong = shuffle(bank.items.filter((o) => o[0] !== word)).slice(0, 2);
     return {
       ask: bank.ask, show: emoji, big: true, en: bank.askEn,
@@ -258,6 +269,7 @@ export class Confront {
     say(q.ask, voice);
     const box = $('foeChoices');
     box.innerHTML = '';
+    const shownAt = performance.now();
     const seconds = a.chief ? 11 : 13;
     return new Promise((resolve) => {
       let done = false;
@@ -285,7 +297,7 @@ export class Confront {
         b.textContent = c.fr;
         b.dir = 'ltr';
         if (c.ok) b.dataset.ok = '1';
-        b.onclick = () => finish(c.ok ? 'right' : 'wrong', b);
+        b.onclick = () => { if (performance.now() - shownAt > 550) finish(c.ok ? 'right' : 'wrong', b); };
         box.append(b);
       }
       $('foeReplay').hidden = false;
@@ -354,6 +366,7 @@ export class Confront {
     say(L.storyAsk, L.chiefVoice);
     const built = [];
     let mistakes = 0;
+    const shownAt = performance.now();
     await new Promise((resolve) => {
       const render = () => {
         el.textContent = built.length ? built.join(' ') : '…';
@@ -366,6 +379,7 @@ export class Confront {
           b.className = 'foe-choice';
           b.textContent = w;
           b.onclick = () => {
+            if (performance.now() - shownAt < 600) return; // a tap meant for the previous screen
             if (w === words[built.length]) {
               built.push(w);
               sfx.coin();
@@ -395,7 +409,7 @@ export class Confront {
 export function confrontTexts(banks) {
   const out = ['🎤 Answer out loud: it is twice as convincing!', '🎤 Très convaincant ! ×2', '🕴️ He lets you go… and walks away.',
     'Tell your story: put the words in order!', 'What time did he say?', 'Which room number did he say?', 'Which platform did he say?',
-    'At what time does the train leave?', 'Not quite. Try again!', 'I did not hear you. Try again.'];
+    'At what time does the Charleroi train leave?', 'Which platform does the Namur train leave from?', 'Not quite. Try again!', 'I did not hear you. Try again.'];
   for (const b of banks) {
     out.push(b.help, b.askEn);
     if (b.kind === 'phrase') for (const q of b.items) out.push(q[3]);

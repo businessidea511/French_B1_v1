@@ -152,6 +152,7 @@ export class UI {
             }
           }
         };
+        const shownAt = performance.now(); // taps in the first moment belong to the previous button
         const order = node.keepOrder ? node.choices : shuffle(node.choices);
         for (const choice of order) {
           const btn = document.createElement('button');
@@ -166,7 +167,7 @@ export class UI {
             label.append(small);
           }
           btn.append(label);
-          btn.onclick = () => pick(choice, btn);
+          btn.onclick = () => { if (performance.now() - shownAt > 450) pick(choice, btn); };
           box.append(btn);
         }
         this.renderHelp();

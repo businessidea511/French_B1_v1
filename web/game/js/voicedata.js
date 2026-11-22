@@ -6,7 +6,8 @@ export const NUMBERS = ['zéro', 'un', 'deux', 'trois', 'quatre', 'cinq', 'six',
 
 export const DEPART_MINUTES = [0, 10, 15, 20, 30, 40, 45, 50];
 export const MINUTE_WORDS = { 0: '', 10: 'dix', 15: 'quinze', 20: 'vingt', 30: 'trente', 40: 'quarante', 45: 'quarante-cinq', 50: 'cinquante' };
-export const departLine = (h, m) => `Le train part à ${NUMBERS[h]} heures${m ? ' ' + MINUTE_WORDS[m] : ''}.`;
+export const departLine = (h, m) => `Le train pour Charleroi part à ${NUMBERS[h]} heures${m ? ' ' + MINUTE_WORDS[m] : ''}.`;
+export const quaiLine = (n) => `Attention : le train de Namur part du quai ${NUMBERS[n]}.`;
 
 
 /** Every sentence a man in grey can say with these banks (to record the voices once). */
@@ -19,7 +20,7 @@ export function bankLines(banks) {
       for (const g of b.gens) {
         if (g === 'heure') for (let h = 1; h < 12; h++) out.push([`Il est ${HOURS[h]}. Vous êtes en retard !`, 'agent']);
         if (g === 'chambre') for (let n = 10; n <= 30; n++) out.push([`Votre chambre d'hôtel, c'est la ${NUMBERS[n]} ?`, 'agent']);
-        if (g === 'quai') for (let n = 1; n <= 12; n++) out.push([`Votre train part du quai ${NUMBERS[n]}.`, 'agent']);
+        if (g === 'quai') for (let n = 1; n <= 12; n++) out.push([quaiLine(n), 'agent']);
         if (g === 'depart') for (let h = 18; h <= 23; h++) for (const m of DEPART_MINUTES) out.push([departLine(h, m), 'agent']);
       }
     }
