@@ -126,6 +126,8 @@ body.fighting .joystick, body.fighting .talk-btn { display: none; }
 .word-help { color: #6b6253; font-size: 15px; }
 .word-note { font-family: var(--serif); font-style: italic; font-size: 15px; line-height: 1.45; margin: 10px 0; color: #3c352b; border-top: 1px dashed #b9ad94; padding-top: 10px; }
 .word-card .round { background: #fff; color: #222; border-color: #cbbfa6; }
+.word-actions { display: flex; gap: 10px; justify-content: center; align-items: center; }
+.word-card { cursor: default; }
 @keyframes pop { from { transform: translate(-50%, -50%) scale(.4); opacity: 0; } }
 
 /* ---------- Dialogue ---------- */

@@ -1,7 +1,8 @@
 // Everything drawn over the 3D scene: dialogues, word cards, the word book,
 // the objective, the joystick.
 import { t, setHelp, isRtl, fill } from './i18n.js';
-import { say, listen, canListen, closeness, sfx, preload } from './speech.js';
+import { say, listen, stopListening, micProblem, canListen, closeness, sfx, preload } from './speech.js';
+import { music } from './music.js';
 
 const $ = (id) => document.getElementById(id);
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -134,8 +135,8 @@ export class UI {
             node.revealed = true;
             this.showText(node);
             this.renderHelp();
-            say(choice.fr, { voice: 'denise', rate: 0.95 });
-            await wait(1100);
+            await Promise.all([say(choice.fr, { voice: 'denise', rate: 0.95 }), wait(900)]);
+            await wait(250);
             resolve(wrong);
           } else {
             wrong++;
@@ -174,22 +175,41 @@ export class UI {
         if (canListen && !node.listen && node.choices.some((c) => c.fr.split(' ').length > 1)) {
           const mic = $('dlgMic');
           mic.hidden = false;
-          mic.onclick = async () => {
-            if (done) return;
-            mic.classList.add('on');
-            $('dlgHeard').textContent = t('Speak now…');
-            const heard = await listen();
-            mic.classList.remove('on');
-            if (!heard) { $('dlgHeard').textContent = t('I did not hear you. Try again.'); return; }
-            $('dlgHeard').textContent = `« ${heard.split('|')[0].trim()} »`;
+          // The choice closest to what was said (null if none is close enough).
+          const match = (heard) => {
             let best = null;
             let score = 0;
-            [...box.children].forEach((btn, i) => {
-              const s = closeness(heard, order[i].fr);
+            order.forEach((c, i) => {
+              const s = closeness(heard, c.fr);
               if (s > score) { score = s; best = i; }
             });
-            if (best !== null && score >= 0.5) pick(order[best], box.children[best]);
-            else $('dlgHeard').textContent += ' — ' + t('Not quite. Try again!');
+            return score >= 0.5 ? best : null;
+          };
+          let listening = false;
+          mic.onclick = async () => {
+            if (done) return;
+            if (listening) return stopListening(); // tap again: done speaking
+            listening = true;
+            mic.classList.add('on');
+            music.hold(true);
+            $('dlgHeard').textContent = '🎤 ' + t('Speak now…');
+            let chosen = null;
+            const { text, error } = await listen((live) => {
+              // The words appear while you speak; the answer is picked as soon as it matches.
+              $('dlgHeard').textContent = `« ${live} »`;
+              if (chosen === null) {
+                chosen = match(live);
+                if (chosen !== null) stopListening();
+              }
+            });
+            listening = false;
+            mic.classList.remove('on');
+            music.hold(false);
+            if (done) return;
+            if (chosen === null && text) chosen = match(text);
+            if (chosen !== null) return pick(order[chosen], box.children[chosen]);
+            if (!text) { $('dlgHeard').textContent = t(micProblem(error)); return; }
+            $('dlgHeard').textContent = `« ${text.split('|')[0].trim()} » — ${t('Not quite. Try again!')}`;
           };
         }
       });
@@ -212,15 +232,24 @@ export class UI {
     note.hidden = !w.note;
     if (w.note) setHelp(note, w.note);
     const speak = () => say(`${w.art.endsWith("'") ? w.art + w.noun : w.art + ' ' + w.noun}`);
-    $('wordSpeak').onclick = (e) => { e.stopPropagation(); speak(); };
+    $('wordSpeak').onclick = speak;
     card.hidden = false;
-    this.busy = true;
     sfx.crystal();
     setTimeout(speak, 350);
-    // Stays until tapped (or 6 seconds): there is a note to read.
-    await Promise.race([wait(6000), new Promise((r) => { card.onclick = r; })]);
+    // Stays as long as needed to read it: closed with the button, or by walking away.
+    await new Promise((resolve) => {
+      $('wordClose').onclick = resolve;
+      // Still walking when the clue was picked up: wait until the stick is let go first.
+      let armed = false;
+      const walking = setInterval(() => {
+        const d = this.direction();
+        const m = Math.hypot(d.x, d.y);
+        if (m < 0.1) armed = true;
+        else if (armed && m > 0.3) { clearInterval(walking); resolve(); }
+      }, 150);
+      $('wordClose').addEventListener('click', () => clearInterval(walking), { once: true });
+    });
     card.hidden = true;
-    this.busy = false;
   }
 
   // ---------- word book ----------

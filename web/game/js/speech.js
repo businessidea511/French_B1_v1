@@ -69,60 +69,131 @@ export async function preload(lines) {
 
 let current = null;
 let token = 0;
+let finishCurrent = null; // ends the promise of the line being said
 
 export function stopSpeaking() {
   token++;
   if (current) { current.pause(); current = null; }
   if ('speechSynthesis' in window) speechSynthesis.cancel();
+  if (finishCurrent) { finishCurrent(); finishCurrent = null; }
 }
 
-function deviceVoice(text, { pitch = 1, rate = 0.92 } = {}) {
-  if (!('speechSynthesis' in window)) return;
+function deviceVoice(text, { pitch = 1, rate = 0.92 } = {}, done) {
+  if (!('speechSynthesis' in window)) return done();
   const u = new SpeechSynthesisUtterance(text);
   u.lang = 'fr-FR';
   if (frVoice) u.voice = frVoice;
   u.pitch = pitch;
   u.rate = rate;
+  u.onend = done;
+  u.onerror = done;
   speechSynthesis.speak(u);
 }
 
-/** Says a French sentence with the character's voice: { voice, speed, pitch, rate }. */
-export async function say(text, opts = {}) {
-  if (!text || !clean(text)) return;
+/**
+ * Says a French sentence with the character's voice: { voice, speed, pitch, rate }.
+ * Resolves when the sentence has been said (or was stopped), so the next one
+ * never talks over it.
+ */
+export function say(text, opts = {}) {
+  if (!text || !clean(text)) return Promise.resolve();
   stopSpeaking();
   const mine = token;
   const line = clean(text);
-  const url = await Promise.race([
-    natural(line, opts.voice || 'denise'),
-    new Promise((r) => setTimeout(() => r(null), 3500)),
-  ]);
-  if (mine !== token) return; // something else is being said now
-  if (!url) return deviceVoice(line, opts);
-  const audio = new Audio(url);
-  audio.playbackRate = opts.speed || 1;
-  current = audio;
-  audio.play().catch(() => deviceVoice(line, opts));
+  return new Promise((resolve) => {
+    let ended = false;
+    const done = () => {
+      if (ended) return;
+      ended = true;
+      if (finishCurrent === done) finishCurrent = null;
+      resolve();
+    };
+    finishCurrent = done;
+    // Never wait forever (a voice that never says « finished »).
+    setTimeout(done, 3500 + line.length * 110);
+    Promise.race([
+      natural(line, opts.voice || 'denise'),
+      new Promise((r) => setTimeout(() => r(null), 3500)),
+    ]).then((url) => {
+      if (mine !== token) return done(); // something else is being said now
+      if (!url) return deviceVoice(line, opts, done);
+      const audio = new Audio(url);
+      audio.playbackRate = opts.speed || 1;
+      audio.onended = done;
+      audio.onerror = done;
+      current = audio;
+      audio.play().catch(() => deviceVoice(line, opts, done));
+    });
+  });
 }
 
 export const canListen = !!(window.SpeechRecognition || window.webkitSpeechRecognition);
 
-/** Listens for one French sentence. Resolves the words heard ('' if none). */
-export function listen() {
+let activeRec = null;
+
+/** Stops listening now (the words heard so far are kept). */
+export function stopListening() {
+  try { activeRec?.stop(); } catch (_) {}
+}
+
+/**
+ * Listens to French. onText(text) gets the words live, while the player
+ * speaks (iPhone Safari only gives results this way). Stops after a short
+ * silence, after 10 seconds, or with stopListening().
+ * Resolves { text, error }: text may hold alternatives separated by « | ».
+ */
+export function listen(onText) {
   return new Promise((resolve) => {
     const Rec = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!Rec) return resolve('');
+    if (!Rec) return resolve({ text: '', error: 'unsupported' });
+    // Sounds playing at the same time can block the microphone on iPhone.
+    stopSpeaking();
     const rec = new Rec();
     rec.lang = 'fr-FR';
-    rec.interimResults = false;
+    rec.interimResults = true;
+    rec.continuous = !/Android/i.test(navigator.userAgent); // Android repeats words in continuous mode
     rec.maxAlternatives = 3;
-    let heard = '';
+    activeRec = rec;
+    let text = '';
+    let alternatives = '';
+    let error = '';
+    let silence = null;
+    const hardStop = setTimeout(() => stopListening(), 10000);
     rec.onresult = (e) => {
-      heard = [...e.results[0]].map((a) => a.transcript).join(' | ');
+      const parts = [];
+      const alts = [];
+      for (const r of e.results) {
+        parts.push(r[0].transcript.trim());
+        for (let k = 1; k < r.length; k++) alts.push(r[k].transcript.trim());
+      }
+      text = parts.join(' ').trim();
+      alternatives = alts.join(' | ');
+      if (text && onText) onText(text);
+      // Finished speaking: stop after a short pause.
+      clearTimeout(silence);
+      silence = setTimeout(() => stopListening(), 1400);
     };
-    rec.onerror = () => resolve('');
-    rec.onend = () => resolve(heard);
-    try { rec.start(); } catch (_) { resolve(''); }
+    rec.onerror = (e) => { if (e.error !== 'no-speech' && e.error !== 'aborted') error = e.error; };
+    rec.onend = () => {
+      clearTimeout(silence);
+      clearTimeout(hardStop);
+      if (activeRec === rec) activeRec = null;
+      resolve({ text: alternatives ? `${text} | ${alternatives}` : text, error });
+    };
+    try { rec.start(); } catch (_) { resolve({ text: '', error: 'start' }); }
   });
+}
+
+/** What to tell the player when the microphone could not be used. */
+export function micProblem(error) {
+  if (error === 'not-allowed' || error === 'service-not-allowed') {
+    return /iPhone|iPad/i.test(navigator.userAgent)
+      ? 'The microphone is blocked. On iPhone: Settings › Safari › Microphone › Allow. Speech recognition also needs Siri to be on.'
+      : 'The microphone is blocked. Allow it for this site in the browser settings.';
+  }
+  if (error === 'audio-capture') return 'No microphone found, or another app is using it.';
+  if (error === 'network') return 'Speech recognition needs the internet.';
+  return 'I did not hear you. Try again.';
 }
 
 /** Letters only, no accents: "Je m'appelle Léa !" → "je mappelle lea". */

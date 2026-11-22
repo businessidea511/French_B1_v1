@@ -59,6 +59,39 @@ const player = makePerson({ skin: '#c99a76', hair: '#1d1612', coat: '#4a3a2c', c
 player.position.set(-1.2, 0, 36);
 player.rotation.y = Math.PI;
 scene.add(player);
+// The player always stands in a little light, even in the darkest corner,
+// with a soft ring on the ground pointing where they walk.
+const playerLight = new THREE.PointLight('#ffe2b8', 7, 7, 1.5);
+playerLight.position.set(0, 2.8, 0.8);
+player.add(playerLight);
+const ringTex = (() => {
+  const c = document.createElement('canvas');
+  c.width = c.height = 128;
+  const x = c.getContext('2d');
+  const g = x.createRadialGradient(64, 64, 20, 64, 64, 62);
+  g.addColorStop(0, 'rgba(255,226,170,0.0)');
+  g.addColorStop(0.7, 'rgba(255,226,170,0.55)');
+  g.addColorStop(1, 'rgba(255,226,170,0)');
+  x.fillStyle = g;
+  x.fillRect(0, 0, 128, 128);
+  // A small arrow at the front: where the player is facing.
+  x.fillStyle = 'rgba(255,226,170,0.9)';
+  x.beginPath();
+  x.moveTo(64, 124);
+  x.lineTo(54, 106);
+  x.lineTo(74, 106);
+  x.fill();
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
+})();
+const feetRing = new THREE.Mesh(
+  new THREE.PlaneGeometry(1.6, 1.6),
+  new THREE.MeshBasicMaterial({ map: ringTex, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }),
+);
+feetRing.rotation.x = -Math.PI / 2;
+feetRing.position.y = 0.03;
+player.add(feetRing);
 
 const people = {};
 for (const [id, p] of Object.entries(ch.PEOPLE)) {
@@ -264,10 +297,11 @@ function updateCamera(dt) {
   const k = portrait ? 1.25 : 1;
   const p = player.position;
   if (cinema) {
+    // A slow crane shot down the middle of the street, under the rain.
     cinema.t += dt;
-    const a = 1.2 + cinema.t * 0.08;
-    camTarget.set(Math.cos(a) * 30, 16, 6 + Math.sin(a) * 30);
-    lookWant.set(0, 2, 4);
+    const k2 = Math.min(cinema.t, 24);
+    camTarget.set(Math.sin(cinema.t * 0.15) * 1.5, 13 - k2 * 0.25, 46 - k2 * 0.9);
+    lookWant.set(0, 3, 4 - k2 * 0.5);
   } else if (talking || confront.active) {
     const o = talking || { x: confront.active.body.position.x, z: confront.active.body.position.z };
     const mx = (p.x + o.x) / 2;
@@ -307,8 +341,8 @@ resize();
 
 // ---------- loop ----------
 const clock = new THREE.Clock();
-camera.position.set(20, 16, 30);
-lookAt.set(0, 2, 4);
+camera.position.set(0, 13, 46);
+lookAt.set(0, 3, 4);
 let firstFrame = true;
 function frame() {
   requestAnimationFrame(frame);
@@ -352,5 +386,5 @@ frame();
 
 // Testing only (…/game/?debug).
 if (new URLSearchParams(location.search).has('debug')) {
-  window.quest = { player, confront, city, get state() { return state; }, talkTo: (id) => talkTo(talkables.find((p) => p.id === id)) };
+  window.quest = { player, confront, city, camera, get state() { return state; }, talkTo: (id) => talkTo(talkables.find((p) => p.id === id)) };
 }

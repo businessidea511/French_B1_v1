@@ -111,6 +111,12 @@ export const music = {
     else { clearTimeout(timer); timer = null; }
     return on;
   },
+  // Silent while the player speaks into the microphone (iPhone shares one audio channel).
+  hold(quiet) {
+    if (!ctx) return;
+    if (quiet) ctx.suspend();
+    else if (on && !document.hidden) ctx.resume();
+  },
   // Quieter while someone speaks.
   duck(quiet) { if (master) master.gain.setTargetAtTime(quiet ? 0.18 : 0.5, ctx.currentTime, 0.2); },
 };

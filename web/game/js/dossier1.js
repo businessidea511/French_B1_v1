@@ -264,7 +264,10 @@ export function allTexts() {
     'Good evening! The evening papers have arrived.', 'The letter, my friend. The man in grey still has it.',
     '(The metro… But where to go? I need more clues.)', '(Next stop: the Midi station, locker seven.)',
     'A man in grey guards this clue. Get past him first.', 'You wake up in front of the hotel… They let you go, for now.',
-    'Listen and choose', 'Speak now…', 'I did not hear you. Try again.', 'Not quite. Try again!',
+    'Listen and choose', 'Speak now…', 'Got it',
+    'The microphone is blocked. On iPhone: Settings › Safari › Microphone › Allow. Speech recognition also needs Siri to be on.',
+    'The microphone is blocked. Allow it for this site in the browser settings.',
+    'No microphone found, or another app is using it.', 'Speech recognition needs the internet.', 'I did not hear you. Try again.', 'Not quite. Try again!',
     'My clues', 'Case file', 'Words found', 'Mistakes', 'Clues found', 'Chapter 1 complete!', 'Coming soon', 'Explore the street',
     'An investigation to learn French', 'Your name', 'Play', 'Continue', 'New game', 'Back to the app', 'Close', 'Help language',
   );

@@ -4,7 +4,7 @@
 // Three alerts, and they take you away (you wake up at the hotel).
 import * as THREE from 'three';
 import { t, isRtl } from './i18n.js';
-import { say, listen, canListen, closeness, sfx } from './speech.js';
+import { say, listen, stopListening, micProblem, canListen, closeness, sfx } from './speech.js';
 import { music } from './music.js';
 import { makeAgent } from './people.js';
 
@@ -242,11 +242,11 @@ export class Confront {
           btn?.classList.add('wrong');
           // Learn from it: the right answer, shown and said.
           $('foeHelp').textContent = `✔ ${right?.textContent}${q.listen ? `  ·  « ${q.ask} »` : ''}`;
-          say(q.listen ? q.ask : right?.textContent, q.listen ? voice : { voice: 'denise' });
-          await wait(2200);
+          await Promise.all([say(q.listen ? q.ask : right?.textContent, q.listen ? voice : { voice: 'denise' }), wait(2000)]);
+          await wait(300);
         } else {
-          if (q.spoken && !q.listen) say(right?.textContent, { voice: 'denise' });
-          await wait(700);
+          if (q.spoken && !q.listen) await say(right?.textContent, { voice: 'denise' });
+          await wait(500);
         }
         resolve(outcome);
       };
@@ -263,20 +263,36 @@ export class Confront {
       $('foeReplay').onclick = () => say(q.ask, voice);
       const mic = $('foeMic');
       mic.hidden = !(canListen && !q.listen);
+      const expected = q.accept || q.choices.find((c) => c.ok).fr;
+      let listening = false;
       mic.onclick = async () => {
         if (done) return;
+        if (listening) return stopListening(); // tap again: done speaking
+        listening = true;
         mic.classList.add('on');
-        const heard = await listen();
+        music.hold(true);
+        $('foeHelp').textContent = '🎤 ' + t('Speak now…');
+        let convinced = false;
+        const { text, error } = await listen((live) => {
+          $('foeHelp').textContent = `« ${live} »`;
+          if (!convinced && closeness(live, expected) >= 0.6) { convinced = true; stopListening(); }
+        });
+        listening = false;
         mic.classList.remove('on');
+        music.hold(false);
         if (done) return;
-        const expected = q.accept || q.choices.find((c) => c.ok).fr;
-        if (heard && closeness(heard, expected) >= 0.6) finish('spoken');
-        else this.g.ui.toast(heard ? `« ${heard.split('|')[0].trim()} » — ${t('Not quite. Try again!')}` : t('I did not hear you. Try again.'), 1800);
+        if (convinced || (text && closeness(text, expected) >= 0.6)) return finish('spoken');
+        $('foeHelp').textContent = text ? `« ${text.split('|')[0].trim()} » — ${t('Not quite. Try again!')}` : t(micProblem(error));
       };
-      const start = performance.now();
+      // The clock stops while you speak: speaking takes time.
+      let start = performance.now();
+      let last = start;
       const bar = $('foeTimer');
       const timer = setInterval(() => {
-        const left = 1 - (performance.now() - start) / (seconds * 1000);
+        const now = performance.now();
+        if (listening) start += now - last;
+        last = now;
+        const left = 1 - (now - start) / (seconds * 1000);
         bar.style.width = `${Math.max(0, left) * 100}%`;
         if (left <= 0) finish('late');
       }, 100);
@@ -319,7 +335,7 @@ export class Confront {
             if (w === words[built.length]) {
               built.push(w);
               sfx.coin();
-              if (built.length === words.length) { say(words.join(' '), { voice: 'denise' }); setTimeout(resolve, 1200); }
+              if (built.length === words.length) say(words.join(' '), { voice: 'denise' }).then(() => setTimeout(resolve, 300));
               render();
             } else {
               mistakes++;
