@@ -46,9 +46,8 @@ export class UI {
     setHelp($('objective'), english);
   }
 
-  counters(words, total, coins) {
-    $('wordCount').textContent = `${words}/${total}`;
-    $('coins').textContent = coins;
+  counters(found, total) {
+    $('wordCount').textContent = `${found}/${total}`;
   }
 
   toast(english, ms = 2600) {
@@ -209,13 +208,19 @@ export class UI {
     fr.innerHTML = '';
     fr.append(wordHtml(w));
     setHelp($('wordHelp'), w.en);
+    const note = $('wordNote');
+    note.hidden = !w.note;
+    if (w.note) setHelp(note, w.note);
     const speak = () => say(`${w.art.endsWith("'") ? w.art + w.noun : w.art + ' ' + w.noun}`);
-    $('wordSpeak').onclick = speak;
+    $('wordSpeak').onclick = (e) => { e.stopPropagation(); speak(); };
     card.hidden = false;
+    this.busy = true;
     sfx.crystal();
     setTimeout(speak, 350);
-    await wait(2600);
+    // Stays until tapped (or 6 seconds): there is a note to read.
+    await Promise.race([wait(6000), new Promise((r) => { card.onclick = r; })]);
     card.hidden = true;
+    this.busy = false;
   }
 
   // ---------- word book ----------
@@ -231,7 +236,7 @@ export class UI {
         b.textContent = w.emoji + ' ';
         b.append(wordHtml(w));
         const s = document.createElement('span');
-        setHelp(s, w.en);
+        setHelp(s, w.note || w.en);
         item.append(b, s);
         item.onclick = () => say(w.art.endsWith("'") ? w.art + w.noun : `${w.art} ${w.noun}`);
       } else {

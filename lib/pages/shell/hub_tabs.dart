@@ -138,8 +138,8 @@ class PracticeTab extends StatelessWidget {
       title: lp.translate('tab_practice'),
       intro: '',
       tiles: (context) => [
-        FeatureTile(emoji: '🏝️', title: 'La Quête des Mots Perdus', subtitle: 'A 3D adventure: find the lost words, open the treasure',
-            color: const Color(0xFF2EC4B6), onTap: openGame),
+        FeatureTile(emoji: '🕵️', title: 'Le Dossier Bruxelles', subtitle: 'A night investigation in Brussels: your French is your only weapon',
+            color: const Color(0xFFB8862E), onTap: openGame),
         FeatureTile(emoji: '✍️', title: tr(context, 'Exam writing kit'), subtitle: 'Joker phrases, writing practice, daily dictation',
             color: const Color(0xFFE0457B), onTap: () => openPage(context, const ExamKitPage())),
         FeatureTile(emoji: '🔁', title: lp.translate('reviews'), subtitle: 'Smart flashcards at the right moment',

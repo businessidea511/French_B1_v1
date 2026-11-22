@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-  <meta name="theme-color" content="#1b2440">
-  <title>La Quête des Mots Perdus — PolyLearn</title>
+  <meta name="theme-color" content="#0d1017">
+  <title>Le Dossier Bruxelles — PolyLearn</title>
   <link rel="icon" type="image/png" href="../favicon.png">
   <link rel="stylesheet" href="game.css">
   <script type="importmap">
@@ -17,9 +17,9 @@
   <!-- Title screen -->
   <section id="title" class="screen">
     <div class="title-card">
-      <div class="title-badge">PolyLearn</div>
-      <h1>La Quête<br>des Mots Perdus</h1>
-      <p class="subtitle" data-t="An adventure to learn French"></p>
+      <div class="title-badge">PolyLearn · Enquête</div>
+      <h1><span>Le Dossier</span>Bruxelles</h1>
+      <p class="subtitle" data-t="An investigation to learn French"></p>
       <input id="playerName" maxlength="16" autocomplete="off" data-ph="Your name">
       <label class="lang-row"><span data-t="Help language">Help language</span>
         <select id="langPick">
@@ -38,7 +38,7 @@
     </div>
   </section>
 
-  <!-- Story slides -->
+  <!-- Story -->
   <section id="story" class="screen" hidden>
     <div class="story-card">
       <div id="storyEmoji" class="story-emoji"></div>
@@ -53,22 +53,21 @@
     <div class="hud-top">
       <a class="hud-btn" href="../" aria-label="Exit">✕</a>
       <div id="objective" class="objective"></div>
-      <button id="bookBtn" class="hud-btn wide">📖 <span id="wordCount">0</span></button>
-      <div class="hud-btn wide">🪙 <span id="coins">0</span></div>
+      <button id="bookBtn" class="hud-btn wide">📓 <span id="wordCount">0</span></button>
       <button id="musicBtn" class="hud-btn" aria-label="Music">🎵</button>
     </div>
     <div id="hearts" class="hearts"></div>
-    <div id="wandBar" class="wand-bar" hidden></div>
     <button id="talkBtn" class="talk-btn" hidden>💬</button>
     <div id="joystick" class="joystick"><div class="stick"></div></div>
   </div>
 
-  <!-- Word found -->
+  <!-- Clue found -->
   <div id="wordCard" class="word-card" hidden>
-    <div class="word-glow"></div>
+    <div class="word-label">INDICE</div>
     <div id="wordEmoji" class="word-emoji"></div>
     <div id="wordFr" class="word-fr"></div>
     <div id="wordHelp" class="word-help"></div>
+    <p id="wordNote" class="word-note"></p>
     <button id="wordSpeak" class="round">🔊</button>
   </div>
 
@@ -92,7 +91,7 @@
     </div>
   </div>
 
-  <!-- Fight -->
+  <!-- Confrontation -->
   <div id="combat" class="combat" hidden>
     <div class="foe-head">
       <span id="foeIcon" class="foe-icon"></span>
@@ -111,11 +110,12 @@
     </div>
   </div>
   <div id="hurt" class="hurt"></div>
+  <div id="fade" class="fade"></div>
 
-  <!-- Word book -->
+  <!-- Case file -->
   <section id="book" class="screen dim" hidden>
     <div class="book-card">
-      <h2>📖 <span data-t="My words"></span></h2>
+      <h2>📓 <span data-t="Case file"></span></h2>
       <div id="bookList" class="book-list"></div>
       <button id="bookClose" class="btn primary" data-t="Close"></button>
     </div>
@@ -124,12 +124,12 @@
   <!-- Chapter complete -->
   <section id="done" class="screen dim" hidden>
     <div class="done-card">
-      <div class="done-map">🗺️</div>
+      <div class="done-map">🗝️</div>
       <h2 data-t="Chapter 1 complete!"></h2>
       <div id="doneStars" class="stars"></div>
       <p id="doneStats"></p>
-      <p class="next-chapter"><b>Chapitre 2 : La Forêt des Verbes</b><br><span data-t="Coming soon"></span></p>
-      <button id="doneReplay" class="btn ghost" data-t="Explore the island"></button>
+      <p class="next-chapter"><b>Chapitre 2 : La Gare du Midi</b><br><span data-t="Coming soon"></span></p>
+      <button id="doneReplay" class="btn ghost" data-t="Explore the street"></button>
       <a class="btn primary" href="../" data-t="Back to the app"></a>
     </div>
   </section>

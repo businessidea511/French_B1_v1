@@ -1,13 +1,13 @@
-// La Quête des Mots Perdus — a 3D adventure to learn French (chapter 1: A1).
+// Le Dossier Bruxelles — an investigation game to learn French (chapter 1).
 import * as THREE from 'three';
-import { World } from './world.js';
-import { makeCharacter, makeParrot, makeWitch, makeMarker } from './characters.js';
+import { City } from './city.js';
+import { makePerson, makeMarker } from './people.js';
 import { UI, wait } from './ui.js';
 import { t, translatePage, prefetch, setVars, setHelp, fill, lang, pickLanguage } from './i18n.js';
 import { sfx, say, preload } from './speech.js';
 import { music } from './music.js';
-import { Combat, WANDS, combatTexts } from './combat.js';
-import * as ch1 from './chapter1.js';
+import { Confront, confrontTexts } from './confront.js';
+import * as ch from './dossier1.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -17,175 +17,124 @@ const memory = navigator.deviceMemory || 8;
 const weak = memory <= 3 || (touch && (navigator.hardwareConcurrency || 8) <= 4);
 
 // ---------- saved game ----------
-const SAVE_KEY = 'quest_save_v1';
-const fresh = () => ({ name: '', found: [], flags: {}, coins: 0, mistakes: 0, introSeen: false, wands: [], wand: null, beaten: [] });
+const SAVE_KEY = 'dossier_save_v1';
+const fresh = () => ({ name: '', found: [], flags: {}, mistakes: 0, introSeen: false, beaten: [] });
 let state = fresh();
 try { state = { ...fresh(), ...JSON.parse(localStorage.getItem(SAVE_KEY) || '{}') }; } catch (_) {}
 const save = () => { try { localStorage.setItem(SAVE_KEY, JSON.stringify(state)); } catch (_) {} };
 
-// ---------- renderer, scene, camera ----------
+// ---------- renderer: night, wet, foggy ----------
 const canvas = $('scene');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: !weak, powerPreference: 'high-performance' });
-renderer.setPixelRatio(Math.min(devicePixelRatio, weak ? 1 : 1.75));
+renderer.setPixelRatio(Math.min(devicePixelRatio, weak ? 1 : 1.6));
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.25;
 renderer.shadowMap.enabled = !weak;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(50, 1, 0.5, 500);
+const camera = new THREE.PerspectiveCamera(55, 1, 0.3, 320);
 
-const hemi = new THREE.HemisphereLight('#d6ecff', '#7a9a52', 0.95);
-scene.add(hemi);
-const sun = new THREE.DirectionalLight('#fff1d6', 1.6);
-sun.position.set(30, 50, 22);
-sun.castShadow = !weak;
-sun.shadow.mapSize.set(2048, 2048);
-Object.assign(sun.shadow.camera, { left: -48, right: 48, top: 48, bottom: -48, near: 1, far: 140 });
-sun.shadow.bias = -0.0006;
-scene.add(sun);
+scene.add(new THREE.HemisphereLight('#5a6c94', '#1a1714', 0.9));
+const moon = new THREE.DirectionalLight('#9fb4ff', 0.55);
+moon.position.set(-25, 40, 18);
+moon.castShadow = !weak;
+moon.shadow.mapSize.set(1024, 1024);
+Object.assign(moon.shadow.camera, { left: -30, right: 30, top: 30, bottom: -30, near: 1, far: 120 });
+moon.shadow.bias = -0.0008;
+scene.add(moon);
+scene.add(moon.target);
+// A few real warm lights where the story happens.
+const warm = [[-6, 3, 26.4], [6, 3, 21], [-12, 3, -17.5], [0, 3.5, -38], [-4.4, 4, 6], [4.4, 4, -9]];
+for (const [x, y, z] of warm.slice(0, weak ? 3 : warm.length)) {
+  const l = new THREE.PointLight('#ffb36b', 14, 13, 1.8);
+  l.position.set(x, y, z);
+  scene.add(l);
+}
 
-// Keep crystals, people and paths free of trees.
-const clear = [
-  ...ch1.WORDS.map((w) => [w.x, w.z, 3]),
-  ...Object.values(ch1.PEOPLE).map((p) => [p.pos[0], p.pos[1], 3]),
-  [-22, 30, 5], [-10, 1, 6],
-];
-const world = new World(scene, { weak, clear });
-const crystals = ch1.WORDS.map((w) => ({ word: w, c: world.addCrystal(w, w.x, w.z) }));
+const city = new City(scene, { weak });
+const clues = ch.CLUES.map((w) => ({ word: w, c: city.addClue(w, w.x, w.z) }));
 
 // ---------- characters ----------
-const player = makeCharacter({ skin: '#d9a77a', shirt: '#2ec4b6', pants: '#2b3550', hair: '#2b1d14', scarf: '#e8443a', backpack: '#a8733f' }, { weak });
-player.position.set(-22, 0.28, 41.5);
+const player = makePerson({ skin: '#c99a76', hair: '#1d1612', coat: '#4a3a2c', coatLong: true, pants: '#22252c', scarf: '#8c2f2f', bag: '#3a2a1e' }, { weak });
+player.position.set(-1.2, 0, 36);
 player.rotation.y = Math.PI;
 scene.add(player);
 
 const people = {};
-for (const [id, p] of Object.entries(ch1.PEOPLE)) {
-  const c = makeCharacter(p.look, { weak });
-  c.position.set(p.pos[0], world.heightAt(p.pos[0], p.pos[1]), p.pos[1]);
+for (const [id, p] of Object.entries(ch.PEOPLE)) {
+  const c = makePerson(p.look, { weak });
+  c.position.set(p.pos[0], city.heightAt(p.pos[0], p.pos[1]), p.pos[1]);
   c.rotation.y = p.face;
-  const marker = makeMarker('!', '#ff9f43');
-  marker.position.y = 3.1 / (p.look.scale || 1);
+  const marker = makeMarker('!', '#ffb84d');
+  marker.position.y = 2.25 / (p.look.height || 1);
   c.add(marker);
   scene.add(c);
-  world.colliders.push({ x: p.pos[0], z: p.pos[1], r: 0.8 });
+  city.colliders.push({ x: p.pos[0], z: p.pos[1], r: 0.55 });
   people[id] = { id, char: c, marker, face: p.face, x: p.pos[0], z: p.pos[1] };
 }
-const chestMarker = makeMarker('?', '#c34dff');
-chestMarker.position.set(22, 2.6, -6.5);
-scene.add(chestMarker);
-const talkables = [...Object.values(people), { id: 'chest', x: 22, z: -6.5, marker: chestMarker }];
-
-const parrot = makeParrot({ weak });
-parrot.visible = false;
-scene.add(parrot);
+const metroMarker = makeMarker('?', '#6fa8ff');
+metroMarker.position.set(0, 2.4, -39.6);
+scene.add(metroMarker);
+const talkables = [...Object.values(people), { id: 'metro', x: 0, z: -39.6, marker: metroMarker }];
 
 // ---------- interface ----------
 const ui = new UI();
 translatePage();
 
 function refresh() {
-  setVars({ name: state.name, n: state.found.length, total: ch1.WORDS.length });
-  ui.objective(ch1.objective(state));
-  ui.counters(state.found.length, ch1.WORDS.length, state.coins);
-  for (const p of talkables) p.marker.visible = ch1.hasNews(p.id, state);
+  setVars({ name: state.name, n: state.found.length, total: ch.CLUES.length });
+  ui.objective(ch.objective(state));
+  ui.counters(state.found.length, ch.CLUES.length);
+  for (const p of talkables) p.marker.visible = ch.hasNews(p.id, state);
 }
+prefetch([...ch.allTexts(), ...confrontTexts()], () => { translatePage(); refresh(); });
 
-prefetch([...ch1.allTexts(), ...combatTexts()], () => {
-  translatePage();
-  refresh();
-});
-
-// Bring back a saved game.
-function restoreSaved() {
-  for (const key of state.found) world.target[key] = 1;
-  world.restore(null, state.found.length, ch1.WORDS.length);
-  world.restoreInstantly();
-  for (const { word, c } of crystals) {
-    if (state.found.includes(word.key)) { c.taken = true; c.group.visible = false; }
-  }
-  if (state.flags.bridge) world.openBridge();
-  if (state.flags.hugo) parrot.visible = true;
-  if (state.flags.chest) { world.chestOpening = 0.999; }
-}
-restoreSaved();
-
-// ---------- Morgane's shadows ----------
-const combat = new Combat({
-  scene, player, world, ui,
+// ---------- the men in grey ----------
+let shake = 0;
+let yaw = Math.PI;
+const confront = new Confront({
+  scene, player, city, ui, weak,
   get state() { return state; },
   save: () => { save(); refresh(); },
   hurt: () => {
     $('hurt').classList.add('on');
-    shake = 0.35;
+    shake = 0.25;
     setTimeout(() => $('hurt').classList.remove('on'), 350);
   },
-  respawn: async () => {
-    $('hurt').classList.add('on');
+  caught: async () => {
+    $('fade').classList.add('on');
+    await wait(900);
+    player.position.set(4.6, 0.14, 2.6);
+    yaw = -Math.PI / 2;
     await wait(500);
-    player.position.set(-10, 0, 5.2);
-    $('hurt').classList.remove('on');
-    ui.toast('You fell… The fountain gives you your strength back.', 3200);
+    $('fade').classList.remove('on');
+    ui.toast('You wake up in front of the hotel… They let you go, for now.', 3800);
   },
 });
-let shake = 0;
-combat.addShadow('tuto', 'mots', -18.5, 22);
-combat.addShadow('arbre', 'mots', -23.2, -3, { guards: 'arbre' });
-combat.addShadow('maison', 'mots', -13.5, -7.5, { guards: 'maison' });
-combat.addShadow('chat', 'nombres', -5.5, -8, { guards: 'chat' });
-combat.addShadow('fleur', 'nombres', -23.5, 15.5, { guards: 'fleur' });
-combat.addShadow('est1', 'etre', 15, -6.5);
-combat.addShadow('est2', 'etre', 18.5, -1.5);
-if (!state.flags.chest) combat.addShadow('boss', 'etre', 22, -10.5, { boss: true });
-const sleeperTold = new Set();
-const lockTold = new Set();
+confront.addAgent('ruelle', [[-12.4, 10]], { guards: 'carnet' });
+confront.addAgent('place', [[-15, -15.6], [-15, -24], [-8, -24]], { guards: 'lettre' });
+confront.addAgent('rue', [[-2.4, 3], [-2.4, -9]]);
+const chief = state.flags.done ? null : confront.addAgent('chef', [[0, -37.8]], { chief: true });
+confront.renderAlerts();
 
-// ---------- game helpers given to the chapter ----------
+// Bring back a saved game.
+for (const { word, c } of clues) if (state.found.includes(word.key)) city.takeClue(c);
+
+// ---------- helpers given to the chapter ----------
 const game = {
   ui,
-  world,
   get state() { return state; },
   save: () => { save(); refresh(); },
-  coinSound: () => sfx.coin(),
-  giveWand(type) {
-    if (!state.wands.includes(type)) state.wands.push(type);
-    state.wand = type;
-    save();
-    combat.renderHud();
-    sfx.open();
-    ui.toast(`${WANDS[type].icon} ${t('New wand!')} ${WANDS[type].name}`, 3000);
-  },
-  fightBoss: () => combat.fight(combat.shadows.find((s) => s.boss)),
-  finalSpell: (words) => combat.sentence(words),
-  showParrot: () => { parrot.visible = true; parrot.position.copy(player.position).add(new THREE.Vector3(0, 4, 0)); },
-  async openChest() {
-    world.openChest();
-    sfx.open();
-    await wait(1600);
-    ui.toast('A piece of the treasure map!', 3000);
-    await wait(1200);
-  },
-  async showWitch(talk) {
-    const witch = makeWitch({ weak });
-    witch.position.set(22, 0, -10.5);
-    witch.lookAt(player.position.x, 0, player.position.z);
-    witch.scale.setScalar(0.01);
-    scene.add(witch);
-    sfx.dark();
-    witches.push(witch);
-    for (let i = 0; i <= 20; i++) { witch.scale.setScalar(i / 20); await wait(25); }
-    await talk();
-    for (let i = 20; i >= 0; i--) { witch.scale.setScalar(Math.max(0.01, i / 20)); await wait(25); }
-    scene.remove(witch);
-    witches.splice(witches.indexOf(witch), 1);
-  },
+  confrontChief: () => confront.confront(chief),
+  story: (words) => confront.story(words),
   finish() {
     const m = state.mistakes;
-    $('doneStars').textContent = m <= 2 ? '⭐⭐⭐' : m <= 5 ? '⭐⭐☆' : '⭐☆☆';
-    $('doneStats').textContent = `${t('Words found')}: ${state.found.length} · ${t('Mistakes')}: ${m}`;
+    $('doneStars').textContent = m <= 3 ? '★★★' : m <= 7 ? '★★☆' : '★☆☆';
+    $('doneStats').textContent = `${t('Clues found')}: ${state.found.length} · ${t('Mistakes')}: ${m}`;
     $('done').hidden = false;
     ui.busy = true;
   },
 };
-const witches = [];
 $('doneReplay').onclick = () => { $('done').hidden = true; ui.busy = false; };
 
 // ---------- screens ----------
@@ -197,50 +146,29 @@ $('langPick').value = lang;
 $('langPick').onchange = (e) => pickLanguage(e.target.value);
 $('musicBtn').textContent = music.on ? '🎵' : '🔇';
 $('musicBtn').onclick = () => { $('musicBtn').textContent = music.toggle() ? '🎵' : '🔇'; };
-$('resetBtn').onclick = () => {
-  localStorage.removeItem(SAVE_KEY);
-  location.reload();
-};
+$('resetBtn').onclick = () => { localStorage.removeItem(SAVE_KEY); location.reload(); };
 $('playBtn').onclick = async () => {
   sfx.unlock();
   music.start();
-  state.name = ($('playerName').value.trim() || 'Explorateur').slice(0, 16);
+  state.name = ($('playerName').value.trim() || 'Alex').slice(0, 16);
   save();
   $('title').hidden = true;
   if (!state.introSeen) await playStory();
   start();
 };
 
+let cinema = null;
 async function playStory() {
   setVars({ name: state.name });
-  preload(ch1.STORY.map((s) => ({ text: fill(s.fr) })));
+  preload(ch.STORY.map((s, i) => ({ text: fill(s.fr), voice: i === 0 ? 'charline' : 'denise' })));
   $('story').hidden = false;
   cinema = { t: 0 };
-  world.setAllColors(1); // the island as it was: full of colours
-  let witch = null;
-  for (const [i, slide] of ch1.STORY.entries()) {
+  for (const [i, slide] of ch.STORY.entries()) {
     $('storyEmoji').textContent = slide.emoji;
     $('storyFr').textContent = fill(slide.fr);
     setHelp($('storyHelp'), slide.en);
-    say(fill(slide.fr), { rate: 0.9 });
-    if (i === 1) {
-      witch = makeWitch({ weak });
-      witch.scale.setScalar(2.4);
-      witch.position.set(-8, 0, 2);
-      scene.add(witch);
-      witches.push(witch);
-      sfx.dark();
-    }
-    if (i === 2) {
-      // Morgane takes the words: the colours drain away.
-      world.drainColors();
-      sfx.dark();
-    }
-    if (i === 3 && witch) {
-      scene.remove(witch);
-      witches.splice(witches.indexOf(witch), 1);
-      cinema = null; // the camera flies down to the boat
-    }
+    say(fill(slide.fr), { voice: i === 0 ? 'charline' : 'denise', speed: 0.95 });
+    if (i === 3) cinema = null; // the camera comes down to the street
     await new Promise((r) => { $('storyNext').onclick = r; });
   }
   cinema = null;
@@ -248,33 +176,36 @@ async function playStory() {
   state.introSeen = true;
   save();
 }
-let cinema = null;
 
 let playing = false;
 function start() {
   playing = true;
   $('hud').hidden = false;
   refresh();
-  if (!state.flags.hugo) ui.toast('Talk to Captain Hugo on the dock.', 3500);
-  combat.renderHud();
+  if (!state.flags.lambert) ui.toast("Find number 12, rue des Ombres: Élise's building.", 3800);
 }
 
-$('bookBtn').onclick = () => ui.openBook(ch1.WORDS, state.found);
+// The case file: the clues, or Élise's letter when it can be read.
+$('bookBtn').onclick = async () => {
+  if (ui.busy) return;
+  if (await ch.decode(game)) return refresh();
+  ui.openBook(ch.CLUES, state.found);
+};
 
 // ---------- talking ----------
 let nearby = null;
+let talking = null;
 async function talkTo(target) {
   if (!target || ui.busy) return;
   $('talkBtn').hidden = true;
   if (target.char) target.char.lookAt(player.position.x, target.char.position.y, player.position.z);
   player.lookAt(target.x, player.position.y, target.z);
   talking = target;
-  await ch1.interact(target.id, game);
+  await ch.interact(target.id, game);
   talking = null;
   if (target.char) target.char.rotation.y = target.face;
   refresh();
 }
-let talking = null;
 $('talkBtn').onclick = () => talkTo(nearby);
 addEventListener('keydown', (e) => {
   if ([' ', 'e', 'enter'].includes(e.key.toLowerCase()) && playing && !ui.busy && nearby) {
@@ -283,33 +214,23 @@ addEventListener('keydown', (e) => {
   }
 });
 
-// ---------- crystals ----------
+// ---------- clues ----------
+const lockTold = new Set();
 async function collect(entry) {
-  const { word, c } = entry;
-  world.takeCrystal(c);
-  state.found.push(word.key);
-  world.restore(word.key, state.found.length, ch1.WORDS.length);
+  city.takeClue(entry.c);
+  state.found.push(entry.word.key);
   save();
   refresh();
-  await ui.wordFound(word);
-  if (state.found.length === ch1.WORDS.length) {
-    ui.toast(state.flags.bridge
-      ? 'All the words are found! Open the chest across the bridge.'
-      : 'All the words are found! Now cross the bridge to the chest.', 3500);
-  }
+  await ui.wordFound(entry.word);
+  if (state.found.length === ch.CLUES.length && state.flags.samir) await ch.decode(game);
+  refresh();
 }
 
 // ---------- movement ----------
-const SPEED = 6.2;
-const camOffset = new THREE.Vector3(0, 11, 12.5);
-const camTarget = new THREE.Vector3();
-let yaw = Math.PI;
-
+const SPEED = 4.6;
 function blocked(x, z) {
-  if (!world.walkable(x, z)) return true;
-  for (const c of world.colliders) {
-    if ((x - c.x) ** 2 + (z - c.z) ** 2 < (c.r + 0.45) ** 2) return true;
-  }
+  if (!city.walkable(x, z)) return true;
+  for (const c of city.colliders) if ((x - c.x) ** 2 + (z - c.z) ** 2 < (c.r + 0.35) ** 2) return true;
   return false;
 }
 
@@ -323,56 +244,49 @@ function movePlayer(dt) {
     if (!blocked(nx, player.position.z)) player.position.x = nx;
     if (!blocked(player.position.x, nz)) player.position.z = nz;
     const want = Math.atan2(d.x, d.y);
-    let diff = want - yaw;
-    diff = Math.atan2(Math.sin(diff), Math.cos(diff));
-    yaw += diff * Math.min(1, dt * 12);
+    const diff = Math.atan2(Math.sin(want - yaw), Math.cos(want - yaw));
+    yaw += diff * Math.min(1, dt * 10);
     player.rotation.y = yaw;
   } else if (!talking) {
     player.rotation.y = yaw;
   }
-  const h = world.heightAt(player.position.x, player.position.z);
+  const h = city.heightAt(player.position.x, player.position.z);
   player.position.y += (h - player.position.y) * Math.min(1, dt * 12);
   player.userData.animate(dt, speed, false);
-  return speed;
 }
 
+// ---------- camera: low and close, like a film ----------
+const camTarget = new THREE.Vector3();
 const lookAt = new THREE.Vector3();
 const lookWant = new THREE.Vector3();
 function updateCamera(dt) {
   const portrait = innerWidth < innerHeight;
-  const k = portrait ? 1.3 : 1;
-  if (talking) {
-    // In a conversation: from the side, both faces visible above the dialogue box.
-    const mx = (player.position.x + talking.x) / 2;
-    const mz = (player.position.z + talking.z) / 2;
-    let dx = talking.x - player.position.x;
-    let dz = talking.z - player.position.z;
+  const k = portrait ? 1.25 : 1;
+  const p = player.position;
+  if (cinema) {
+    cinema.t += dt;
+    const a = 1.2 + cinema.t * 0.08;
+    camTarget.set(Math.cos(a) * 30, 16, 6 + Math.sin(a) * 30);
+    lookWant.set(0, 2, 4);
+  } else if (talking || confront.active) {
+    const o = talking || { x: confront.active.body.position.x, z: confront.active.body.position.z };
+    const mx = (p.x + o.x) / 2;
+    const mz = (p.z + o.z) / 2;
+    let dx = o.x - p.x;
+    let dz = o.z - p.z;
     const len = Math.hypot(dx, dz) || 1;
     dx /= len;
     dz /= len;
     let px = dz;
     let pz = -dx;
-    if (pz < 0) { px = -px; pz = -pz; } // stay on the south side, like the usual view
-    camTarget.set(mx + px * 7 * k - dx * 1.5, player.position.y + 4.5 * k, mz + pz * 7 * k - dz * 1.5);
-    lookWant.set(mx, player.position.y + (portrait ? -0.6 : 0.3), mz);
+    if (pz < 0) { px = -px; pz = -pz; }
+    camTarget.set(mx + px * 4.2 * k - dx * 1.2, p.y + 2.4 * k, mz + pz * 4.2 * k - dz * 1.2);
+    lookWant.set(mx, p.y + (portrait ? 0.4 : 1.2), mz);
   } else {
-    camTarget.set(player.position.x + camOffset.x, player.position.y + camOffset.y * k, player.position.z + camOffset.z * k);
-    lookWant.set(player.position.x, player.position.y + 1.2, player.position.z - 1);
+    camTarget.set(p.x, p.y + 6.5 * k, p.z + 7.5 * k);
+    lookWant.set(p.x, p.y + 1.2, p.z - 2);
   }
-  if (cinema) {
-    cinema.t += dt;
-    const a = 0.6 + cinema.t * 0.12;
-    camTarget.set(-6 + Math.cos(a) * 46, 26, 2 + Math.sin(a) * 46);
-    lookWant.set(-6, 0, 2);
-  } else if (combat.active) {
-    // In a fight: see both the player and the shadow.
-    const f = combat.active.group.position;
-    const mx = (player.position.x + f.x) / 2;
-    const mz = (player.position.z + f.z) / 2;
-    camTarget.set(mx, player.position.y + 9 * k, mz + 10 * k);
-    lookWant.set(mx, player.position.y + (portrait ? -1.5 : 0.5), mz);
-  }
-  camera.position.lerp(camTarget, Math.min(1, dt * (cinema ? 1.5 : 4)));
+  camera.position.lerp(camTarget, Math.min(1, dt * (cinema ? 1.2 : 3.5)));
   lookAt.lerp(lookWant, Math.min(1, dt * 5));
   camera.lookAt(lookAt);
   if (shake > 0) {
@@ -382,23 +296,10 @@ function updateCamera(dt) {
   }
 }
 
-const parrotWant = new THREE.Vector3();
-function updateParrot(dt) {
-  if (!parrot.visible) return;
-  const side = new THREE.Vector3(Math.cos(yaw) * 0.9, 0, -Math.sin(yaw) * 0.9);
-  parrotWant.copy(player.position).add(side);
-  parrotWant.y = player.position.y + 2.6 + Math.sin(world.time * 3) * 0.25;
-  parrot.position.lerp(parrotWant, Math.min(1, dt * 3));
-  parrot.rotation.y = yaw;
-  parrot.userData.animate(dt);
-}
-
 function resize() {
-  const w = innerWidth;
-  const h = innerHeight;
-  renderer.setSize(w, h, false);
-  camera.aspect = w / h;
-  camera.fov = w < h ? 62 : 50;
+  renderer.setSize(innerWidth, innerHeight, false);
+  camera.aspect = innerWidth / innerHeight;
+  camera.fov = innerWidth < innerHeight ? 64 : 55;
   camera.updateProjectionMatrix();
 }
 addEventListener('resize', resize);
@@ -406,45 +307,31 @@ resize();
 
 // ---------- loop ----------
 const clock = new THREE.Clock();
-camera.position.set(player.position.x, 14, player.position.z + 16);
-lookAt.set(player.position.x, 1.2, player.position.z - 1);
+camera.position.set(20, 16, 30);
+lookAt.set(0, 2, 4);
 let firstFrame = true;
 function frame() {
   requestAnimationFrame(frame);
   const dt = Math.min(clock.getDelta(), 0.05);
-  world.update(dt);
+  city.update(dt, cinema ? camera.position : player.position);
   movePlayer(dt);
-  updateParrot(dt);
+  confront.update(dt);
   for (const p of Object.values(people)) p.char.userData.animate(dt, 0, talking === p);
-  for (const w of witches) w.userData.animate(dt);
-  combat.update(dt);
-  for (const p of talkables) if (p.marker.visible) p.marker.position.y = (p.char ? 3.1 / p.char.scale.y : 2.6) + Math.sin(world.time * 3) * 0.12;
+  for (const p of talkables) if (p.marker.visible) p.marker.position.y = (p.char ? 2.25 / p.char.scale.y : 2.4) + Math.sin(city.time * 3) * 0.08;
 
   if (playing && !ui.busy) {
-    for (const entry of crystals) {
+    for (const entry of clues) {
       if (entry.c.taken) continue;
-      if (Math.hypot(player.position.x - entry.word.x, player.position.z - entry.word.z) < 1.5) {
+      if (Math.hypot(player.position.x - entry.word.x, player.position.z - entry.word.z) < 1.3) {
         if (entry.c.locked) {
-          if (!lockTold.has(entry.word.key)) { lockTold.add(entry.word.key); ui.toast('A shadow guards this crystal! Beat it first.', 2600); }
+          if (!lockTold.has(entry.word.key)) { lockTold.add(entry.word.key); ui.toast('A man in grey guards this clue. Get past him first.', 2800); }
         } else collect(entry);
       }
     }
-    // Shadows attack when you come close (if you have their wand).
-    const threat = combat.nearbyThreat();
-    if (threat) combat.fight(threat);
-    const sleeper = combat.sleeperNear();
-    if (sleeper && !sleeperTold.has(sleeper.id)) {
-      sleeperTold.add(sleeper.id);
-      ui.toast({
-        mots: 'This shadow is asleep. Captain Hugo has a wand for you.',
-        nombres: 'This golden shadow is asleep. Léa at the bakery has the Wand of Numbers.',
-        etre: 'This purple shadow is asleep. Bruno has the Wand of Être.',
-      }[sleeper.type], 3500);
-    }
-    // The fountain heals.
-    if (Math.hypot(player.position.x + 10, player.position.z - 1) < 3.8 && combat.heal()) ui.toast('⛲ The fountain heals you!', 2000);
+    const man = confront.spotted();
+    if (man) confront.confront(man);
     nearby = null;
-    let best = 2.9;
+    let best = 2.4;
     for (const p of talkables) {
       const d = Math.hypot(player.position.x - p.x, player.position.z - p.z);
       if (d < best) { best = d; nearby = p; }
@@ -463,7 +350,7 @@ function frame() {
 }
 frame();
 
-// Testing only (…/game/?debug): move the player and read the state from the console.
+// Testing only (…/game/?debug).
 if (new URLSearchParams(location.search).has('debug')) {
-  window.quest = { player, combat, get state() { return state; }, world, talkTo: (id) => talkTo(talkables.find((p) => p.id === id)) };
+  window.quest = { player, confront, city, get state() { return state; }, talkTo: (id) => talkTo(talkables.find((p) => p.id === id)) };
 }

@@ -34,7 +34,11 @@ export const isRtl = RTL.includes(lang);
 // Interface words, written by hand in the two most used languages.
 const UI = {
   ar: {
-    'An adventure to learn French': 'مغامرة لتعلّم الفرنسية',
+    'An investigation to learn French': 'تحقيق بوليسي لتعلّم الفرنسية',
+    'Case file': 'ملف القضية',
+    'Explore the street': 'استكشف الشارع',
+    'Clues found': 'الأدلة',
+    Mistakes: 'الأخطاء',
     'Your name': 'اسمك',
     Play: 'العب',
     Continue: 'تابع',

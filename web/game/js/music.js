@@ -12,8 +12,9 @@ const NOTE = (n) => 440 * Math.pow(2, (n - 69) / 12);
 
 // Chords as MIDI notes. Explore: C – Am – F – G. Fight: Am – F – G – E.
 const SONGS = {
-  explore: { bpm: 92, chords: [[60, 64, 67], [57, 60, 64], [53, 57, 60], [55, 59, 62]], bass: [36, 33, 29, 31], drums: false },
-  fight: { bpm: 132, chords: [[57, 60, 64], [53, 57, 60], [55, 59, 62], [52, 56, 59]], bass: [33, 29, 31, 28], drums: true },
+  // Night: Am – F – Dm – E, slow, a low drone. Danger: faster, with drums.
+  explore: { bpm: 66, chords: [[57, 60, 64], [53, 57, 60], [50, 53, 57], [52, 56, 59]], bass: [33, 29, 26, 28], drums: false, sparse: true },
+  fight: { bpm: 118, chords: [[57, 60, 64], [57, 60, 63], [53, 57, 60], [52, 56, 59]], bass: [33, 33, 29, 28], drums: true },
 };
 
 function voice(freq, start, dur, type, gain) {
@@ -73,9 +74,9 @@ function tick() {
     voice(NOTE(song.bass[bar]), t, eighth * 3, 'triangle', 0.16);
   }
   if (i === 4) voice(NOTE(song.bass[bar] + 7), t, eighth * 2, 'triangle', 0.1);
-  // Arpeggio on top.
+  // A few piano-like notes on top (sparse at night).
   const arp = [0, 1, 2, 1, 2, 0, 1, 2][i];
-  voice(NOTE(chord[arp] + 12), t, eighth * 1.6, 'triangle', mode === 'fight' ? 0.05 : 0.035);
+  if (!song.sparse || i === 0 || i === 3 || i === 6) voice(NOTE(chord[arp] + 12), t, eighth * 3, 'triangle', mode === 'fight' ? 0.05 : 0.03);
   if (song.drums) {
     if (i % 4 === 0) kick(t);
     hat(t, i % 2 ? 0.03 : 0.05);
