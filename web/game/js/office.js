@@ -105,9 +105,63 @@ const LAYOUTS = {
       ['barrels', 14, -9, 0], ['bike', 3.5, -10, Math.PI / 2], ['boiler', 14.5, -18, 0], ['box', 9, -18.5], ['box', 4, -18], ['shelf', 15.4, -13.5, -Math.PI / 2],
     ],
     signs: [
-      ['APPARTEMENT 3B · MOREAU', 0, 2.5, 10.17, Math.PI], ['GRENIER ↑', -8, 2.5, -5.83, Math.PI], ['CAVE ↓', 8, 2.5, -5.83, Math.PI],
+      ['APPARTEMENT 3B · MOREAU', 0, 2.5, 10.17, 0], ['GRENIER ↑', -8, 2.5, -5.83, 0], ['CAVE ↓', 8, 2.5, -5.83, 0],
     ],
     pools: [[0, 15, '#ffd59a'], [-9, 3, '#ffe2b8'], [8, 6, '#fff3d6'], [11, -2, '#ffcf9a'], [-8, -13, '#c9b48a'], [8, -13, '#9fb4ff']],
+  },
+  // The Gazette newspaper at night (stage B1-2): reception, newsroom, archives, photo lab, the editor's office.
+  gazette: {
+    bounds: [-18, 18, -20, 20],
+    floor: '#2e3138',
+    wall: '#c9c2b4',
+    cinema: [0, 18, 34, -0.6, 0, 0, 8],
+    walls: [
+      [-18, -20, 18, -20], [-18, 20, -2, 20], [2, 20, 18, 20], [-18, -20, -18, 20], [18, -20, 18, 20],
+      // reception | newsroom
+      [-18, 12, -2, 12], [2, 12, 18, 12],
+      // archives (west), photo lab (middle), editor (east)
+      [-18, -4, -13.4, -4], [-10.6, -4, -1.4, -4], [1.4, -4, 9.4, -4], [12.6, -4, 18, -4], [-6, -4, -6, -20], [6, -4, 6, -20],
+    ],
+    props: [
+      ['desk', -9, 15, 0], ['plant', -16.5, 18.5], ['plant', 16.5, 18.5], ['sofa', 12, 16, -Math.PI / 2], ['logo', 0, 19.7, Math.PI, 'LA GAZETTE'],
+      ['desk', -14, 6, 0], ['desk', -14, 0.5, 0], ['desk', -9, 6, 0], ['desk', -9, 0.5, 0], ['desk', -4, 6, 0], ['desk', -4, 0.5, 0], ['desk', 4, 6, 0], ['desk', 4, 0.5, 0], ['desk', 9, 6, 0], ['desk', 9, 0.5, 0], ['desk', 14, 6, 0], ['desk', 14, 0.5, 0],
+      ['shelf', -14, -11, 0], ['shelf', -14, -15, 0], ['shelf', -9, -11, 0], ['shelf', -9, -15, 0], ['box', -8, -18.4],
+      ['labtable', -3, -13, 0], ['labtable', 3, -13, 0], ['screens', 0, -19.6, 0], ['lamp', -5, -5.6],
+      ['desk', 12, -10.5, 0], ['shelf', 17.4, -12, -Math.PI / 2], ['sofa', 9.5, -17.4, 0], ['plant', 16.5, -5.6],
+    ],
+    signs: [
+      ['RÉDACTION', 0, 2.5, 12.17, 0], ['ARCHIVES', -12, 2.5, -3.83, 0], ['LABO PHOTO', 0, 2.5, -3.83, 0], ['RÉDACTEUR EN CHEF', 11, 2.5, -3.83, 0],
+    ],
+    pools: [[0, 16, '#d6e4ff'], [-9, 3, '#ffe2b8'], [9, 3, '#ffe2b8'], [-12, -12, '#c9b48a'], [0, -12, '#ff6b6b'], [12, -10, '#ffe2b8']],
+  },
+  // Victor's bookshop in Liège, at night (stage A2-4): the shop, his office, his mother's flat, the printing room.
+  librairie: {
+    bounds: [-14, 14, -18, 18],
+    floor: '#4a3424',
+    wall: '#8a7258',
+    cinema: [0, 15, 30, -0.5, 0, 0, 6],
+    walls: [
+      [-14, -18, 14, -18], [-14, 18, 14, 18], [-14, -18, -14, 18], [14, -18, 14, 18],
+      // shop (south) | office (west) and the flat (east)
+      [-14, 4, -8.4, 4], [-5.6, 4, 5.6, 4], [8.4, 4, 14, 4], [0, 4, 0, -6],
+      // the printing room under the office (north)
+      [-14, -6, -9.4, -6], [-6.6, -6, 14, -6],
+    ],
+    props: [
+      // shop
+      ['shelf', -11, 15, 0], ['shelf', -11, 10.5, 0], ['shelf', 11, 15, 0], ['shelf', 11, 10.5, 0],
+      ['shelf', -5, 13, Math.PI / 2], ['shelf', 5, 13, Math.PI / 2], ['desk', 0, 7, 0], ['sofa', -10, 6.2, 0], ['lamp', -13, 7.5], ['plant', 13, 6.5], ['rug', 0, 12],
+      // Victor's office
+      ['desk', -7, -0.5, Math.PI], ['shelf', -13.4, -1, Math.PI / 2], ['safe', -12.8, -4.6, Math.PI / 2], ['trunk', -2.6, -4.6, 0], ['lamp', -1.4, 2.6],
+      // Odile's flat and Lina's corner
+      ['table', 5, -1], ['chair', 3.6, -1, Math.PI / 2], ['chair', 6.4, -1, -Math.PI / 2], ['bed', 11.4, -3.2, -Math.PI / 2], ['wardrobe', 12.9, 2.2, -Math.PI / 2], ['lamp', 1.2, -4.8], ['rug', 10, -0.5],
+      // printing room
+      ['press', 0, -12.6, 0], ['box', -11.6, -16.2], ['box', -12.6, -9], ['barrels', 11, -15], ['shelf', 12.6, -9.6, -Math.PI / 2], ['shelf', -13.4, -12.6, Math.PI / 2], ['lamp', -5, -16.6],
+    ],
+    signs: [
+      ['LIBRAIRIE LE PHÉNIX', 0, 2.5, 17.83, Math.PI], ['BUREAU', -7, 2.5, 4.17, 0], ['PRIVÉ', 7, 2.5, 4.17, 0], ['IMPRIMERIE', -8, 2.5, -5.83, 0],
+    ],
+    pools: [[0, 12, '#ffd59a'], [-7, -1, '#ffe2b8'], [7, -1, '#ffcf9a'], [0, -12, '#9fb4ff'], [-10, 7, '#ffd59a']],
   },
   // The night train to Liège (stage A2-2): car 8 (seats), car 7 (bar), car 6 (sleeping car), car 5 (luggage).
   train: {
@@ -137,8 +191,8 @@ const LAYOUTS = {
       ['box', -1.8, -38.6], ['lamp', 2, -38.6],
     ],
     signs: [
-      ['VOITURE 8', 1, 2.5, 21.83, Math.PI], ['VOITURE 7 · BAR', 1, 2.5, 3.83, Math.PI], ['VOITURE 6 · COUCHETTES', 1, 2.5, -14.17, Math.PI],
-      ['VOITURE 5 · BAGAGES', 1, 2.5, -32.17, Math.PI], ['3', -0.35, 2.4, -6.75, -Math.PI / 2],
+      ['VOITURE 7 · BAR', 1, 2.5, 22.17, 0], ['VOITURE 6 · COUCHETTES', 1, 2.5, 4.17, 0], ['VOITURE 5 · BAGAGES', 1, 2.5, -13.83, 0],
+      ['PLATEFORME', 1, 2.5, -31.83, 0], ['COUCHETTE 3', -0.03, 2.4, -6.75, Math.PI / 2],
     ],
     pools: [[0, 31, '#ffe2b8'], [0, 13, '#ffcf8a'], [1.2, -5, '#d6e4ff'], [0, -23, '#9fb4ff'], [0, -36, '#ff9a6a']],
   },
@@ -170,7 +224,7 @@ const LAYOUTS = {
     ],
     signs: [
       ['BOURSE · BEURS', 0, 2.6, 21.8, Math.PI], ['QUAI 1 · DIRECTION GARE DU MIDI', 6, 2.6, 0.83, Math.PI], ['QUAI 2 · DIRECTION ROI BAUDOUIN', 6, 2.6, -25.8, 0],
-      ['→ QUAI 2', -14.17, 2.4, -6, Math.PI / 2], ['GUICHET', 15.6, 2.6, 14, -Math.PI / 2],
+      ['← QUAI 2', -13.83, 2.4, -6, Math.PI / 2], ['GUICHET', 15.6, 2.6, 14, -Math.PI / 2],
     ],
     pools: [[0, 16, '#fff3d6'], [-7, 4, '#d6e4ff'], [6, -5, '#fff3d6'], [6, -21, '#fff3d6'], [-16, -8, '#d6e4ff'], [16, -23, '#ffcf6b']],
   },
@@ -393,6 +447,20 @@ export class Office {
       put(this.box(1, 1, 1, std('#8a6a4a')), 0, 0.5, 0);
       put(this.box(0.8, 0.8, 0.8, std('#7a5a3a')), 0.3, 1.4, 0.1);
       r = 0.9;
+    } else if (type === 'safe') {
+      put(this.box(0.9, 1.1, 0.9, std('#2a2d33', { metalness: 0.7, roughness: 0.35 })), 0, 0.55, 0);
+      put(new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.05, 14), std('#c9a24a', { metalness: 0.8 })), 0, 0.7, 0.47).rotation.x = Math.PI / 2;
+      r = 0.7;
+    } else if (type === 'press') {
+      const iron = std('#3a3d42', { metalness: 0.6, roughness: 0.5 });
+      put(this.box(3.4, 1, 2, iron), 0, 0.5, 0);
+      for (const z of [-0.5, 0.5]) {
+        const roller = put(new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, 3.2, 14), metal), 0, 1.35, z);
+        roller.rotation.z = Math.PI / 2;
+      }
+      put(new THREE.Mesh(new THREE.TorusGeometry(0.55, 0.06, 6, 18), std('#8a2a2a', { metalness: 0.5 })), 1.8, 1.3, 0).rotation.y = Math.PI / 2;
+      put(this.box(2.6, 0.04, 1.4, std('#efe9dc')), 0, 1.02, 0);
+      r = 2.1;
     } else if (type === 'seat') {
       const cloth = std('#2f4a6a', { roughness: 0.9 });
       put(this.box(1.3, 0.45, 0.6, cloth), 0, 0.3, 0);

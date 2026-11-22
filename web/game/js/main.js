@@ -16,8 +16,11 @@ export const STAGES = [
   { id: '1b', level: 'A1', name: "L'immeuble d'Élise", save: 'dossier_save_1b' },
   { id: '1c', level: 'A1', name: 'La station Bourse', save: 'dossier_save_1c' },
   { id: '2', level: 'A2', name: 'La Gare du Midi', save: 'dossier_save_ch2' },
+  { id: '2b', level: 'A2', name: 'Le train de nuit', save: 'dossier_save_2b' },
   { id: '3', level: 'A2', name: 'Liège — La Poursuite', save: 'dossier_save_ch3' },
+  { id: '3b', level: 'A2', name: 'La librairie Le Phénix', save: 'dossier_save_3b' },
   { id: '4', level: 'B1', name: 'Le Laboratoire Lumen', save: 'dossier_save_ch4' },
+  { id: '4b', level: 'B1', name: 'La Gazette, la nuit', save: 'dossier_save_4b' },
   { id: '5', level: 'B1', name: 'La Vérité', save: 'dossier_save_ch5' },
 ];
 const asked = String(new URLSearchParams(location.search).get('ch') || localStorage.getItem('dossier_chapter') || '1');

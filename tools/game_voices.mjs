@@ -42,7 +42,7 @@ function add(text, voice) {
   lines.set(`${v}|${line}`, { text: line, voice: v });
 }
 
-for (const file of ['dossier1.js', 'dossier1b.js', 'dossier1c.js', 'dossier2.js', 'dossier3.js', 'dossier4.js', 'dossier5.js']) {
+for (const file of ['dossier1.js', 'dossier1b.js', 'dossier1c.js', 'dossier2.js', 'dossier2b.js', 'dossier3.js', 'dossier3b.js', 'dossier4.js', 'dossier5.js']) {
   const ch = await load(file);
   for (const [text, v] of ch.voiceLines()) add(text, v?.voice);
   const L = ch.LINES;
