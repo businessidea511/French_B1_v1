@@ -7,6 +7,7 @@ let timer = null;
 let step = 0;
 let mode = 'explore';
 let on = localStorage.getItem('quest_music') !== '0';
+let held = false; // quiet while the microphone listens
 
 const NOTE = (n) => 440 * Math.pow(2, (n - 69) / 12);
 
@@ -70,18 +71,20 @@ function tick() {
   const i = step % 8;
   const chord = song.chords[bar];
   if (i === 0) {
-    for (const n of chord) voice(NOTE(n), t, eighth * 8, 'sine', 0.05);
+    for (const n of chord) voice(NOTE(n), t, eighth * 8, 'sine', mode === 'fight' ? 0.05 : 0.065);
     voice(NOTE(song.bass[bar]), t, eighth * 3, 'triangle', 0.16);
   }
   if (i === 4) voice(NOTE(song.bass[bar] + 7), t, eighth * 2, 'triangle', 0.1);
   // A few piano-like notes on top (sparse at night).
   const arp = [0, 1, 2, 1, 2, 0, 1, 2][i];
-  if (!song.sparse || i === 0 || i === 3 || i === 6) voice(NOTE(chord[arp] + 12), t, eighth * 3, 'triangle', mode === 'fight' ? 0.05 : 0.03);
+  if (!song.sparse || i === 0 || i === 3 || i === 6) voice(NOTE(chord[arp] + 12), t, eighth * 3, 'triangle', mode === 'fight' ? 0.05 : 0.045);
   if (song.drums) {
     if (i % 4 === 0) kick(t);
     hat(t, i % 2 ? 0.03 : 0.05);
   }
   step++;
+  // Phones pause the music when a voice plays (iPhone: « interrupted »): start it again.
+  if (ctx.state !== 'running' && on && !held && !document.hidden) ctx.resume().catch(() => {});
   timer = setTimeout(tick, eighth * 1000);
 }
 
@@ -95,7 +98,7 @@ function begin() {
     master.gain.value = 0.5;
     master.connect(ctx.destination);
   }
-  if (ctx.state === 'suspended') ctx.resume();
+  if (ctx.state !== 'running' && !held) ctx.resume().catch(() => {});
   if (!timer) tick();
 }
 
@@ -113,6 +116,7 @@ export const music = {
   },
   // Silent while the player speaks into the microphone (iPhone shares one audio channel).
   hold(quiet) {
+    held = quiet;
     if (!ctx) return;
     if (quiet) ctx.suspend();
     else if (on && !document.hidden) ctx.resume();

@@ -1,8 +1,8 @@
 // The chase: on a delivery scooter, through the streets of Liège at night.
 // Élise gives the way on the phone, in French (« Tourne à gauche ! »);
 // only the right street leads on. A grey car follows your exact path a
-// little behind: stop or take the wrong street and it catches you, and
-// you start that street again.
+// few seconds behind: stop too long and it catches you, and you start
+// that street again. Élise speaks before each crossroads.
 import * as THREE from 'three';
 import { t, isRtl } from './i18n.js';
 import { say, sfx } from './speech.js';
@@ -143,7 +143,7 @@ export class Chase {
     this.scooter.rotation.y = heading;
     this.scooter.visible = true;
     // The grey car starts a little behind.
-    const back = new THREE.Vector3(n.x - Math.sin(heading) * 16, 0, n.z - Math.cos(heading) * 16);
+    const back = new THREE.Vector3(n.x - Math.sin(heading) * 24, 0, n.z - Math.cos(heading) * 24);
     this.car.position.copy(back);
     this.history = [{ t: this.clock, p: back.clone() }];
     this.legStart = this.clock;
@@ -208,7 +208,7 @@ export class Chase {
       return;
     }
     this.legStart = this.clock;
-    await wait(500);
+    await wait(150);
     this.locked = false;
     this.announce();
   }
@@ -225,7 +225,7 @@ export class Chase {
     if (Math.abs(throttle) < 0.05) this.speed -= this.speed * 1.4 * dt;
     this.speed = Math.max(-3, Math.min(14, this.speed));
     const turn = Math.min(1, Math.abs(this.speed) / 3) * Math.sign(this.speed || 1);
-    this.heading -= steer * 2.3 * dt * turn;
+    this.heading -= steer * 2.9 * dt * turn;
     const nx = s.position.x + Math.sin(this.heading) * this.speed * dt;
     const nz = s.position.z + Math.cos(this.heading) * this.speed * dt;
     const city = this.g.city;
@@ -246,26 +246,29 @@ export class Chase {
     // Crossroads: the right one leads on, any other is a wrong turn.
     const near = (n) => Math.hypot(n.x - s.position.x, n.z - s.position.z) < 4.6;
     const target = this.route[this.leg + 1];
-    if (near(target)) return this.success();
+    if (Math.hypot(target.x - s.position.x, target.z - s.position.z) < 9) return this.success();
     const here = this.route[this.leg];
     for (const n of this.nodes || []) {
       if (near(n) && !(n.x === here.x && n.z === here.z)) return this.fail('wrong');
     }
-    // The grey car follows your path, 2.2 seconds behind.
+    // The grey car follows your path, 4 seconds behind, a little slower than you.
     this.history.push({ t: now, p: s.position.clone() });
-    while (this.history.length > 2 && this.history[1].t < now - 2.2) this.history.shift();
+    while (this.history.length > 2 && this.history[1].t < now - 4) this.history.shift();
     const behind = this.history[0].p;
     const c = this.car.position;
     const d = Math.hypot(behind.x - c.x, behind.z - c.z);
-    if (d > 0.05) {
-      const step = Math.min(d, 15 * dt);
+    const toYou = Math.hypot(c.x - s.position.x, c.z - s.position.z);
+    // Coming back towards it after a wrong turn: the car waits instead of crashing into you.
+    const fromBehind = Math.sin(this.heading) * (s.position.x - c.x) + Math.cos(this.heading) * (s.position.z - c.z) > 0;
+    if (d > 0.05 && (fromBehind || toYou > 7)) {
+      const step = Math.min(d, 11 * dt);
       const ang = Math.atan2(behind.x - c.x, behind.z - c.z);
       c.x += Math.sin(ang) * step;
       c.z += Math.cos(ang) * step;
       this.car.rotation.y = ang;
     }
-    if (now - this.legStart > 3 && Math.hypot(c.x - s.position.x, c.z - s.position.z) < 2.8) this.fail('caught');
-    else if (now - this.legStart > 40) this.fail('caught');
+    if (now - this.legStart > 6 && fromBehind && toYou < 2.2) this.fail('caught');
+    else if (now - this.legStart > 60) this.fail('caught');
   }
 
   /** Chase camera: behind the scooter, looking ahead. */
