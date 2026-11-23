@@ -93,6 +93,28 @@ function tick() {
 // (On iPhone, a second player for the voices stopped the music.)
 // « playback »: the game is like a music app (iPhone, Safari 16.4+).
 try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (_) {}
+// After the microphone, iPhone stays in « phone call » mode: the sound comes
+// from the small earpiece, very low. Go back to the loudspeaker and start a
+// fresh audio engine (the music comes back on its own or on the next touch).
+const IOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+function afterMic() {
+  if (held) return;
+  try {
+    if (navigator.audioSession) {
+      navigator.audioSession.type = 'auto';
+      navigator.audioSession.type = 'playback';
+    }
+  } catch (_) {}
+  const old = ctx;
+  clearTimeout(timer);
+  timer = null;
+  ctx = null;
+  master = null;
+  noiseBuffer = null;
+  if (old) old.close().catch(() => {});
+  if (on) begin();
+}
+
 export function audioContext() {
   if (!ctx) {
     const AC = window.AudioContext || window.webkitAudioContext;
@@ -128,8 +150,9 @@ export const music = {
   hold(quiet) {
     held = quiet;
     if (!ctx) return;
-    if (quiet) ctx.suspend();
-    else if (on && !document.hidden) ctx.resume();
+    if (quiet) { ctx.suspend(); return; }
+    if (IOS) return setTimeout(afterMic, 400);
+    if (on && !document.hidden) ctx.resume();
   },
   // Quieter while someone speaks.
   duck(quiet) { if (master) master.gain.setTargetAtTime(quiet ? 0.18 : 0.5, ctx.currentTime, 0.2); },
