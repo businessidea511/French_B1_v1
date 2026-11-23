@@ -89,16 +89,25 @@ function tick() {
   timer = setTimeout(tick, eighth * 1000);
 }
 
-function begin() {
-  if (!on) return;
+// One audio engine for the whole game: music, voices and little sounds.
+// (On iPhone, a second player for the voices stopped the music.)
+// « playback »: the game is like a music app (iPhone, Safari 16.4+).
+try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (_) {}
+export function audioContext() {
   if (!ctx) {
     const AC = window.AudioContext || window.webkitAudioContext;
-    if (!AC) return;
+    if (!AC) return null;
     ctx = new AC();
     master = ctx.createGain();
     master.gain.value = 0.5;
     master.connect(ctx.destination);
   }
+  return ctx;
+}
+
+function begin() {
+  if (!on) return;
+  if (!audioContext()) return;
   if (ctx.state !== 'running' && !held) ctx.resume().catch(() => {});
   if (!timer) tick();
 }

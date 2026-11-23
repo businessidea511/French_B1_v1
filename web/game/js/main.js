@@ -504,9 +504,8 @@ function goal() {
   // Only the story (people and places): the clues are for the player to find
   // (light columns, and a hint in the case file if they ask).
   for (const t of talkables) if (t.marker.visible) consider(t.x, t.z);
-  // No one to see now: after 25 seconds without finding anything, the
-  // arrow shows the way to the nearest clue (still some searching first).
-  if (!best && city.time - lastProgress > 25) for (const { c, word } of clues) if (!c.taken) consider(word.x, word.z);
+  // No one to see now: a few seconds later, the arrow shows the way to the nearest clue.
+  if (!best && city.time - lastProgress > 5) for (const { c, word } of clues) if (!c.taken) consider(word.x, word.z);
   return best;
 }
 function updateGuide(dt) {

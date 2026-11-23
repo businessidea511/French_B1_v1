@@ -4,6 +4,7 @@
 // or there is no internet, the phone's own voice speaks instead.
 // Listening uses the browser's speech recognition.
 import { API_BASE } from './i18n.js';
+import { audioContext } from './music.js';
 
 let frVoice = null;
 function pickVoice() {
@@ -77,6 +78,27 @@ export async function preload(lines) {
 
 let current = null;
 let token = 0;
+
+const buffers = new Map(); // url → Promise<AudioBuffer>
+async function playBuffer(url, mine, done) {
+  const a = audioContext();
+  if (!a) throw new Error('no audio');
+  if (a.state !== 'running') a.resume().catch(() => {});
+  if (!buffers.has(url)) {
+    buffers.set(url, fetch(url)
+      .then((r) => { if (!r.ok) throw new Error('audio ' + r.status); return r.arrayBuffer(); })
+      .then((data) => new Promise((ok, bad) => a.decodeAudioData(data, ok, bad))));
+    buffers.get(url).catch(() => buffers.delete(url));
+  }
+  const buffer = await buffers.get(url);
+  if (mine !== token) return done();
+  const src = a.createBufferSource();
+  src.buffer = buffer;
+  src.connect(a.destination);
+  src.onended = done;
+  current = { pause() { src.onended = null; try { src.stop(); } catch (_) {} } };
+  src.start();
+}
 let finishCurrent = null; // ends the promise of the line being said
 
 export function stopSpeaking() {
@@ -125,12 +147,17 @@ export function say(text, opts = {}) {
     ]).then((url) => {
       if (mine !== token) return done(); // something else is being said now
       if (!url) return deviceVoice(line, opts, done);
-      const audio = new Audio(url);
-      audio.playbackRate = opts.speed || 1;
-      audio.onended = done;
-      audio.onerror = done;
-      current = audio;
-      audio.play().catch(() => deviceVoice(line, opts, done));
+      // Through the game's audio engine (so the music keeps playing on iPhone);
+      // a normal audio player only if that fails.
+      playBuffer(url, mine, done).catch(() => {
+        if (mine !== token) return done();
+        const audio = new Audio(url);
+        audio.playbackRate = opts.speed || 1;
+        audio.onended = done;
+        audio.onerror = done;
+        current = audio;
+        audio.play().catch(() => deviceVoice(line, opts, done));
+      });
     });
   });
 }
@@ -258,11 +285,8 @@ export function bestMatch(heard, answers) {
 // ---- Little sounds, made on the fly (no files to download) ----
 let ctx = null;
 function audio() {
-  if (!ctx) {
-    const AC = window.AudioContext || window.webkitAudioContext;
-    if (!AC) return null;
-    ctx = new AC();
-  }
+  ctx = audioContext();
+  if (!ctx) return null;
   if (ctx.state !== 'running') ctx.resume().catch(() => {});
   return ctx;
 }
