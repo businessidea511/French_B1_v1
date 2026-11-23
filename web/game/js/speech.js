@@ -263,7 +263,7 @@ function audio() {
     if (!AC) return null;
     ctx = new AC();
   }
-  if (ctx.state === 'suspended') ctx.resume();
+  if (ctx.state !== 'running') ctx.resume().catch(() => {});
   return ctx;
 }
 
@@ -280,6 +280,11 @@ function tone(freq, start, dur, type = 'sine', gain = 0.18) {
   o.connect(g).connect(a.destination);
   o.start(a.currentTime + start);
   o.stop(a.currentTime + start + dur + 0.05);
+}
+
+// The little sounds' engine is paused by voices too: every touch wakes it.
+for (const ev of ['touchstart', 'touchend', 'pointerdown']) {
+  window.addEventListener(ev, () => { if (ctx && ctx.state !== 'running') ctx.resume().catch(() => {}); }, { capture: true, passive: true });
 }
 
 export const sfx = {

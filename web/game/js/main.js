@@ -89,6 +89,7 @@ if (C.locks?.length) {
   city.walkable = (x, z) => base(x, z) && !lockAt(x, z);
 }
 let lockToldAt = -99;
+let lastProgress = 0; // when the player last found a clue or talked to someone
 // Clues on the ground (others are given by the characters).
 const clues = ch.CLUES.filter((w) => !w.given).map((w) => ({ word: w, c: city.addClue(w, w.x, w.z) }));
 
@@ -370,6 +371,7 @@ async function talkTo(target) {
   talking = target;
   await ch.interact(target.id, game);
   talking = null;
+  lastProgress = city.time;
   if (target.char) target.char.rotation.y = target.face;
   refresh();
 }
@@ -384,6 +386,7 @@ addEventListener('keydown', (e) => {
 // ---------- clues ----------
 const lockTold = new Map(); // clue → when the player was last told it is guarded
 async function collect(entry) {
+  lastProgress = city.time;
   city.takeClue(entry.c);
   state.found.push(entry.word.key);
   save();
@@ -501,6 +504,9 @@ function goal() {
   // Only the story (people and places): the clues are for the player to find
   // (light columns, and a hint in the case file if they ask).
   for (const t of talkables) if (t.marker.visible) consider(t.x, t.z);
+  // No one to see now: after 25 seconds without finding anything, the
+  // arrow shows the way to the nearest clue (still some searching first).
+  if (!best && city.time - lastProgress > 25) for (const { c, word } of clues) if (!c.taken) consider(word.x, word.z);
   return best;
 }
 function updateGuide(dt) {

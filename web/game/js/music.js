@@ -66,6 +66,7 @@ function kick(start) {
 function tick() {
   const song = SONGS[mode];
   const eighth = 60 / song.bpm / 2;
+  if (ctx.state !== 'running') { timer = setTimeout(tick, eighth * 1000); return; } // paused: no notes piling up
   const t = ctx.currentTime + 0.1;
   const bar = Math.floor(step / 8) % 4;
   const i = step % 8;
@@ -124,6 +125,15 @@ export const music = {
   // Quieter while someone speaks.
   duck(quiet) { if (master) master.gain.setTargetAtTime(quiet ? 0.18 : 0.5, ctx.currentTime, 0.2); },
 };
+
+// iPhone pauses the music each time a voice plays, and lets it start again
+// only on a touch: every touch (the joystick too) brings it back.
+function wake() {
+  if (ctx && on && !held && !document.hidden && ctx.state !== 'running') ctx.resume().catch(() => {});
+}
+for (const ev of ['touchstart', 'touchend', 'pointerdown', 'pointerup', 'keydown']) {
+  window.addEventListener(ev, wake, { capture: true, passive: true });
+}
 
 // The music stops when the phone screen goes off or the app is hidden.
 document.addEventListener('visibilitychange', () => {
