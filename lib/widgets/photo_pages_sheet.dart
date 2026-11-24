@@ -6,7 +6,7 @@ import '../services/photo_picker.dart';
 import '../theme/app_theme.dart';
 import '../services/ui_strings.dart';
 
-enum PhotoImportMode { fullLesson, exercisesOnly, essayQuestions, handwrittenEssay }
+enum PhotoImportMode { fullLesson, exercisesOnly, essayQuestions, handwrittenEssay, homework }
 
 /// The pages collected by [showPhotoPagesSheet].
 class PhotoImportRequest {
@@ -144,6 +144,8 @@ class _PhotoPagesSheetState extends State<_PhotoPagesSheet> {
                   PhotoImportMode.handwrittenEssay =>
                     tr(context, 'Take a photo of each page of your essay, in order, with good light. Professeur AI copies your text and finds the topic.'),
                   PhotoImportMode.fullLesson => 'Add the lesson pages in order. You can take several photos one after another.',
+                  PhotoImportMode.homework =>
+                    tr(context, 'Take a photo of each page of your homework, in order, flat and with good light.'),
                 },
                 style: TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
             const SizedBox(height: 16),
@@ -230,6 +232,7 @@ class _PhotoPagesSheetState extends State<_PhotoPagesSheet> {
                 PhotoImportMode.essayQuestions => tr(context, 'Find the questions ({n} photos)', {'n': _pages.length}),
                 PhotoImportMode.handwrittenEssay => tr(context, 'Read my essay ({n} photos)', {'n': _pages.length}),
                 PhotoImportMode.fullLesson => 'Create from ${_pages.length} page${_pages.length == 1 ? '' : 's'}',
+                PhotoImportMode.homework => tr(context, 'Solve my homework ({n} photos)', {'n': _pages.length}),
               }),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppTheme.primary,

@@ -15,6 +15,7 @@ import '../daily_phrases/daily_phrases_page.dart';
 import '../exercises/exercises_page.dart';
 import '../flashcards/flashcards_page.dart';
 import '../games/conjugation_game_page.dart';
+import '../homework/homework_page.dart';
 import '../games/dictee_page.dart';
 import '../games/duel_page.dart';
 import '../exam/exam_kit_page.dart';
@@ -137,6 +138,8 @@ class PracticeTab extends StatelessWidget {
       tiles: (context) => [
         FeatureTile(emoji: '🕵️', title: 'Le Dossier Bruxelles', subtitle: 'A night investigation in Brussels: your French is your only weapon',
             color: const Color(0xFFB8862E), onTap: openGame),
+        FeatureTile(emoji: '📸', title: tr(context, 'Homework help'), subtitle: 'Photo of your homework: translation, hard words, checked answers',
+            color: const Color(0xFF2E9E8F), onTap: () => openPage(context, const HomeworkPage())),
         FeatureTile(emoji: '✍️', title: tr(context, 'Exam writing kit'), subtitle: 'Joker phrases, writing practice, daily dictation',
             color: const Color(0xFFE0457B), onTap: () => openPage(context, const ExamKitPage())),
         FeatureTile(emoji: '🔁', title: lp.translate('reviews'), subtitle: 'Smart flashcards at the right moment',
