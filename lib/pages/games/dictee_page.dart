@@ -231,7 +231,7 @@ class _DicteePageState extends State<DicteePage> {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               gradient: LinearGradient(colors: [AppTheme.primary, AppTheme.accent]),
-              boxShadow: [BoxShadow(color: AppTheme.primary.withValues(alpha: 0.5), blurRadius: 24, offset: const Offset(0, 10))],
+              boxShadow: softShadow(AppTheme.primary.withValues(alpha: 0.5), blur: 24, offset: const Offset(0, 10)),
             ),
             child: Center(child: Text(emoji, style: const TextStyle(fontSize: 36))),
           ),

@@ -1,31 +1,30 @@
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'device_probe.dart';
 
-/// Light mode for older phones: a still background, no 3D effects and no
-/// entrance animations. "Auto" turns it on when the device looks weak.
+/// Light design, the default for everyone: a still background, flat cards and
+/// no 3D effects, so the screen is only redrawn when something changes.
+/// "Full" brings back the moving background and 3D effects for strong phones.
 class PerfMode extends ChangeNotifier {
   PerfMode._();
   static final instance = PerfMode._();
 
   static const _prefKey = 'perf_mode';
-  static const auto = 'auto', on = 'on', off = 'off';
+  static const on = 'on', off = 'off';
 
-  String choice = auto;
-  List<String> weakSigns = const [];
+  String choice = on;
 
   /// Read everywhere an effect is drawn.
   static bool get light => instance.isLight;
 
-  bool get isLight => choice == on || (choice == auto && weakSigns.isNotEmpty);
+  bool get isLight => choice != off;
 
   Future<void> load() async {
-    weakSigns = DeviceProbe.weakSigns();
     try {
       final prefs = await SharedPreferences.getInstance();
-      choice = prefs.getString(_prefKey) ?? auto;
+      // Only an explicit "full" keeps the effects; the old "auto" becomes light.
+      choice = prefs.getString(_prefKey) == off ? off : on;
     } catch (_) {}
-    debugPrint('⚡ Light mode: $isLight ($choice; ${weakSigns.join(', ')})');
+    debugPrint('⚡ Light mode: $isLight');
   }
 
   Future<void> set(String value) async {
@@ -38,8 +37,5 @@ class PerfMode extends ChangeNotifier {
   }
 
   @visibleForTesting
-  void reset() {
-    choice = auto;
-    weakSigns = const [];
-  }
+  void reset() => choice = on;
 }

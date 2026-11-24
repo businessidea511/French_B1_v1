@@ -45,7 +45,7 @@ class FeatureTile extends StatelessWidget {
                     decoration: BoxDecoration(
                       gradient: LinearGradient(colors: [color.withValues(alpha: 0.45), color.withValues(alpha: 0.12)]),
                       borderRadius: BorderRadius.circular(16),
-                      boxShadow: [BoxShadow(color: color.withValues(alpha: 0.35), blurRadius: 18, offset: const Offset(0, 8))],
+                      boxShadow: softShadow(color.withValues(alpha: 0.35), blur: 18, offset: const Offset(0, 8)),
                     ),
                     child: Center(child: Text(emoji, style: const TextStyle(fontSize: 23))),
                   ),
@@ -220,7 +220,7 @@ class GlowButton extends StatelessWidget {
           decoration: BoxDecoration(
             gradient: LinearGradient(colors: colors),
             borderRadius: BorderRadius.circular(18),
-            boxShadow: [BoxShadow(color: colors.first.withValues(alpha: 0.45), blurRadius: 22, offset: const Offset(0, 10))],
+            boxShadow: softShadow(colors.first.withValues(alpha: 0.45), blur: 22, offset: const Offset(0, 10)),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,

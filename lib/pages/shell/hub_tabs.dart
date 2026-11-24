@@ -8,6 +8,7 @@ import '../../services/language_provider.dart';
 import '../../services/open_game.dart';
 import '../../services/progress_service.dart';
 import '../../theme/app_theme.dart';
+import '../../widgets/motion.dart';
 import '../../widgets/ui_kit.dart';
 import '../ai_book/ai_book_page.dart';
 import '../daily_phrases/daily_phrases_page.dart';
@@ -81,11 +82,7 @@ class _HubTabState extends State<HubTab> {
         controller: _scroll,
         children: [
           const SizedBox(height: 12),
-          ShaderMask(
-            blendMode: BlendMode.srcIn,
-            shaderCallback: (r) => AppTheme.primaryGradient.createShader(r),
-            child: Text(widget.title, style: TextStyle(fontSize: 34, fontWeight: FontWeight.w900, color: AppTheme.textPrimary)),
-          ),
+          GradientTitle(widget.title),
           const SizedBox(height: 18),
           FeatureGrid(tiles: widget.tiles(context)),
         ],

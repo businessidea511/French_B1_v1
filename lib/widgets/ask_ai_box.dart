@@ -8,7 +8,6 @@ import '../services/photo_picker.dart';
 import '../theme/app_theme.dart';
 import 'translated_text.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
-import 'dart:ui';
 import '../services/ui_strings.dart';
 
 class AskAIBox extends StatefulWidget {
@@ -175,9 +174,7 @@ class _AskAIBoxState extends State<AskAIBox> with AutomaticKeepAliveClientMixin 
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(30),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-          child: Padding(
+        child: Padding(
             padding: const EdgeInsets.all(24.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -441,7 +438,6 @@ class _AskAIBoxState extends State<AskAIBox> with AutomaticKeepAliveClientMixin 
               ],
             ),
           ),
-        ),
       ),
     ),
    );

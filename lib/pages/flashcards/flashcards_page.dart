@@ -1,5 +1,6 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+import '../../widgets/motion.dart';
 import 'package:provider/provider.dart';
 import '../../theme/app_theme.dart';
 import '../../services/deepseek_service.dart';
@@ -436,7 +437,7 @@ class _FlashcardsPageState extends State<FlashcardsPage> {
         gradient: gradient,
         borderRadius: BorderRadius.circular(32),
         boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.15), blurRadius: 20, offset: const Offset(0, 10)),
+          ...softShadow(Colors.black.withValues(alpha: 0.15), blur: 20, offset: const Offset(0, 10)),
         ],
       ),
       child: Center(

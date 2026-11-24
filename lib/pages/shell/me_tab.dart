@@ -228,7 +228,7 @@ class _MeTabState extends State<MeTab> {
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         gradient: LinearGradient(colors: [AppTheme.primary, AppTheme.secondary]),
-                        boxShadow: [BoxShadow(color: AppTheme.secondary.withValues(alpha: 0.5), blurRadius: 24)],
+                        boxShadow: softShadow(AppTheme.secondary.withValues(alpha: 0.5), blur: 24),
                       ),
                       child: Center(
                         child: Text('$level', style: TextStyle(fontSize: 32, fontWeight: FontWeight.w900, color: AppTheme.onColor)),
@@ -397,13 +397,12 @@ class _MeTabState extends State<MeTab> {
                     ],
                   ),
                   const SizedBox(height: 10),
-                  // On its own line: three labels do not fit next to the title on a small phone.
+                  // On its own line: the labels do not fit next to the title on a small phone.
                   SizedBox(
                     width: double.infinity,
                     child: SegmentedButton<String>(
                         showSelectedIcon: false,
                         segments: [
-                          const ButtonSegment(value: PerfMode.auto, label: Text('Auto')),
                           ButtonSegment(value: PerfMode.on, label: Text('⚡ ${tr(context, 'Fast')}')),
                           ButtonSegment(value: PerfMode.off, label: Text('✨ ${tr(context, 'Full')}')),
                         ],
@@ -413,8 +412,7 @@ class _MeTabState extends State<MeTab> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    '${tr(context, 'Fast mode: a still background and no 3D effects. Best for older phones.')} '
-                    '${perf.choice == PerfMode.auto ? tr(context, perf.isLight ? 'This phone uses fast mode.' : 'This phone uses full effects.') : ''}',
+                    tr(context, 'Fast mode: a still background and no 3D effects. Best for older phones.'),
                     style: TextStyle(color: AppTheme.textTertiary, fontSize: 12),
                   ),
                 ],

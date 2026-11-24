@@ -91,13 +91,8 @@ class _TodayTabState extends State<TodayTab> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    ShaderMask(
-                      blendMode: BlendMode.srcIn,
-                      shaderCallback: (r) => AppTheme.primaryGradient.createShader(r),
-                      child: Text(_greeting(),
-                          textDirection: TextDirection.ltr, // French: "Bonsoir !" also in Arabic mode
-                          style: TextStyle(fontSize: 34, fontWeight: FontWeight.w900, color: AppTheme.textPrimary)),
-                    ),
+                    GradientTitle(_greeting(),
+                        textDirection: TextDirection.ltr), // French: "Bonsoir !" also in Arabic mode
                     Text('${_days[now.weekday - 1]} ${now.day} ${_months[now.month - 1]}',
                         style: TextStyle(color: AppTheme.textTertiary, fontSize: 15)),
                   ],
@@ -268,7 +263,7 @@ class _StreakBadge extends StatelessWidget {
             colors: lit ? [const Color(0xFFF97316), AppTheme.warning] : [AppTheme.surface, AppTheme.surfaceLight],
           ),
           borderRadius: BorderRadius.circular(100),
-          boxShadow: lit ? [BoxShadow(color: const Color(0xFFF97316).withValues(alpha: 0.5), blurRadius: 16)] : null,
+          boxShadow: lit ? softShadow(const Color(0xFFF97316).withValues(alpha: 0.5), blur: 16) : null,
         ),
         child: Text('🔥 $streak', style: TextStyle(fontWeight: FontWeight.w900, color: lit ? AppTheme.onColor : AppTheme.textPrimary, fontSize: 16)),
       ),
@@ -373,7 +368,7 @@ class _WordOfDayCardState extends State<_WordOfDayCard> {
       decoration: BoxDecoration(
         gradient: LinearGradient(colors: gradient, begin: Alignment.topLeft, end: Alignment.bottomRight),
         borderRadius: BorderRadius.circular(26),
-        boxShadow: [BoxShadow(color: gradient.first.withValues(alpha: 0.45), blurRadius: 26, offset: const Offset(0, 12))],
+        boxShadow: softShadow(gradient.first.withValues(alpha: 0.45), blur: 26, offset: const Offset(0, 12)),
       ),
       child: Center(child: SingleChildScrollView(child: Column(mainAxisSize: MainAxisSize.min, children: children))),
     );

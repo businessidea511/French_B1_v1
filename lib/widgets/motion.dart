@@ -77,7 +77,26 @@ class _AuroraPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    canvas.drawRect(Offset.zero & size, Paint()..color = AppTheme.background);
+    final rect = Offset.zero & size;
+    if (!particles) {
+      // Light mode: one soft wash of colour from the top, a single cheap fill.
+      // Four big glowing circles cost a lot on an older phone, as they are
+      // drawn again whenever anything on top moves (a scroll, a tap).
+      canvas.drawRect(
+        rect,
+        Paint()
+          ..shader = LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color.alphaBlend(AppTheme.primary.withValues(alpha: AppTheme.isDark ? 0.10 : 0.08), AppTheme.background),
+              AppTheme.background,
+            ],
+          ).createShader(rect),
+      );
+      return;
+    }
+    canvas.drawRect(rect, Paint()..color = AppTheme.background);
     final phase = t.value * 2 * pi;
     final span = max(size.width, size.height);
     for (final (color, offset, radius) in _blobs) {
@@ -402,6 +421,35 @@ class GlassCard extends StatelessWidget {
   }
 }
 
+/// A soft coloured shadow. Light mode keeps it small and close: a wide blur is
+/// one of the costliest things to draw on an older phone.
+List<BoxShadow> softShadow(Color color, {double blur = 20, Offset offset = Offset.zero}) => [
+      PerfMode.light
+          ? BoxShadow(color: color.withValues(alpha: color.a * 0.6), blurRadius: min(blur, 8), offset: offset / 3)
+          : BoxShadow(color: color, blurRadius: blur, offset: offset),
+    ];
+
+/// A big page title. Light mode: one solid colour (a gradient through a
+/// ShaderMask needs an extra layer for every frame); full effects: the gradient.
+class GradientTitle extends StatelessWidget {
+  final String text;
+  final TextDirection? textDirection;
+  const GradientTitle(this.text, {super.key, this.textDirection});
+
+  @override
+  Widget build(BuildContext context) {
+    final style = TextStyle(
+        fontSize: 34, fontWeight: FontWeight.w900, color: PerfMode.light ? AppTheme.primary : AppTheme.textPrimary);
+    final title = Text(text, textDirection: textDirection, style: style);
+    if (PerfMode.light) return title;
+    return ShaderMask(
+      blendMode: BlendMode.srcIn,
+      shaderCallback: (r) => AppTheme.primaryGradient.createShader(r),
+      child: title,
+    );
+  }
+}
+
 /// Circular progress with a glowing gradient arc.
 class GoalRing extends StatelessWidget {
   final double progress;
@@ -453,7 +501,7 @@ class _RingPainter extends CustomPainter {
           ..style = PaintingStyle.stroke
           ..strokeCap = StrokeCap.round
           ..strokeWidth = stroke
-          ..maskFilter = const MaskFilter.blur(BlurStyle.solid, 3)
+          ..maskFilter = PerfMode.light ? null : const MaskFilter.blur(BlurStyle.solid, 3)
           ..shader = gradient.createShader(rect));
   }
 

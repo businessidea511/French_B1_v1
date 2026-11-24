@@ -11,18 +11,21 @@ void main() {
   });
   tearDown(() => PerfMode.instance.reset());
 
-  test('auto: fast mode only on a weak device; the choice is remembered', () async {
+  test('light design is the default; only an explicit "full" keeps the effects', () async {
     final perf = PerfMode.instance;
-    expect(perf.isLight, isFalse);
-    perf.weakSigns = ['2 cores'];
     expect(perf.isLight, isTrue);
 
     await perf.set(PerfMode.off);
     expect(perf.isLight, isFalse, reason: 'the learner asked for full effects');
-
     perf.reset();
     await perf.load();
-    expect(perf.choice, PerfMode.off);
+    expect(perf.choice, PerfMode.off, reason: 'the choice is remembered');
+
+    // A phone that kept the old "auto" choice gets the light design.
+    SharedPreferences.setMockInitialValues({'perf_mode': 'auto'});
+    perf.reset();
+    await perf.load();
+    expect(perf.isLight, isTrue);
   });
 
   testWidgets('fast mode: no entrance animation, still background', (tester) async {

@@ -1,5 +1,6 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+import '../widgets/motion.dart';
 import 'package:provider/provider.dart';
 import '../services/language_provider.dart';
 import '../services/life_story_service.dart';
@@ -121,10 +122,7 @@ class _HomePageState extends State<HomePage> {
                 color: AppTheme.surface.withValues(alpha: 0.92),
                 borderRadius: BorderRadius.circular(28),
                 border: Border.all(color: AppTheme.fg.withValues(alpha: 0.12)),
-                boxShadow: [
-                  BoxShadow(color: Colors.black.withValues(alpha: 0.45), blurRadius: 30, offset: const Offset(0, 12)),
-                  BoxShadow(color: AppTheme.primary.withValues(alpha: 0.15), blurRadius: 30),
-                ],
+                boxShadow: softShadow(Colors.black.withValues(alpha: 0.45), blur: 30, offset: const Offset(0, 12)),
               ),
               child: Row(
                 children: [
