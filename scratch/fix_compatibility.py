@@ -2,7 +2,7 @@ import os
 import re
 
 def fix_flutter_compatibility():
-    lib_dir = r'c:\Users\Lenovo\OneDrive\Desktop\B1 French Flutter\french_course_b1\lib'
+    lib_dir = r'c:\Users\ahmad\Desktop\B1 French Flutter\french_course_b1\lib'
     
     # Regex to find .withValues(alpha: 0.X) and convert to .withOpacity(0.X)
     pattern = re.compile(r'\.withValues\(alpha:\s*([\d\.]+)\)')

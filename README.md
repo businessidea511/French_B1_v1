@@ -40,12 +40,12 @@ Ensure that exercises are pedagogical, unique, and randomized to prevent predict
 
 ## Proposed Changes
 
-### [DeepSeek Service](file:///c:/Users/Lenovo/OneDrive/Desktop/B1%20French%20Flutter/french_course_b1/lib/services/deepseek_service.dart)
+### [DeepSeek Service](file:///c:/Users/ahmad/Desktop/B1%20French%20Flutter/french_course_b1/lib/services/deepseek_service.dart)
 - Update the `generateExercises` prompt to explicitly demand 4 **unique** options.
 - Add a requirement for the AI to vary the correct answer index (redundant but helpful for variety).
 - Increase the temperature slightly to encourage diverse distractors.
 
-### [Exercises Page](file:///c:/Users/Lenovo/OneDrive/Desktop/B1%20French%20Flutter/french_course_b1/lib/pages/exercises/exercises_page.dart)
+### [Exercises Page](file:///c:/Users/ahmad/Desktop/B1%20French%20Flutter/french_course_b1/lib/pages/exercises/exercises_page.dart)
 - Implement a `_shuffleAndSanitize` method in `_ExercisesPageState`.
 - This method will:
     - **Shuffle** the options array for each question.
@@ -73,7 +73,7 @@ Ensure that exercises are pedagogical, unique, and randomized to prevent predict
 
 1. **Clone the repository**
 ```bash
-cd "C:\Users\Lenovo\OneDrive\Desktop\B1 French Flutter\french_course_b1"
+cd "C:\Users\ahmad\Desktop\B1 French Flutter\french_course_b1"
 ```
 
 2. **Install dependencies**
