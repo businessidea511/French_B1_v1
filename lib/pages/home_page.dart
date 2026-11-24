@@ -1,4 +1,3 @@
-import 'dart:math';
 import 'package:flutter/material.dart';
 import '../widgets/motion.dart';
 import 'package:provider/provider.dart';
@@ -25,6 +24,7 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   int _tab = 0;
+  final _opened = <int>{0};
 
   static const _icons = [
     Icons.wb_sunny_rounded,
@@ -85,29 +85,18 @@ class _HomePageState extends State<HomePage> {
 
     return Scaffold(
       extendBody: true,
-      body: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 500),
-        switchInCurve: Curves.easeOutCubic,
-        switchOutCurve: Curves.easeInCubic,
-        transitionBuilder: (child, animation) => AnimatedBuilder(
-          animation: animation,
-          child: child,
-          builder: (context, child) {
-            final t = animation.value;
-            return Opacity(
-              opacity: t,
-              child: Transform(
-                alignment: Alignment.center,
-                transform: Matrix4.identity()
-                  ..setEntry(3, 2, 0.001)
-                  ..rotateY((1 - t) * pi / 8)
-                  ..scale(0.94 + 0.06 * t),
-                child: child,
+      // Tabs open at once, like a phone app: each tab is built the first time
+      // it is opened and then kept, so coming back is instant and keeps its
+      // scroll position. Hidden tabs are not painted and their animations stop.
+      body: Stack(
+        children: [
+          for (var i = 0; i < 5; i++)
+            if (_opened.contains(i))
+              Offstage(
+                offstage: _tab != i,
+                child: TickerMode(enabled: _tab == i, child: KeyedSubtree(key: ValueKey(i), child: _page(i))),
               ),
-            );
-          },
-        ),
-        child: KeyedSubtree(key: ValueKey(_tab), child: _page(_tab)),
+        ],
       ),
       bottomNavigationBar: SafeArea(
         minimum: const EdgeInsets.fromLTRB(12, 0, 12, 12),
@@ -135,7 +124,7 @@ class _HomePageState extends State<HomePage> {
                         badge: i == 0 && messages > 0
                             ? '$messages'
                             : (i == 2 && badge > 0 ? '$badge' : null),
-                        onTap: () => setState(() => _tab = i),
+                        onTap: () => setState(() => _opened.add(_tab = i)),
                       ),
                     ),
                 ],
